@@ -60,7 +60,7 @@
                         <div class="col-md-6">
                             <label class="text-muted small">Expenditure Value</label>
                             <p class="mb-0">
-                                <strong class="text-success fs-5">Rp {{ number_format($contract->expenditure, 2, ',', '.') }}</strong>
+                                <strong class="text-success fs-5">IDR {{ number_format($contract->expenditure, 2, ',', '.') }}</strong>
                             </p>
                         </div>
                         <div class="col-md-6">
