@@ -88,16 +88,14 @@ class CustomerController extends Controller
             'customer' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:100',
-            'website' => 'nullable|url|max:255',
+            'email' => 'nullable|max:100',
+            'website' => 'nullable|max:255',
             'npwp' => 'nullable|string|max:50',
             'note' => 'nullable|string',
         ], [
             'code.required' => 'Kode customer wajib diisi',
             'code.unique' => 'Kode customer sudah digunakan',
             'customer.required' => 'Nama customer wajib diisi',
-            'email.email' => 'Format email tidak valid',
-            'website.url' => 'Format website tidak valid',
         ]);
 
         if ($validator->fails()) {
@@ -227,16 +225,14 @@ class CustomerController extends Controller
             'customer' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
-            'email' => 'nullable|email|max:100',
-            'website' => 'nullable|url|max:255',
+            'email' => 'nullable|max:100',
+            'website' => 'nullable|max:255',
             'npwp' => 'nullable|string|max:50',
             'note' => 'nullable|string',
         ], [
             'code.required' => 'Kode customer wajib diisi',
             'code.unique' => 'Kode customer sudah digunakan',
             'customer.required' => 'Nama customer wajib diisi',
-            'email.email' => 'Format email tidak valid',
-            'website.url' => 'Format website tidak valid',
         ]);
 
         if ($validator->fails()) {

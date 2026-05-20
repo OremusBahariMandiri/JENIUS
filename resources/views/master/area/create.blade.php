@@ -17,7 +17,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">Add Area Form</h5>
@@ -60,46 +60,6 @@
                             </a>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Information</h6>
-                </div>
-                <div class="card-body">
-                    <small class="text-muted">
-                        <ul class="ps-3">
-                            <li>Fields marked with <span class="text-danger">*</span> are required</li>
-                            <li>Area code must be unique</li>
-                            <li>Area name will be used for location/region identification</li>
-                            <li>Note is optional for additional information</li>
-                        </ul>
-                    </small>
-                </div>
-            </div>
-
-            <div class="card mt-3">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Examples</h6>
-                </div>
-                <div class="card-body">
-                    <small class="text-muted">
-                        <strong>Code Examples:</strong>
-                        <ul class="ps-3 mb-2">
-                            <li>JKT - Jakarta</li>
-                            <li>SBY - Surabaya</li>
-                            <li>BDG - Bandung</li>
-                        </ul>
-                        <strong>Name Examples:</strong>
-                        <ul class="ps-3 mb-0">
-                            <li>Central Jakarta</li>
-                            <li>East Surabaya</li>
-                            <li>West Bandung</li>
-                        </ul>
-                    </small>
                 </div>
             </div>
         </div>

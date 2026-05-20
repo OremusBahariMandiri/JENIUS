@@ -672,38 +672,14 @@
             <div class="nav-item has-submenu" data-tooltip="Manajemen Data">
                 <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenData">
                     <i class="fas fa-briefcase"></i>
-                    <span>Manajemen Data</span>
+                    <span>Job Order</span>
                     <i class="fas fa-chevron-down submenu-indicator"></i>
                 </a>
-                <div class="sidebar-submenu" id="manajemenData">
-                    <!-- Data Kontrak with Nested Submenu -->
-                    <div class="submenu-item has-nested-submenu">
-                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataKontrakSub">
-                            <i class="fas fa-scroll"></i>
-                            <span>Job Order</span>
-                            <i class="fas fa-chevron-down submenu-indicator"></i>
-                        </a>
-                        <div class="sidebar-nested-submenu" id="dataKontrakSub">
-                            <div class="nested-submenu-item">
-                                <a class="nav-link" href="{{route('jo-contract.index')}}">
-                                    <i class="fas fa-pen-fancy"></i>
-                                    <span>Contract</span>
-                                </a>
-                            </div>
-                            {{-- <div class="nested-submenu-item">
-                                <a class="nav-link" href="#">
-                                    <i class="fas fa-ship"></i>
-                                    <span>Tramper</span>
-                                </a>
-                            </div>
-                            <div class="nested-submenu-item">
-                                <a class="nav-link" href="#">
-                                    <i class="fas fa-ellipsis-h"></i>
-                                    <span>Other</span>
-                                </a>
-                            </div> --}}
-                        </div>
-                    </div>
+                <div class="submenu-item">
+                    <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}" href="{{route('jo-contract.index')}}">
+                        <i class="fas fa-pen-fancy"></i>
+                        <span>JO Contract</span>
+                    </a>
                 </div>
             </div>
 

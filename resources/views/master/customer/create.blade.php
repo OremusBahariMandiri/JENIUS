@@ -17,7 +17,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">Form Tambah Customer</h5>
@@ -61,7 +61,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
-                                <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="email@example.com">
+                                <input type="text" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="email@example.com">
                                 @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -71,7 +71,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Website</label>
-                                <input type="url" name="website" class="form-control @error('website') is-invalid @enderror" value="{{ old('website') }}" placeholder="https://example.com">
+                                <input type="text" name="website" class="form-control @error('website') is-invalid @enderror" value="{{ old('website') }}" placeholder="https://example.com">
                                 @error('website')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -102,24 +102,6 @@
                             </a>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi</h6>
-                </div>
-                <div class="card-body">
-                    <small class="text-muted">
-                        <ul class="ps-3">
-                            <li>Field dengan tanda <span class="text-danger">*</span> wajib diisi</li>
-                            <li>Kode customer harus unik</li>
-                            <li>Format email harus valid</li>
-                            <li>Format website harus lengkap dengan http:// atau https://</li>
-                        </ul>
-                    </small>
                 </div>
             </div>
         </div>
