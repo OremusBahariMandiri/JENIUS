@@ -67,7 +67,7 @@
                             <div class="mb-3">
                                 <label class="form-label">Expenditure Value <span class="text-danger">*</span></label>
                                 <div class="input-group">
-                                    <span class="input-group-text">Rp</span>
+                                    <span class="input-group-text">IDR</span>
                                     <input type="text" id="expenditure_display"
                                         class="form-control @error('expenditure') is-invalid @enderror"
                                         value="{{ old('expenditure') ? number_format(old('expenditure'), 2, ',', '.') : '' }}"
