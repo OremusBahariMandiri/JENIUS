@@ -16,7 +16,6 @@ class JoContractItem extends Model
     protected $fillable = [
         'id_jo_cont_item',
         'id_jo_cont',
-        'deskripsi',
         'id_md_invoice',
         'pendapatan_idr',
         'pendapatan_usd',
@@ -29,7 +28,7 @@ class JoContractItem extends Model
     protected $casts = [
         'pendapatan_idr' => 'decimal:2',
         'pendapatan_usd' => 'decimal:2',
-        'kurs_usd' => 'decimal:4',
+        'kurs_usd' => 'decimal:2',
         'tgl_kurs_usd' => 'date',
         'hpp_ops' => 'decimal:2',
         'hargajual_idr' => 'decimal:2',

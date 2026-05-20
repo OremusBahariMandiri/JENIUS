@@ -9,6 +9,9 @@ use App\Models\Master\Area;
 class JoContract extends Model
 {
     protected $table = 'b01_jo_cont';
+    protected $primaryKey = 'id_jo_cont'; // ← INI YANG PENTING!
+    public $incrementing = true; // Auto-increment
+    protected $keyType = 'int'; // Type integer
 
     protected $fillable = [
         'id_jo_cont',

@@ -11,6 +11,7 @@ use App\Models\Master\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class JoContractController extends Controller
 {
@@ -103,19 +104,27 @@ class JoContractController extends Controller
      */
     public function store(Request $request)
     {
+        // Log input data untuk debugging
+        Log::info('JO Contract Store Request', [
+            'all_data' => $request->all()
+        ]);
+
         $validator = Validator::make($request->all(), [
             'id_md_cont' => 'required|exists:a02_md_contract,id_md_cont',
             'id_md_area' => 'required|exists:a03_md_area,id_md_area',
             'title' => 'required|string|max:255',
             'note' => 'nullable|string',
 
+            // Global kurs validation
+            'global_kurs_usd' => 'required|numeric|min:0',
+            'global_tgl_kurs_usd' => 'required|date',
+
             // Validation untuk items
             'items' => 'required|array|min:1',
             'items.*.id_md_invoice' => 'required|exists:a04_md_invoice,id_md_invoice',
+            'items.*.invoice_ctg' => 'nullable|string',
             'items.*.pendapatan_idr' => 'required|numeric|min:0',
             'items.*.pendapatan_usd' => 'required|numeric|min:0',
-            'items.*.kurs_usd' => 'required|numeric|min:0',
-            'items.*.tgl_kurs_usd' => 'nullable|date',
             'items.*.hpp_ops' => 'required|numeric|min:0',
             'items.*.hargajual_idr' => 'required|numeric|min:0',
         ], [
@@ -124,18 +133,23 @@ class JoContractController extends Controller
             'id_md_area.required' => 'Area is required',
             'id_md_area.exists' => 'Selected area does not exist',
             'title.required' => 'Title is required',
+            'global_kurs_usd.required' => 'Exchange rate is required',
+            'global_tgl_kurs_usd.required' => 'Exchange rate date is required',
             'items.required' => 'At least one item is required',
             'items.min' => 'At least one item is required',
-            'items.*.id_md_invoice.required' => 'Invoice is required',
+            'items.*.id_md_invoice.required' => 'Invoice is required for each item',
             'items.*.id_md_invoice.exists' => 'Selected invoice does not exist',
-            'items.*.pendapatan_idr.required' => 'Revenue IDR is required',
-            'items.*.pendapatan_usd.required' => 'Revenue USD is required',
-            'items.*.kurs_usd.required' => 'Exchange rate is required',
-            'items.*.hpp_ops.required' => 'HPP Operational is required',
-            'items.*.hargajual_idr.required' => 'Selling price is required',
+            'items.*.pendapatan_idr.required' => 'Revenue IDR is required for each item',
+            'items.*.pendapatan_usd.required' => 'Revenue USD is required for each item',
+            'items.*.hpp_ops.required' => 'HPP Operational is required for each item',
+            'items.*.hargajual_idr.required' => 'Selling price is required for each item',
         ]);
 
         if ($validator->fails()) {
+            Log::error('JO Contract Validation Failed', [
+                'errors' => $validator->errors()->toArray()
+            ]);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -154,6 +168,16 @@ class JoContractController extends Controller
             $lastJoContract = JoContract::orderBy('id_jo_cont', 'desc')->first();
             $newJoContId = $lastJoContract ? $lastJoContract->id_jo_cont + 1 : 1;
 
+            Log::info('Creating JO Contract', [
+                'new_id' => $newJoContId,
+                'contract_data' => [
+                    'id_md_cont' => $request->id_md_cont,
+                    'id_md_area' => $request->id_md_area,
+                    'title' => $request->title,
+                    'note' => $request->note,
+                ]
+            ]);
+
             // Create JO Contract
             $joContract = JoContract::create([
                 'id_jo_cont' => $newJoContId,
@@ -163,27 +187,59 @@ class JoContractController extends Controller
                 'note' => $request->note,
             ]);
 
+            Log::info('JO Contract Created Successfully', [
+                'jo_contract_id' => $joContract->id_jo_cont
+            ]);
+
+            // Get global kurs
+            $globalKursUsd = $request->global_kurs_usd;
+            $globalTglKursUsd = $request->global_tgl_kurs_usd;
+
             // Create JO Contract Items
             $lastItem = JoContractItem::orderBy('id_jo_cont_item', 'desc')->first();
             $itemIdCounter = $lastItem ? $lastItem->id_jo_cont_item : 0;
 
-            foreach ($request->items as $item) {
+            foreach ($request->items as $index => $item) {
                 $itemIdCounter++;
 
-                JoContractItem::create([
+                Log::info('Creating JO Contract Item', [
+                    'item_index' => $index,
+                    'item_id' => $itemIdCounter,
+                    'item_data' => [
+                        'id_jo_cont' => $newJoContId,
+                        'id_md_invoice' => $item['id_md_invoice'],
+                        'pendapatan_idr' => $item['pendapatan_idr'],
+                        'pendapatan_usd' => $item['pendapatan_usd'],
+                        'kurs_usd' => $globalKursUsd,
+                        'tgl_kurs_usd' => $globalTglKursUsd,
+                        'hpp_ops' => $item['hpp_ops'],
+                        'hargajual_idr' => $item['hargajual_idr'],
+                    ]
+                ]);
+
+                $createdItem = JoContractItem::create([
                     'id_jo_cont_item' => $itemIdCounter,
                     'id_jo_cont' => $newJoContId,
                     'id_md_invoice' => $item['id_md_invoice'],
                     'pendapatan_idr' => $item['pendapatan_idr'],
                     'pendapatan_usd' => $item['pendapatan_usd'],
-                    'kurs_usd' => $item['kurs_usd'],
-                    'tgl_kurs_usd' => $item['tgl_kurs_usd'] ?? null,
+                    'kurs_usd' => $globalKursUsd, // Menggunakan global kurs
+                    'tgl_kurs_usd' => $globalTglKursUsd, // Menggunakan global tanggal kurs
                     'hpp_ops' => $item['hpp_ops'],
                     'hargajual_idr' => $item['hargajual_idr'],
+                ]);
+
+                Log::info('JO Contract Item Created', [
+                    'item_id' => $createdItem->id_jo_cont_item
                 ]);
             }
 
             DB::commit();
+
+            Log::info('JO Contract Transaction Committed Successfully', [
+                'jo_contract_id' => $newJoContId,
+                'total_items' => count($request->items)
+            ]);
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -199,16 +255,27 @@ class JoContractController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
+            Log::error('JO Contract Store Failed', [
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'error_line' => $e->getLine(),
+                'error_file' => $e->getFile()
+            ]);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error creating JO contract: ' . $e->getMessage()
+                    'message' => 'Error creating JO contract: ' . $e->getMessage(),
+                    'error_detail' => [
+                        'line' => $e->getLine(),
+                        'file' => $e->getFile()
+                    ]
                 ], 500);
             }
 
             return back()
                 ->withInput()
-                ->with('error', 'Error creating JO contract: ' . $e->getMessage());
+                ->with('error', 'Error creating JO contract: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')');
         }
     }
 
@@ -217,12 +284,30 @@ class JoContractController extends Controller
      */
     public function show(Request $request, $id)
     {
+        Log::info('=== JO Contract Show Request START ===', [
+            'id' => $id,
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'user_id' => auth()->id() ?? 'guest',
+            'ip' => $request->ip()
+        ]);
+
         try {
+            Log::info('Attempting to load JO Contract', [
+                'id' => $id
+            ]);
+
             $joContract = JoContract::with([
                 'contract.customer',
                 'area',
                 'items.invoice'
             ])->findOrFail($id);
+
+            Log::info('JO Contract loaded successfully', [
+                'id' => $joContract->id_jo_cont,
+                'title' => $joContract->title,
+                'items_count' => $joContract->items->count()
+            ]);
 
             // Calculate summary
             $summary = [
@@ -233,7 +318,10 @@ class JoContractController extends Controller
                 'total_selling_price' => $joContract->items->sum('hargajual_idr'),
             ];
 
+            Log::info('Summary calculated', $summary);
+
             if ($request->expectsJson()) {
+                Log::info('Returning JSON response');
                 return response()->json([
                     'success' => true,
                     'data' => $joContract,
@@ -241,8 +329,27 @@ class JoContractController extends Controller
                 ]);
             }
 
+            Log::info('Attempting to load view: data.jo-contract.show');
+
+            // Check if view exists
+            if (!view()->exists('data.jo-contract.show')) {
+                Log::error('VIEW NOT FOUND: data.jo-contract.show', [
+                    'expected_path' => 'resources/views/data/jo-contract/show.blade.php',
+                    'searched_paths' => config('view.paths')
+                ]);
+
+                return back()->with('error', 'View file not found: data.jo-contract.show');
+            }
+
+            Log::info('View exists, rendering...');
+
             return view('data.jo-contract.show', compact('joContract', 'summary'));
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('JO Contract NOT FOUND in database', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -251,6 +358,25 @@ class JoContractController extends Controller
             }
 
             return back()->with('error', 'JO Contract not found');
+        } catch (\Exception $e) {
+            Log::error('JO Contract Show Failed', [
+                'id' => $id,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'error_line' => $e->getLine(),
+                'error_file' => $e->getFile()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error loading JO Contract: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->with('error', 'Error loading JO Contract: ' . $e->getMessage());
+        } finally {
+            Log::info('=== JO Contract Show Request END ===');
         }
     }
 
@@ -259,17 +385,77 @@ class JoContractController extends Controller
      */
     public function edit($id)
     {
+        Log::info('=== JO Contract Edit Request START ===', [
+            'id' => $id,
+            'url' => request()->fullUrl(),
+            'method' => request()->method(),
+            'user_id' => auth()->id() ?? 'guest',
+            'ip' => request()->ip()
+        ]);
+
         try {
-            $joContract = JoContract::findOrFail($id);
+            Log::info('Attempting to load JO Contract for editing', [
+                'id' => $id
+            ]);
+
+            $joContract = JoContract::with(['items.invoice'])->findOrFail($id);
+
+            Log::info('JO Contract loaded successfully', [
+                'id' => $joContract->id_jo_cont,
+                'title' => $joContract->title,
+                'items_count' => $joContract->items->count()
+            ]);
+
+            Log::info('Loading related data (contracts, areas, invoices)');
 
             $contracts = Contract::with('customer')
                 ->orderBy('no_contract')
                 ->get();
+
+            Log::info('Contracts loaded', ['count' => $contracts->count()]);
+
             $areas = Area::orderBy('area')->get();
 
-            return view('data.jo-contract.edit', compact('joContract', 'contracts', 'areas'));
+            Log::info('Areas loaded', ['count' => $areas->count()]);
+
+            $invoices = Invoice::orderBy('id')->get();
+
+            Log::info('Invoices loaded', ['count' => $invoices->count()]);
+
+            Log::info('Attempting to load view: data.jo-contract.edit');
+
+            // Check if view exists
+            if (!view()->exists('data.jo-contract.edit')) {
+                Log::error('VIEW NOT FOUND: data.jo-contract.edit', [
+                    'expected_path' => 'resources/views/data/jo-contract/edit.blade.php',
+                    'searched_paths' => config('view.paths')
+                ]);
+
+                return back()->with('error', 'View file not found: data.jo-contract.edit');
+            }
+
+            Log::info('View exists, rendering...');
+
+            return view('data.jo-contract.edit', compact('joContract', 'contracts', 'areas', 'invoices'));
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('JO Contract NOT FOUND in database', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            return back()->with('error', 'JO Contract not found in database');
         } catch (\Exception $e) {
-            return back()->with('error', 'JO Contract not found');
+            Log::error('JO Contract Edit Failed', [
+                'id' => $id,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'error_line' => $e->getLine(),
+                'error_file' => $e->getFile()
+            ]);
+
+            return back()->with('error', 'Error loading JO Contract: ' . $e->getMessage());
+        } finally {
+            Log::info('=== JO Contract Edit Request END ===');
         }
     }
 
@@ -278,20 +464,47 @@ class JoContractController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // Log input data untuk debugging
+        Log::info('JO Contract Update Request', [
+            'id' => $id,
+            'all_data' => $request->all()
+        ]);
+
         $validator = Validator::make($request->all(), [
             'id_md_cont' => 'required|exists:a02_md_contract,id_md_cont',
             'id_md_area' => 'required|exists:a03_md_area,id_md_area',
             'title' => 'required|string|max:255',
             'note' => 'nullable|string',
+
+            // Global kurs validation
+            'global_kurs_usd' => 'required|numeric|min:0',
+            'global_tgl_kurs_usd' => 'required|date',
+
+            // Validation untuk items
+            'items' => 'required|array|min:1',
+            'items.*.id_md_invoice' => 'required|exists:a04_md_invoice,id_md_invoice',
+            'items.*.pendapatan_idr' => 'required|numeric|min:0',
+            'items.*.pendapatan_usd' => 'required|numeric|min:0',
+            'items.*.hpp_ops' => 'required|numeric|min:0',
+            'items.*.hargajual_idr' => 'required|numeric|min:0',
         ], [
             'id_md_cont.required' => 'Contract is required',
             'id_md_cont.exists' => 'Selected contract does not exist',
             'id_md_area.required' => 'Area is required',
             'id_md_area.exists' => 'Selected area does not exist',
             'title.required' => 'Title is required',
+            'global_kurs_usd.required' => 'Exchange rate is required',
+            'global_tgl_kurs_usd.required' => 'Exchange rate date is required',
+            'items.required' => 'At least one item is required',
+            'items.min' => 'At least one item is required',
         ]);
 
         if ($validator->fails()) {
+            Log::error('JO Contract Update Validation Failed', [
+                'id' => $id,
+                'errors' => $validator->errors()->toArray()
+            ]);
+
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -308,6 +521,12 @@ class JoContractController extends Controller
         try {
             $joContract = JoContract::findOrFail($id);
 
+            Log::info('Updating JO Contract', [
+                'id' => $id,
+                'old_data' => $joContract->toArray()
+            ]);
+
+            // Update JO Contract
             $joContract->update([
                 'id_md_cont' => $request->id_md_cont,
                 'id_md_area' => $request->id_md_area,
@@ -315,32 +534,104 @@ class JoContractController extends Controller
                 'note' => $request->note,
             ]);
 
+            Log::info('JO Contract Updated Successfully', [
+                'id' => $id
+            ]);
+
+            // Delete old items
+            Log::info('Deleting old JO Contract Items', [
+                'jo_cont_id' => $id,
+                'old_items_count' => $joContract->items()->count()
+            ]);
+
+            $joContract->items()->delete(); // Soft delete
+
+            // Get global kurs
+            $globalKursUsd = $request->global_kurs_usd;
+            $globalTglKursUsd = $request->global_tgl_kurs_usd;
+
+            // Create new items
+            $lastItem = JoContractItem::withTrashed()->orderBy('id_jo_cont_item', 'desc')->first();
+            $itemIdCounter = $lastItem ? $lastItem->id_jo_cont_item : 0;
+
+            foreach ($request->items as $index => $item) {
+                $itemIdCounter++;
+
+                Log::info('Creating new JO Contract Item', [
+                    'item_index' => $index,
+                    'item_id' => $itemIdCounter,
+                    'item_data' => [
+                        'id_jo_cont' => $id,
+                        'id_md_invoice' => $item['id_md_invoice'],
+                        'pendapatan_idr' => $item['pendapatan_idr'],
+                        'pendapatan_usd' => $item['pendapatan_usd'],
+                        'kurs_usd' => $globalKursUsd,
+                        'tgl_kurs_usd' => $globalTglKursUsd,
+                        'hpp_ops' => $item['hpp_ops'],
+                        'hargajual_idr' => $item['hargajual_idr'],
+                    ]
+                ]);
+
+                $createdItem = JoContractItem::create([
+                    'id_jo_cont_item' => $itemIdCounter,
+                    'id_jo_cont' => $id,
+                    'id_md_invoice' => $item['id_md_invoice'],
+                    'pendapatan_idr' => $item['pendapatan_idr'],
+                    'pendapatan_usd' => $item['pendapatan_usd'],
+                    'kurs_usd' => $globalKursUsd,
+                    'tgl_kurs_usd' => $globalTglKursUsd,
+                    'hpp_ops' => $item['hpp_ops'],
+                    'hargajual_idr' => $item['hargajual_idr'],
+                ]);
+
+                Log::info('JO Contract Item Created', [
+                    'item_id' => $createdItem->id_jo_cont_item
+                ]);
+            }
+
             DB::commit();
+
+            Log::info('JO Contract Update Transaction Committed Successfully', [
+                'jo_contract_id' => $id,
+                'total_new_items' => count($request->items)
+            ]);
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => 'JO Contract successfully updated',
-                    'data' => $joContract
+                    'data' => $joContract->load('items')
                 ]);
             }
 
             return redirect()
-                ->route('jo-contract.index')
-                ->with('success', 'JO Contract successfully updated');
+                ->route('jo-contract.show', $id)
+                ->with('success', 'JO Contract successfully updated with ' . count($request->items) . ' item(s)');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('JO Contract Update Failed', [
+                'id' => $id,
+                'error_message' => $e->getMessage(),
+                'error_trace' => $e->getTraceAsString(),
+                'error_line' => $e->getLine(),
+                'error_file' => $e->getFile()
+            ]);
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error updating JO contract: ' . $e->getMessage()
+                    'message' => 'Error updating JO contract: ' . $e->getMessage(),
+                    'error_detail' => [
+                        'line' => $e->getLine(),
+                        'file' => $e->getFile()
+                    ]
                 ], 500);
             }
 
             return back()
                 ->withInput()
-                ->with('error', 'Error updating JO contract: ' . $e->getMessage());
+                ->with('error', 'Error updating JO contract: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')');
         }
     }
 
