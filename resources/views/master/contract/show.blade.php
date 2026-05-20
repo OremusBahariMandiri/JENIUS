@@ -60,7 +60,7 @@
                         <div class="col-md-6">
                             <label class="text-muted small">Expenditure Value</label>
                             <p class="mb-0">
-                                <strong class="text-success fs-5">Rp {{ number_format($contract->expenditure, 0, ',', '.') }}</strong>
+                                <strong class="text-success fs-5">Rp {{ number_format($contract->expenditure, 2, ',', '.') }}</strong>
                             </p>
                         </div>
                         <div class="col-md-6">
@@ -96,6 +96,7 @@
                     $today = now();
                     $remaining = $contract->date_end >= $today ? $today->diffInDays($contract->date_end) : 0;
                     $total = $contract->date_start->diffInDays($contract->date_end);
+                    $progress = $total > 0 ? (($total - $remaining) / $total) * 100 : 0;
                     @endphp
 
                     <div class="mb-3">
@@ -105,9 +106,6 @@
                             <span><i class="fas fa-hourglass-end me-2"></i>Remaining: {{ $remaining }} days</span>
                         </div>
                         <div class="progress" style="height: 20px;">
-                            @php
-                            $progress = $total > 0 ? (($total - $remaining) / $total) * 100 : 0;
-                            @endphp
                             <div class="progress-bar bg-success" role="progressbar" style="width: {{ $progress }}%">
                                 {{ number_format($progress, 1) }}%
                             </div>
@@ -167,8 +165,8 @@
                             <small class="text-muted">Contract Status</small>
                             <h4 class="mb-0">{{ $summary['status'] }}</h4>
                         </div>
-                        <div class="stats-icon" style="background: {{ $summary['status'] == 'Active' ? 'var(--light-green)' : '#e5e7eb' }}; color: {{ $summary['status'] == 'Active' ? 'var(--primary-green)' : '#6b7280' }};">
-                            <i class="fas {{ $summary['status'] == 'Active' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
+                        <div class="stats-icon bg-{{ $summary['status'] == 'Active' ? 'success' : 'secondary' }} bg-opacity-25 p-3 rounded">
+                            <i class="fas {{ $summary['status'] == 'Active' ? 'fa-check-circle' : 'fa-times-circle' }} text-{{ $summary['status'] == 'Active' ? 'success' : 'secondary' }} fs-4"></i>
                         </div>
                     </div>
 
@@ -177,8 +175,8 @@
                             <small class="text-muted">Days Remaining</small>
                             <h3 class="mb-0 text-primary">{{ $summary['remaining_days'] }}</h3>
                         </div>
-                        <div class="stats-icon" style="background: #bfdbfe; color: #3b82f6;">
-                            <i class="fas fa-calendar-day"></i>
+                        <div class="stats-icon bg-primary bg-opacity-25 p-3 rounded">
+                            <i class="fas fa-calendar-day text-primary fs-4"></i>
                         </div>
                     </div>
 
@@ -187,8 +185,8 @@
                             <small class="text-muted">Total Items</small>
                             <h3 class="mb-0 text-dark">{{ $summary['total_items'] }}</h3>
                         </div>
-                        <div class="stats-icon" style="background: #fee2e2; color: #ef4444;">
-                            <i class="fas fa-list"></i>
+                        <div class="stats-icon bg-danger bg-opacity-25 p-3 rounded">
+                            <i class="fas fa-list text-danger fs-4"></i>
                         </div>
                     </div>
                 </div>

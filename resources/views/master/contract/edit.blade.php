@@ -17,7 +17,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">Edit Contract Form</h5>
@@ -63,11 +63,13 @@
                             <label class="form-label">Expenditure Value <span class="text-danger">*</span></label>
                             <div class="input-group">
                                 <span class="input-group-text">Rp</span>
-                                <input type="number" name="expenditure" class="form-control @error('expenditure') is-invalid @enderror" value="{{ old('expenditure', $contract->expenditure) }}" placeholder="0" min="0" step="0.01" required>
+                                <input type="text" id="expenditure_display" class="form-control @error('expenditure') is-invalid @enderror" value="{{ old('expenditure') ? number_format(old('expenditure'), 2, ',', '.') : number_format($contract->expenditure, 2, ',', '.') }}" placeholder="0,00" required>
+                                <input type="hidden" name="expenditure" id="expenditure_value" value="{{ old('expenditure', $contract->expenditure) }}">
                                 @error('expenditure')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
+                            <small class="text-muted">Contoh: ketik 5000 menjadi 5.000,00</small>
                         </div>
 
                         <div class="row mb-3">
@@ -107,36 +109,145 @@
                 </div>
             </div>
         </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Update Information</h6>
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr>
-                            <td width="40%">Created</td>
-                            <td>: {{ $contract->created_at->format('d/m/Y H:i') }}</td>
-                        </tr>
-                        <tr>
-                            <td>Last Updated</td>
-                            <td>: {{ $contract->updated_at->format('d/m/Y H:i') }}</td>
-                        </tr>
-                        <tr>
-                            <td>Status</td>
-                            <td>:
-                                @if($contract->date_end >= now())
-                                <span class="badge bg-success">Active</span>
-                                @else
-                                <span class="badge bg-secondary">Expired</span>
-                                @endif
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const expenditureDisplay = document.getElementById('expenditure_display');
+    const expenditureValue = document.getElementById('expenditure_value');
+
+    // Format number to Rupiah format (1.000.000,00)
+    function formatRupiah(value) {
+        // Remove all non-numeric characters except comma
+        let number = value.replace(/[^\d,]/g, '');
+
+        // Remove existing dots (thousand separator)
+        number = number.replace(/\./g, '');
+
+        if (number === '') return '0,00';
+
+        // Split by comma for decimal handling
+        let parts = number.split(',');
+        let integerPart = parts[0];
+        let decimalPart = parts.length > 1 ? parts[1] : '';
+
+        // Limit decimal to 2 digits
+        if (decimalPart.length > 2) {
+            decimalPart = decimalPart.substring(0, 2);
+        }
+
+        // Add thousand separator to integer part
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+        // Always show decimal with 2 digits
+        if (parts.length > 1) {
+            // User sudah mengetik koma
+            return integerPart + ',' + decimalPart.padEnd(2, '0');
+        } else {
+            // User belum ketik koma, tampilkan ,00
+            return integerPart + ',00';
+        }
+    }
+
+    // Parse formatted Rupiah to number
+    function parseRupiah(value) {
+        let cleaned = value.replace(/\./g, '').replace(',', '.');
+        return cleaned;
+    }
+
+    expenditureDisplay.addEventListener('input', function(e) {
+        // Simpan posisi cursor dari belakang
+        let valueLength = this.value.length;
+        let cursorPosition = this.selectionStart;
+
+        // Hitung posisi dari belakang, tapi jangan hitung ,00 jika cursor di tengah
+        let beforeCursor = this.value.substring(0, cursorPosition);
+        let afterCursor = this.value.substring(cursorPosition);
+
+        // Format value
+        let formatted = formatRupiah(this.value);
+        this.value = formatted;
+
+        // Cari posisi koma
+        let commaIndex = formatted.indexOf(',');
+
+        // Jika cursor sebelumnya sebelum koma atau tidak ada koma di input asli
+        if (!beforeCursor.includes(',')) {
+            // Set cursor sebelum koma
+            let newCommaIndex = this.value.indexOf(',');
+            let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+            let digitsBeforeComma = this.value.substring(0, newCommaIndex).replace(/\D/g, '').length;
+
+            // Hitung posisi baru berdasarkan jumlah digit
+            let newPos = 0;
+            let digitCount = 0;
+            for (let i = 0; i < this.value.length; i++) {
+                if (/\d/.test(this.value[i])) {
+                    digitCount++;
+                    if (digitCount === digitsBeforeCursor) {
+                        newPos = i + 1;
+                        break;
+                    }
+                }
+            }
+
+            this.setSelectionRange(newPos, newPos);
+        } else {
+            // Cursor setelah koma, set di posisi desimal
+            let commaPos = this.value.indexOf(',');
+            let decimalDigits = beforeCursor.split(',')[1]?.replace(/\D/g, '').length || 0;
+            let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+            this.setSelectionRange(newPos, newPos);
+        }
+
+        // Update hidden input
+        expenditureValue.value = parseRupiah(formatted);
+    });
+
+    // Format on blur to ensure proper format
+    expenditureDisplay.addEventListener('blur', function(e) {
+        if (e.target.value && e.target.value !== '0,00') {
+            let formatted = formatRupiah(e.target.value);
+            e.target.value = formatted;
+            expenditureValue.value = parseRupiah(formatted);
+        } else {
+            e.target.value = '0,00';
+            expenditureValue.value = '0';
+        }
+    });
+
+    // Allow only numbers and comma
+    expenditureDisplay.addEventListener('keypress', function(e) {
+        // Allow: backspace, delete, tab, escape, enter
+        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+            // Allow comma (only one)
+            (e.key === ',' && !this.value.includes(',')) ||
+            // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+            return;
+        }
+
+        // Ensure that it is a number and stop the keypress
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
+    });
+
+    // Initialize format jika ada value dari database
+    if (expenditureDisplay.value) {
+        let formatted = formatRupiah(expenditureDisplay.value);
+        expenditureDisplay.value = formatted;
+        expenditureValue.value = parseRupiah(formatted);
+    } else {
+        expenditureDisplay.value = '0,00';
+        expenditureValue.value = '0';
+    }
+});
+</script>
+@endpush
 @endsection

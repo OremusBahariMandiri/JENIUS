@@ -94,7 +94,7 @@
                                 <strong>{{ $contract->contract }}</strong>
                             </td>
                             <td>{{ $contract->customer->customer ?? '-' }}</td>
-                            <td>Rp {{ number_format($contract->expenditure, 0, ',', '.') }}</td>
+                            <td>IDR {{ number_format($contract->expenditure, 2, ',', '.') }}</td>
                             <td>
                                 <small>{{ $contract->date_start->format('d/m/Y') }}</small><br>
                                 <small>{{ $contract->date_end->format('d/m/Y') }}</small>

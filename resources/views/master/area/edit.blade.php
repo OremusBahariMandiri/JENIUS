@@ -17,7 +17,7 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-8">
+        <div class="col-lg-12">
             <div class="card">
                 <div class="card-header bg-white">
                     <h5 class="mb-0">Edit Area Form</h5>
@@ -61,30 +61,6 @@
                             </a>
                         </div>
                     </form>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Update Information</h6>
-                </div>
-                <div class="card-body">
-                    <table class="table table-sm">
-                        <tr>
-                            <td width="40%">Area ID</td>
-                            <td>: <span class="badge bg-secondary">{{ $area->id_md_area }}</span></td>
-                        </tr>
-                        <tr>
-                            <td>Created</td>
-                            <td>: {{ $area->created_at->format('d/m/Y H:i') }}</td>
-                        </tr>
-                        <tr>
-                            <td>Last Updated</td>
-                            <td>: {{ $area->updated_at->format('d/m/Y H:i') }}</td>
-                        </tr>
-                    </table>
                 </div>
             </div>
         </div>
