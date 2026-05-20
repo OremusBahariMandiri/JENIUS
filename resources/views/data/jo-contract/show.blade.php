@@ -2,11 +2,230 @@
 
 @section('title', 'JO Contract Detail')
 
+@push('styles')
+    <style>
+        .required-field::after {
+            content: " *";
+            color: red;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            color: black;
+            box-shadow: 0 4px 15px rgba(207, 207, 207, 0.4);
+        }
+
+        .info-card h6 {
+            color: black;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.9);
+        }
+
+        .info-value {
+            color: rgb(0, 0, 0);
+            text-align: right;
+        }
+
+        .kurs-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .kurs-section h6 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        .kurs-section .form-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .kurs-section .form-control {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            padding: 0.6rem 0.75rem;
+        }
+
+        .table-items {
+            width: 100%;
+            margin-bottom: 1rem;
+            background-color: transparent;
+        }
+
+        .table-items thead th {
+            background-color: #ececec;
+            color: rgb(0, 0, 0);
+            border: 1px solid #34495e;
+            padding: 14px 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            vertical-align: middle;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .table-items tbody td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            vertical-align: middle;
+            background-color: #fff;
+        }
+
+        .table-items tbody tr:hover td:not(.category-cell) {
+            background-color: #f8f9fa;
+        }
+
+        /* Category Cell Styling - MERGED CELL */
+        .category-cell {
+            background: #f8f9fa !important;
+            color: #2c3e50 !important;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-right: 2px solid #dee2e6 !important;
+            text-align: center;
+            vertical-align: middle;
+            position: relative;
+            padding: 10px !important;
+        }
+
+        .category-cell .category-content {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .category-cell .category-name {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #495057;
+        }
+
+        .category-cell .category-count {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .currency-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .currency-label {
+            background-color: #34495e;
+            color: white;
+            border: 1px solid #2c3e50;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 6px 0 0 6px;
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .currency-value {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-left: none;
+            padding: 0.5rem;
+            border-radius: 0 6px 6px 0;
+            flex: 1;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .table-footer {
+            background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            font-weight: 700;
+        }
+
+        .table-footer .currency-label {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .item-number-cell {
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            background-color: #ecf0f1 !important;
+            font-size: 0.9rem;
+        }
+
+        .badge-category {
+            background-color: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .action-buttons .btn {
+            border-radius: 8px;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-buttons .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .item-type-cell {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+    </style>
+@endpush
+
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
+    <div class="container-fluid">
+        <!-- Page Header -->
+        <div class="mb-4">
             <h1 class="h3 mb-2 text-gray-800">JO Contract Detail</h1>
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb breadcrumb-custom mb-0">
@@ -16,254 +235,227 @@
                 </ol>
             </nav>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}" class="btn btn-warning">
-                <i class="fas fa-edit me-2"></i>Edit
-            </a>
-            <a href="{{ route('jo-contract.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back
-            </a>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- JO Contract Info Card -->
+                <div class="card mb-4">
+                    <div class="card-header text-black" style="background-color: #d1fae5">
+                        <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-card">
+                            <div class="info-row">
+                                <span class="info-label">JO Contract ID:</span>
+                                <span class="info-value">{{ $joContract->id_jo_cont }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Contract:</span>
+                                <span class="info-value">
+                                    {{ $joContract->contract->no_contract }} - {{ $joContract->contract->contract }}
+                                    @if ($joContract->contract->customer)
+                                        <br><small>({{ $joContract->contract->customer->customer }})</small>
+                                    @endif
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Area:</span>
+                                <span class="info-value">{{ $joContract->area->area }}</span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Title:</span>
+                                <span class="info-value">{{ $joContract->title }}</span>
+                            </div>
+                            @if ($joContract->note)
+                                <div class="info-row">
+                                    <span class="info-label">Note:</span>
+                                    <span class="info-value">{{ $joContract->note }}</span>
+                                </div>
+                            @endif
+                            <div class="info-row">
+                                <span class="info-label">Created At:</span>
+                                <span class="info-value">{{ $joContract->created_at->format('d M Y H:i') }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JO Contract Items -->
+                <div class="card">
+                    <div class="card-header text-black" style="background-color: #d1fae5">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items ({{ $joContract->items->count() }} items)</h5>
+                            <div class="d-flex gap-3 align-items-center">
+                                @php
+                                    $firstItem = $joContract->items->first();
+                                @endphp
+                                @if($firstItem)
+                                    <div>
+                                        <label class="form-label mb-1 small">Kurs Date</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                            value="{{ $firstItem->tgl_kurs_usd ? $firstItem->tgl_kurs_usd->format('d M Y') : '-' }}"
+                                            style="min-width: 150px; background-color: #f8f9fa;" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="form-label mb-1 small">Kurs Rate</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                            value="{{ number_format($firstItem->kurs_usd, 2, ',', '.') }}"
+                                            style="min-width: 130px; background-color: #f8f9fa;" readonly>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-items table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 5%;">No</th>
+                                        <th style="width: 12%;">Category</th>
+                                        <th style="width: 18%;">Item / Invoice Type</th>
+                                        <th style="width: 13%;">Pendapatan IDR</th>
+                                        <th style="width: 13%;">Pendapatan USD</th>
+                                        <th style="width: 13%;">HPP (Biaya Ops)</th>
+                                        <th style="width: 13%;">Harga Jual (IDR)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @php
+                                        $currentCategory = null;
+                                        $categoryItems = [];
+
+                                        // Group items by category
+                                        foreach ($joContract->items as $item) {
+                                            $cat = $item->invoice->invoice_ctg;
+                                            if (!isset($categoryItems[$cat])) {
+                                                $categoryItems[$cat] = [];
+                                            }
+                                            $categoryItems[$cat][] = $item;
+                                        }
+
+                                        $itemNumber = 0;
+                                    @endphp
+
+                                    @foreach ($categoryItems as $category => $items)
+                                        @foreach ($items as $index => $item)
+                                            @php $itemNumber++; @endphp
+                                            <tr>
+                                                <td class="item-number-cell">{{ $itemNumber }}</td>
+
+                                                @if ($index === 0)
+                                                    <td class="category-cell" rowspan="{{ count($items) }}">
+                                                        <div class="category-content">
+                                                            <span class="category-name">{{ $category }}</span>
+                                                            <span class="category-count">{{ count($items) }} item{{ count($items) > 1 ? 's' : '' }}</span>
+                                                        </div>
+                                                    </td>
+                                                @endif
+
+                                                <td class="item-type-cell">
+                                                    {{ $item->invoice->invoice_typ }}
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group">
+                                                        <span class="currency-label">IDR</span>
+                                                        <span class="currency-value">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group">
+                                                        <span class="currency-label">USD</span>
+                                                        <span class="currency-value">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group">
+                                                        <span class="currency-label">IDR</span>
+                                                        <span class="currency-value">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group">
+                                                        <span class="currency-label">IDR</span>
+                                                        <span class="currency-value">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endforeach
+                                </tbody>
+                                <tfoot class="table-footer">
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
+                                        <td>
+                                            <div class="currency-group">
+                                                <span class="currency-label text-black">IDR</span>
+                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                    {{ number_format($summary['total_revenue_idr'], 2, ',', '.') }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="currency-group">
+                                                <span class="currency-label text-black">USD</span>
+                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                    {{ number_format($summary['total_revenue_usd'], 2, ',', '.') }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="currency-group">
+                                                <span class="currency-label text-black">IDR</span>
+                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                    {{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="currency-group">
+                                                <span class="currency-label text-black">IDR</span>
+                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                    {{ number_format($summary['total_selling_price'], 2, ',', '.') }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-buttons mt-4 mb-5">
+                    <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-edit me-2"></i>Edit JO Contract
+                    </a>
+                    <a href="{{ route('jo-contract.index') }}" class="btn btn-secondary btn-lg">
+                        <i class="fas fa-arrow-left me-2"></i>Back to List
+                    </a>
+                    <button type="button" class="btn btn-danger btn-lg" onclick="confirmDelete()">
+                        <i class="fas fa-trash me-2"></i>Delete
+                    </button>
+                </div>
+            </div>
+
         </div>
     </div>
 
-    <div class="row">
-        <!-- JO Contract Information -->
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="text-muted small">JO ID</label>
-                            <p class="mb-0"><span class="badge bg-primary fs-6">JO-{{ $joContract->id_jo_cont }}</span></p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Title</label>
-                            <p class="mb-0 fw-bold">{{ $joContract->title }}</p>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="text-muted small">Contract Number</label>
-                            <p class="mb-0">
-                                @if($joContract->contract)
-                                {{ $joContract->contract->no_contract }}
-                                @else
-                                -
-                                @endif
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Contract Name</label>
-                            <p class="mb-0">
-                                @if($joContract->contract)
-                                {{ $joContract->contract->contract }}
-                                @else
-                                -
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="text-muted small">Customer</label>
-                            <p class="mb-0">
-                                @if($joContract->contract && $joContract->contract->customer)
-                                <i class="fas fa-building text-primary me-2"></i>{{ $joContract->contract->customer->customer }}
-                                @else
-                                -
-                                @endif
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="text-muted small">Area</label>
-                            <p class="mb-0">
-                                @if($joContract->area)
-                                <span class="badge bg-info text-dark fs-6">{{ $joContract->area->area }}</span>
-                                @else
-                                -
-                                @endif
-                            </p>
-                        </div>
-                    </div>
-
-                    @if($joContract->note)
-                    <div class="mb-3">
-                        <label class="text-muted small">Note</label>
-                        <div class="alert alert-light mb-0">{{ $joContract->note }}</div>
-                    </div>
-                    @endif
-
-                    <hr>
-
-                    <div class="row text-muted small">
-                        <div class="col-md-6">
-                            <i class="fas fa-calendar-plus me-2"></i>Created: {{ $joContract->created_at->format('d/m/Y H:i') }}
-                        </div>
-                        <div class="col-md-6">
-                            <i class="fas fa-calendar-check me-2"></i>Updated: {{ $joContract->updated_at->format('d/m/Y H:i') }}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Related Items Section -->
-            @if(isset($summary))
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items</h5>
-                </div>
-                <div class="card-body">
-                    @if($joContract->items->count() > 0)
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Invoice</th>
-                                    <th>Revenue IDR</th>
-                                    <th>Revenue USD</th>
-                                    <th>HPP Ops</th>
-                                    <th>Selling Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($joContract->items as $item)
-                                <tr>
-                                    <td>
-                                        @if($item->invoice)
-                                        <span class="badge bg-secondary">{{ $item->invoice->code }}</span>
-                                        @else
-                                        -
-                                        @endif
-                                    </td>
-                                    <td>Rp {{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
-                                    <td>$ {{ number_format($item->pendapatan_usd, 2, '.', ',') }}</td>
-                                    <td>Rp {{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
-                                    <td>Rp {{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                            <tfoot class="table-light">
-                                <tr>
-                                    <th>Total</th>
-                                    <th>Rp {{ number_format($summary['total_revenue_idr'], 2, ',', '.') }}</th>
-                                    <th>$ {{ number_format($summary['total_revenue_usd'], 2, '.', ',') }}</th>
-                                    <th>Rp {{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}</th>
-                                    <th>Rp {{ number_format($summary['total_selling_price'], 2, ',', '.') }}</th>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    @else
-                    <div class="text-center py-4">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No items for this JO contract yet</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            @endif
-        </div>
-
-        <!-- Statistics Sidebar -->
-        <div class="col-lg-4">
-            @if(isset($summary))
-            <div class="card mb-3">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Statistics</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                        <div>
-                            <small class="text-muted">Total Items</small>
-                            <h3 class="mb-0 text-success">{{ $summary['total_items'] }}</h3>
-                        </div>
-                        <div class="stats-icon green">
-                            <i class="fas fa-list"></i>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                        <div>
-                            <small class="text-muted">Total Revenue IDR</small>
-                            <h5 class="mb-0 text-primary">Rp {{ number_format($summary['total_revenue_idr'], 0, ',', '.') }}</h5>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
-                        <div>
-                            <small class="text-muted">Total Revenue USD</small>
-                            <h5 class="mb-0 text-info">$ {{ number_format($summary['total_revenue_usd'], 2, '.', ',') }}</h5>
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <small class="text-muted">Total Selling Price</small>
-                            <h5 class="mb-0 text-dark">Rp {{ number_format($summary['total_selling_price'], 0, ',', '.') }}</h5>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            @endif
-
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Actions</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}" class="btn btn-warning">
-                            <i class="fas fa-edit me-2"></i>Edit JO Contract
-                        </a>
-                        <button type="button" class="btn btn-danger" onclick="deleteJoContract({{ $joContract->id_jo_cont }})">
-                            <i class="fas fa-trash me-2"></i>Delete JO Contract
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Delete Form -->
-<form id="deleteForm" method="POST" style="display: none;">
-    @csrf
-    @method('DELETE')
-</form>
+    <!-- Delete Form -->
+    <form id="deleteForm" action="{{ route('jo-contract.destroy', $joContract->id_jo_cont) }}" method="POST"
+        style="display: none;">
+        @csrf
+        @method('DELETE')
+    </form>
+@endsection
 
 @push('scripts')
-<script>
-function deleteJoContract(id) {
-    if (confirm('Are you sure you want to delete this JO contract?')) {
-        const form = document.getElementById('deleteForm');
-        form.action = `/data/jo-contract/${id}`;
-        form.submit();
-    }
-}
-</script>
+    <script>
+        function confirmDelete() {
+            if (confirm('Are you sure you want to delete this JO Contract? This action cannot be undone!')) {
+                document.getElementById('deleteForm').submit();
+            }
+        }
+    </script>
 @endpush
-
-@push('styles')
-<style>
-.stats-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-}
-
-.stats-icon.green {
-    background: #d1fae5;
-    color: #10b981;
-}
-</style>
-@endpush
-@endsection
