@@ -195,16 +195,10 @@ class JoContractController extends Controller
             $globalKursUsd = $request->global_kurs_usd;
             $globalTglKursUsd = $request->global_tgl_kurs_usd;
 
-            // Create JO Contract Items
-            $lastItem = JoContractItem::orderBy('id_jo_cont_item', 'desc')->first();
-            $itemIdCounter = $lastItem ? $lastItem->id_jo_cont_item : 0;
-
+            // Create JO Contract Items - ID akan di-generate otomatis oleh Model
             foreach ($request->items as $index => $item) {
-                $itemIdCounter++;
-
                 Log::info('Creating JO Contract Item', [
                     'item_index' => $index,
-                    'item_id' => $itemIdCounter,
                     'item_data' => [
                         'id_jo_cont' => $newJoContId,
                         'id_md_invoice' => $item['id_md_invoice'],
@@ -217,14 +211,15 @@ class JoContractController extends Controller
                     ]
                 ]);
 
+                // ID akan di-generate otomatis oleh boot() method di Model
                 $createdItem = JoContractItem::create([
-                    'id_jo_cont_item' => $itemIdCounter,
+                    // TIDAK PERLU SET id_jo_cont_item, akan auto-generate
                     'id_jo_cont' => $newJoContId,
                     'id_md_invoice' => $item['id_md_invoice'],
                     'pendapatan_idr' => $item['pendapatan_idr'],
                     'pendapatan_usd' => $item['pendapatan_usd'],
-                    'kurs_usd' => $globalKursUsd, // Menggunakan global kurs
-                    'tgl_kurs_usd' => $globalTglKursUsd, // Menggunakan global tanggal kurs
+                    'kurs_usd' => $globalKursUsd,
+                    'tgl_kurs_usd' => $globalTglKursUsd,
                     'hpp_ops' => $item['hpp_ops'],
                     'hargajual_idr' => $item['hargajual_idr'],
                 ]);
@@ -538,44 +533,28 @@ class JoContractController extends Controller
                 'id' => $id
             ]);
 
-            // PERBAIKAN: Force delete old items untuk menghindari duplicate key error
+            // Delete old items
             $oldItems = $joContract->items;
-            Log::info('Force deleting old JO Contract Items', [
+            Log::info('Deleting old JO Contract Items', [
                 'jo_cont_id' => $id,
                 'old_items_count' => $oldItems->count(),
                 'old_item_ids' => $oldItems->pluck('id_jo_cont_item')->toArray()
             ]);
 
-            // Force delete untuk benar-benar menghapus dari database
             foreach ($oldItems as $oldItem) {
-                $oldItem->forceDelete();
+                $oldItem->delete(); // Soft delete
             }
 
-            Log::info('Old items force deleted successfully');
+            Log::info('Old items deleted successfully');
 
             // Get global kurs
             $globalKursUsd = $request->global_kurs_usd;
             $globalTglKursUsd = $request->global_tgl_kurs_usd;
 
-            // PERBAIKAN: Get last item ID dari semua records termasuk yang sudah dihapus
-            $lastItem = JoContractItem::withTrashed()
-                ->orderBy('id_jo_cont_item', 'desc')
-                ->first();
-
-            $itemIdCounter = $lastItem ? $lastItem->id_jo_cont_item : 0;
-
-            Log::info('Starting item ID counter', [
-                'last_item_id' => $itemIdCounter,
-                'items_to_create' => count($request->items)
-            ]);
-
-            // Create new items
+            // Create new items - ID akan di-generate otomatis
             foreach ($request->items as $index => $item) {
-                $itemIdCounter++;
-
                 Log::info('Creating new JO Contract Item', [
                     'item_index' => $index,
-                    'item_id' => $itemIdCounter,
                     'item_data' => [
                         'id_jo_cont' => $id,
                         'id_md_invoice' => $item['id_md_invoice'],
@@ -588,8 +567,8 @@ class JoContractController extends Controller
                     ]
                 ]);
 
+                // ID akan di-generate otomatis
                 $createdItem = JoContractItem::create([
-                    'id_jo_cont_item' => $itemIdCounter,
                     'id_jo_cont' => $id,
                     'id_md_invoice' => $item['id_md_invoice'],
                     'pendapatan_idr' => $item['pendapatan_idr'],

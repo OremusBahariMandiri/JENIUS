@@ -30,14 +30,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Kode Customer <span class="text-danger">*</span></label>
-                                <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code', $customer->code) }}" placeholder="Contoh: CUST001" required>
+                                <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code', $customer->code) }}" required>
                                 @error('code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Nama Customer <span class="text-danger">*</span></label>
-                                <input type="text" name="customer" class="form-control @error('customer') is-invalid @enderror" value="{{ old('customer', $customer->customer) }}" placeholder="Nama customer" required>
+                                <input type="text" name="customer" class="form-control @error('customer') is-invalid @enderror" value="{{ old('customer', $customer->customer) }}" required>
                                 @error('customer')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -46,7 +46,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Alamat</label>
-                            <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="3" placeholder="Alamat lengkap customer">{{ old('address', $customer->address) }}</textarea>
+                            <textarea name="address" class="form-control @error('address') is-invalid @enderror" rows="3">{{ old('address', $customer->address) }}</textarea>
                             @error('address')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -55,14 +55,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Telepon</label>
-                                <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $customer->phone) }}" placeholder="Nomor telepon">
+                                <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $customer->phone) }}" >
                                 @error('phone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Email</label>
-                                <input type="text" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $customer->email) }}" placeholder="email@example.com">
+                                <input type="text" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $customer->email) }}">
                                 @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -72,14 +72,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Website</label>
-                                <input type="text" name="website" class="form-control @error('website') is-invalid @enderror" value="{{ old('website', $customer->website) }}" placeholder="https://example.com">
+                                <input type="text" name="website" class="form-control @error('website') is-invalid @enderror" value="{{ old('website', $customer->website) }}" >
                                 @error('website')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">NPWP</label>
-                                <input type="text" name="npwp" class="form-control @error('npwp') is-invalid @enderror" value="{{ old('npwp', $customer->npwp) }}" placeholder="XX.XXX.XXX.X-XXX.XXX">
+                                <input type="text" name="npwp" class="form-control @error('npwp') is-invalid @enderror" value="{{ old('npwp', $customer->npwp) }}">
                                 @error('npwp')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -88,7 +88,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Catatan</label>
-                            <textarea name="note" class="form-control @error('note') is-invalid @enderror" rows="3" placeholder="Catatan tambahan">{{ old('note', $customer->note) }}</textarea>
+                            <textarea name="note" class="form-control @error('note') is-invalid @enderror" rows="3" >{{ old('note', $customer->note) }}</textarea>
                             @error('note')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
