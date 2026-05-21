@@ -29,7 +29,7 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Invoice Code <span class="text-danger">*</span></label>
-                                <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}" placeholder="e.g. INV001" required>
+                                <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}"  required>
                                 @error('code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -37,7 +37,7 @@
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Invoice Category <span class="text-danger">*</span></label>
-                                <input type="text" name="invoice_ctg" class="form-control @error('invoice_ctg') is-invalid @enderror" value="{{ old('invoice_ctg') }}" placeholder="e.g. Service, Product" list="categoryList" required>
+                                <input type="text" name="invoice_ctg" class="form-control @error('invoice_ctg') is-invalid @enderror" value="{{ old('invoice_ctg') }}" list="categoryList" required>
                                 @error('invoice_ctg')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -53,7 +53,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Invoice Type <span class="text-danger">*</span></label>
-                            <input type="text" name="invoice_typ" class="form-control @error('invoice_typ') is-invalid @enderror" value="{{ old('invoice_typ') }}" placeholder="e.g. Monthly, Annual" list="typeList" required>
+                            <input type="text" name="invoice_typ" class="form-control @error('invoice_typ') is-invalid @enderror" value="{{ old('invoice_typ') }}" list="typeList" required>
                             @error('invoice_typ')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -68,7 +68,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Note</label>
-                            <textarea name="note" class="form-control @error('note') is-invalid @enderror" rows="4" placeholder="Additional notes (optional)">{{ old('note') }}</textarea>
+                            <textarea name="note" class="form-control @error('note') is-invalid @enderror" rows="4" >{{ old('note') }}</textarea>
                             @error('note')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

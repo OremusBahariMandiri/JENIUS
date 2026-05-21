@@ -2,6 +2,7 @@
 
 namespace App\Models\Data;
 
+use App\Helpers\IdGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Master\Invoice;
@@ -36,6 +37,21 @@ class JoContractItem extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->id_jo_cont_item)) {
+                $model->id_jo_cont_item = IdGenerator::generate(
+                    'B02',                  // Kode tabel
+                    'b02_jo_cont_item',     // Nama tabel
+                    'id_jo_cont_item'       // Nama kolom
+                );
+            }
+        });
+    }
 
     // Relationships
     public function joContract()

@@ -29,14 +29,14 @@
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <label class="form-label">Area Code <span class="text-danger">*</span></label>
-                                <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}" placeholder="e.g., AREA001" required>
+                                <input type="text" name="code" class="form-control @error('code') is-invalid @enderror" value="{{ old('code') }}" required>
                                 @error('code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Area Name <span class="text-danger">*</span></label>
-                                <input type="text" name="area" class="form-control @error('area') is-invalid @enderror" value="{{ old('area') }}" placeholder="Area name" required>
+                                <input type="text" name="area" class="form-control @error('area') is-invalid @enderror" value="{{ old('area') }}"  required>
                                 @error('area')
                                 <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -45,7 +45,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Note</label>
-                            <textarea name="note" class="form-control @error('note') is-invalid @enderror" rows="4" placeholder="Additional notes about this area">{{ old('note') }}</textarea>
+                            <textarea name="note" class="form-control @error('note') is-invalid @enderror" rows="4" >{{ old('note') }}</textarea>
                             @error('note')
                             <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

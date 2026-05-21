@@ -353,7 +353,7 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Contract</label>
                                     <select name="id_md_cont" id="id_md_cont"
-                                        class="form-select @error('id_md_cont') is-invalid @enderror" required>
+                                        class="form-select @error('id_md_cont') is-invalid @enderror">
                                         <option value="">Select Contract</option>
                                         @foreach ($contracts as $contract)
                                             <option value="{{ $contract->id_md_cont }}"
@@ -373,7 +373,7 @@
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Area</label>
                                     <select name="id_md_area" id="id_md_area"
-                                        class="form-select @error('id_md_area') is-invalid @enderror" required>
+                                        class="form-select @error('id_md_area') is-invalid @enderror">
                                         <option value="">Select Area</option>
                                         @foreach ($areas as $area)
                                             <option value="{{ $area->id_md_area }}"
@@ -391,8 +391,7 @@
                             <div class="mb-3">
                                 <label class="form-label required-field">Title</label>
                                 <input type="text" name="title" id="title"
-                                    class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}"
-                                    placeholder="JO contract title" required>
+                                    class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}">
                                 @error('title')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -400,8 +399,7 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Note</label>
-                                <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3"
-                                    placeholder="Additional notes (optional)">{{ old('note') }}</textarea>
+                                <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note') }}</textarea>
                                 @error('note')
                                     <div class="invalid-feedback">{{ $message }}</div>
                                 @enderror
@@ -425,7 +423,7 @@
                                     <div>
                                         <label class="form-label mb-1 small">Kurs Rate</label>
                                         <input type="text" id="global_kurs_usd_display"
-                                            class="form-control form-control-sm" value="17.600,00" placeholder="17.600,00" style="min-width: 130px;" required>
+                                            class="form-control form-control-sm" style="min-width: 130px;" required>
                                         <input type="hidden" name="global_kurs_usd" id="global_kurs_usd" value="17600">
                                     </div>
                                 </div>
@@ -521,7 +519,7 @@
         </form>
     </div>
 @endsection
-
+{{-- Script Jo Contract Create --}}
 @push('scripts')
     <script>
         let globalItemNumber = 0;
@@ -529,26 +527,26 @@
 
         // Format Rupiah Helper Functions
         function formatRupiah(value) {
-            let number = value.replace(/[^\d,]/g, '');
-            number = number.replace(/\./g, '');
-            if (number === '') return '0,00';
+    let number = value.replace(/[^\d,]/g, '');
+    number = number.replace(/\./g, '');
+    if (number === '') return '';  // ← UBAH INI dari '0,00' jadi ''
 
-            let parts = number.split(',');
-            let integerPart = parts[0];
-            let decimalPart = parts.length > 1 ? parts[1] : '';
+    let parts = number.split(',');
+    let integerPart = parts[0];
+    let decimalPart = parts.length > 1 ? parts[1] : '';
 
-            if (decimalPart.length > 2) {
-                decimalPart = decimalPart.substring(0, 2);
-            }
+    if (decimalPart.length > 2) {
+        decimalPart = decimalPart.substring(0, 2);
+    }
 
-            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
-            if (parts.length > 1) {
-                return integerPart + ',' + decimalPart.padEnd(2, '0');
-            } else {
-                return integerPart + ',00';
-            }
-        }
+    if (parts.length > 1) {
+        return integerPart + ',' + decimalPart;
+    } else {
+        return integerPart + ',00';
+    }
+}
 
         function parseRupiah(value) {
             let cleaned = value.replace(/\./g, '').replace(',', '.');
@@ -556,62 +554,148 @@
         }
 
         function setupRupiahInput(displayInput, hiddenInput) {
-            displayInput.addEventListener('input', function(e) {
-                let cursorPosition = this.selectionStart;
-                let beforeCursor = this.value.substring(0, cursorPosition);
-                let formatted = formatRupiah(this.value);
+    displayInput.addEventListener('input', function(e) {
+        let cursorPosition = this.selectionStart;
+        let beforeCursor = this.value.substring(0, cursorPosition);
+
+        let formatted = formatRupiah(this.value);
+        this.value = formatted;
+
+        if (!beforeCursor.includes(',')) {
+            let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+            let newPos = 0;
+            let digitCount = 0;
+            for (let i = 0; i < this.value.length; i++) {
+                if (/\d/.test(this.value[i])) {
+                    digitCount++;
+                    if (digitCount === digitsBeforeCursor) {
+                        newPos = i + 1;
+                        break;
+                    }
+                }
+            }
+            this.setSelectionRange(newPos, newPos);
+        } else {
+            let commaPos = this.value.indexOf(',');
+            let decimalDigitsInput = beforeCursor.split(',')[1] || '';
+            let decimalDigits = decimalDigitsInput.length;
+            let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+            this.setSelectionRange(newPos, newPos);
+        }
+
+        hiddenInput.value = parseRupiah(formatted);
+    });
+
+    displayInput.addEventListener('keydown', function(e) {
+        let cursorPosition = this.selectionStart;
+        let selectionEnd = this.selectionEnd;
+        let commaPos = this.value.indexOf(',');
+
+        if (e.key === 'Backspace') {
+            if (cursorPosition !== selectionEnd) {
+                return;
+            }
+
+            if (commaPos !== -1 && cursorPosition > commaPos + 1) {
+                e.preventDefault();
+
+                let posInDecimal = cursorPosition - commaPos - 1;
+                let beforeComma = this.value.substring(0, commaPos);
+                let afterComma = this.value.substring(commaPos + 1);
+
+                let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
+
+                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                let formatted = formatRupiah(newValue);
                 this.value = formatted;
 
-                if (!beforeCursor.includes(',')) {
-                    let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-                    let newPos = 0;
-                    let digitCount = 0;
-                    for (let i = 0; i < this.value.length; i++) {
-                        if (/\d/.test(this.value[i])) {
-                            digitCount++;
-                            if (digitCount === digitsBeforeCursor) {
-                                newPos = i + 1;
-                                break;
-                            }
-                        }
-                    }
-                    this.setSelectionRange(newPos, newPos);
-                } else {
-                    let commaPos = this.value.indexOf(',');
-                    let decimalDigits = beforeCursor.split(',')[1]?.replace(/\D/g, '').length || 0;
-                    let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
-                    this.setSelectionRange(newPos, newPos);
-                }
+                let newCommaPos = this.value.indexOf(',');
+                let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
+                this.setSelectionRange(newCursorPos, newCursorPos);
 
-                hiddenInput.value = parseRupiah(formatted);
-            });
+                hiddenInput.value = parseRupiah(this.value);
+            }
+            else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
+                e.preventDefault();
+            }
+            else if (cursorPosition === commaPos) {
+                e.preventDefault();
+                let beforeComma = this.value.substring(0, commaPos);
+                this.value = beforeComma;
+                this.setSelectionRange(beforeComma.length, beforeComma.length);
+                hiddenInput.value = parseRupiah(this.value);
+            }
+        } else if (e.key === 'Delete') {
+            if (cursorPosition !== selectionEnd) {
+                return;
+            }
 
-            displayInput.addEventListener('blur', function(e) {
-                if (e.target.value && e.target.value !== '0,00') {
-                    let formatted = formatRupiah(e.target.value);
-                    e.target.value = formatted;
-                    hiddenInput.value = parseRupiah(formatted);
-                } else {
-                    e.target.value = '0,00';
-                    hiddenInput.value = '0';
-                }
-            });
+            if (cursorPosition === commaPos) {
+                e.preventDefault();
+                let beforeComma = this.value.substring(0, commaPos);
+                this.value = beforeComma;
+                this.setSelectionRange(beforeComma.length, beforeComma.length);
+                hiddenInput.value = parseRupiah(this.value);
+                return;
+            }
 
-            displayInput.addEventListener('keypress', function(e) {
-                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
-                    (e.key === ',' && !this.value.includes(',')) ||
-                    (e.keyCode === 65 && e.ctrlKey === true) ||
-                    (e.keyCode === 67 && e.ctrlKey === true) ||
-                    (e.keyCode === 86 && e.ctrlKey === true) ||
-                    (e.keyCode === 88 && e.ctrlKey === true)) {
-                    return;
-                }
+            if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
+                e.preventDefault();
 
-                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-                    e.preventDefault();
-                }
-            });
+                let posInDecimal = cursorPosition - commaPos - 1;
+                let beforeComma = this.value.substring(0, commaPos);
+                let afterComma = this.value.substring(commaPos + 1);
+
+                let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
+
+                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                let formatted = formatRupiah(newValue);
+                this.value = formatted;
+
+                let newCommaPos = this.value.indexOf(',');
+                this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
+
+                hiddenInput.value = parseRupiah(this.value);
+            }
         }
+    });
+
+    displayInput.addEventListener('blur', function(e) {
+        if (e.target.value) {
+            if (!e.target.value.includes(',')) {
+                e.target.value = e.target.value + ',00';
+            } else {
+                let parts = e.target.value.split(',');
+                if (parts[1] !== undefined) {
+                    if (parts[1].length === 0) {
+                        e.target.value = parts[0] + ',00';
+                    } else if (parts[1].length < 2) {
+                        e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                    }
+                }
+            }
+            hiddenInput.value = parseRupiah(e.target.value);
+        } else {
+            e.target.value = '';
+            hiddenInput.value = '';
+        }
+    });
+
+    displayInput.addEventListener('keypress', function(e) {
+        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+            (e.key === ',' && !this.value.includes(',')) ||
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true)) {
+            return;
+        }
+
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
+    });
+}
 
         // Setup Global Kurs Input
         const globalKursDisplay = document.getElementById('global_kurs_usd_display');
@@ -665,12 +749,12 @@
             newRow.innerHTML = `
             <td class="item-number-cell">${globalItemNumber}</td>
             <td>
-                <select class="form-select category-dropdown-select" required>
+                <select class="form-select category-dropdown-select">
                     ${categoryOptionsHtml}
                 </select>
             </td>
             <td>
-                <select name="items[${globalItemNumber}][id_md_invoice]" class="form-select invoice-type-select" disabled required>
+                <select name="items[${globalItemNumber}][id_md_invoice]" class="form-select invoice-type-select" disabled>
                     <option value="">Select category first</option>
                 </select>
                 <input type="hidden" name="items[${globalItemNumber}][invoice_ctg]" class="invoice-ctg-input">
@@ -678,29 +762,29 @@
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input revenue-idr-display" value="0,00" required>
-                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_idr]" class="revenue-idr-value" value="0">
+                    <input type="text" class="form-control currency-input revenue-idr-display">
+                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_idr]" class="revenue-idr-value">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">USD</span>
-                    <input type="text" class="form-control currency-input revenue-usd-display" value="0,00" required>
-                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_usd]" class="revenue-usd-value" value="0">
+                    <input type="text" class="form-control currency-input revenue-usd-display">
+                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_usd]" class="revenue-usd-value">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input hpp-display" value="0,00" required>
-                    <input type="hidden" name="items[${globalItemNumber}][hpp_ops]" class="hpp-value" value="0">
+                    <input type="text" class="form-control currency-input hpp-display">
+                    <input type="hidden" name="items[${globalItemNumber}][hpp_ops]" class="hpp-value">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input selling-price-display" value="0,00" readonly style="background-color: #e9ecef;">
-                    <input type="hidden" name="items[${globalItemNumber}][hargajual_idr]" class="selling-price-value" value="0">
+                    <input type="text" class="form-control currency-input selling-price-display" readonly style="background-color: #e9ecef;">
+                    <input type="hidden" name="items[${globalItemNumber}][hargajual_idr]" class="selling-price-value">
                 </div>
             </td>
             <td class="text-center">
