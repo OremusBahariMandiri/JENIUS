@@ -538,22 +538,38 @@ class JoContractController extends Controller
                 'id' => $id
             ]);
 
-            // Delete old items
-            Log::info('Deleting old JO Contract Items', [
+            // PERBAIKAN: Force delete old items untuk menghindari duplicate key error
+            $oldItems = $joContract->items;
+            Log::info('Force deleting old JO Contract Items', [
                 'jo_cont_id' => $id,
-                'old_items_count' => $joContract->items()->count()
+                'old_items_count' => $oldItems->count(),
+                'old_item_ids' => $oldItems->pluck('id_jo_cont_item')->toArray()
             ]);
 
-            $joContract->items()->delete(); // Soft delete
+            // Force delete untuk benar-benar menghapus dari database
+            foreach ($oldItems as $oldItem) {
+                $oldItem->forceDelete();
+            }
+
+            Log::info('Old items force deleted successfully');
 
             // Get global kurs
             $globalKursUsd = $request->global_kurs_usd;
             $globalTglKursUsd = $request->global_tgl_kurs_usd;
 
-            // Create new items
-            $lastItem = JoContractItem::withTrashed()->orderBy('id_jo_cont_item', 'desc')->first();
+            // PERBAIKAN: Get last item ID dari semua records termasuk yang sudah dihapus
+            $lastItem = JoContractItem::withTrashed()
+                ->orderBy('id_jo_cont_item', 'desc')
+                ->first();
+
             $itemIdCounter = $lastItem ? $lastItem->id_jo_cont_item : 0;
 
+            Log::info('Starting item ID counter', [
+                'last_item_id' => $itemIdCounter,
+                'items_to_create' => count($request->items)
+            ]);
+
+            // Create new items
             foreach ($request->items as $index => $item) {
                 $itemIdCounter++;
 
@@ -584,7 +600,7 @@ class JoContractController extends Controller
                     'hargajual_idr' => $item['hargajual_idr'],
                 ]);
 
-                Log::info('JO Contract Item Created', [
+                Log::info('JO Contract Item Created Successfully', [
                     'item_id' => $createdItem->id_jo_cont_item
                 ]);
             }
@@ -600,12 +616,12 @@ class JoContractController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'JO Contract successfully updated',
-                    'data' => $joContract->load('items')
+                    'data' => $joContract->fresh()->load('items')
                 ]);
             }
 
             return redirect()
-                ->route('jo-contract.show', $id)
+                ->route('jo-contract.index')
                 ->with('success', 'JO Contract successfully updated with ' . count($request->items) . ' item(s)');
         } catch (\Exception $e) {
             DB::rollBack();
