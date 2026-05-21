@@ -315,7 +315,6 @@
                                     <div>
                                         <label class="form-label mb-1 small">Kurs Date</label>
                                         @php
-                                            // Get the first item's date or use current date
                                             $firstItem = $joContract->items->first();
                                             $defaultDate = $firstItem && $firstItem->tgl_kurs_usd
                                                 ? $firstItem->tgl_kurs_usd->format('Y-m-d')
@@ -333,10 +332,11 @@
                                                 ? $firstItem->kurs_usd
                                                 : 17600;
                                         @endphp
-                                        <input type="number" name="global_kurs_usd" id="global_kurs_usd"
-                                            class="form-control form-control-sm" step="0.01" min="0"
-                                            value="{{ old('global_kurs_usd', $defaultKurs) }}"
-                                            placeholder="17,600.00" style="min-width: 130px;" required>
+                                        <input type="text" id="global_kurs_usd_display"
+                                            class="form-control form-control-sm"
+                                            value="{{ number_format($defaultKurs, 2, ',', '.') }}"
+                                            placeholder="17.600,00" style="min-width: 130px;" required>
+                                        <input type="hidden" name="global_kurs_usd" id="global_kurs_usd" value="{{ $defaultKurs }}">
                                     </div>
                                 </div>
                             </div>
@@ -413,40 +413,38 @@
                                                     <td>
                                                         <div class="currency-group">
                                                             <span class="currency-label">IDR</span>
-                                                            <input type="number"
-                                                                name="items[{{ $index + 1 }}][pendapatan_idr]"
-                                                                class="form-control currency-input revenue-idr"
-                                                                step="0.01" min="0"
-                                                                value="{{ $item->pendapatan_idr }}" required>
+                                                            <input type="text" class="form-control currency-input revenue-idr-display"
+                                                                value="{{ number_format($item->pendapatan_idr, 2, ',', '.') }}" required>
+                                                            <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_idr]"
+                                                                class="revenue-idr-value" value="{{ $item->pendapatan_idr }}">
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <div class="currency-group">
                                                             <span class="currency-label">USD</span>
-                                                            <input type="number"
-                                                                name="items[{{ $index + 1 }}][pendapatan_usd]"
-                                                                class="form-control currency-input revenue-usd"
-                                                                step="0.01" min="0"
-                                                                value="{{ $item->pendapatan_usd }}" required>
+                                                            <input type="text" class="form-control currency-input revenue-usd-display"
+                                                                value="{{ number_format($item->pendapatan_usd, 2, ',', '.') }}" required>
+                                                            <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_usd]"
+                                                                class="revenue-usd-value" value="{{ $item->pendapatan_usd }}">
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <div class="currency-group">
                                                             <span class="currency-label">IDR</span>
-                                                            <input type="number" name="items[{{ $index + 1 }}][hpp_ops]"
-                                                                class="form-control currency-input hpp" step="0.01"
-                                                                min="0" value="{{ $item->hpp_ops }}" required>
+                                                            <input type="text" class="form-control currency-input hpp-display"
+                                                                value="{{ number_format($item->hpp_ops, 2, ',', '.') }}" required>
+                                                            <input type="hidden" name="items[{{ $index + 1 }}][hpp_ops]"
+                                                                class="hpp-value" value="{{ $item->hpp_ops }}">
                                                         </div>
                                                     </td>
                                                     <td>
                                                         <div class="currency-group">
                                                             <span class="currency-label">IDR</span>
-                                                            <input type="number"
-                                                                name="items[{{ $index + 1 }}][hargajual_idr]"
-                                                                class="form-control currency-input selling-price"
-                                                                step="0.01" min="0"
-                                                                value="{{ $item->hargajual_idr }}" readonly
+                                                            <input type="text" class="form-control currency-input selling-price-display"
+                                                                value="{{ number_format($item->hargajual_idr, 2, ',', '.') }}" readonly
                                                                 style="background-color: #e9ecef;">
+                                                            <input type="hidden" name="items[{{ $index + 1 }}][hargajual_idr]"
+                                                                class="selling-price-value" value="{{ $item->hargajual_idr }}">
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
@@ -530,6 +528,97 @@
         let globalItemNumber = {{ $joContract->items->count() }};
         let categories = {};
 
+        // Format Rupiah Helper Functions
+        function formatRupiah(value) {
+            let number = value.replace(/[^\d,]/g, '');
+            number = number.replace(/\./g, '');
+            if (number === '') return '0,00';
+
+            let parts = number.split(',');
+            let integerPart = parts[0];
+            let decimalPart = parts.length > 1 ? parts[1] : '';
+
+            if (decimalPart.length > 2) {
+                decimalPart = decimalPart.substring(0, 2);
+            }
+
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+            if (parts.length > 1) {
+                return integerPart + ',' + decimalPart.padEnd(2, '0');
+            } else {
+                return integerPart + ',00';
+            }
+        }
+
+        function parseRupiah(value) {
+            let cleaned = value.replace(/\./g, '').replace(',', '.');
+            return parseFloat(cleaned) || 0;
+        }
+
+        function setupRupiahInput(displayInput, hiddenInput) {
+            displayInput.addEventListener('input', function(e) {
+                let cursorPosition = this.selectionStart;
+                let beforeCursor = this.value.substring(0, cursorPosition);
+                let formatted = formatRupiah(this.value);
+                this.value = formatted;
+
+                if (!beforeCursor.includes(',')) {
+                    let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+                    let newPos = 0;
+                    let digitCount = 0;
+                    for (let i = 0; i < this.value.length; i++) {
+                        if (/\d/.test(this.value[i])) {
+                            digitCount++;
+                            if (digitCount === digitsBeforeCursor) {
+                                newPos = i + 1;
+                                break;
+                            }
+                        }
+                    }
+                    this.setSelectionRange(newPos, newPos);
+                } else {
+                    let commaPos = this.value.indexOf(',');
+                    let decimalDigits = beforeCursor.split(',')[1]?.replace(/\D/g, '').length || 0;
+                    let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+                    this.setSelectionRange(newPos, newPos);
+                }
+
+                hiddenInput.value = parseRupiah(formatted);
+            });
+
+            displayInput.addEventListener('blur', function(e) {
+                if (e.target.value && e.target.value !== '0,00') {
+                    let formatted = formatRupiah(e.target.value);
+                    e.target.value = formatted;
+                    hiddenInput.value = parseRupiah(formatted);
+                } else {
+                    e.target.value = '0,00';
+                    hiddenInput.value = '0';
+                }
+            });
+
+            displayInput.addEventListener('keypress', function(e) {
+                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                    (e.key === ',' && !this.value.includes(',')) ||
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true)) {
+                    return;
+                }
+
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
+        }
+
+        // Setup Global Kurs Input
+        const globalKursDisplay = document.getElementById('global_kurs_usd_display');
+        const globalKursValue = document.getElementById('global_kurs_usd');
+        setupRupiahInput(globalKursDisplay, globalKursValue);
+
         // Group invoices by category
         const invoicesByCategory = {
             @foreach ($invoices->groupBy('invoice_ctg') as $category => $invoiceGroup)
@@ -610,25 +699,29 @@
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="number" name="items[${globalItemNumber}][pendapatan_idr]" class="form-control currency-input revenue-idr" step="0.01" min="0" value="0" required>
+                    <input type="text" class="form-control currency-input revenue-idr-display" value="0,00" required>
+                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_idr]" class="revenue-idr-value" value="0">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">USD</span>
-                    <input type="number" name="items[${globalItemNumber}][pendapatan_usd]" class="form-control currency-input revenue-usd" step="0.01" min="0" value="0" required>
+                    <input type="text" class="form-control currency-input revenue-usd-display" value="0,00" required>
+                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_usd]" class="revenue-usd-value" value="0">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="number" name="items[${globalItemNumber}][hpp_ops]" class="form-control currency-input hpp" step="0.01" min="0" value="0" required>
+                    <input type="text" class="form-control currency-input hpp-display" value="0,00" required>
+                    <input type="hidden" name="items[${globalItemNumber}][hpp_ops]" class="hpp-value" value="0">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="number" name="items[${globalItemNumber}][hargajual_idr]" class="form-control currency-input selling-price" step="0.01" min="0" value="0" readonly style="background-color: #e9ecef;">
+                    <input type="text" class="form-control currency-input selling-price-display" value="0,00" readonly style="background-color: #e9ecef;">
+                    <input type="hidden" name="items[${globalItemNumber}][hargajual_idr]" class="selling-price-value" value="0">
                 </div>
             </td>
             <td class="text-center">
@@ -822,63 +915,85 @@
             globalItemNumber = itemRows.length;
         }
 
-        // Attach event listeners to item
+        // Attach event listeners to item - WITH RUPIAH FORMAT
         function attachItemEventListeners(row) {
-            const revenueIDR = row.querySelector('.revenue-idr');
-            const revenueUSD = row.querySelector('.revenue-usd');
-            const sellingPrice = row.querySelector('.selling-price');
-            const hpp = row.querySelector('.hpp');
+            const revenueIDRDisplay = row.querySelector('.revenue-idr-display');
+            const revenueIDRValue = row.querySelector('.revenue-idr-value');
+            const revenueUSDDisplay = row.querySelector('.revenue-usd-display');
+            const revenueUSDValue = row.querySelector('.revenue-usd-value');
+            const hppDisplay = row.querySelector('.hpp-display');
+            const hppValue = row.querySelector('.hpp-value');
+            const sellingPriceDisplay = row.querySelector('.selling-price-display');
+            const sellingPriceValue = row.querySelector('.selling-price-value');
+
+            // Setup Rupiah formatting for all inputs
+            setupRupiahInput(revenueIDRDisplay, revenueIDRValue);
+            setupRupiahInput(revenueUSDDisplay, revenueUSDValue);
+            setupRupiahInput(hppDisplay, hppValue);
 
             function calculateSellingPrice() {
-                const kursRate = parseFloat(document.getElementById('global_kurs_usd').value) || 0;
-                const idrValue = parseFloat(revenueIDR.value) || 0;
-                const usdValue = parseFloat(revenueUSD.value) || 0;
+                const kursRate = parseRupiah(globalKursDisplay.value);
+                const idrValue = parseRupiah(revenueIDRDisplay.value);
+                const usdValue = parseRupiah(revenueUSDDisplay.value);
 
+                let sellingPrice = 0;
                 if (idrValue > 0) {
-                    sellingPrice.value = idrValue.toFixed(2);
+                    sellingPrice = idrValue;
                 } else if (usdValue > 0) {
-                    sellingPrice.value = (usdValue * kursRate).toFixed(2);
-                } else {
-                    sellingPrice.value = '0.00';
+                    sellingPrice = usdValue * kursRate;
                 }
 
+                sellingPriceValue.value = sellingPrice.toFixed(2);
+                sellingPriceDisplay.value = formatRupiah(sellingPrice.toFixed(2).replace('.', ','));
                 updateGrandTotal();
             }
 
-            revenueIDR.addEventListener('input', function() {
-                if (parseFloat(this.value) > 0) {
-                    revenueUSD.value = '0';
+            // Event listener untuk Pendapatan IDR
+            revenueIDRDisplay.addEventListener('input', function() {
+                // Jika IDR diisi, kosongkan USD
+                if (parseRupiah(this.value) > 0) {
+                    revenueUSDDisplay.value = '0,00';
+                    revenueUSDValue.value = '0';
                 }
                 calculateSellingPrice();
             });
 
-            revenueUSD.addEventListener('input', function() {
-                if (parseFloat(this.value) > 0) {
-                    revenueIDR.value = '0';
+            // Event listener untuk Pendapatan USD
+            revenueUSDDisplay.addEventListener('input', function() {
+                // Jika USD diisi, kosongkan IDR
+                if (parseRupiah(this.value) > 0) {
+                    revenueIDRDisplay.value = '0,00';
+                    revenueIDRValue.value = '0';
                 }
                 calculateSellingPrice();
             });
 
-            hpp.addEventListener('input', updateGrandTotal);
+            // Event listener untuk HPP
+            hppDisplay.addEventListener('input', updateGrandTotal);
         }
 
-        // Global kurs change handler
-        document.getElementById('global_kurs_usd').addEventListener('input', function() {
+        // Global kurs change handler - UPDATED WITH RUPIAH FORMAT
+        globalKursDisplay.addEventListener('input', function() {
             const allRows = document.querySelectorAll('.item-row');
             allRows.forEach(row => {
-                const revenueIDR = row.querySelector('.revenue-idr');
-                const revenueUSD = row.querySelector('.revenue-usd');
-                const sellingPrice = row.querySelector('.selling-price');
+                const revenueIDRDisplay = row.querySelector('.revenue-idr-display');
+                const revenueUSDDisplay = row.querySelector('.revenue-usd-display');
+                const sellingPriceDisplay = row.querySelector('.selling-price-display');
+                const sellingPriceValue = row.querySelector('.selling-price-value');
 
-                const idrValue = parseFloat(revenueIDR.value) || 0;
-                const usdValue = parseFloat(revenueUSD.value) || 0;
-                const kursRate = parseFloat(this.value) || 0;
+                const idrValue = parseRupiah(revenueIDRDisplay.value);
+                const usdValue = parseRupiah(revenueUSDDisplay.value);
+                const kursRate = parseRupiah(this.value);
 
+                let sellingPrice = 0;
                 if (idrValue > 0) {
-                    sellingPrice.value = idrValue.toFixed(2);
+                    sellingPrice = idrValue;
                 } else if (usdValue > 0) {
-                    sellingPrice.value = (usdValue * kursRate).toFixed(2);
+                    sellingPrice = usdValue * kursRate;
                 }
+
+                sellingPriceValue.value = sellingPrice.toFixed(2);
+                sellingPriceDisplay.value = formatRupiah(sellingPrice.toFixed(2).replace('.', ','));
             });
             updateGrandTotal();
         });
@@ -892,10 +1007,10 @@
             let totalSelling = 0;
 
             itemRows.forEach(row => {
-                const idr = parseFloat(row.querySelector('.revenue-idr')?.value) || 0;
-                const usd = parseFloat(row.querySelector('.revenue-usd')?.value) || 0;
-                const hpp = parseFloat(row.querySelector('.hpp')?.value) || 0;
-                const selling = parseFloat(row.querySelector('.selling-price')?.value) || 0;
+                const idr = parseRupiah(row.querySelector('.revenue-idr-display')?.value || '0');
+                const usd = parseRupiah(row.querySelector('.revenue-usd-display')?.value || '0');
+                const hpp = parseRupiah(row.querySelector('.hpp-display')?.value || '0');
+                const selling = parseRupiah(row.querySelector('.selling-price-display')?.value || '0');
 
                 totalRevenueIDR += idr;
                 totalRevenueUSD += usd;
