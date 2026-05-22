@@ -212,6 +212,7 @@ $(document).ready(function() {
         lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
         order: [[1, 'asc']],
         columnDefs: [
+            { orderable: false, targets: 0 },
             { orderable: false, targets: -1 }
         ],
         language: {
@@ -228,9 +229,19 @@ $(document).ready(function() {
             }
         },
         autoWidth: true,
-        drawCallback: function() {
-            this.api().columns.adjust();
-        }
+        drawCallback: function(settings) {
+        var api = this.api();
+        var pageInfo = api.page.info();
+        var startIndex = pageInfo.start;
+
+        // Update nomor urut pada kolom pertama
+        api.column(0, {page: 'current'}).nodes().each(function(cell, i) {
+            cell.innerHTML = startIndex + i + 1;
+        });
+
+        // Adjust columns
+        api.columns.adjust();
+    }
     });
 
     let resizeTimer;

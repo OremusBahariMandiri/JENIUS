@@ -20,20 +20,20 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 30px 20px;
+            padding: 20px;
         }
 
         .login-wrapper {
-            max-width: 1300px;
+            max-width: 950px;
             width: 100%;
             display: grid;
-            grid-template-columns: 1.4fr 1fr;
+            grid-template-columns: 1fr 1fr;
             gap: 0;
             background: white;
-            border-radius: 24px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-            min-height: 650px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            min-height: 580px;
         }
 
         .login-image {
@@ -41,22 +41,22 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 80px 60px;
+            padding: 60px 40px;
             position: relative;
         }
 
         .image-content {
             text-align: center;
-            max-width: 550px;
+            max-width: 100%;
         }
 
         .image-content img {
             width: 100%;
             height: auto;
-            max-height: 500px;
+            max-height: 260px;
             object-fit: contain;
-            filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.25));
-            margin-bottom: 30px;
+            filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.2));
+            margin-bottom: 24px;
         }
 
         .image-text {
@@ -64,22 +64,22 @@
         }
 
         .image-text h2 {
-            font-size: 48px;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 16px;
-            letter-spacing: 2px;
+            margin-bottom: 12px;
+            letter-spacing: 1.5px;
         }
 
         .image-text .clock {
-            font-size: 32px;
+            font-size: 20px;
             font-weight: 500;
             opacity: 0.95;
             font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
 
         .login-form {
-            padding: 80px 70px;
+            padding: 60px 40px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -87,39 +87,39 @@
         }
 
         .login-header {
-            margin-bottom: 45px;
+            margin-bottom: 40px;
         }
 
         .login-header h1 {
-            font-size: 34px;
+            font-size: 24px;
             font-weight: 700;
             color: #0f172a;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
         }
 
         .login-header p {
-            font-size: 16px;
+            font-size: 14px;
             color: #64748b;
         }
 
         .form-group {
-            margin-bottom: 26px;
+            margin-bottom: 24px;
         }
 
         .form-group label {
             display: block;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             color: #334155;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
         }
 
         .form-control {
             width: 100%;
-            padding: 16px 18px;
+            padding: 12px 14px;
             border: 2px solid #e2e8f0;
-            border-radius: 12px;
-            font-size: 15px;
+            border-radius: 10px;
+            font-size: 14px;
             transition: all 0.3s ease;
             background: #f8fafc;
         }
@@ -132,7 +132,7 @@
             outline: none;
             border-color: #10b981;
             background: white;
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.1);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
         .form-control.is-invalid {
@@ -143,29 +143,29 @@
         .invalid-feedback {
             display: block;
             color: #ef4444;
-            font-size: 13px;
-            margin-top: 8px;
+            font-size: 12px;
+            margin-top: 6px;
             font-weight: 500;
         }
 
         .btn-login {
             width: 100%;
-            padding: 16px;
+            padding: 13px;
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
-            border-radius: 12px;
-            font-size: 16px;
+            border-radius: 10px;
+            font-size: 15px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
-            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            margin-top: 8px;
         }
 
         .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.4);
         }
 
         .btn-login:active {
@@ -174,9 +174,9 @@
 
         .spinner {
             display: none;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-top-color: white;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
@@ -195,60 +195,59 @@
             display: none;
         }
 
-        @media (max-width: 1024px) {
-            .login-wrapper {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .login-image {
-                padding: 60px 40px;
-            }
-
-            .image-content img {
-                max-height: 400px;
-            }
-
-            .image-text h2 {
-                font-size: 38px;
-            }
-
-            .image-text .clock {
-                font-size: 26px;
-            }
-
-            .login-form {
-                padding: 60px 50px;
-            }
-        }
-
         @media (max-width: 768px) {
             .login-wrapper {
                 grid-template-columns: 1fr;
+                max-width: 420px;
             }
 
             .login-image {
-                padding: 50px 30px;
+                padding: 35px 30px;
             }
 
             .image-content img {
-                max-height: 280px;
-                margin-bottom: 20px;
+                max-height: 150px;
+                margin-bottom: 18px;
             }
 
             .image-text h2 {
-                font-size: 32px;
+                font-size: 24px;
             }
 
             .image-text .clock {
-                font-size: 22px;
+                font-size: 18px;
             }
 
             .login-form {
-                padding: 50px 35px;
+                padding: 40px 30px;
             }
 
             .login-header h1 {
-                font-size: 26px;
+                font-size: 22px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 15px;
+            }
+
+            .login-form {
+                padding: 35px 25px;
+            }
+
+            .login-header h1 {
+                font-size: 20px;
+            }
+
+            .form-control {
+                padding: 11px 12px;
+                font-size: 13px;
+            }
+
+            .btn-login {
+                padding: 12px;
+                font-size: 14px;
             }
         }
     </style>
