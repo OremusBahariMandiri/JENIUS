@@ -10,9 +10,17 @@ use Illuminate\Support\Facades\Validator;
 
 class CustomerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('check.access:customer')->only('index');
+        $this->middleware('check.access:customer,detail')->only('show');
+        $this->middleware('check.access:customer,tambah')->only('create', 'store');
+        $this->middleware('check.access:customer,ubah')->only('edit', 'update');
+        $this->middleware('check.access:customer,hapus')->only('destroy', 'bulkDelete');
+    }
+
     public function index(Request $request)
     {
         try {
@@ -84,7 +92,7 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:a01_md_customer,code',
+            // 'code' => 'required|string|max:50|unique:a01_md_customer,code',
             'customer' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
@@ -93,8 +101,8 @@ class CustomerController extends Controller
             'npwp' => 'nullable|string|max:50',
             'note' => 'nullable|string',
         ], [
-            'code.required' => 'Kode customer wajib diisi',
-            'code.unique' => 'Kode customer sudah digunakan',
+            // 'code.required' => 'Kode customer wajib diisi',
+            // 'code.unique' => 'Kode customer sudah digunakan',
             'customer.required' => 'Nama customer wajib diisi',
         ]);
 
@@ -221,7 +229,7 @@ class CustomerController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:a01_md_customer,code,' . $id . ',id_md_cust,deleted_at,NULL',
+            // 'code' => 'required|string|max:50|unique:a01_md_customer,code,' . $id . ',id_md_cust,deleted_at,NULL',
             'customer' => 'required|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
@@ -230,8 +238,8 @@ class CustomerController extends Controller
             'npwp' => 'nullable|string|max:50',
             'note' => 'nullable|string',
         ], [
-            'code.required' => 'Kode customer wajib diisi',
-            'code.unique' => 'Kode customer sudah digunakan',
+            // 'code.required' => 'Kode customer wajib diisi',
+            // 'code.unique' => 'Kode customer sudah digunakan',
             'customer.required' => 'Nama customer wajib diisi',
         ]);
 

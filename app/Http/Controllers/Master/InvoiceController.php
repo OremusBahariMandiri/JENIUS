@@ -10,9 +10,16 @@ use Illuminate\Support\Facades\Validator;
 
 class InvoiceController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('check.access:invoice')->only('index');
+        $this->middleware('check.access:invoice,detail')->only('show');
+        $this->middleware('check.access:invoice,tambah')->only('create', 'store');
+        $this->middleware('check.access:invoice,ubah')->only('edit', 'update');
+        $this->middleware('check.access:invoice,hapus')->only('destroy', 'bulkDelete');
+    }
+
     public function index(Request $request)
     {
         try {
@@ -21,11 +28,11 @@ class InvoiceController extends Controller
             // Search functionality
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
-                      ->orWhere('invoice_ctg', 'like', "%{$search}%")
-                      ->orWhere('invoice_typ', 'like', "%{$search}%")
-                      ->orWhere('note', 'like', "%{$search}%");
+                        ->orWhere('invoice_ctg', 'like', "%{$search}%")
+                        ->orWhere('invoice_typ', 'like', "%{$search}%")
+                        ->orWhere('note', 'like', "%{$search}%");
                 });
             }
 
@@ -90,13 +97,13 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:a04_md_invoice,code',
+            // 'code' => 'nullable|string|max:50|unique:a04_md_invoice,code',
             'invoice_ctg' => 'required|string|max:100',
             'invoice_typ' => 'required|string|max:100',
             'note' => 'nullable|string',
         ], [
-            'code.required' => 'Kode invoice wajib diisi',
-            'code.unique' => 'Kode invoice sudah digunakan',
+            // 'code.required' => 'Kode invoice wajib diisi',
+            // 'code.unique' => 'Kode invoice sudah digunakan',
             'invoice_ctg.required' => 'Kategori invoice wajib diisi',
             'invoice_typ.required' => 'Tipe invoice wajib diisi',
         ]);
@@ -220,13 +227,13 @@ class InvoiceController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:a04_md_invoice,code,' . $id . ',id_md_invoice',
+            // 'code' => 'required|string|max:50|unique:a04_md_invoice,code,' . $id . ',id_md_invoice',
             'invoice_ctg' => 'required|string|max:100',
             'invoice_typ' => 'required|string|max:100',
             'note' => 'nullable|string',
         ], [
-            'code.required' => 'Kode invoice wajib diisi',
-            'code.unique' => 'Kode invoice sudah digunakan',
+            // 'code.required' => 'Kode invoice wajib diisi',
+            // 'code.unique' => 'Kode invoice sudah digunakan',
             'invoice_ctg.required' => 'Kategori invoice wajib diisi',
             'invoice_typ.required' => 'Tipe invoice wajib diisi',
         ]);
@@ -354,7 +361,7 @@ class InvoiceController extends Controller
 
             $invoices = $query->orderBy('code', 'asc')
                 ->get()
-                ->map(function($invoice) {
+                ->map(function ($invoice) {
                     return [
                         'id' => $invoice->id_md_invoice,
                         'text' => $invoice->code . ' - ' . $invoice->invoice_ctg . ' (' . $invoice->invoice_typ . ')',
@@ -386,7 +393,7 @@ class InvoiceController extends Controller
                 ->filter()
                 ->sort()
                 ->values()
-                ->map(function($category) {
+                ->map(function ($category) {
                     return [
                         'id' => $category,
                         'text' => $category
@@ -422,7 +429,7 @@ class InvoiceController extends Controller
                 ->filter()
                 ->sort()
                 ->values()
-                ->map(function($type) {
+                ->map(function ($type) {
                     return [
                         'id' => $type,
                         'text' => $type
@@ -454,7 +461,7 @@ class InvoiceController extends Controller
                 'by_category' => Invoice::select('invoice_ctg', DB::raw('count(*) as total'))
                     ->groupBy('invoice_ctg')
                     ->get()
-                    ->map(function($item) {
+                    ->map(function ($item) {
                         return [
                             'category' => $item->invoice_ctg,
                             'total' => $item->total
@@ -463,7 +470,7 @@ class InvoiceController extends Controller
                 'by_type' => Invoice::select('invoice_typ', DB::raw('count(*) as total'))
                     ->groupBy('invoice_typ')
                     ->get()
-                    ->map(function($item) {
+                    ->map(function ($item) {
                         return [
                             'type' => $item->invoice_typ,
                             'total' => $item->total

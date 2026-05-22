@@ -3,127 +3,102 @@
 @section('title', 'Area Detail')
 
 @section('content')
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h1 class="h3 mb-2 text-gray-800">Area Detail</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb breadcrumb-custom mb-0">
-                    <li class="breadcrumb-item"><a href="#">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('area.index') }}">Area</a></li>
-                    <li class="breadcrumb-item active">Detail</li>
-                </ol>
-            </nav>
-        </div>
-        <div class="d-flex gap-2">
-            <a href="{{ route('area.edit', $area->id_md_area) }}" class="btn btn-warning">
-                <i class="fas fa-edit me-2"></i>Edit
-            </a>
-            <a href="{{ route('area.index') }}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left me-2"></i>Back
-            </a>
-        </div>
-    </div>
-
+<div class="container-fluid areaPage">
     <div class="row">
-        <!-- Area Information -->
-        <div class="col-lg-8">
-            <div class="card mb-4">
-                <div class="card-header bg-success text-white">
-                    <h5 class="mb-0"><i class="fas fa-globe me-2"></i>Area Information</h5>
+        <!-- Main Content -->
+        <div class="col-lg-12">
+            <!-- Area Information Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
+                    <span class="fw-bold"><i class="fas fa-info-circle me-2"></i>Area Information</span>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('area.edit', $area->id_md_area) }}" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit me-1"></i>Edit
+                        </a>
+                        <a href="{{ route('area.index') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i>Back
+                        </a>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="text-muted small">Area ID</label>
-                            <p class="mb-0"><span class="badge bg-secondary fs-6">{{ $area->id_md_area }}</span></p>
+                <div class="card-body p-4">
+                    <!-- Area Name -->
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase mb-2">Area Name</label>
+                        <h3 class="mb-0 text-primary">
+                            <i class="fas fa-map-marker-alt me-2"></i>{{ $area->area }}
+                        </h3>
+                    </div>
+
+                    <hr>
+
+                    <!-- Details Grid -->
+                    <div class="row mb-4">
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small text-uppercase mb-2">Code</label>
+                            <div>
+                                <span class="badge bg-primary fs-6 px-3 py-2">
+                                    {{ $area->code ?? '-' }}
+                                </span>
+                            </div>
                         </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Area Code</label>
-                            <p class="mb-0"><span class="badge bg-primary fs-6">{{ $area->code }}</span></p>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="text-muted small">Status</label>
-                            <p class="mb-0"><span class="badge bg-success fs-6">Active</span></p>
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small text-uppercase mb-2">Status</label>
+                            <div>
+                                <span class="badge bg-success fs-6 px-3 py-2">
+                                    <i class="fas fa-check-circle me-1"></i>Active
+                                </span>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="text-muted small">Area Name</label>
-                        <p class="mb-0">
-                            <i class="fas fa-map-marker-alt text-success me-2"></i>
-                            <strong class="fs-5">{{ $area->area }}</strong>
-                        </p>
-                    </div>
-
+                    <!-- Note Section -->
                     @if($area->note)
-                    <div class="mb-3">
-                        <label class="text-muted small">Note</label>
-                        <div class="alert alert-light mb-0">
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase mb-2">Note</label>
+                        <div class="alert alert-light border-start border-4 border-warning mb-0">
                             <i class="fas fa-sticky-note text-warning me-2"></i>
                             {{ $area->note }}
+                        </div>
+                    </div>
+                    @else
+                    <div class="mb-4">
+                        <label class="text-muted small text-uppercase mb-2">Note</label>
+                        <div class="alert alert-light mb-0">
+                            <i class="fas fa-info-circle text-muted me-2"></i>
+                            <em class="text-muted">No notes available</em>
                         </div>
                     </div>
                     @endif
 
                     <hr>
 
-                    <div class="row text-muted small">
-                        <div class="col-md-6">
-                            <i class="fas fa-calendar-plus me-2"></i>Created: {{ $area->created_at->format('d/m/Y H:i') }}
+                    <!-- Timestamps -->
+                    <div class="row text-muted">
+                        <div class="col-md-6 mb-2">
+                            <i class="fas fa-calendar-plus me-2 text-primary"></i>
+                            <strong>Created:</strong><br>
+                            <span class="ms-4">{{ $area->created_at->format('d F Y, H:i') }}</span>
                         </div>
-                        <div class="col-md-6">
-                            <i class="fas fa-calendar-check me-2"></i>Updated: {{ $area->updated_at->format('d/m/Y H:i') }}
+                        <div class="col-md-6 mb-2">
+                            <i class="fas fa-calendar-check me-2 text-success"></i>
+                            <strong>Last Updated:</strong><br>
+                            <span class="ms-4">{{ $area->updated_at->format('d F Y, H:i') }}</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Related Contracts Section -->
-            <div class="card">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0"><i class="fas fa-link me-2"></i>Related Job Orders</h5>
+            <!-- Related Job Orders Card -->
+            <div class="card shadow">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-briefcase me-2 text-primary"></i>Related Job Orders</h5>
+                    <span class="badge bg-light text-dark">0 items</span>
                 </div>
                 <div class="card-body">
-                    <div class="text-center py-4">
-                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">No job orders available for this area</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Sidebar -->
-        <div class="col-lg-4">
-            <div class="card mb-3">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-map me-2"></i>Location Information</h6>
-                </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="text-muted small">Code</label>
-                        <h4 class="mb-0 text-primary">{{ $area->code }}</h4>
-                    </div>
-                    <div>
-                        <label class="text-muted small">Area Name</label>
-                        <h5 class="mb-0">{{ $area->area }}</h5>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header bg-light">
-                    <h6 class="mb-0"><i class="fas fa-cog me-2"></i>Actions</h6>
-                </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ route('area.edit', $area->id_md_area) }}" class="btn btn-warning">
-                            <i class="fas fa-edit me-2"></i>Edit Area
-                        </a>
-                        <button type="button" class="btn btn-danger" onclick="deleteArea({{ $area->id_md_area }})">
-                            <i class="fas fa-trash me-2"></i>Delete Area
-                        </button>
+                    <div class="text-center py-5">
+                        <i class="fas fa-inbox fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Job Orders Available</h5>
+                        <p class="text-muted mb-0">There are no job orders associated with this area yet.</p>
                     </div>
                 </div>
             </div>
@@ -132,20 +107,94 @@
 </div>
 
 <!-- Delete Form -->
-<form id="deleteForm" method="POST" style="display: none;">
+<form id="deleteForm" method="POST" action="{{ route('area.destroy', $area->id_md_area) }}" style="display: none;">
     @csrf
     @method('DELETE')
 </form>
+@endsection
+
+@push('styles')
+<style>
+    .areaPage .card {
+        border: none;
+        border-radius: 10px;
+    }
+
+    .areaPage .card-header {
+        border-radius: 10px 10px 0 0 !important;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .areaPage .badge {
+        border-radius: 6px;
+        font-weight: 500;
+    }
+
+    .areaPage .alert {
+        border-radius: 8px;
+    }
+
+    .areaPage h3 {
+        color: var(--primary-green);
+    }
+
+    .areaPage .text-primary {
+        color: var(--primary-green) !important;
+    }
+
+    .areaPage .btn {
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+
+    .areaPage .btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .areaPage .btn-success {
+        background-color: var(--primary-green);
+        border-color: var(--primary-green);
+    }
+
+    .areaPage .btn-success:hover {
+        background-color: var(--dark-green);
+        border-color: var(--dark-green);
+    }
+
+    .areaPage .border-bottom {
+        border-color: #e2e8f0 !important;
+    }
+</style>
+@endpush
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-function deleteArea(id) {
-    if (confirm('Are you sure you want to delete this area?')) {
-        const form = document.getElementById('deleteForm');
-        form.action = `/master/area/${id}`;
-        form.submit();
-    }
+function deleteArea() {
+    Swal.fire({
+        title: 'Delete Area?',
+        html: `Area <strong>{{ $area->area }}</strong> will be permanently deleted.<br><small class="text-muted">This action cannot be undone.</small>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
+        cancelButtonText: 'Cancel',
+        focusCancel: true,
+        customClass: {
+            confirmButton: 'btn btn-danger',
+            cancelButton: 'btn btn-secondary'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            document.getElementById('deleteForm').submit();
+        }
+    });
 }
 </script>
 @endpush
-@endsection

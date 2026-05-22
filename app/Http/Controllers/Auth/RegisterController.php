@@ -7,20 +7,10 @@ use App\Models\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class RegisterController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Register Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles the registration of new users as well as their
-    | validation and creation. By default this controller uses a trait to
-    | provide this functionality without requiring any additional code.
-    |
-    */
-
     use RegistersUsers;
 
     /**
@@ -43,28 +33,48 @@ class RegisterController extends Controller
     /**
      * Get a validator for an incoming registration request.
      *
+     * @param  array  $data
      * @return \Illuminate\Contracts\Validation\Validator
      */
     protected function validator(array $data)
     {
         return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'employee_id_number' => ['required', 'string', 'max:255', 'unique:users'],
+            'full_name' => ['required', 'string', 'max:255'],
+            'department' => ['required', 'string', 'max:255'],
+            'position' => ['required', 'string', 'max:255'],
+            'work_location' => ['required', 'string', 'max:255'],
+            'password' => ['required', 'string', 'min:6', 'confirmed'],
+        ], [
+            'employee_id_number.required' => 'Employee ID wajib diisi',
+            'employee_id_number.unique' => 'Employee ID sudah terdaftar',
+            'full_name.required' => 'Nama Lengkap wajib diisi',
+            'department.required' => 'Departemen wajib diisi',
+            'position.required' => 'Jabatan wajib diisi',
+            'work_location.required' => 'Wilayah Kerja wajib diisi',
+            'password.required' => 'Password wajib diisi',
+            'password.min' => 'Password minimal 6 karakter',
+            'password.confirmed' => 'Konfirmasi password tidak cocok',
         ]);
     }
 
     /**
      * Create a new user instance after a valid registration.
      *
-     * @return User
+     * @param  array  $data
+     * @return \App\Models\User
      */
     protected function create(array $data)
     {
         return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
+            'employee_code' => 'EMP-' . strtoupper(Str::random(8)),
+            'employee_id_number' => $data['employee_id_number'],
+            'full_name' => $data['full_name'],
+            'department' => $data['department'],
+            'position' => $data['position'],
+            'work_location' => $data['work_location'],
             'password' => Hash::make($data['password']),
+            'is_admin' => false,
         ]);
     }
 }
