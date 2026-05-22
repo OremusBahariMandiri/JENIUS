@@ -15,114 +15,117 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            background: #f1f5f9;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 30px 20px;
         }
 
-        .login-container {
-            display: flex;
-            max-width: 1100px;
+        .login-wrapper {
+            max-width: 1300px;
             width: 100%;
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 0;
             background: white;
             border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 20px 60px rgba(34, 197, 94, 0.15);
-            min-height: 600px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+            min-height: 650px;
         }
 
         .login-image {
-            flex: 1;
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 60px;
+            padding: 80px 60px;
             position: relative;
-            overflow: hidden;
         }
 
-        .login-image::before {
-            content: '';
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            top: -100px;
-            right: -100px;
+        .image-content {
+            text-align: center;
+            max-width: 550px;
         }
 
-        .login-image::after {
-            content: '';
-            position: absolute;
-            width: 200px;
-            height: 200px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 50%;
-            bottom: -50px;
-            left: -50px;
-        }
-
-        .login-image img {
-            max-width: 100%;
+        .image-content img {
+            width: 100%;
             height: auto;
-            position: relative;
-            z-index: 1;
-            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+            max-height: 500px;
+            object-fit: contain;
+            filter: drop-shadow(0 15px 35px rgba(0, 0, 0, 0.25));
+            margin-bottom: 30px;
+        }
+
+        .image-text {
+            color: white;
+        }
+
+        .image-text h2 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+        }
+
+        .image-text .clock {
+            font-size: 32px;
+            font-weight: 500;
+            opacity: 0.95;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
         }
 
         .login-form {
-            flex: 1;
-            padding: 60px 50px;
+            padding: 80px 70px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            background: white;
         }
 
         .login-header {
-            margin-bottom: 40px;
+            margin-bottom: 45px;
         }
 
         .login-header h1 {
-            font-size: 32px;
+            font-size: 34px;
             font-weight: 700;
-            color: #065f46;
-            margin-bottom: 8px;
+            color: #0f172a;
+            margin-bottom: 10px;
         }
 
         .login-header p {
             font-size: 16px;
-            color: #6b7280;
+            color: #64748b;
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 26px;
         }
 
         .form-group label {
             display: block;
             font-size: 14px;
             font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-        }
-
-        .input-wrapper {
-            position: relative;
+            color: #334155;
+            margin-bottom: 10px;
         }
 
         .form-control {
             width: 100%;
-            padding: 14px 16px;
-            border: 2px solid #e5e7eb;
+            padding: 16px 18px;
+            border: 2px solid #e2e8f0;
             border-radius: 12px;
             font-size: 15px;
             transition: all 0.3s ease;
-            background: #f9fafb;
+            background: #f8fafc;
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
         }
 
         .form-control:focus {
@@ -141,35 +144,13 @@
             display: block;
             color: #ef4444;
             font-size: 13px;
-            margin-top: 6px;
+            margin-top: 8px;
             font-weight: 500;
-        }
-
-        .form-check {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 24px;
-        }
-
-        .form-check-input {
-            width: 18px;
-            height: 18px;
-            border: 2px solid #d1d5db;
-            border-radius: 4px;
-            cursor: pointer;
-            accent-color: #10b981;
-        }
-
-        .form-check-label {
-            font-size: 14px;
-            color: #6b7280;
-            cursor: pointer;
         }
 
         .btn-login {
             width: 100%;
-            padding: 14px;
+            padding: 16px;
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             border: none;
@@ -178,55 +159,19 @@
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+            margin-top: 10px;
         }
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
         }
 
         .btn-login:active {
             transform: translateY(0);
         }
 
-        .forgot-password {
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .forgot-password a {
-            color: #10b981;
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
-            transition: color 0.3s ease;
-        }
-
-        .forgot-password a:hover {
-            color: #059669;
-        }
-
-        @media (max-width: 768px) {
-            .login-container {
-                flex-direction: column;
-            }
-
-            .login-image {
-                padding: 40px;
-                min-height: 250px;
-            }
-
-            .login-form {
-                padding: 40px 30px;
-            }
-
-            .login-header h1 {
-                font-size: 26px;
-            }
-        }
-
-        /* Loading spinner */
         .spinner {
             display: none;
             width: 20px;
@@ -249,17 +194,78 @@
         .btn-login.loading span {
             display: none;
         }
+
+        @media (max-width: 1024px) {
+            .login-wrapper {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .login-image {
+                padding: 60px 40px;
+            }
+
+            .image-content img {
+                max-height: 400px;
+            }
+
+            .image-text h2 {
+                font-size: 38px;
+            }
+
+            .image-text .clock {
+                font-size: 26px;
+            }
+
+            .login-form {
+                padding: 60px 50px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .login-wrapper {
+                grid-template-columns: 1fr;
+            }
+
+            .login-image {
+                padding: 50px 30px;
+            }
+
+            .image-content img {
+                max-height: 280px;
+                margin-bottom: 20px;
+            }
+
+            .image-text h2 {
+                font-size: 32px;
+            }
+
+            .image-text .clock {
+                font-size: 22px;
+            }
+
+            .login-form {
+                padding: 50px 35px;
+            }
+
+            .login-header h1 {
+                font-size: 26px;
+            }
+        }
     </style>
 </head>
 
 <body>
-    <div class="login-container">
-        <!-- Left Side - Image -->
+    <div class="login-wrapper">
         <div class="login-image">
-            <img src="{{ asset('images/jenius-main.png') }}" alt="Jenius">
+            <div class="image-content">
+                <img src="{{ asset('images/jenius-main.png') }}" alt="Jenius">
+                <div class="image-text">
+                    <h2>JENIUS APP</h2>
+                    <div class="clock" id="clock"></div>
+                </div>
+            </div>
         </div>
 
-        <!-- Right Side - Form -->
         <div class="login-form">
             <div class="login-header">
                 <h1>Welcome Back</h1>
@@ -270,41 +276,36 @@
                 @csrf
 
                 <div class="form-group">
-                    <label for="email">Email Address</label>
-                    <div class="input-wrapper">
-                        <input id="email" type="email"
-                            class="form-control @error('email') is-invalid @enderror"
-                            name="email"
-                            value="{{ old('email') }}"
-                            required
-                            autocomplete="email"
-                            autofocus
-                            placeholder="Enter your email">
+                    <label for="employee_id_number">Employee ID</label>
+                    <input id="employee_id_number" type="text"
+                        class="form-control @error('employee_id_number') is-invalid @enderror"
+                        name="employee_id_number"
+                        value="{{ old('employee_id_number') }}"
+                        required
+                        autofocus
+                        placeholder="Enter your Employee ID">
 
-                        @error('email')
-                            <span class="invalid-feedback">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                        @enderror
-                    </div>
+                    @error('employee_id_number')
+                        <span class="invalid-feedback">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                 </div>
 
                 <div class="form-group">
                     <label for="password">Password</label>
-                    <div class="input-wrapper">
-                        <input id="password" type="password"
-                            class="form-control @error('password') is-invalid @enderror"
-                            name="password"
-                            required
-                            autocomplete="current-password"
-                            placeholder="Enter your password">
+                    <input id="password" type="password"
+                        class="form-control @error('password') is-invalid @enderror"
+                        name="password"
+                        required
+                        autocomplete="current-password"
+                        placeholder="Enter your password">
 
-                        @error('password')
-                            <span class="invalid-feedback">
-                                <strong>{{ $message }}</strong>
-                            </span>
-                        @enderror
-                    </div>
+                    @error('password')
+                        <span class="invalid-feedback">
+                            <strong>{{ $message }}</strong>
+                        </span>
+                    @enderror
                 </div>
 
                 <button type="submit" class="btn-login" id="loginBtn">
@@ -316,22 +317,24 @@
     </div>
 
     <script>
-        // Add loading state to button on submit
+        // Clock function
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        // Update clock every second
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Login form handling
         document.getElementById('loginForm').addEventListener('submit', function() {
             const btn = document.getElementById('loginBtn');
             btn.classList.add('loading');
             btn.disabled = true;
-        });
-
-        // Add focus effects
-        const inputs = document.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.addEventListener('focus', function() {
-                this.parentElement.style.transform = 'scale(1.01)';
-            });
-            input.addEventListener('blur', function() {
-                this.parentElement.style.transform = 'scale(1)';
-            });
         });
     </script>
 </body>

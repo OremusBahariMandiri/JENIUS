@@ -13,6 +13,17 @@ class AreaController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+     public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('check.access:area')->only('index');
+        $this->middleware('check.access:area,detail')->only('show');
+        $this->middleware('check.access:area,tambah')->only('create', 'store');
+        $this->middleware('check.access:area,ubah')->only('edit', 'update');
+        $this->middleware('check.access:area,hapus')->only('destroy', 'bulkDelete');
+    }
+
     public function index(Request $request)
     {
         try {
@@ -21,10 +32,10 @@ class AreaController extends Controller
             // Search functionality
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
-                      ->orWhere('area', 'like', "%{$search}%")
-                      ->orWhere('note', 'like', "%{$search}%");
+                        ->orWhere('area', 'like', "%{$search}%")
+                        ->orWhere('note', 'like', "%{$search}%");
                 });
             }
 
@@ -71,12 +82,12 @@ class AreaController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:a03_md_area,code',
+            // 'code' => 'required|string|max:50|unique:a03_md_area,code',
             'area' => 'required|string|max:255',
             'note' => 'nullable|string',
         ], [
-            'code.required' => 'Kode area wajib diisi',
-            'code.unique' => 'Kode area sudah digunakan',
+            // 'code.required' => 'Kode area wajib diisi',
+            // 'code.unique' => 'Kode area sudah digunakan',
             'area.required' => 'Nama area wajib diisi',
         ]);
 
@@ -183,12 +194,12 @@ class AreaController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:50|unique:a03_md_area,code,' . $id . ',id_md_area',
+            // 'code' => 'required|string|max:50|unique:a03_md_area,code,' . $id . ',id_md_area',
             'area' => 'required|string|max:255',
             'note' => 'nullable|string',
         ], [
-            'code.required' => 'Kode area wajib diisi',
-            'code.unique' => 'Kode area sudah digunakan',
+            // 'code.required' => 'Kode area wajib diisi',
+            // 'code.unique' => 'Kode area sudah digunakan',
             'area.required' => 'Nama area wajib diisi',
         ]);
 
@@ -303,7 +314,7 @@ class AreaController extends Controller
             $areas = Area::select('id_md_area', 'code', 'area')
                 ->orderBy('area', 'asc')
                 ->get()
-                ->map(function($area) {
+                ->map(function ($area) {
                     return [
                         'id' => $area->id_md_area,
                         'text' => $area->code . ' - ' . $area->area

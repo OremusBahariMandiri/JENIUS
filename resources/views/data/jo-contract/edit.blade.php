@@ -4,36 +4,77 @@
 
 @push('styles')
     <style>
+        .joContractEditPage .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .joContractEditPage .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .joContractEditPage .form-control:focus,
+        .joContractEditPage .form-select:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+        }
+
+        .joContractEditPage .form-label {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .joContractEditPage .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .joContractEditPage .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .joContractEditPage .btn-success {
+            background-color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+
+        .joContractEditPage .btn-success:hover {
+            background-color: var(--dark-green);
+            border-color: var(--dark-green);
+        }
+
         .required-field::after {
             content: " *";
-            color: red;
+            color: #dc3545;
+            font-weight: 600;
         }
 
         .kurs-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 10px;
+            padding: 20px;
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .kurs-section h6 {
-            color: white;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         .kurs-section .form-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
         }
 
         .kurs-section .form-control {
             background: rgba(255, 255, 255, 0.95);
             border: none;
-            padding: 0.6rem 0.75rem;
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
         }
 
         .table-items {
@@ -43,10 +84,10 @@
         }
 
         .table-items thead th {
-            background-color: #ececec;
-            color: rgb(0, 0, 0);
-            border: 1px solid #34495e;
-            padding: 14px 10px;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            border: 1px solid #dee2e6;
+            padding: 12px 10px;
             font-weight: 600;
             font-size: 0.875rem;
             vertical-align: middle;
@@ -67,9 +108,8 @@
             background-color: #f8f9fa;
         }
 
-        /* Category Cell Styling - MERGED CELL */
         .category-cell {
-            background: #f8f9fa !important;
+            background: #f1f5f9 !important;
             color: #2c3e50 !important;
             font-weight: 600;
             font-size: 0.875rem;
@@ -90,12 +130,12 @@
         .category-cell .category-name {
             font-weight: 700;
             font-size: 0.85rem;
-            color: #495057;
+            color: #1e293b;
         }
 
         .category-cell .category-count {
-            background: #e9ecef;
-            color: #495057;
+            background: #e2e8f0;
+            color: #475569;
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 0.7rem;
@@ -106,10 +146,10 @@
             background: #dc3545;
             border: none;
             color: white;
-            border-radius: 4px;
+            border-radius: 6px;
             width: 100%;
-            max-width: 60px;
-            padding: 3px 8px;
+            max-width: 70px;
+            padding: 4px 8px;
             font-size: 0.7rem;
             cursor: pointer;
             transition: all 0.3s;
@@ -131,8 +171,8 @@
 
         .table-items input:focus,
         .table-items select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
         }
 
         .currency-group {
@@ -142,7 +182,7 @@
         }
 
         .currency-label {
-            background-color: #34495e;
+            background-color: #2c3e50;
             color: white;
             border: 1px solid #2c3e50;
             padding: 0.5rem;
@@ -171,7 +211,7 @@
         }
 
         .table-footer {
-            background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+            background: #2c3e50;
             color: white;
             font-weight: 700;
         }
@@ -200,12 +240,11 @@
             padding: 0.6rem 1.2rem;
             font-weight: 600;
             transition: all 0.3s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .action-buttons .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
         .item-number-cell {
@@ -219,32 +258,29 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="h3 mb-2 text-gray-800">Edit JO Contract</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb breadcrumb-custom mb-0">
-                    <li class="breadcrumb-item"><a href="">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('jo-contract.index') }}">JO Contract</a></li>
-                    <li class="breadcrumb-item active">Edit</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid joContractEditPage">
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- Page Header Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
+                        <span class="fw-bold"><i class="fas fa-edit me-2"></i>Edit JO Contract</span>
+                        <a href="{{ route('jo-contract.index') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </a>
+                    </div>
+                </div>
 
-        <form action="{{ route('jo-contract.update', $joContract->id_jo_cont) }}" method="POST" id="joContractForm">
-            @csrf
-            @method('PUT')
+                <form action="{{ route('jo-contract.update', $joContract->id_jo_cont) }}" method="POST" id="joContractForm">
+                    @csrf
+                    @method('PUT')
 
-            <div class="row">
-                <!-- Main Form -->
-                <div class="col-lg-12">
                     <!-- JO Contract Info Card -->
-                    <div class="card mb-4">
-                        <div class="card-header text-black" style="background-color: #d1fae5"">
-                            <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h5>
+                    <div class="card shadow mb-4">
+                        <div class="card-header text-black" style="background-color: #d1fae5">
+                            <h6 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Contract</label>
@@ -262,7 +298,7 @@
                                         @endforeach
                                     </select>
                                     @error('id_md_cont')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
 
@@ -279,7 +315,7 @@
                                         @endforeach
                                     </select>
                                     @error('id_md_area')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -288,10 +324,9 @@
                                 <label class="form-label required-field">Title</label>
                                 <input type="text" name="title" id="title"
                                     class="form-control @error('title') is-invalid @enderror"
-                                    value="{{ old('title', $joContract->title) }}"
-                                    >
+                                    value="{{ old('title', $joContract->title) }}">
                                 @error('title')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -299,20 +334,37 @@
                                 <label class="form-label">Note</label>
                                 <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note', $joContract->note) }}</textarea>
                                 @error('note')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
+                            </div>
+                        </div>
+
+                        <!-- Metadata -->
+                        <div class="card-body bg-light border-top p-4">
+                            <h6 class="text-muted mb-3">
+                                <i class="fas fa-clock me-1"></i>Record Information
+                            </h6>
+                            <div class="row text-sm">
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted">Created:</small><br>
+                                    <small><i class="fas fa-calendar-plus me-1"></i>{{ $joContract->created_at->format('d M Y, H:i') }}</small>
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <small class="text-muted">Last Updated:</small><br>
+                                    <small><i class="fas fa-calendar-check me-1"></i>{{ $joContract->updated_at->format('d M Y, H:i') }}</small>
+                                </div>
                             </div>
                         </div>
                     </div>
 
                     <!-- JO Contract Items Card -->
-                    <div class="card">
+                    <div class="card shadow mb-4">
                         <div class="card-header text-black" style="background-color: #d1fae5">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items</h5>
-                                <div class="d-flex gap-3 align-items-center">
+                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items</h6>
+                                <div class="kurs-section d-flex gap-3 align-items-center mb-0" style="padding: 10px 15px;">
                                     <div>
-                                        <label class="form-label mb-1 small">Kurs Date</label>
+                                        <label class="form-label mb-1">Kurs Date</label>
                                         @php
                                             $firstItem = $joContract->items->first();
                                             $defaultDate = $firstItem && $firstItem->tgl_kurs_usd
@@ -322,10 +374,10 @@
                                         <input type="date" name="global_tgl_kurs_usd" id="global_tgl_kurs_usd"
                                             class="form-control form-control-sm"
                                             value="{{ old('global_tgl_kurs_usd', $defaultDate) }}"
-                                            style="min-width: 150px;" >
+                                            style="min-width: 150px;">
                                     </div>
                                     <div>
-                                        <label class="form-label mb-1 small">Kurs Rate</label>
+                                        <label class="form-label mb-1">Kurs Rate</label>
                                         @php
                                             $defaultKurs = $firstItem && $firstItem->kurs_usd
                                                 ? $firstItem->kurs_usd
@@ -333,13 +385,13 @@
                                         @endphp
                                         <input type="text" id="global_kurs_usd_display"
                                             class="form-control form-control-sm"
-                                            value="{{ number_format($defaultKurs, 2, ',', '.') }}" style="min-width: 130px;" >
+                                            value="{{ number_format($defaultKurs, 2, ',', '.') }}" style="min-width: 130px;">
                                         <input type="hidden" name="global_kurs_usd" id="global_kurs_usd" value="{{ $defaultKurs }}">
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="action-buttons">
                                 <button type="button" class="btn btn-primary" id="addItemBtn">
                                     <i class="fas fa-plus me-1"></i>Add Item
@@ -412,7 +464,7 @@
                                                         <div class="currency-group">
                                                             <span class="currency-label">IDR</span>
                                                             <input type="text" class="form-control currency-input revenue-idr-display"
-                                                                value="{{ number_format($item->pendapatan_idr, 2, ',', '.') }}" >
+                                                                value="{{ number_format($item->pendapatan_idr, 2, ',', '.') }}">
                                                             <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_idr]"
                                                                 class="revenue-idr-value" value="{{ $item->pendapatan_idr }}">
                                                         </div>
@@ -421,7 +473,7 @@
                                                         <div class="currency-group">
                                                             <span class="currency-label">USD</span>
                                                             <input type="text" class="form-control currency-input revenue-usd-display"
-                                                                value="{{ number_format($item->pendapatan_usd, 2, ',', '.') }}" >
+                                                                value="{{ number_format($item->pendapatan_usd, 2, ',', '.') }}">
                                                             <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_usd]"
                                                                 class="revenue-usd-value" value="{{ $item->pendapatan_usd }}">
                                                         </div>
@@ -430,7 +482,7 @@
                                                         <div class="currency-group">
                                                             <span class="currency-label">IDR</span>
                                                             <input type="text" class="form-control currency-input hpp-display"
-                                                                value="{{ number_format($item->hpp_ops, 2, ',', '.') }}" >
+                                                                value="{{ number_format($item->hpp_ops, 2, ',', '.') }}">
                                                             <input type="hidden" name="items[{{ $index + 1 }}][hpp_ops]"
                                                                 class="hpp-value" value="{{ $item->hpp_ops }}">
                                                         </div>
@@ -456,9 +508,9 @@
                                         @else
                                             <tr class="no-items-row">
                                                 <td colspan="8">
-                                                    <i class="fas fa-inbox fa-3x mb-3"></i>
+                                                    <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                                                     <p class="mb-0 fw-bold">No data available</p>
-                                                    <small class="text-muted">Click "Add Item" above to get started</small>
+                                                    <small class="text-muted">Click "Add Item" to get started</small>
                                                 </td>
                                             </tr>
                                         @endif
@@ -468,56 +520,58 @@
                                             <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
+                                                    <span class="currency-label text-white">IDR</span>
                                                     <span id="footerTotalIDR"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">USD</span>
+                                                    <span class="currency-label text-white">USD</span>
                                                     <span id="footerTotalUSD"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
+                                                    <span class="currency-label text-white">IDR</span>
                                                     <span id="footerTotalHPP"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
+                                                    <span class="currency-label text-white">IDR</span>
                                                     <span id="footerTotalSelling"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
-                                            <td colspan="2"></td>
+                                            <td></td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
 
                             @error('items')
-                                <div class="alert alert-danger mt-3">{{ $message }}</div>
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                </div>
                             @enderror
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="d-flex gap-2 mt-4 mb-5">
+                    <div class="d-flex gap-2 mb-5">
                         <button type="submit" class="btn btn-success btn-lg">
                             <i class="fas fa-save me-2"></i>Update JO Contract
                         </button>
                         <a href="{{ route('jo-contract.show', $joContract->id_jo_cont) }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                            <i class="fas fa-times me-2"></i>Cancel
                         </a>
                     </div>
-                </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 @endsection
 {{-- Script Jo Contract Edit --}}

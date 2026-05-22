@@ -4,36 +4,77 @@
 
 @push('styles')
     <style>
+        .joContractCreatePage .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .joContractCreatePage .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+
+        .joContractCreatePage .form-control:focus,
+        .joContractCreatePage .form-select:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+        }
+
+        .joContractCreatePage .form-label {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .joContractCreatePage .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .joContractCreatePage .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .joContractCreatePage .btn-success {
+            background-color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+
+        .joContractCreatePage .btn-success:hover {
+            background-color: var(--dark-green);
+            border-color: var(--dark-green);
+        }
+
         .required-field::after {
             content: " *";
-            color: red;
+            color: #dc3545;
+            font-weight: 600;
         }
 
         .kurs-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 10px;
+            padding: 20px;
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .kurs-section h6 {
-            color: white;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         .kurs-section .form-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
         }
 
         .kurs-section .form-control {
             background: rgba(255, 255, 255, 0.95);
             border: none;
-            padding: 0.6rem 0.75rem;
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
         }
 
         .table-items {
@@ -43,10 +84,10 @@
         }
 
         .table-items thead th {
-            background-color: #ececec;
-            color: rgb(0, 0, 0);
-            border: 1px solid #34495e;
-            padding: 14px 10px;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            border: 1px solid #dee2e6;
+            padding: 12px 10px;
             font-weight: 600;
             font-size: 0.875rem;
             vertical-align: middle;
@@ -69,7 +110,7 @@
 
         /* Category Cell Styling - MERGED CELL */
         .category-cell {
-            background: #f8f9fa !important;
+            background: #f1f5f9 !important;
             color: #2c3e50 !important;
             font-weight: 600;
             font-size: 0.875rem;
@@ -90,12 +131,12 @@
         .category-cell .category-name {
             font-weight: 700;
             font-size: 0.85rem;
-            color: #495057;
+            color: #1e293b;
         }
 
         .category-cell .category-count {
-            background: #e9ecef;
-            color: #495057;
+            background: #e2e8f0;
+            color: #475569;
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 0.7rem;
@@ -106,10 +147,10 @@
             background: #dc3545;
             border: none;
             color: white;
-            border-radius: 4px;
+            border-radius: 6px;
             width: 100%;
-            max-width: 60px;
-            padding: 3px 8px;
+            max-width: 70px;
+            padding: 4px 8px;
             font-size: 0.7rem;
             cursor: pointer;
             transition: all 0.3s;
@@ -131,8 +172,8 @@
 
         .table-items input:focus,
         .table-items select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
         }
 
         .currency-group {
@@ -142,7 +183,7 @@
         }
 
         .currency-label {
-            background-color: #34495e;
+            background-color: #2c3e50;
             color: white;
             border: 1px solid #2c3e50;
             padding: 0.5rem;
@@ -171,7 +212,7 @@
         }
 
         .table-footer {
-            background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+            background: #2c3e50;
             color: white;
             font-weight: 700;
         }
@@ -200,12 +241,11 @@
             padding: 0.6rem 1.2rem;
             font-weight: 600;
             transition: all 0.3s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .action-buttons .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
         .item-number-cell {
@@ -244,12 +284,12 @@
         }
 
         .mode-idr {
-            background-color: #27ae60;
+            background-color: #10b981;
             color: white;
         }
 
         .mode-usd {
-            background-color: #3498db;
+            background-color: #3b82f6;
             color: white;
         }
 
@@ -266,19 +306,19 @@
         }
 
         .category-dropdown-btn {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             border: none;
             color: white;
             padding: 10px 20px;
             border-radius: 25px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
             transition: all 0.3s;
         }
 
         .category-dropdown-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
         }
 
         .category-dropdown-menu {
@@ -318,37 +358,34 @@
 
         .category-dropdown-item i {
             margin-right: 8px;
-            color: #667eea;
+            color: var(--primary-green);
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="h3 mb-2 text-gray-800">Add JO Contract</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb breadcrumb-custom mb-0">
-                    <li class="breadcrumb-item"><a href="">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('jo-contract.index') }}">JO Contract</a></li>
-                    <li class="breadcrumb-item active">Add</li>
-                </ol>
-            </nav>
-        </div>
+    <div class="container-fluid joContractCreatePage">
+        <div class="row">
+            <div class="col-lg-12">
+                <!-- Page Header Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
+                        <span class="fw-bold"><i class="fas fa-plus-circle me-2"></i>Add JO Contract</span>
+                        <a href="{{ route('jo-contract.index') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i> Back
+                        </a>
+                    </div>
+                </div>
 
-        <form action="{{ route('jo-contract.store') }}" method="POST" id="joContractForm">
-            @csrf
+                <form action="{{ route('jo-contract.store') }}" method="POST" id="joContractForm">
+                    @csrf
 
-            <div class="row">
-                <!-- Main Form -->
-                <div class="col-lg-12">
                     <!-- JO Contract Info Card -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h5>
+                    <div class="card shadow mb-4">
+                        <div class="card-header text-black" style="background-color: #d1fae5">
+                            <h6 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h6>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Contract</label>
@@ -366,7 +403,7 @@
                                         @endforeach
                                     </select>
                                     @error('id_md_cont')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
 
@@ -383,7 +420,7 @@
                                         @endforeach
                                     </select>
                                     @error('id_md_area')
-                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
@@ -393,7 +430,7 @@
                                 <input type="text" name="title" id="title"
                                     class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}">
                                 @error('title')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
                             </div>
 
@@ -401,27 +438,25 @@
                                 <label class="form-label">Note</label>
                                 <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note') }}</textarea>
                                 @error('note')
-                                    <div class="invalid-feedback">{{ $message }}</div>
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
                             </div>
                         </div>
                     </div>
 
-
-
                     <!-- JO Contract Items Card -->
-                    <div class="card">
-                        <div class="card-header bg-success text-white">
+                    <div class="card shadow mb-4">
+                        <div class="card-header text-black" style="background-color: #d1fae5">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items</h5>
-                                <div class="d-flex gap-3 align-items-center">
+                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items</h6>
+                                <div class="kurs-section d-flex gap-3 align-items-center mb-0" style="padding: 10px 15px;">
                                     <div>
-                                        <label class="form-label mb-1 small">Kurs Date</label>
+                                        <label class="form-label mb-1">Kurs Date</label>
                                         <input type="date" name="global_tgl_kurs_usd" id="global_tgl_kurs_usd"
                                             class="form-control form-control-sm" style="min-width: 150px;" required>
                                     </div>
                                     <div>
-                                        <label class="form-label mb-1 small">Kurs Rate</label>
+                                        <label class="form-label mb-1">Kurs Rate</label>
                                         <input type="text" id="global_kurs_usd_display"
                                             class="form-control form-control-sm" style="min-width: 130px;" required>
                                         <input type="hidden" name="global_kurs_usd" id="global_kurs_usd" value="17600">
@@ -429,7 +464,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="card-body">
+                        <div class="card-body p-4">
                             <div class="action-buttons">
                                 <button type="button" class="btn btn-primary" id="addItemBtn">
                                     <i class="fas fa-plus me-1"></i>Add Item
@@ -455,10 +490,10 @@
                                     </thead>
                                     <tbody id="itemsTableBody">
                                         <tr class="no-items-row">
-                                            <td colspan="9">
-                                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                            <td colspan="8">
+                                                <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                                                 <p class="mb-0 fw-bold">No data available</p>
-                                                <small class="text-muted">Click "Add Category" above to get started</small>
+                                                <small class="text-muted">Click "Add Item" to get started</small>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -467,58 +502,61 @@
                                             <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
+                                                    <span class="currency-label text-white">IDR</span>
                                                     <span id="footerTotalIDR"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">USD</span>
+                                                    <span class="currency-label text-white">USD</span>
                                                     <span id="footerTotalUSD"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
+                                                    <span class="currency-label text-white">IDR</span>
                                                     <span id="footerTotalHPP"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
+                                                    <span class="currency-label text-white">IDR</span>
                                                     <span id="footerTotalSelling"
-                                                        style="color: rgb(0, 0, 0); font-weight: 700;">0,00</span>
+                                                        style="color: #fff; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
-                                            <td colspan="2"></td>
+                                            <td></td>
                                         </tr>
                                     </tfoot>
                                 </table>
                             </div>
 
                             @error('items')
-                                <div class="alert alert-danger mt-3">{{ $message }}</div>
+                                <div class="alert alert-danger mt-3">
+                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                </div>
                             @enderror
                         </div>
                     </div>
 
                     <!-- Action Buttons -->
-                    <div class="d-flex gap-2 mt-4 mb-5">
+                    <div class="d-flex gap-2 mb-5">
                         <button type="submit" class="btn btn-success btn-lg">
                             <i class="fas fa-save me-2"></i>Save JO Contract
                         </button>
                         <a href="{{ route('jo-contract.index') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-arrow-left me-2"></i>Cancel
+                            <i class="fas fa-times me-2"></i>Cancel
                         </a>
                     </div>
-                </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 @endsection
+
 {{-- Script Jo Contract Create --}}
 @push('scripts')
     <script>
@@ -527,26 +565,26 @@
 
         // Format Rupiah Helper Functions
         function formatRupiah(value) {
-    let number = value.replace(/[^\d,]/g, '');
-    number = number.replace(/\./g, '');
-    if (number === '') return '';  // ← UBAH INI dari '0,00' jadi ''
+            let number = value.replace(/[^\d,]/g, '');
+            number = number.replace(/\./g, '');
+            if (number === '') return '';
 
-    let parts = number.split(',');
-    let integerPart = parts[0];
-    let decimalPart = parts.length > 1 ? parts[1] : '';
+            let parts = number.split(',');
+            let integerPart = parts[0];
+            let decimalPart = parts.length > 1 ? parts[1] : '';
 
-    if (decimalPart.length > 2) {
-        decimalPart = decimalPart.substring(0, 2);
-    }
+            if (decimalPart.length > 2) {
+                decimalPart = decimalPart.substring(0, 2);
+            }
 
-    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
-    if (parts.length > 1) {
-        return integerPart + ',' + decimalPart;
-    } else {
-        return integerPart + ',00';
-    }
-}
+            if (parts.length > 1) {
+                return integerPart + ',' + decimalPart;
+            } else {
+                return integerPart + ',00';
+            }
+        }
 
         function parseRupiah(value) {
             let cleaned = value.replace(/\./g, '').replace(',', '.');
@@ -554,148 +592,148 @@
         }
 
         function setupRupiahInput(displayInput, hiddenInput) {
-    displayInput.addEventListener('input', function(e) {
-        let cursorPosition = this.selectionStart;
-        let beforeCursor = this.value.substring(0, cursorPosition);
+            displayInput.addEventListener('input', function(e) {
+                let cursorPosition = this.selectionStart;
+                let beforeCursor = this.value.substring(0, cursorPosition);
 
-        let formatted = formatRupiah(this.value);
-        this.value = formatted;
-
-        if (!beforeCursor.includes(',')) {
-            let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-            let newPos = 0;
-            let digitCount = 0;
-            for (let i = 0; i < this.value.length; i++) {
-                if (/\d/.test(this.value[i])) {
-                    digitCount++;
-                    if (digitCount === digitsBeforeCursor) {
-                        newPos = i + 1;
-                        break;
-                    }
-                }
-            }
-            this.setSelectionRange(newPos, newPos);
-        } else {
-            let commaPos = this.value.indexOf(',');
-            let decimalDigitsInput = beforeCursor.split(',')[1] || '';
-            let decimalDigits = decimalDigitsInput.length;
-            let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
-            this.setSelectionRange(newPos, newPos);
-        }
-
-        hiddenInput.value = parseRupiah(formatted);
-    });
-
-    displayInput.addEventListener('keydown', function(e) {
-        let cursorPosition = this.selectionStart;
-        let selectionEnd = this.selectionEnd;
-        let commaPos = this.value.indexOf(',');
-
-        if (e.key === 'Backspace') {
-            if (cursorPosition !== selectionEnd) {
-                return;
-            }
-
-            if (commaPos !== -1 && cursorPosition > commaPos + 1) {
-                e.preventDefault();
-
-                let posInDecimal = cursorPosition - commaPos - 1;
-                let beforeComma = this.value.substring(0, commaPos);
-                let afterComma = this.value.substring(commaPos + 1);
-
-                let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
-
-                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                let formatted = formatRupiah(newValue);
+                let formatted = formatRupiah(this.value);
                 this.value = formatted;
 
-                let newCommaPos = this.value.indexOf(',');
-                let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
-                this.setSelectionRange(newCursorPos, newCursorPos);
+                if (!beforeCursor.includes(',')) {
+                    let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+                    let newPos = 0;
+                    let digitCount = 0;
+                    for (let i = 0; i < this.value.length; i++) {
+                        if (/\d/.test(this.value[i])) {
+                            digitCount++;
+                            if (digitCount === digitsBeforeCursor) {
+                                newPos = i + 1;
+                                break;
+                            }
+                        }
+                    }
+                    this.setSelectionRange(newPos, newPos);
+                } else {
+                    let commaPos = this.value.indexOf(',');
+                    let decimalDigitsInput = beforeCursor.split(',')[1] || '';
+                    let decimalDigits = decimalDigitsInput.length;
+                    let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+                    this.setSelectionRange(newPos, newPos);
+                }
 
-                hiddenInput.value = parseRupiah(this.value);
-            }
-            else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
-                e.preventDefault();
-            }
-            else if (cursorPosition === commaPos) {
-                e.preventDefault();
-                let beforeComma = this.value.substring(0, commaPos);
-                this.value = beforeComma;
-                this.setSelectionRange(beforeComma.length, beforeComma.length);
-                hiddenInput.value = parseRupiah(this.value);
-            }
-        } else if (e.key === 'Delete') {
-            if (cursorPosition !== selectionEnd) {
-                return;
-            }
+                hiddenInput.value = parseRupiah(formatted);
+            });
 
-            if (cursorPosition === commaPos) {
-                e.preventDefault();
-                let beforeComma = this.value.substring(0, commaPos);
-                this.value = beforeComma;
-                this.setSelectionRange(beforeComma.length, beforeComma.length);
-                hiddenInput.value = parseRupiah(this.value);
-                return;
-            }
+            displayInput.addEventListener('keydown', function(e) {
+                let cursorPosition = this.selectionStart;
+                let selectionEnd = this.selectionEnd;
+                let commaPos = this.value.indexOf(',');
 
-            if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
-                e.preventDefault();
+                if (e.key === 'Backspace') {
+                    if (cursorPosition !== selectionEnd) {
+                        return;
+                    }
 
-                let posInDecimal = cursorPosition - commaPos - 1;
-                let beforeComma = this.value.substring(0, commaPos);
-                let afterComma = this.value.substring(commaPos + 1);
+                    if (commaPos !== -1 && cursorPosition > commaPos + 1) {
+                        e.preventDefault();
 
-                let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
+                        let posInDecimal = cursorPosition - commaPos - 1;
+                        let beforeComma = this.value.substring(0, commaPos);
+                        let afterComma = this.value.substring(commaPos + 1);
 
-                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                let formatted = formatRupiah(newValue);
-                this.value = formatted;
+                        let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
 
-                let newCommaPos = this.value.indexOf(',');
-                this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
+                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                        let formatted = formatRupiah(newValue);
+                        this.value = formatted;
 
-                hiddenInput.value = parseRupiah(this.value);
-            }
-        }
-    });
+                        let newCommaPos = this.value.indexOf(',');
+                        let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
+                        this.setSelectionRange(newCursorPos, newCursorPos);
 
-    displayInput.addEventListener('blur', function(e) {
-        if (e.target.value) {
-            if (!e.target.value.includes(',')) {
-                e.target.value = e.target.value + ',00';
-            } else {
-                let parts = e.target.value.split(',');
-                if (parts[1] !== undefined) {
-                    if (parts[1].length === 0) {
-                        e.target.value = parts[0] + ',00';
-                    } else if (parts[1].length < 2) {
-                        e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                        hiddenInput.value = parseRupiah(this.value);
+                    }
+                    else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
+                        e.preventDefault();
+                    }
+                    else if (cursorPosition === commaPos) {
+                        e.preventDefault();
+                        let beforeComma = this.value.substring(0, commaPos);
+                        this.value = beforeComma;
+                        this.setSelectionRange(beforeComma.length, beforeComma.length);
+                        hiddenInput.value = parseRupiah(this.value);
+                    }
+                } else if (e.key === 'Delete') {
+                    if (cursorPosition !== selectionEnd) {
+                        return;
+                    }
+
+                    if (cursorPosition === commaPos) {
+                        e.preventDefault();
+                        let beforeComma = this.value.substring(0, commaPos);
+                        this.value = beforeComma;
+                        this.setSelectionRange(beforeComma.length, beforeComma.length);
+                        hiddenInput.value = parseRupiah(this.value);
+                        return;
+                    }
+
+                    if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
+                        e.preventDefault();
+
+                        let posInDecimal = cursorPosition - commaPos - 1;
+                        let beforeComma = this.value.substring(0, commaPos);
+                        let afterComma = this.value.substring(commaPos + 1);
+
+                        let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
+
+                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                        let formatted = formatRupiah(newValue);
+                        this.value = formatted;
+
+                        let newCommaPos = this.value.indexOf(',');
+                        this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
+
+                        hiddenInput.value = parseRupiah(this.value);
                     }
                 }
-            }
-            hiddenInput.value = parseRupiah(e.target.value);
-        } else {
-            e.target.value = '';
-            hiddenInput.value = '';
-        }
-    });
+            });
 
-    displayInput.addEventListener('keypress', function(e) {
-        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
-            (e.key === ',' && !this.value.includes(',')) ||
-            (e.keyCode === 65 && e.ctrlKey === true) ||
-            (e.keyCode === 67 && e.ctrlKey === true) ||
-            (e.keyCode === 86 && e.ctrlKey === true) ||
-            (e.keyCode === 88 && e.ctrlKey === true)) {
-            return;
-        }
+            displayInput.addEventListener('blur', function(e) {
+                if (e.target.value) {
+                    if (!e.target.value.includes(',')) {
+                        e.target.value = e.target.value + ',00';
+                    } else {
+                        let parts = e.target.value.split(',');
+                        if (parts[1] !== undefined) {
+                            if (parts[1].length === 0) {
+                                e.target.value = parts[0] + ',00';
+                            } else if (parts[1].length < 2) {
+                                e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                            }
+                        }
+                    }
+                    hiddenInput.value = parseRupiah(e.target.value);
+                } else {
+                    e.target.value = '';
+                    hiddenInput.value = '';
+                }
+            });
 
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-            e.preventDefault();
+            displayInput.addEventListener('keypress', function(e) {
+                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                    (e.key === ',' && !this.value.includes(',')) ||
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true)) {
+                    return;
+                }
+
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
         }
-    });
-}
 
         // Setup Global Kurs Input
         const globalKursDisplay = document.getElementById('global_kurs_usd_display');
@@ -903,7 +941,7 @@
                     tbody.innerHTML = `
                     <tr class="no-items-row">
                         <td colspan="8">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                             <p class="mb-0 fw-bold">No data available</p>
                             <small class="text-muted">Click "Add Item" to get started</small>
                         </td>
@@ -929,7 +967,7 @@
                     tbody.innerHTML = `
                     <tr class="no-items-row">
                         <td colspan="8">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                             <p class="mb-0 fw-bold">No data available</p>
                             <small class="text-muted">Click "Add Item" to get started</small>
                         </td>
@@ -976,7 +1014,7 @@
                 document.getElementById('itemsTableBody').innerHTML = `
                 <tr class="no-items-row">
                     <td colspan="8">
-                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                         <p class="mb-0 fw-bold">No data available</p>
                         <small class="text-muted">Click "Add Item" to get started</small>
                     </td>

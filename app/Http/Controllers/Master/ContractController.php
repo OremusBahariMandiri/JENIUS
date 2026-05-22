@@ -12,9 +12,17 @@ use Carbon\Carbon;
 
 class ContractController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+
+    public function __construct()
+    {
+        $this->middleware('auth');
+        $this->middleware('check.access:contract')->only('index');
+        $this->middleware('check.access:contract,detail')->only('show');
+        $this->middleware('check.access:contract,tambah')->only('create', 'store');
+        $this->middleware('check.access:contract,ubah')->only('edit', 'update');
+        $this->middleware('check.access:contract,hapus')->only('destroy', 'bulkDelete');
+    }
+
     public function index(Request $request)
     {
         try {

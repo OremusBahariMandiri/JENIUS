@@ -28,7 +28,9 @@
             "Database\\Seeders\\": "database/seeders/"
         },
         "files": [
-        "app/Helpers/IdGenerator.php"
+        "app/Helpers/IdGenerator.php",
+        "app/Helpers/AccessHelper.php"
+
     ]
     },
     "autoload-dev": {

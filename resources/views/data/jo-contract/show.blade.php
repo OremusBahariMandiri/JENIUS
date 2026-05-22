@@ -4,32 +4,60 @@
 
 @push('styles')
     <style>
-        .required-field::after {
-            content: " *";
-            color: red;
+        .joContractShowPage .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .joContractShowPage .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .joContractShowPage .badge {
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+        .joContractShowPage .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .joContractShowPage .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .joContractShowPage .btn-success {
+            background-color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+
+        .joContractShowPage .btn-success:hover {
+            background-color: var(--dark-green);
+            border-color: var(--dark-green);
+        }
+
+        .joContractShowPage .border-bottom {
+            border-color: #e2e8f0 !important;
         }
 
         .info-card {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
-            color: black;
-            box-shadow: 0 4px 15px rgba(207, 207, 207, 0.4);
-        }
-
-        .info-card h6 {
-            color: black;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
+            border-radius: 10px;
+            padding: 1.5rem;
         }
 
         .info-row {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
         }
 
         .info-row:last-child {
@@ -38,39 +66,36 @@
 
         .info-label {
             font-weight: 600;
-            color: rgba(0, 0, 0, 0.9);
+            color: #64748b;
+            font-size: 0.875rem;
         }
 
         .info-value {
-            color: rgb(0, 0, 0);
+            color: #1e293b;
             text-align: right;
+            font-weight: 500;
         }
 
         .kurs-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 25px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 10px;
+            padding: 15px 20px;
             color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .kurs-section h6 {
-            color: white;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
 
         .kurs-section .form-label {
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
+            color: rgba(255, 255, 255, 0.95);
+            font-weight: 600;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
         }
 
         .kurs-section .form-control {
             background: rgba(255, 255, 255, 0.95);
             border: none;
-            padding: 0.6rem 0.75rem;
+            padding: 0.5rem 0.75rem;
+            font-weight: 500;
         }
 
         .table-items {
@@ -80,10 +105,10 @@
         }
 
         .table-items thead th {
-            background-color: #ececec;
-            color: rgb(0, 0, 0);
-            border: 1px solid #34495e;
-            padding: 14px 10px;
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            border: 1px solid #dee2e6;
+            padding: 12px 10px;
             font-weight: 600;
             font-size: 0.875rem;
             vertical-align: middle;
@@ -104,9 +129,8 @@
             background-color: #f8f9fa;
         }
 
-        /* Category Cell Styling - MERGED CELL */
         .category-cell {
-            background: #f8f9fa !important;
+            background: #f1f5f9 !important;
             color: #2c3e50 !important;
             font-weight: 600;
             font-size: 0.875rem;
@@ -127,12 +151,12 @@
         .category-cell .category-name {
             font-weight: 700;
             font-size: 0.85rem;
-            color: #495057;
+            color: #1e293b;
         }
 
         .category-cell .category-count {
-            background: #e9ecef;
-            color: #495057;
+            background: #e2e8f0;
+            color: #475569;
             padding: 2px 8px;
             border-radius: 12px;
             font-size: 0.7rem;
@@ -146,7 +170,7 @@
         }
 
         .currency-label {
-            background-color: #34495e;
+            background-color: #2c3e50;
             color: white;
             border: 1px solid #2c3e50;
             padding: 0.5rem;
@@ -169,7 +193,7 @@
         }
 
         .table-footer {
-            background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+            background: #2c3e50;
             color: white;
             font-weight: 700;
         }
@@ -187,13 +211,9 @@
             font-size: 0.9rem;
         }
 
-        .badge-category {
-            background-color: #667eea;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.75rem;
+        .item-type-cell {
             font-weight: 600;
+            color: #2c3e50;
         }
 
         .action-buttons {
@@ -204,109 +224,131 @@
 
         .action-buttons .btn {
             border-radius: 8px;
-            padding: 0.6rem 1.2rem;
+            padding: 0.6rem 1.5rem;
             font-weight: 600;
             transition: all 0.3s;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         .action-buttons .btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        .item-type-cell {
-            font-weight: 600;
-            color: #2c3e50;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
     </style>
 @endpush
 
 @section('content')
-    <div class="container-fluid">
-        <!-- Page Header -->
-        <div class="mb-4">
-            <h1 class="h3 mb-2 text-gray-800">JO Contract Detail</h1>
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb breadcrumb-custom mb-0">
-                    <li class="breadcrumb-item"><a href="">Dashboard</a></li>
-                    <li class="breadcrumb-item"><a href="{{ route('jo-contract.index') }}">JO Contract</a></li>
-                    <li class="breadcrumb-item active">Detail</li>
-                </ol>
-            </nav>
-        </div>
-
+    <div class="container-fluid joContractShowPage">
         <div class="row">
+            <!-- Main Content -->
             <div class="col-lg-12">
-                <!-- JO Contract Info Card -->
-                <div class="card mb-4">
-                    <div class="card-header text-black" style="background-color: #d1fae5">
-                        <h5 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h5>
+                <!-- Page Header Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
+                        <span class="fw-bold"><i class="fas fa-file-contract me-2"></i>JO Contract Detail</span>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}" class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit me-1"></i>Edit
+                            </a>
+                            <a href="{{ route('jo-contract.index') }}" class="btn btn-light btn-sm">
+                                <i class="fas fa-arrow-left me-1"></i>Back
+                            </a>
+                        </div>
                     </div>
-                    <div class="card-body">
+                </div>
+
+                <!-- JO Contract Info Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header text-black" style="background-color: #d1fae5">
+                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>JO Contract Information</h6>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Title -->
+                        <div class="mb-4">
+                            <label class="text-muted small text-uppercase mb-2">Title</label>
+                            <h3 class="mb-0 text-primary">
+                                <i class="fas fa-file-alt me-2"></i>{{ $joContract->title }}
+                            </h3>
+                        </div>
+
+                        <hr>
+
                         <div class="info-card">
                             <div class="info-row">
-                                <span class="info-label">JO Contract ID:</span>
-                                <span class="info-value">{{ $joContract->id_jo_cont }}</span>
+                                <span class="info-label">JO Contract ID</span>
+                                <span class="info-value">
+                                    <span class="badge bg-secondary fs-6 px-3 py-2">#{{ $joContract->id_jo_cont }}</span>
+                                </span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">Contract:</span>
+                                <span class="info-label">Contract</span>
                                 <span class="info-value">
-                                    {{ $joContract->contract->no_contract }} - {{ $joContract->contract->contract }}
+                                    <strong>{{ $joContract->contract->no_contract }}</strong><br>
+                                    <small class="text-muted">{{ $joContract->contract->contract }}</small>
                                     @if ($joContract->contract->customer)
-                                        <br><small>({{ $joContract->contract->customer->customer }})</small>
+                                        <br><small class="text-muted">({{ $joContract->contract->customer->customer }})</small>
                                     @endif
                                 </span>
                             </div>
                             <div class="info-row">
-                                <span class="info-label">Area:</span>
-                                <span class="info-value">{{ $joContract->area->area }}</span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Title:</span>
-                                <span class="info-value">{{ $joContract->title }}</span>
+                                <span class="info-label">Area</span>
+                                <span class="info-value">
+                                    <span class="badge bg-info text-dark fs-6">{{ $joContract->area->area }}</span>
+                                </span>
                             </div>
                             @if ($joContract->note)
                                 <div class="info-row">
-                                    <span class="info-label">Note:</span>
+                                    <span class="info-label">Note</span>
                                     <span class="info-value">{{ $joContract->note }}</span>
                                 </div>
                             @endif
                             <div class="info-row">
-                                <span class="info-label">Created At:</span>
-                                <span class="info-value">{{ $joContract->created_at->format('d M Y H:i') }}</span>
+                                <span class="info-label">Created At</span>
+                                <span class="info-value">
+                                    <i class="fas fa-calendar-plus me-1 text-primary"></i>
+                                    {{ $joContract->created_at->format('d M Y H:i') }}
+                                </span>
+                            </div>
+                            <div class="info-row">
+                                <span class="info-label">Last Updated</span>
+                                <span class="info-value">
+                                    <i class="fas fa-calendar-check me-1 text-success"></i>
+                                    {{ $joContract->updated_at->format('d M Y H:i') }}
+                                </span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- JO Contract Items -->
-                <div class="card">
+                <div class="card shadow mb-4">
                     <div class="card-header text-black" style="background-color: #d1fae5">
                         <div class="d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items ({{ $joContract->items->count() }} items)</h5>
-                            <div class="d-flex gap-3 align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list me-2"></i>JO Contract Items
+                                <span class="badge bg-light text-dark ms-2">{{ $joContract->items->count() }} items</span>
+                            </h6>
+                            <div class="kurs-section d-flex gap-3 align-items-center mb-0" style="padding: 8px 15px;">
                                 @php
                                     $firstItem = $joContract->items->first();
                                 @endphp
                                 @if($firstItem)
                                     <div>
-                                        <label class="form-label mb-1 small">Kurs Date</label>
+                                        <label class="form-label mb-1">Kurs Date</label>
                                         <input type="text" class="form-control form-control-sm"
                                             value="{{ $firstItem->tgl_kurs_usd ? $firstItem->tgl_kurs_usd->format('d M Y') : '-' }}"
-                                            style="min-width: 150px; background-color: #f8f9fa;" readonly>
+                                            style="min-width: 130px;" readonly>
                                     </div>
                                     <div>
-                                        <label class="form-label mb-1 small">Kurs Rate</label>
+                                        <label class="form-label mb-1">Kurs Rate</label>
                                         <input type="text" class="form-control form-control-sm"
                                             value="{{ number_format($firstItem->kurs_usd, 2, ',', '.') }}"
-                                            style="min-width: 130px; background-color: #f8f9fa;" readonly>
+                                            style="min-width: 120px;" readonly>
                                     </div>
                                 @endif
                             </div>
                         </div>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         <div class="table-responsive">
                             <table class="table table-items table-bordered">
                                 <thead>
@@ -389,7 +431,7 @@
                                         <td>
                                             <div class="currency-group">
                                                 <span class="currency-label text-black">IDR</span>
-                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                <span style="color: #000000; font-weight: 700;">
                                                     {{ number_format($summary['total_revenue_idr'], 2, ',', '.') }}
                                                 </span>
                                             </div>
@@ -397,7 +439,7 @@
                                         <td>
                                             <div class="currency-group">
                                                 <span class="currency-label text-black">USD</span>
-                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                <span style="color: #000000; font-weight: 700;">
                                                     {{ number_format($summary['total_revenue_usd'], 2, ',', '.') }}
                                                 </span>
                                             </div>
@@ -405,7 +447,7 @@
                                         <td>
                                             <div class="currency-group">
                                                 <span class="currency-label text-black">IDR</span>
-                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                <span style="color: #000000; font-weight: 700;">
                                                     {{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}
                                                 </span>
                                             </div>
@@ -413,7 +455,7 @@
                                         <td>
                                             <div class="currency-group">
                                                 <span class="currency-label text-black">IDR</span>
-                                                <span style="color: rgb(0, 0, 0); font-weight: 700;">
+                                                <span style="color: #000000; font-weight: 700;">
                                                     {{ number_format($summary['total_selling_price'], 2, ',', '.') }}
                                                 </span>
                                             </div>
@@ -423,19 +465,6 @@
                             </table>
                         </div>
                     </div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="action-buttons mt-4 mb-5">
-                    <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}" class="btn btn-warning btn-lg">
-                        <i class="fas fa-edit me-2"></i>Edit JO Contract
-                    </a>
-                    <a href="{{ route('jo-contract.index') }}" class="btn btn-secondary btn-lg">
-                        <i class="fas fa-arrow-left me-2"></i>Back to List
-                    </a>
-                    <button type="button" class="btn btn-danger btn-lg" onclick="confirmDelete()">
-                        <i class="fas fa-trash me-2"></i>Delete
-                    </button>
                 </div>
             </div>
 
@@ -451,11 +480,29 @@
 @endsection
 
 @push('scripts')
-    <script>
-        function confirmDelete() {
-            if (confirm('Are you sure you want to delete this JO Contract? This action cannot be undone!')) {
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function confirmDelete() {
+        Swal.fire({
+            title: 'Delete JO Contract?',
+            html: `JO Contract <strong>{{ $joContract->title }}</strong> will be permanently deleted.<br><small class="text-muted">This action cannot be undone.</small>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
+            cancelButtonText: 'Cancel',
+            focusCancel: true,
+            customClass: {
+                confirmButton: 'btn btn-danger',
+                cancelButton: 'btn btn-secondary'
+            },
+            buttonsStyling: false
+        }).then((result) => {
+            if (result.isConfirmed) {
                 document.getElementById('deleteForm').submit();
             }
-        }
-    </script>
+        });
+    }
+</script>
 @endpush

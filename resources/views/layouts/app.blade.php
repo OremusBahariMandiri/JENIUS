@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,6 +24,7 @@
             --text-dark: #1e293b;
             --text-gray: #64748b;
             --border-color: #e2e8f0;
+
         }
 
         * {
@@ -353,15 +355,17 @@
             color: var(--text-gray);
         }
 
-        /* Main Wrapper */
+        /* Main Wrapper - FIXED */
         .main-wrapper {
             margin-left: var(--sidebar-width);
             transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             min-height: 100vh;
+            width: calc(100% - var(--sidebar-width));
         }
 
         .main-wrapper.expanded {
             margin-left: var(--sidebar-collapsed-width);
+            width: calc(100% - var(--sidebar-collapsed-width));
         }
 
         /* Topbar */
@@ -526,6 +530,7 @@
 
             .main-wrapper {
                 margin-left: 0;
+                width: 100%;
             }
 
             .mobile-menu-btn {
@@ -546,6 +551,7 @@
             border: 1px solid var(--border-color);
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease;
         }
 
         .card-header {
@@ -597,9 +603,20 @@
         .text-gray-800 {
             color: var(--text-dark) !important;
         }
+
+        /* PERBAIKAN: Table dan Card responsive terhadap sidebar */
+        .table-responsive {
+            transition: all 0.3s ease;
+        }
+
+        /* DataTables wrapper juga perlu smooth transition */
+        .dataTables_wrapper {
+            transition: all 0.3s ease;
+        }
     </style>
     @stack('styles')
 </head>
+
 <body>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileSidebar()"></div>
 
@@ -615,75 +632,147 @@
         </div>
 
         <nav class="sidebar-nav">
+            {{-- Dashboard - Semua user bisa akses --}}
             <div class="nav-item" data-tooltip="Dashboard">
-                <a href="{{route('home')}}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
+                <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
             </div>
 
-            <div class="nav-item has-submenu" data-tooltip="Data Master">
-                <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataMaster">
-                    <i class="fas fa-cogs"></i>
-                    <span>Data Master</span>
-                    <i class="fas fa-chevron-down submenu-indicator"></i>
-                </a>
-                <div class="sidebar-submenu {{ request()->is('master/*') ? 'show' : '' }}" id="dataMaster">
-                    <div class="submenu-item">
-                        <a class="nav-link {{ request()->routeIs('customer.*') ? 'active' : '' }}" href="{{ route('customer.index') }}">
-                            <i class="fas fa-user-circle"></i>
-                            <span>Customer</span>
-                        </a>
-                    </div>
-                    <div class="submenu-item">
-                        <a class="nav-link {{ request()->routeIs('contract.*') ? 'active' : '' }}" href="{{ route('contract.index') }}">
-                            <i class="fas fa-building"></i>
-                            <span>Contract</span>
-                        </a>
-                    </div>
-                    <div class="submenu-item">
-                        <a class="nav-link {{ request()->routeIs('area.*') ? 'active' : '' }}" href="{{ route('area.index') }}">
-                            <i class="fas fa-globe"></i>
-                            <span>Area</span>
-                        </a>
-                    </div>
-                    <div class="submenu-item">
-                        <a class="nav-link {{ request()->routeIs('invoice.*') ? 'active' : '' }}" href="{{ route('invoice.index') }}">
-                            <i class="fas fa-project-diagram"></i>
-                            <span>Invoice</span>
-                        </a>
-                    </div>
-                    {{-- <div class="submenu-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-handshake"></i>
-                            <span>Vessel</span>
-                        </a>
-                    </div>
-                    <div class="submenu-item">
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-anchor"></i>
-                            <span>Port</span>
-                        </a>
-                    </div> --}}
-                </div>
-            </div>
-
-            <!-- Manajemen Data Dropdown -->
-            <div class="nav-item has-submenu" data-tooltip="Manajemen Data">
-                <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenData">
-                    <i class="fas fa-briefcase"></i>
-                    <span>Job Order</span>
-                    <i class="fas fa-chevron-down submenu-indicator"></i>
-                </a>
-                <div class="submenu-item">
-                    <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}" href="{{route('jo-contract.index')}}">
-                        <i class="fas fa-pen-fancy"></i>
-                        <span>JO Contract</span>
+            {{-- User Management --}}
+            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
+                <div class="nav-item has-submenu" data-tooltip="Manajemen Pengguna">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenUser">
+                        <i class="fas fa-users"></i>
+                        <span>User Management</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
                     </a>
+                    <div class="sidebar-submenu {{ request()->is('admin/user*') ? 'show' : '' }}" id="manajemenUser">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('user.*') && !request()->routeIs('user-access.*') ? 'active' : '' }}"
+                                    href="{{ route('user.index') }}">
+                                    <i class="fas fa-user"></i>
+                                    <span>Users</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            </div>
+            @endif
 
+            {{-- Data Master --}}
+            @if (auth()->check() &&
+                    (auth()->user()->is_admin ||
+                        auth()->user()->hasAccessToMenu('customer') ||
+                        auth()->user()->hasAccessToMenu('contract') ||
+                        auth()->user()->hasAccessToMenu('area') ||
+                        auth()->user()->hasAccessToMenu('invoice')||
+                        auth()->user()->hasAccessToMenu('vessel')||
+                        auth()->user()->hasAccessToMenu('port')||
+                        auth()->user()->hasAccessToMenu('other')))
+                <div class="nav-item has-submenu" data-tooltip="Data Master">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataMaster">
+                        <i class="fas fa-cogs"></i>
+                        <span>Data Master</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
+                    </a>
+                    <div class="sidebar-submenu {{ request()->is('master/*') ? 'show' : '' }}" id="dataMaster">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('customer'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('customer.*') ? 'active' : '' }}"
+                                    href="{{ route('customer.index') }}">
+                                    <i class="fas fa-user-circle"></i>
+                                    <span>Customer</span>
+                                </a>
+                            </div>
+                        @endif
 
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('contract'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('contract.*') ? 'active' : '' }}"
+                                    href="{{ route('contract.index') }}">
+                                    <i class="fas fa-building"></i>
+                                    <span>Contract</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('area'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('area.*') ? 'active' : '' }}"
+                                    href="{{ route('area.index') }}">
+                                    <i class="fas fa-globe"></i>
+                                    <span>Area</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('invoice'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('invoice.*') ? 'active' : '' }}"
+                                    href="{{ route('invoice.index') }}">
+                                    <i class="fas fa-project-diagram"></i>
+                                    <span>Invoice</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('vessel'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('vessel.*') ? 'active' : '' }}"
+                                    href="{{ route('vessel.index') }}">
+                                    <i class="fas fa-ship"></i>
+                                    <span>Vessel</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('port'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('port.*') ? 'active' : '' }}"
+                                    href="{{ route('port.index') }}">
+                                    <i class="fas fa-anchor"></i>
+                                    <span>Port</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('other'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('other.*') ? 'active' : '' }}"
+                                    href="{{ route('other.index') }}">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                    <span>Other</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- Job Order --}}
+            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract')))
+                <div class="nav-item has-submenu" data-tooltip="Job Order">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenData">
+                        <i class="fas fa-briefcase"></i>
+                        <span>Job Order</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
+                    </a>
+                    <div class="sidebar-submenu {{ request()->is('jo-contract*') ? 'show' : '' }}" id="manajemenData">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}"
+                                    href="{{ route('jo-contract.index') }}">
+                                    <i class="fas fa-pen-fancy"></i>
+                                    <span>JO Contract</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
         </nav>
 
         <div class="sidebar-footer">
@@ -710,10 +799,20 @@
                         <i class="bi bi-person-circle"></i>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Profile</a></li>
+                        <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i> Profile</a>
+                        </li>
                         <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i> Settings</a></li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
+                                @csrf
+                                <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Logout
+                                </button>
+                            </form>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -724,6 +823,9 @@
         </main>
     </div>
 
+    <!-- jQuery from CDN - MUST BE FIRST -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         class SidebarManager {
@@ -770,13 +872,16 @@
                                 // Close sibling nested submenus only
                                 const parent = submenu.closest('.sidebar-submenu');
                                 if (parent) {
-                                    parent.querySelectorAll('.sidebar-nested-submenu.show').forEach(menu => {
-                                        if (menu !== submenu) {
-                                            menu.classList.remove('show');
-                                            const otherToggle = document.querySelector(`[data-menu="${menu.id}"]`);
-                                            if (otherToggle) otherToggle.classList.remove('menu-open');
-                                        }
-                                    });
+                                    parent.querySelectorAll('.sidebar-nested-submenu.show').forEach(
+                                        menu => {
+                                            if (menu !== submenu) {
+                                                menu.classList.remove('show');
+                                                const otherToggle = document.querySelector(
+                                                    `[data-menu="${menu.id}"]`);
+                                                if (otherToggle) otherToggle.classList.remove(
+                                                    'menu-open');
+                                            }
+                                        });
                                 }
                             } else {
                                 // Close other main level submenus
@@ -784,13 +889,18 @@
                                     if (menu !== submenu) {
                                         menu.classList.remove('show');
                                         // Also close nested submenus inside
-                                        menu.querySelectorAll('.sidebar-nested-submenu.show').forEach(nested => {
-                                            nested.classList.remove('show');
-                                            const nestedToggle = document.querySelector(`[data-menu="${nested.id}"]`);
-                                            if (nestedToggle) nestedToggle.classList.remove('menu-open');
-                                        });
-                                        const otherToggle = document.querySelector(`[data-menu="${menu.id}"]`);
-                                        if (otherToggle) otherToggle.classList.remove('menu-open');
+                                        menu.querySelectorAll('.sidebar-nested-submenu.show')
+                                            .forEach(nested => {
+                                                nested.classList.remove('show');
+                                                const nestedToggle = document.querySelector(
+                                                    `[data-menu="${nested.id}"]`);
+                                                if (nestedToggle) nestedToggle.classList
+                                                    .remove('menu-open');
+                                            });
+                                        const otherToggle = document.querySelector(
+                                            `[data-menu="${menu.id}"]`);
+                        if (otherToggle) otherToggle.classList.remove(
+                                            'menu-open');
                                     }
                                 });
                             }
@@ -800,11 +910,14 @@
                                 submenu.classList.remove('show');
                                 toggle.classList.remove('menu-open');
                                 // Close nested submenus if closing parent
-                                submenu.querySelectorAll('.sidebar-nested-submenu.show').forEach(nested => {
-                                    nested.classList.remove('show');
-                                    const nestedToggle = document.querySelector(`[data-menu="${nested.id}"]`);
-                                    if (nestedToggle) nestedToggle.classList.remove('menu-open');
-                                });
+                                submenu.querySelectorAll('.sidebar-nested-submenu.show').forEach(
+                                    nested => {
+                                        nested.classList.remove('show');
+                                        const nestedToggle = document.querySelector(
+                                            `[data-menu="${nested.id}"]`);
+                                        if (nestedToggle) nestedToggle.classList.remove(
+                                            'menu-open');
+                                    });
                             } else {
                                 submenu.classList.add('show');
                                 toggle.classList.add('menu-open');
@@ -902,6 +1015,18 @@
                 }
 
                 this.saveState();
+
+                // Trigger DataTable column adjustment jika ada
+                this.adjustDataTable();
+            }
+
+            adjustDataTable() {
+                // Tunggu transisi selesai baru adjust DataTable
+                setTimeout(() => {
+                    if (typeof $.fn.DataTable !== 'undefined') {
+                        $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                    }
+                }, 350); // Sesuai dengan durasi transisi CSS (0.3s + buffer)
             }
 
             saveState() {
@@ -947,4 +1072,5 @@
     </script>
     @stack('scripts')
 </body>
+
 </html>
