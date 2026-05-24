@@ -668,9 +668,9 @@
                         auth()->user()->hasAccessToMenu('customer') ||
                         auth()->user()->hasAccessToMenu('contract') ||
                         auth()->user()->hasAccessToMenu('area') ||
-                        auth()->user()->hasAccessToMenu('invoice')||
-                        auth()->user()->hasAccessToMenu('vessel')||
-                        auth()->user()->hasAccessToMenu('port')||
+                        auth()->user()->hasAccessToMenu('invoice') ||
+                        auth()->user()->hasAccessToMenu('vessel') ||
+                        auth()->user()->hasAccessToMenu('port') ||
                         auth()->user()->hasAccessToMenu('other')))
                 <div class="nav-item has-submenu" data-tooltip="Data Master">
                     <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataMaster">
@@ -753,7 +753,11 @@
             @endif
 
             {{-- Job Order --}}
-            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract')))
+            @if (auth()->check() &&
+                    (auth()->user()->is_admin ||
+                        auth()->user()->hasAccessToMenu('jo_contract') ||
+                        auth()->user()->hasAccessToMenu('jo_tramper') ||
+                        auth()->user()->hasAccessToMenu('jo_other')))
                 <div class="nav-item has-submenu" data-tooltip="Job Order">
                     <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenData">
                         <i class="fas fa-briefcase"></i>
@@ -765,11 +769,33 @@
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}"
                                     href="{{ route('jo-contract.index') }}">
-                                    <i class="fas fa-pen-fancy"></i>
+                                    <i class="fas fa-file-contract"></i>
                                     <span>JO Contract</span>
                                 </a>
                             </div>
                         @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_tramper'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}"
+                                    href="{{ route('jo-tramper.index') }}">
+                                    <i class="fas fa-truck-moving"></i>
+                                    <span>JO Tramper</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_other'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('jo-other.*') ? 'active' : '' }}"
+                                    href="{{ route('jo-other.index') }}">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                    <span>JO Other</span>
+                                </a>
+                            </div>
+                        @endif
+
+
                     </div>
                 </div>
             @endif
@@ -808,7 +834,8 @@
                         <li>
                             <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
                                 @csrf
-                                <button type="submit" class="dropdown-item" style="border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
+                                <button type="submit" class="dropdown-item"
+                                    style="border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </button>
                             </form>
@@ -899,7 +926,7 @@
                                             });
                                         const otherToggle = document.querySelector(
                                             `[data-menu="${menu.id}"]`);
-                        if (otherToggle) otherToggle.classList.remove(
+                                        if (otherToggle) otherToggle.classList.remove(
                                             'menu-open');
                                     }
                                 });
@@ -1024,7 +1051,10 @@
                 // Tunggu transisi selesai baru adjust DataTable
                 setTimeout(() => {
                     if (typeof $.fn.DataTable !== 'undefined') {
-                        $.fn.DataTable.tables({ visible: true, api: true }).columns.adjust();
+                        $.fn.DataTable.tables({
+                            visible: true,
+                            api: true
+                        }).columns.adjust();
                     }
                 }, 350); // Sesuai dengan durasi transisi CSS (0.3s + buffer)
             }

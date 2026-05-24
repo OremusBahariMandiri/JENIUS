@@ -1,50 +1,50 @@
 @extends('layouts.app')
 
-@section('title', 'Edit JO Contract')
+@section('title', 'Edit JO Tramper')
 
 @push('styles')
     <style>
-        .joContractEditPage .card {
+        .joTramperEditPage .card {
             border: none;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
         }
 
-        .joContractEditPage .card-header {
+        .joTramperEditPage .card-header {
             border-radius: 10px 10px 0 0 !important;
             padding: 1rem 1.5rem;
             font-weight: 600;
         }
 
-        .joContractEditPage .form-control:focus,
-        .joContractEditPage .form-select:focus {
+        .joTramperEditPage .form-control:focus,
+        .joTramperEditPage .form-select:focus {
             border-color: var(--primary-green);
             box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
         }
 
-        .joContractEditPage .form-label {
+        .joTramperEditPage .form-label {
             color: var(--text-dark);
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
 
-        .joContractEditPage .btn {
+        .joTramperEditPage .btn {
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.2s;
         }
 
-        .joContractEditPage .btn:hover {
+        .joTramperEditPage .btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .joContractEditPage .btn-success {
+        .joTramperEditPage .btn-success {
             background-color: var(--primary-green);
             border-color: var(--primary-green);
         }
 
-        .joContractEditPage .btn-success:hover {
+        .joTramperEditPage .btn-success:hover {
             background-color: var(--dark-green);
             border-color: var(--dark-green);
         }
@@ -258,63 +258,88 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid joContractEditPage">
+    <div class="container-fluid joTramperEditPage">
         <div class="row">
             <div class="col-lg-12">
                 <!-- Page Header Card -->
                 <div class="card shadow mb-4">
                     <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-edit me-2"></i>Edit JO Contract</span>
-                        <a href="{{ route('jo-contract.index') }}" class="btn btn-light btn-sm">
+                        <span class="fw-bold"><i class="fas fa-edit me-2"></i>Edit JO Tramper</span>
+                        <a href="{{ route('jo-tramper.index') }}" class="btn btn-light btn-sm">
                             <i class="fas fa-arrow-left me-1"></i> Back
                         </a>
                     </div>
                 </div>
 
-                <form action="{{ route('jo-contract.update', $joContract->id_jo_cont) }}" method="POST" id="joContractForm">
+                <form action="{{ route('jo-tramper.update', $joTramper->id_jo_tram) }}" method="POST" id="joTramperForm">
                     @csrf
                     @method('PUT')
 
-                    <!-- JO Contract Info Card -->
+                    <!-- JO Tramper Info Card -->
                     <div class="card shadow mb-4">
                         <div class="card-header text-black" style="background-color: #d1fae5">
-                            <h6 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h6>
+                            <h6 class="mb-0"><i class="fas fa-ship me-2"></i>JO Tramper Information</h6>
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label required-field">Contract</label>
-                                    <select name="id_md_cont" id="id_md_cont"
-                                        class="form-select @error('id_md_cont') is-invalid @enderror">
-                                        <option value="">Select Contract</option>
-                                        @foreach ($contracts as $contract)
-                                            <option value="{{ $contract->id_md_cont }}"
-                                                {{ old('id_md_cont', $joContract->id_md_cont) == $contract->id_md_cont ? 'selected' : '' }}>
-                                                {{ $contract->no_contract }} - {{ $contract->contract }}
-                                                @if ($contract->customer)
-                                                    ({{ $contract->customer->customer }})
+                                    <label class="form-label required-field">Customer</label>
+                                    <select name="id_md_cust" id="id_md_cust"
+                                        class="form-select @error('id_md_cust') is-invalid @enderror">
+                                        <option value="">Select Customer</option>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id_md_cust }}"
+                                                {{ old('id_md_cust', $joTramper->id_md_cust) == $customer->id_md_cust ? 'selected' : '' }}>
+                                                {{ $customer->customer }}
+                                                @if ($customer->no_customer)
+                                                    ({{ $customer->no_customer }})
                                                 @endif
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('id_md_cont')
+                                    @error('id_md_cust')
                                         <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label required-field">Area</label>
-                                    <select name="id_md_area" id="id_md_area"
-                                        class="form-select @error('id_md_area') is-invalid @enderror">
-                                        <option value="">Select Area</option>
-                                        @foreach ($areas as $area)
-                                            <option value="{{ $area->id_md_area }}"
-                                                {{ old('id_md_area', $joContract->id_md_area) == $area->id_md_area ? 'selected' : '' }}>
-                                                {{ $area->area }}
+                                    <label class="form-label required-field">Port</label>
+                                    <select name="id_md_port" id="id_md_port"
+                                        class="form-select @error('id_md_port') is-invalid @enderror">
+                                        <option value="">Select Port</option>
+                                        @foreach ($ports as $port)
+                                            <option value="{{ $port->id_md_port }}"
+                                                {{ old('id_md_port', $joTramper->id_md_port) == $port->id_md_port ? 'selected' : '' }}>
+                                                {{ $port->name_port }}
+                                                @if ($port->no_port)
+                                                    ({{ $port->no_port }})
+                                                @endif
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('id_md_area')
+                                    @error('id_md_port')
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required-field">Start Date</label>
+                                    <input type="date" name="date_start" id="date_start"
+                                        class="form-control @error('date_start') is-invalid @enderror"
+                                        value="{{ old('date_start', $joTramper->date_start ? $joTramper->date_start->format('Y-m-d') : '') }}">
+                                    @error('date_start')
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required-field">End Date</label>
+                                    <input type="date" name="date_end" id="date_end"
+                                        class="form-control @error('date_end') is-invalid @enderror"
+                                        value="{{ old('date_end', $joTramper->date_end ? $joTramper->date_end->format('Y-m-d') : '') }}">
+                                    @error('date_end')
                                         <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -324,7 +349,7 @@
                                 <label class="form-label required-field">Title</label>
                                 <input type="text" name="title" id="title"
                                     class="form-control @error('title') is-invalid @enderror"
-                                    value="{{ old('title', $joContract->title) }}">
+                                    value="{{ old('title', $joTramper->title) }}">
                                 @error('title')
                                     <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
@@ -332,8 +357,18 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Note</label>
-                                <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note', $joContract->note) }}</textarea>
+                                <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note', $joTramper->note) }}</textarea>
                                 @error('note')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <input type="number" name="sts_proses" id="title"
+                                    class="form-control @error('sts_proses') is-invalid @enderror"
+                                    value="{{ old('sts_proses', $joTramper->sts_proses) }}">
+                                @error('sts_proses')
                                     <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
                             </div>
@@ -347,26 +382,26 @@
                             <div class="row text-sm">
                                 <div class="col-md-6 mb-2">
                                     <small class="text-muted">Created:</small><br>
-                                    <small><i class="fas fa-calendar-plus me-1"></i>{{ $joContract->created_at->format('d M Y, H:i') }}</small>
+                                    <small><i class="fas fa-calendar-plus me-1"></i>{{ $joTramper->created_at->format('d M Y, H:i') }}</small>
                                 </div>
                                 <div class="col-md-6 mb-2">
                                     <small class="text-muted">Last Updated:</small><br>
-                                    <small><i class="fas fa-calendar-check me-1"></i>{{ $joContract->updated_at->format('d M Y, H:i') }}</small>
+                                    <small><i class="fas fa-calendar-check me-1"></i>{{ $joTramper->updated_at->format('d M Y, H:i') }}</small>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- JO Contract Items Card -->
+                    <!-- JO Tramper Items Card -->
                     <div class="card shadow mb-4">
                         <div class="card-header text-black" style="background-color: #d1fae5">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items</h6>
+                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Tramper Items</h6>
                                 <div class="kurs-section d-flex gap-3 align-items-center mb-0" style="padding: 10px 15px;">
                                     <div>
                                         <label class="form-label mb-1">Kurs Date</label>
                                         @php
-                                            $firstItem = $joContract->items->first();
+                                            $firstItem = $joTramper->items->first();
                                             $defaultDate = $firstItem && $firstItem->tgl_kurs_usd
                                                 ? $firstItem->tgl_kurs_usd->format('Y-m-d')
                                                 : '';
@@ -416,16 +451,16 @@
                                         </tr>
                                     </thead>
                                     <tbody id="itemsTableBody">
-                                        @if ($joContract->items->count() > 0)
-                                            @foreach ($joContract->items as $index => $item)
+                                        @if ($joTramper->items->count() > 0)
+                                            @foreach ($joTramper->items as $index => $item)
                                                 <tr class="item-row" data-item-number="{{ $index + 1 }}"
                                                     data-category="{{ $item->invoice->invoice_ctg }}"
-                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joContract->items[$index - 1]->invoice->invoice_ctg) data-is-first-in-category="true" @endif>
+                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joTramper->items[$index - 1]->invoice->invoice_ctg) data-is-first-in-category="true" @endif>
                                                     <td class="item-number-cell">{{ $index + 1 }}</td>
 
-                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joContract->items[$index - 1]->invoice->invoice_ctg)
+                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joTramper->items[$index - 1]->invoice->invoice_ctg)
                                                         @php
-                                                            $categoryCount = $joContract->items
+                                                            $categoryCount = $joTramper->items
                                                                 ->where('invoice.invoice_ctg', $item->invoice->invoice_ctg)
                                                                 ->count();
                                                         @endphp
@@ -563,9 +598,9 @@
                     <!-- Action Buttons -->
                     <div class="d-flex gap-2 mb-5">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save me-2"></i>Update JO Contract
+                            <i class="fas fa-save me-2"></i>Update JO Tramper
                         </button>
-                        <a href="{{ route('jo-contract.show', $joContract->id_jo_cont) }}" class="btn btn-secondary btn-lg">
+                        <a href="{{ route('jo-tramper.show', $joTramper->id_jo_tram) }}" class="btn btn-secondary btn-lg">
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
                     </div>
@@ -574,34 +609,34 @@
         </div>
     </div>
 @endsection
-{{-- Script Jo Contract Edit --}}
+{{-- Script Jo Tramper Edit --}}
 @push('scripts')
     <script>
-        let globalItemNumber = {{ $joContract->items->count() }};
+        let globalItemNumber = {{ $joTramper->items->count() }};
         let categories = {};
 
         // Format Rupiah Helper Functions
         function formatRupiah(value) {
-    let number = value.replace(/[^\d,]/g, '');
-    number = number.replace(/\./g, '');
-    if (number === '') return '';  // ← UBAH INI dari '0,00' jadi ''
+            let number = value.replace(/[^\d,]/g, '');
+            number = number.replace(/\./g, '');
+            if (number === '') return '';
 
-    let parts = number.split(',');
-    let integerPart = parts[0];
-    let decimalPart = parts.length > 1 ? parts[1] : '';
+            let parts = number.split(',');
+            let integerPart = parts[0];
+            let decimalPart = parts.length > 1 ? parts[1] : '';
 
-    if (decimalPart.length > 2) {
-        decimalPart = decimalPart.substring(0, 2);
-    }
+            if (decimalPart.length > 2) {
+                decimalPart = decimalPart.substring(0, 2);
+            }
 
-    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
-    if (parts.length > 1) {
-        return integerPart + ',' + decimalPart;
-    } else {
-        return integerPart + ',00';
-    }
-}
+            if (parts.length > 1) {
+                return integerPart + ',' + decimalPart;
+            } else {
+                return integerPart + ',00';
+            }
+        }
 
         function parseRupiah(value) {
             let cleaned = value.replace(/\./g, '').replace(',', '.');
@@ -609,148 +644,148 @@
         }
 
         function setupRupiahInput(displayInput, hiddenInput) {
-    displayInput.addEventListener('input', function(e) {
-        let cursorPosition = this.selectionStart;
-        let beforeCursor = this.value.substring(0, cursorPosition);
+            displayInput.addEventListener('input', function(e) {
+                let cursorPosition = this.selectionStart;
+                let beforeCursor = this.value.substring(0, cursorPosition);
 
-        let formatted = formatRupiah(this.value);
-        this.value = formatted;
-
-        if (!beforeCursor.includes(',')) {
-            let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-            let newPos = 0;
-            let digitCount = 0;
-            for (let i = 0; i < this.value.length; i++) {
-                if (/\d/.test(this.value[i])) {
-                    digitCount++;
-                    if (digitCount === digitsBeforeCursor) {
-                        newPos = i + 1;
-                        break;
-                    }
-                }
-            }
-            this.setSelectionRange(newPos, newPos);
-        } else {
-            let commaPos = this.value.indexOf(',');
-            let decimalDigitsInput = beforeCursor.split(',')[1] || '';
-            let decimalDigits = decimalDigitsInput.length;
-            let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
-            this.setSelectionRange(newPos, newPos);
-        }
-
-        hiddenInput.value = parseRupiah(formatted);
-    });
-
-    displayInput.addEventListener('keydown', function(e) {
-        let cursorPosition = this.selectionStart;
-        let selectionEnd = this.selectionEnd;
-        let commaPos = this.value.indexOf(',');
-
-        if (e.key === 'Backspace') {
-            if (cursorPosition !== selectionEnd) {
-                return;
-            }
-
-            if (commaPos !== -1 && cursorPosition > commaPos + 1) {
-                e.preventDefault();
-
-                let posInDecimal = cursorPosition - commaPos - 1;
-                let beforeComma = this.value.substring(0, commaPos);
-                let afterComma = this.value.substring(commaPos + 1);
-
-                let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
-
-                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                let formatted = formatRupiah(newValue);
+                let formatted = formatRupiah(this.value);
                 this.value = formatted;
 
-                let newCommaPos = this.value.indexOf(',');
-                let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
-                this.setSelectionRange(newCursorPos, newCursorPos);
+                if (!beforeCursor.includes(',')) {
+                    let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+                    let newPos = 0;
+                    let digitCount = 0;
+                    for (let i = 0; i < this.value.length; i++) {
+                        if (/\d/.test(this.value[i])) {
+                            digitCount++;
+                            if (digitCount === digitsBeforeCursor) {
+                                newPos = i + 1;
+                                break;
+                            }
+                        }
+                    }
+                    this.setSelectionRange(newPos, newPos);
+                } else {
+                    let commaPos = this.value.indexOf(',');
+                    let decimalDigitsInput = beforeCursor.split(',')[1] || '';
+                    let decimalDigits = decimalDigitsInput.length;
+                    let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+                    this.setSelectionRange(newPos, newPos);
+                }
 
-                hiddenInput.value = parseRupiah(this.value);
-            }
-            else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
-                e.preventDefault();
-            }
-            else if (cursorPosition === commaPos) {
-                e.preventDefault();
-                let beforeComma = this.value.substring(0, commaPos);
-                this.value = beforeComma;
-                this.setSelectionRange(beforeComma.length, beforeComma.length);
-                hiddenInput.value = parseRupiah(this.value);
-            }
-        } else if (e.key === 'Delete') {
-            if (cursorPosition !== selectionEnd) {
-                return;
-            }
+                hiddenInput.value = parseRupiah(formatted);
+            });
 
-            if (cursorPosition === commaPos) {
-                e.preventDefault();
-                let beforeComma = this.value.substring(0, commaPos);
-                this.value = beforeComma;
-                this.setSelectionRange(beforeComma.length, beforeComma.length);
-                hiddenInput.value = parseRupiah(this.value);
-                return;
-            }
+            displayInput.addEventListener('keydown', function(e) {
+                let cursorPosition = this.selectionStart;
+                let selectionEnd = this.selectionEnd;
+                let commaPos = this.value.indexOf(',');
 
-            if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
-                e.preventDefault();
+                if (e.key === 'Backspace') {
+                    if (cursorPosition !== selectionEnd) {
+                        return;
+                    }
 
-                let posInDecimal = cursorPosition - commaPos - 1;
-                let beforeComma = this.value.substring(0, commaPos);
-                let afterComma = this.value.substring(commaPos + 1);
+                    if (commaPos !== -1 && cursorPosition > commaPos + 1) {
+                        e.preventDefault();
 
-                let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
+                        let posInDecimal = cursorPosition - commaPos - 1;
+                        let beforeComma = this.value.substring(0, commaPos);
+                        let afterComma = this.value.substring(commaPos + 1);
 
-                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                let formatted = formatRupiah(newValue);
-                this.value = formatted;
+                        let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
 
-                let newCommaPos = this.value.indexOf(',');
-                this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
+                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                        let formatted = formatRupiah(newValue);
+                        this.value = formatted;
 
-                hiddenInput.value = parseRupiah(this.value);
-            }
-        }
-    });
+                        let newCommaPos = this.value.indexOf(',');
+                        let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
+                        this.setSelectionRange(newCursorPos, newCursorPos);
 
-    displayInput.addEventListener('blur', function(e) {
-        if (e.target.value) {
-            if (!e.target.value.includes(',')) {
-                e.target.value = e.target.value + ',00';
-            } else {
-                let parts = e.target.value.split(',');
-                if (parts[1] !== undefined) {
-                    if (parts[1].length === 0) {
-                        e.target.value = parts[0] + ',00';
-                    } else if (parts[1].length < 2) {
-                        e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                        hiddenInput.value = parseRupiah(this.value);
+                    }
+                    else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
+                        e.preventDefault();
+                    }
+                    else if (cursorPosition === commaPos) {
+                        e.preventDefault();
+                        let beforeComma = this.value.substring(0, commaPos);
+                        this.value = beforeComma;
+                        this.setSelectionRange(beforeComma.length, beforeComma.length);
+                        hiddenInput.value = parseRupiah(this.value);
+                    }
+                } else if (e.key === 'Delete') {
+                    if (cursorPosition !== selectionEnd) {
+                        return;
+                    }
+
+                    if (cursorPosition === commaPos) {
+                        e.preventDefault();
+                        let beforeComma = this.value.substring(0, commaPos);
+                        this.value = beforeComma;
+                        this.setSelectionRange(beforeComma.length, beforeComma.length);
+                        hiddenInput.value = parseRupiah(this.value);
+                        return;
+                    }
+
+                    if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
+                        e.preventDefault();
+
+                        let posInDecimal = cursorPosition - commaPos - 1;
+                        let beforeComma = this.value.substring(0, commaPos);
+                        let afterComma = this.value.substring(commaPos + 1);
+
+                        let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
+
+                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                        let formatted = formatRupiah(newValue);
+                        this.value = formatted;
+
+                        let newCommaPos = this.value.indexOf(',');
+                        this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
+
+                        hiddenInput.value = parseRupiah(this.value);
                     }
                 }
-            }
-            hiddenInput.value = parseRupiah(e.target.value);
-        } else {
-            e.target.value = '';
-            hiddenInput.value = '';
-        }
-    });
+            });
 
-    displayInput.addEventListener('keypress', function(e) {
-        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
-            (e.key === ',' && !this.value.includes(',')) ||
-            (e.keyCode === 65 && e.ctrlKey === true) ||
-            (e.keyCode === 67 && e.ctrlKey === true) ||
-            (e.keyCode === 86 && e.ctrlKey === true) ||
-            (e.keyCode === 88 && e.ctrlKey === true)) {
-            return;
-        }
+            displayInput.addEventListener('blur', function(e) {
+                if (e.target.value) {
+                    if (!e.target.value.includes(',')) {
+                        e.target.value = e.target.value + ',00';
+                    } else {
+                        let parts = e.target.value.split(',');
+                        if (parts[1] !== undefined) {
+                            if (parts[1].length === 0) {
+                                e.target.value = parts[0] + ',00';
+                            } else if (parts[1].length < 2) {
+                                e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                            }
+                        }
+                    }
+                    hiddenInput.value = parseRupiah(e.target.value);
+                } else {
+                    e.target.value = '';
+                    hiddenInput.value = '';
+                }
+            });
 
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-            e.preventDefault();
+            displayInput.addEventListener('keypress', function(e) {
+                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                    (e.key === ',' && !this.value.includes(',')) ||
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true)) {
+                    return;
+                }
+
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
         }
-    });
-}
 
         // Setup Global Kurs Input
         const globalKursDisplay = document.getElementById('global_kurs_usd_display');
@@ -851,14 +886,14 @@
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input hpp-display" >
+                    <input type="text" class="form-control currency-input hpp-display">
                     <input type="hidden" name="items[${globalItemNumber}][hpp_ops]" class="hpp-value" value="0">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input selling-price-display"   readonly style="background-color: #e9ecef;">
+                    <input type="text" class="form-control currency-input selling-price-display" readonly style="background-color: #e9ecef;">
                     <input type="hidden" name="items[${globalItemNumber}][hargajual_idr]" class="selling-price-value" value="0">
                 </div>
             </td>
@@ -1171,7 +1206,7 @@
         }
 
         // Form submission validation
-        document.getElementById('joContractForm').addEventListener('submit', function(e) {
+        document.getElementById('joTramperForm').addEventListener('submit', function(e) {
             const itemRows = document.querySelectorAll('.item-row');
 
             if (itemRows.length === 0) {
