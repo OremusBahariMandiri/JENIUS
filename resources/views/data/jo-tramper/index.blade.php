@@ -1,18 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'JO Contract Data')
+@section('title', 'JO Tramper Data')
 
 @section('content')
-    <div class="container-fluid joContractPage">
+    <div class="container-fluid joTramperPage">
         <div class="row">
             <div class="col-md-12">
                 <div class="card shadow">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-file-contract me-2"></i>JO Contract Data</span>
-                        @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'tambah')))
-                            <a href="{{ route('jo-contract.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add JO Contract
+                        <span class="fw-bold"><i class="fas fa-ship me-2"></i>JO Tramper Data</span>
+                        @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'tambah')))
+                            <a href="{{ route('jo-tramper.create') }}" class="btn btn-light">
+                                <i class="fas fa-plus-circle me-1"></i> Add JO Tramper
                             </a>
                         @endif
                     </div>
@@ -33,66 +33,80 @@
                         @endif
 
                         <div class="table-responsive">
-                            <table id="joContractTable" class="table table-bordered table-striped">
+                            <table id="joTramperTable" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
                                         <th width="5%">No</th>
                                         {{-- <th>JO Number</th> --}}
                                         <th>Title</th>
-                                        <th>Contract</th>
                                         <th>Customer</th>
-                                        <th>Area</th>
-                                        <th>Department</th>
+                                        <th>Port</th>
+                                        <th>Period</th>
+                                        <th>Status</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($joContracts as $index => $joContract)
+                                    @forelse($joTrampers as $index => $joTramper)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            {{-- <td><strong>{{ $joContract->no_jo_cont ?? '-' }}</strong></td> --}}
-                                            <td>{{ $joContract->title }}</td>
+                                            {{-- <td><strong>JOT-{{ $joTramper->id_jo_tram }}</strong></td> --}}
+                                            <td>{{ $joTramper->title }}</td>
                                             <td>
-                                                @if ($joContract->contract)
-                                                    <span
-                                                        class="badge bg-info text-dark">{{ $joContract->contract->no_contract }}</span>
+                                                @if ($joTramper->customer)
+                                                    {{ $joTramper->customer->customer }}
                                                 @else
                                                     -
                                                 @endif
                                             </td>
                                             <td>
-                                                @if ($joContract->contract && $joContract->contract->customer)
-                                                    {{ $joContract->contract->customer->customer }}
+                                                @if ($joTramper->port)
+                                                    <span class="badge bg-info text-dark">{{ $joTramper->port->name_port }}</span>
                                                 @else
                                                     -
                                                 @endif
                                             </td>
-                                            <td>{{ $joContract->area ? $joContract->area->area : '-' }}</td>
-                                            <td>{{ $joContract->department ? $joContract->department->department : '-' }}
+                                            <td>
+                                                <small>
+                                                    {{ $joTramper->date_start ? $joTramper->date_start->format('d M Y') : '-' }}
+                                                    <i class="fas fa-arrow-right mx-1"></i>
+                                                    {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @if ($joTramper->sts_proses == 'Draft')
+                                                    <span class="badge bg-secondary">Draft</span>
+                                                @elseif ($joTramper->sts_proses == 'Approved')
+                                                    <span class="badge bg-success">Approved</span>
+                                                @elseif ($joTramper->sts_proses == 'Pending')
+                                                    <span class="badge bg-warning text-dark">Pending</span>
+                                                @else
+                                                    <span class="badge bg-info">{{ $joTramper->sts_proses }}</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center">
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
-                                                        <a href="{{ route('jo-contract.show', $joContract->id_jo_cont) }}"
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'detail')))
+                                                        <a href="{{ route('jo-tramper.show', $joTramper->id_jo_tram) }}"
                                                             class="btn btn-sm btn-info" data-bs-toggle="tooltip"
                                                             title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     @endif
 
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'ubah')))
-                                                        <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}"
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'ubah')))
+                                                        <a href="{{ route('jo-tramper.edit', $joTramper->id_jo_tram) }}"
                                                             class="btn btn-sm btn-warning" data-bs-toggle="tooltip"
                                                             title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                     @endif
 
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'hapus')))
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'hapus')))
                                                         <button type="button" class="btn btn-sm btn-danger btn-delete"
-                                                            data-id="{{ $joContract->id_jo_cont }}"
-                                                            data-name="{{ $joContract->title }}"
-                                                            data-url="{{ route('jo-contract.destroy', $joContract->id_jo_cont) }}"
+                                                            data-id="{{ $joTramper->id_jo_tram }}"
+                                                            data-name="{{ $joTramper->title }}"
+                                                            data-url="{{ route('jo-tramper.destroy', $joTramper->id_jo_tram) }}"
                                                             data-bs-toggle="tooltip" title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -102,10 +116,10 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center py-5">
+                                            <td colspan="7" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
-                                                <h5 class="text-muted">No JO Contract Data</h5>
-                                                <p class="text-muted mb-0">Start by adding a new JO contract</p>
+                                                <h5 class="text-muted">No JO Tramper Data</h5>
+                                                <p class="text-muted mb-0">Start by adding a new JO Tramper</p>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -129,90 +143,90 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 
     <style>
-        .joContractPage .card {
+        .joTramperPage .card {
             border: none;
             border-radius: 10px;
         }
 
-        .joContractPage .card-header {
+        .joTramperPage .card-header {
             border-radius: 10px 10px 0 0 !important;
             padding: 1rem 1.5rem;
         }
 
-        .joContractPage .dataTables_wrapper {
+        .joTramperPage .dataTables_wrapper {
             width: 100%;
             transition: all 0.3s ease;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_length,
-        .joContractPage .dataTables_wrapper .dataTables_filter {
+        .joTramperPage .dataTables_wrapper .dataTables_length,
+        .joTramperPage .dataTables_wrapper .dataTables_filter {
             margin-bottom: 1rem !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_filter {
+        .joTramperPage .dataTables_wrapper .dataTables_filter {
             text-align: right !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_filter input {
+        .joTramperPage .dataTables_wrapper .dataTables_filter input {
             margin-left: 5px !important;
             border-radius: 4px !important;
             border: 1px solid #ced4da !important;
             padding: 0.375rem 0.75rem !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_length select {
+        .joTramperPage .dataTables_wrapper .dataTables_length select {
             border-radius: 4px !important;
             border: 1px solid #ced4da !important;
             padding: 0.375rem 2rem 0.375rem 0.75rem !important;
         }
 
-        .joContractPage #joContractTable {
+        .joTramperPage #joTramperTable {
             width: 100% !important;
             transition: all 0.3s ease;
         }
 
-        .joContractPage #joContractTable tbody tr {
+        .joTramperPage #joTramperTable tbody tr {
             transition: all 0.2s ease;
         }
 
-        .joContractPage #joContractTable tbody tr:hover {
+        .joTramperPage #joTramperTable tbody tr:hover {
             background-color: #f8f9fa;
             cursor: pointer;
         }
 
-        .joContractPage .btn-sm {
+        .joTramperPage .btn-sm {
             transition: transform 0.2s;
         }
 
-        .joContractPage .btn-sm:hover {
+        .joTramperPage .btn-sm:hover {
             transform: scale(1.1);
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_paginate .paginate_button {
+        .joTramperPage .dataTables_wrapper .dataTables_paginate .paginate_button {
             padding: 0.375rem 0.75rem !important;
             margin: 0 2px !important;
             border-radius: 4px !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        .joTramperPage .dataTables_wrapper .dataTables_paginate .paginate_button.current {
             background: var(--primary-green) !important;
             color: white !important;
             border: 1px solid var(--primary-green) !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        .joTramperPage .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
             background: var(--primary-green) !important;
             color: white !important;
             border: 1px solid var(--primary-green) !important;
         }
 
-        .joContractPage .table-responsive {
+        .joTramperPage .table-responsive {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
 
-        .joContractPage .badge {
+        .joTramperPage .badge {
             font-weight: 500;
             padding: 0.35rem 0.65rem;
         }
@@ -225,19 +239,18 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <script>
         $(document).ready(function() {
             // Cek apakah tabel memiliki data
-            var hasData = $('#joContractTable tbody tr').length > 0 &&
-                !$('#joContractTable tbody tr td[colspan]').length;
+            var hasData = $('#joTramperTable tbody tr').length > 0 &&
+                          !$('#joTramperTable tbody tr td[colspan]').length;
 
             if (hasData) {
-                if ($.fn.DataTable.isDataTable('#joContractTable')) {
-                    $('#joContractTable').DataTable().destroy();
+                if ($.fn.DataTable.isDataTable('#joTramperTable')) {
+                    $('#joTramperTable').DataTable().destroy();
                 }
 
-                var table = $('#joContractTable').DataTable({
+                var table = $('#joTramperTable').DataTable({
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [
@@ -245,7 +258,7 @@
                         [10, 25, 50, "All"]
                     ],
                     order: [
-                        [1, 'asc']
+                        [1, 'desc']
                     ],
                     columnDefs: [{
                             orderable: false,
@@ -268,7 +281,7 @@
                             next: "Next",
                             previous: "Previous"
                         },
-                        emptyTable: "No JO Contract data available"
+                        emptyTable: "No JO Tramper data available"
                     },
                     autoWidth: true,
                     drawCallback: function(settings) {
@@ -290,26 +303,27 @@
                 $(window).on('resize', function() {
                     clearTimeout(resizeTimer);
                     resizeTimer = setTimeout(function() {
-                        if ($.fn.DataTable.isDataTable('#joContractTable')) {
-                            $('#joContractTable').DataTable().columns.adjust().responsive.recalc();
+                        if ($.fn.DataTable.isDataTable('#joTramperTable')) {
+                            $('#joTramperTable').DataTable().columns.adjust().responsive.recalc();
                         }
                     }, 300);
                 });
 
                 setTimeout(function() {
-                    if ($.fn.DataTable.isDataTable('#joContractTable')) {
-                        $('#joContractTable').DataTable().columns.adjust().responsive.recalc();
+                    if ($.fn.DataTable.isDataTable('#joTramperTable')) {
+                        $('#joTramperTable').DataTable().columns.adjust().responsive.recalc();
                     }
                 }, 100);
+            } else {
+                // Jika data kosong, sembunyikan elemen DataTables
+                $('#joTramperTable').wrap('<div class="table-responsive"></div>');
             }
 
-            // Initialize tooltips
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
             var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            // Delete confirmation with SweetAlert2
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
 
@@ -317,8 +331,8 @@
                 const url = $(this).data('url');
 
                 Swal.fire({
-                    title: 'Delete JO Contract?',
-                    html: `JO Contract <strong>${name}</strong> will be permanently deleted.`,
+                    title: 'Delete JO Tramper?',
+                    html: `JO Tramper <strong>${name}</strong> will be permanently deleted.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -333,9 +347,8 @@
                 });
             });
 
-            // Row click to detail
             if (hasData) {
-                $('#joContractTable tbody').on('click', 'tr', function(e) {
+                $('#joTramperTable tbody').on('click', 'tr', function(e) {
                     if ($(e.target).is('button') || $(e.target).is('a') || $(e.target).is('i') ||
                         $(e.target).closest('button').length || $(e.target).closest('a').length) {
                         return;
@@ -348,7 +361,6 @@
                 });
             }
 
-            // Auto hide alerts
             setTimeout(function() {
                 $(".alert").fadeOut("slow");
             }, 5000);

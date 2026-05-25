@@ -502,30 +502,30 @@
                                             <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-white">IDR</span>
+                                                    <span class="currency-label text-black">IDR</span>
                                                     <span id="footerTotalIDR"
-                                                        style="color: #fff; font-weight: 700;">0,00</span>
+                                                        style="color: #000000; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-white">USD</span>
+                                                    <span class="currency-label text-black">USD</span>
                                                     <span id="footerTotalUSD"
-                                                        style="color: #fff; font-weight: 700;">0,00</span>
+                                                        style="color: #000000; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-white">IDR</span>
+                                                    <span class="currency-label text-black">IDR</span>
                                                     <span id="footerTotalHPP"
-                                                        style="color: #fff; font-weight: 700;">0,00</span>
+                                                        style="color: #000000; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group">
-                                                    <span class="currency-label text-white">IDR</span>
+                                                    <span class="currency-label text-black">IDR</span>
                                                     <span id="footerTotalSelling"
-                                                        style="color: #fff; font-weight: 700;">0,00</span>
+                                                        style="color: #000000; font-weight: 700;">0,00</span>
                                                 </div>
                                             </td>
                                             <td></td>

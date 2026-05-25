@@ -8,6 +8,8 @@ use App\Http\Controllers\Master\ContractController;
 use App\Http\Controllers\Master\CustomerController;
 use App\Http\Controllers\Master\InvoiceController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Data\JoOtherController;
+use App\Http\Controllers\Data\JoTramperController;
 use App\Http\Controllers\Master\OtherController;
 use App\Http\Controllers\Master\PortController;
 use App\Http\Controllers\Master\VesselController;
@@ -142,6 +144,14 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('jo-contract', JoContractController::class);
         Route::get('jo-contract-select', [JoContractController::class, 'getForSelect']);
         Route::post('jo-contract-bulk-delete', [JoContractController::class, 'bulkDelete']);
+
+        Route::resource('jo-tramper', JoTramperController::class);
+        Route::get('jo-tramper-select', [JoTramperController::class, 'getForSelect']);
+        Route::post('jo-tramper-bulk-delete', [JoTramperController::class, 'bulkDelete']);
+
+        Route::resource('jo-other', JoOtherController::class);
+        Route::get('jo-other-select', [JoOtherController::class, 'getForSelect']);
+        Route::post('jo-other-bulk-delete', [JoOtherController::class, 'bulkDelete']);
 
         // JO Contract Item Routes
         Route::resource('jo-contract-item', JoContractItemController::class);

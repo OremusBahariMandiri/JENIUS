@@ -62,7 +62,21 @@ return [
         [
             'key' => 'jo_contract',
             'name' => 'JO Contract',
-            'icon' => 'fas fa-pen-fancy',
+            'icon' => 'fas fa-file-contract',
+            'description' => 'Manage job order contract data',
+        ],
+
+        [
+            'key' => 'jo_tramper',
+            'name' => 'JO Tramper',
+            'icon' => 'fas fa-truck-moving',
+            'description' => 'Manage job order contract data',
+        ],
+
+        [
+            'key' => 'jo_other',
+            'name' => 'JO Other',
+            'icon' => 'fas fa-ellipsis-h',
             'description' => 'Manage job order contract data',
         ],
     ],

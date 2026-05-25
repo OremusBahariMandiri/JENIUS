@@ -1,18 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'JO Contract Data')
+@section('title', 'JO Other Data')
 
 @section('content')
-    <div class="container-fluid joContractPage">
+    <div class="container-fluid joOtherPage">
         <div class="row">
             <div class="col-md-12">
                 <div class="card shadow">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-file-contract me-2"></i>JO Contract Data</span>
-                        @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'tambah')))
-                            <a href="{{ route('jo-contract.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add JO Contract
+                        <span class="fw-bold"><i class="fas fa-file-invoice me-2"></i>JO Other Data</span>
+                        @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'tambah')))
+                            <a href="{{ route('jo-other.create') }}" class="btn btn-light">
+                                <i class="fas fa-plus-circle me-1"></i> Add JO Other
                             </a>
                         @endif
                     </div>
@@ -33,66 +33,94 @@
                         @endif
 
                         <div class="table-responsive">
-                            <table id="joContractTable" class="table table-bordered table-striped">
+                            <table id="joOtherTable" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
                                         <th width="5%">No</th>
                                         {{-- <th>JO Number</th> --}}
                                         <th>Title</th>
-                                        <th>Contract</th>
                                         <th>Customer</th>
-                                        <th>Area</th>
-                                        <th>Department</th>
+                                        <th>Other Type</th>
+                                        <th>Port</th>
+                                        <th>Date Range</th>
+                                        <th>Status</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($joContracts as $index => $joContract)
+                                    @forelse($joOthers as $index => $joOther)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            {{-- <td><strong>{{ $joContract->no_jo_cont ?? '-' }}</strong></td> --}}
-                                            <td>{{ $joContract->title }}</td>
+                                            {{-- <td><strong>JOO-{{ str_pad($joOther->id_jo_other, 4, '0', STR_PAD_LEFT) }}</strong></td> --}}
+                                            <td>{{ $joOther->title }}</td>
                                             <td>
-                                                @if ($joContract->contract)
-                                                    <span
-                                                        class="badge bg-info text-dark">{{ $joContract->contract->no_contract }}</span>
+                                                @if ($joOther->customer)
+                                                    {{ $joOther->customer->customer }}
                                                 @else
                                                     -
                                                 @endif
                                             </td>
                                             <td>
-                                                @if ($joContract->contract && $joContract->contract->customer)
-                                                    {{ $joContract->contract->customer->customer }}
+                                                @if ($joOther->other)
+                                                    <span class="badge bg-info text-dark">{{ $joOther->other->other }}</span>
                                                 @else
                                                     -
                                                 @endif
                                             </td>
-                                            <td>{{ $joContract->area ? $joContract->area->area : '-' }}</td>
-                                            <td>{{ $joContract->department ? $joContract->department->department : '-' }}
+                                            <td>
+                                                @if ($joOther->port)
+                                                    {{ $joOther->port->name_port }}
+                                                @else
+                                                    -
+                                                @endif
+                                            </td>
+                                            <td>
+                                                <small class="text-muted">
+                                                    {{ $joOther->date_start ? $joOther->date_start->format('d M Y') : '-' }}
+                                                    <br>
+                                                    to
+                                                    <br>
+                                                    {{ $joOther->date_end ? $joOther->date_end->format('d M Y') : '-' }}
+                                                </small>
+                                            </td>
+                                            <td>
+                                                @if ($joOther->sts_proses)
+                                                    @if ($joOther->sts_proses == 'Draft')
+                                                        <span class="badge bg-secondary">{{ $joOther->sts_proses }}</span>
+                                                    @elseif ($joOther->sts_proses == 'On Progress')
+                                                        <span class="badge bg-warning text-dark">{{ $joOther->sts_proses }}</span>
+                                                    @elseif ($joOther->sts_proses == 'Completed')
+                                                        <span class="badge bg-success">{{ $joOther->sts_proses }}</span>
+                                                    @else
+                                                        <span class="badge bg-primary">{{ $joOther->sts_proses }}</span>
+                                                    @endif
+                                                @else
+                                                    <span class="badge bg-secondary">Draft</span>
+                                                @endif
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center">
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
-                                                        <a href="{{ route('jo-contract.show', $joContract->id_jo_cont) }}"
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'detail')))
+                                                        <a href="{{ route('jo-other.show', $joOther->id_jo_other) }}"
                                                             class="btn btn-sm btn-info" data-bs-toggle="tooltip"
                                                             title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     @endif
 
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'ubah')))
-                                                        <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}"
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'ubah')))
+                                                        <a href="{{ route('jo-other.edit', $joOther->id_jo_other) }}"
                                                             class="btn btn-sm btn-warning" data-bs-toggle="tooltip"
                                                             title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                     @endif
 
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'hapus')))
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'hapus')))
                                                         <button type="button" class="btn btn-sm btn-danger btn-delete"
-                                                            data-id="{{ $joContract->id_jo_cont }}"
-                                                            data-name="{{ $joContract->title }}"
-                                                            data-url="{{ route('jo-contract.destroy', $joContract->id_jo_cont) }}"
+                                                            data-id="{{ $joOther->id_jo_other }}"
+                                                            data-name="{{ $joOther->title }}"
+                                                            data-url="{{ route('jo-other.destroy', $joOther->id_jo_other) }}"
                                                             data-bs-toggle="tooltip" title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -102,10 +130,10 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center py-5">
+                                            <td colspan="9" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
-                                                <h5 class="text-muted">No JO Contract Data</h5>
-                                                <p class="text-muted mb-0">Start by adding a new JO contract</p>
+                                                <h5 class="text-muted">No JO Other Data</h5>
+                                                <p class="text-muted mb-0">Start by adding a new JO other</p>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -129,90 +157,90 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
 
     <style>
-        .joContractPage .card {
+        .joOtherPage .card {
             border: none;
             border-radius: 10px;
         }
 
-        .joContractPage .card-header {
+        .joOtherPage .card-header {
             border-radius: 10px 10px 0 0 !important;
             padding: 1rem 1.5rem;
         }
 
-        .joContractPage .dataTables_wrapper {
+        .joOtherPage .dataTables_wrapper {
             width: 100%;
             transition: all 0.3s ease;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_length,
-        .joContractPage .dataTables_wrapper .dataTables_filter {
+        .joOtherPage .dataTables_wrapper .dataTables_length,
+        .joOtherPage .dataTables_wrapper .dataTables_filter {
             margin-bottom: 1rem !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_filter {
+        .joOtherPage .dataTables_wrapper .dataTables_filter {
             text-align: right !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_filter input {
+        .joOtherPage .dataTables_wrapper .dataTables_filter input {
             margin-left: 5px !important;
             border-radius: 4px !important;
             border: 1px solid #ced4da !important;
             padding: 0.375rem 0.75rem !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_length select {
+        .joOtherPage .dataTables_wrapper .dataTables_length select {
             border-radius: 4px !important;
             border: 1px solid #ced4da !important;
             padding: 0.375rem 2rem 0.375rem 0.75rem !important;
         }
 
-        .joContractPage #joContractTable {
+        .joOtherPage #joOtherTable {
             width: 100% !important;
             transition: all 0.3s ease;
         }
 
-        .joContractPage #joContractTable tbody tr {
+        .joOtherPage #joOtherTable tbody tr {
             transition: all 0.2s ease;
         }
 
-        .joContractPage #joContractTable tbody tr:hover {
+        .joOtherPage #joOtherTable tbody tr:hover {
             background-color: #f8f9fa;
             cursor: pointer;
         }
 
-        .joContractPage .btn-sm {
+        .joOtherPage .btn-sm {
             transition: transform 0.2s;
         }
 
-        .joContractPage .btn-sm:hover {
+        .joOtherPage .btn-sm:hover {
             transform: scale(1.1);
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_paginate .paginate_button {
+        .joOtherPage .dataTables_wrapper .dataTables_paginate .paginate_button {
             padding: 0.375rem 0.75rem !important;
             margin: 0 2px !important;
             border-radius: 4px !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+        .joOtherPage .dataTables_wrapper .dataTables_paginate .paginate_button.current {
             background: var(--primary-green) !important;
             color: white !important;
             border: 1px solid var(--primary-green) !important;
         }
 
-        .joContractPage .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+        .joOtherPage .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
             background: var(--primary-green) !important;
             color: white !important;
             border: 1px solid var(--primary-green) !important;
         }
 
-        .joContractPage .table-responsive {
+        .joOtherPage .table-responsive {
             width: 100%;
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
         }
 
-        .joContractPage .badge {
+        .joOtherPage .badge {
             font-weight: 500;
             padding: 0.35rem 0.65rem;
         }
@@ -229,15 +257,15 @@
     <script>
         $(document).ready(function() {
             // Cek apakah tabel memiliki data
-            var hasData = $('#joContractTable tbody tr').length > 0 &&
-                !$('#joContractTable tbody tr td[colspan]').length;
+            var hasData = $('#joOtherTable tbody tr').length > 0 &&
+                          !$('#joOtherTable tbody tr td[colspan]').length;
 
             if (hasData) {
-                if ($.fn.DataTable.isDataTable('#joContractTable')) {
-                    $('#joContractTable').DataTable().destroy();
+                if ($.fn.DataTable.isDataTable('#joOtherTable')) {
+                    $('#joOtherTable').DataTable().destroy();
                 }
 
-                var table = $('#joContractTable').DataTable({
+                var table = $('#joOtherTable').DataTable({
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [
@@ -245,7 +273,7 @@
                         [10, 25, 50, "All"]
                     ],
                     order: [
-                        [1, 'asc']
+                        [1, 'desc']
                     ],
                     columnDefs: [{
                             orderable: false,
@@ -268,7 +296,7 @@
                             next: "Next",
                             previous: "Previous"
                         },
-                        emptyTable: "No JO Contract data available"
+                        emptyTable: "No JO Other data available"
                     },
                     autoWidth: true,
                     drawCallback: function(settings) {
@@ -290,15 +318,15 @@
                 $(window).on('resize', function() {
                     clearTimeout(resizeTimer);
                     resizeTimer = setTimeout(function() {
-                        if ($.fn.DataTable.isDataTable('#joContractTable')) {
-                            $('#joContractTable').DataTable().columns.adjust().responsive.recalc();
+                        if ($.fn.DataTable.isDataTable('#joOtherTable')) {
+                            $('#joOtherTable').DataTable().columns.adjust().responsive.recalc();
                         }
                     }, 300);
                 });
 
                 setTimeout(function() {
-                    if ($.fn.DataTable.isDataTable('#joContractTable')) {
-                        $('#joContractTable').DataTable().columns.adjust().responsive.recalc();
+                    if ($.fn.DataTable.isDataTable('#joOtherTable')) {
+                        $('#joOtherTable').DataTable().columns.adjust().responsive.recalc();
                     }
                 }, 100);
             }
@@ -317,8 +345,8 @@
                 const url = $(this).data('url');
 
                 Swal.fire({
-                    title: 'Delete JO Contract?',
-                    html: `JO Contract <strong>${name}</strong> will be permanently deleted.`,
+                    title: 'Delete JO Other?',
+                    html: `JO Other <strong>${name}</strong> will be permanently deleted.`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -335,7 +363,7 @@
 
             // Row click to detail
             if (hasData) {
-                $('#joContractTable tbody').on('click', 'tr', function(e) {
+                $('#joOtherTable tbody').on('click', 'tr', function(e) {
                     if ($(e.target).is('button') || $(e.target).is('a') || $(e.target).is('i') ||
                         $(e.target).closest('button').length || $(e.target).closest('a').length) {
                         return;

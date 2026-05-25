@@ -1,50 +1,50 @@
 @extends('layouts.app')
 
-@section('title', 'Edit JO Contract')
+@section('title', 'Add JO Tramper')
 
 @push('styles')
     <style>
-        .joContractEditPage .card {
+        .joTramperCreatePage .card {
             border: none;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
         }
 
-        .joContractEditPage .card-header {
+        .joTramperCreatePage .card-header {
             border-radius: 10px 10px 0 0 !important;
             padding: 1rem 1.5rem;
             font-weight: 600;
         }
 
-        .joContractEditPage .form-control:focus,
-        .joContractEditPage .form-select:focus {
+        .joTramperCreatePage .form-control:focus,
+        .joTramperCreatePage .form-select:focus {
             border-color: var(--primary-green);
             box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
         }
 
-        .joContractEditPage .form-label {
+        .joTramperCreatePage .form-label {
             color: var(--text-dark);
             margin-bottom: 0.5rem;
             font-weight: 500;
         }
 
-        .joContractEditPage .btn {
+        .joTramperCreatePage .btn {
             border-radius: 8px;
             font-weight: 500;
             transition: all 0.2s;
         }
 
-        .joContractEditPage .btn:hover {
+        .joTramperCreatePage .btn:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        .joContractEditPage .btn-success {
+        .joTramperCreatePage .btn-success {
             background-color: var(--primary-green);
             border-color: var(--primary-green);
         }
 
-        .joContractEditPage .btn-success:hover {
+        .joTramperCreatePage .btn-success:hover {
             background-color: var(--dark-green);
             border-color: var(--dark-green);
         }
@@ -258,63 +258,87 @@
 @endpush
 
 @section('content')
-    <div class="container-fluid joContractEditPage">
+    <div class="container-fluid joTramperCreatePage">
         <div class="row">
             <div class="col-lg-12">
                 <!-- Page Header Card -->
                 <div class="card shadow mb-4">
                     <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-edit me-2"></i>Edit JO Contract</span>
-                        <a href="{{ route('jo-contract.index') }}" class="btn btn-light btn-sm">
+                        <span class="fw-bold"><i class="fas fa-plus-circle me-2"></i>Add JO Tramper</span>
+                        <a href="{{ route('jo-tramper.index') }}" class="btn btn-light btn-sm">
                             <i class="fas fa-arrow-left me-1"></i> Back
                         </a>
                     </div>
                 </div>
 
-                <form action="{{ route('jo-contract.update', $joContract->id_jo_cont) }}" method="POST" id="joContractForm">
+                <form action="{{ route('jo-tramper.store') }}" method="POST" id="joTramperForm">
                     @csrf
-                    @method('PUT')
 
-                    <!-- JO Contract Info Card -->
+                    <!-- JO Tramper Info Card -->
                     <div class="card shadow mb-4">
                         <div class="card-header text-black" style="background-color: #d1fae5">
-                            <h6 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h6>
+                            <h6 class="mb-0"><i class="fas fa-ship me-2"></i>JO Tramper Information</h6>
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label required-field">Contract</label>
-                                    <select name="id_md_cont" id="id_md_cont"
-                                        class="form-select @error('id_md_cont') is-invalid @enderror">
-                                        <option value="">Select Contract</option>
-                                        @foreach ($contracts as $contract)
-                                            <option value="{{ $contract->id_md_cont }}"
-                                                {{ old('id_md_cont', $joContract->id_md_cont) == $contract->id_md_cont ? 'selected' : '' }}>
-                                                {{ $contract->no_contract }} - {{ $contract->contract }}
-                                                @if ($contract->customer)
-                                                    ({{ $contract->customer->customer }})
+                                    <label class="form-label required-field">Customer</label>
+                                    <select name="id_md_cust" id="id_md_cust"
+                                        class="form-select @error('id_md_cust') is-invalid @enderror">
+                                        <option value="">Select Customer</option>
+                                        @foreach ($customers as $customer)
+                                            <option value="{{ $customer->id_md_cust }}"
+                                                {{ old('id_md_cust') == $customer->id_md_cust ? 'selected' : '' }}>
+                                                {{ $customer->customer }}
+                                                @if ($customer->no_customer)
+                                                    ({{ $customer->no_customer }})
                                                 @endif
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('id_md_cont')
+                                    @error('id_md_cust')
                                         <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
 
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label required-field">Area</label>
-                                    <select name="id_md_area" id="id_md_area"
-                                        class="form-select @error('id_md_area') is-invalid @enderror">
-                                        <option value="">Select Area</option>
-                                        @foreach ($areas as $area)
-                                            <option value="{{ $area->id_md_area }}"
-                                                {{ old('id_md_area', $joContract->id_md_area) == $area->id_md_area ? 'selected' : '' }}>
-                                                {{ $area->area }}
+                                    <label class="form-label required-field">Port</label>
+                                    <select name="id_md_port" id="id_md_port"
+                                        class="form-select @error('id_md_port') is-invalid @enderror">
+                                        <option value="">Select Port</option>
+                                        @foreach ($ports as $port)
+                                            <option value="{{ $port->id_md_port }}"
+                                                {{ old('id_md_port') == $port->id_md_port ? 'selected' : '' }}>
+                                                {{ $port->name_port }}
+                                                @if ($port->no_port)
+                                                    ({{ $port->no_port }})
+                                                @endif
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('id_md_area')
+                                    @error('id_md_port')
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required-field">Start Date</label>
+                                    <input type="date" name="date_start" id="date_start"
+                                        class="form-control @error('date_start') is-invalid @enderror"
+                                        value="{{ old('date_start') }}">
+                                    @error('date_start')
+                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required-field">End Date</label>
+                                    <input type="date" name="date_end" id="date_end"
+                                        class="form-control @error('date_end') is-invalid @enderror"
+                                        value="{{ old('date_end') }}">
+                                    @error('date_end')
                                         <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -323,8 +347,7 @@
                             <div class="mb-3">
                                 <label class="form-label required-field">Title</label>
                                 <input type="text" name="title" id="title"
-                                    class="form-control @error('title') is-invalid @enderror"
-                                    value="{{ old('title', $joContract->title) }}">
+                                    class="form-control @error('title') is-invalid @enderror" value="{{ old('title') }}">
                                 @error('title')
                                     <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
@@ -332,61 +355,39 @@
 
                             <div class="mb-3">
                                 <label class="form-label">Note</label>
-                                <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note', $joContract->note) }}</textarea>
+                                <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note') }}</textarea>
                                 @error('note')
                                     <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
                             </div>
-                        </div>
 
-                        <!-- Metadata -->
-                        <div class="card-body bg-light border-top p-4">
-                            <h6 class="text-muted mb-3">
-                                <i class="fas fa-clock me-1"></i>Record Information
-                            </h6>
-                            <div class="row text-sm">
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted">Created:</small><br>
-                                    <small><i class="fas fa-calendar-plus me-1"></i>{{ $joContract->created_at->format('d M Y, H:i') }}</small>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted">Last Updated:</small><br>
-                                    <small><i class="fas fa-calendar-check me-1"></i>{{ $joContract->updated_at->format('d M Y, H:i') }}</small>
-                                </div>
+                            <div class="mb-3">
+                                <label class="form-label">Status</label>
+                                <input type="text" name="sts_proses" id="sts_proses"
+                                    class="form-control @error('sts_proses') is-invalid @enderror" value="{{ old('sts_proses') }}">
+                                @error('sts_proses')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                @enderror
                             </div>
                         </div>
                     </div>
 
-                    <!-- JO Contract Items Card -->
+                    <!-- JO Tramper Items Card -->
                     <div class="card shadow mb-4">
                         <div class="card-header text-black" style="background-color: #d1fae5">
                             <div class="d-flex justify-content-between align-items-center">
-                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Contract Items</h6>
+                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Tramper Items</h6>
                                 <div class="kurs-section d-flex gap-3 align-items-center mb-0" style="padding: 10px 15px;">
                                     <div>
                                         <label class="form-label mb-1">Kurs Date</label>
-                                        @php
-                                            $firstItem = $joContract->items->first();
-                                            $defaultDate = $firstItem && $firstItem->tgl_kurs_usd
-                                                ? $firstItem->tgl_kurs_usd->format('Y-m-d')
-                                                : '';
-                                        @endphp
                                         <input type="date" name="global_tgl_kurs_usd" id="global_tgl_kurs_usd"
-                                            class="form-control form-control-sm"
-                                            value="{{ old('global_tgl_kurs_usd', $defaultDate) }}"
-                                            style="min-width: 150px;">
+                                            class="form-control form-control-sm" style="min-width: 150px;" required>
                                     </div>
                                     <div>
                                         <label class="form-label mb-1">Kurs Rate</label>
-                                        @php
-                                            $defaultKurs = $firstItem && $firstItem->kurs_usd
-                                                ? $firstItem->kurs_usd
-                                                : 17600;
-                                        @endphp
                                         <input type="text" id="global_kurs_usd_display"
-                                            class="form-control form-control-sm"
-                                            value="{{ number_format($defaultKurs, 2, ',', '.') }}" style="min-width: 130px;">
-                                        <input type="hidden" name="global_kurs_usd" id="global_kurs_usd" value="{{ $defaultKurs }}">
+                                            class="form-control form-control-sm" style="min-width: 130px;" required>
+                                        <input type="hidden" name="global_kurs_usd" id="global_kurs_usd" value="17600">
                                     </div>
                                 </div>
                             </div>
@@ -416,104 +417,13 @@
                                         </tr>
                                     </thead>
                                     <tbody id="itemsTableBody">
-                                        @if ($joContract->items->count() > 0)
-                                            @foreach ($joContract->items as $index => $item)
-                                                <tr class="item-row" data-item-number="{{ $index + 1 }}"
-                                                    data-category="{{ $item->invoice->invoice_ctg }}"
-                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joContract->items[$index - 1]->invoice->invoice_ctg) data-is-first-in-category="true" @endif>
-                                                    <td class="item-number-cell">{{ $index + 1 }}</td>
-
-                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joContract->items[$index - 1]->invoice->invoice_ctg)
-                                                        @php
-                                                            $categoryCount = $joContract->items
-                                                                ->where('invoice.invoice_ctg', $item->invoice->invoice_ctg)
-                                                                ->count();
-                                                        @endphp
-                                                        <td class="category-cell" rowspan="{{ $categoryCount }}"
-                                                            data-category="{{ $item->invoice->invoice_ctg }}">
-                                                            <div class="category-content">
-                                                                <span
-                                                                    class="category-name">{{ $item->invoice->invoice_ctg }}</span>
-                                                                <span
-                                                                    class="category-count">{{ $categoryCount }}
-                                                                    item{{ $categoryCount > 1 ? 's' : '' }}</span>
-                                                                <button type="button" class="btn-remove-category"
-                                                                    onclick="removeCategoryWithItems('{{ $item->invoice->invoice_ctg }}', event)">
-                                                                    <i class="fas fa-times"></i> Remove
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    @endif
-
-                                                    <td>
-                                                        <select name="items[{{ $index + 1 }}][id_md_invoice]"
-                                                            class="form-select invoice-type-select">
-                                                            <option value="">Select Invoice Type</option>
-                                                            @foreach ($invoices->where('invoice_ctg', $item->invoice->invoice_ctg) as $invoice)
-                                                                <option value="{{ $invoice->id_md_invoice }}"
-                                                                    {{ $item->id_md_invoice == $invoice->id_md_invoice ? 'selected' : '' }}>
-                                                                    {{ $invoice->invoice_typ }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                        <input type="hidden" name="items[{{ $index + 1 }}][invoice_ctg]"
-                                                            class="invoice-ctg-input"
-                                                            value="{{ $item->invoice->invoice_ctg }}">
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">IDR</span>
-                                                            <input type="text" class="form-control currency-input revenue-idr-display"
-                                                                value="{{ number_format($item->pendapatan_idr, 2, ',', '.') }}">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_idr]"
-                                                                class="revenue-idr-value" value="{{ $item->pendapatan_idr }}">
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">USD</span>
-                                                            <input type="text" class="form-control currency-input revenue-usd-display"
-                                                                value="{{ number_format($item->pendapatan_usd, 2, ',', '.') }}">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_usd]"
-                                                                class="revenue-usd-value" value="{{ $item->pendapatan_usd }}">
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">IDR</span>
-                                                            <input type="text" class="form-control currency-input hpp-display"
-                                                                value="{{ number_format($item->hpp_ops, 2, ',', '.') }}">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][hpp_ops]"
-                                                                class="hpp-value" value="{{ $item->hpp_ops }}">
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">IDR</span>
-                                                            <input type="text" class="form-control currency-input selling-price-display"
-                                                                value="{{ number_format($item->hargajual_idr, 2, ',', '.') }}" readonly
-                                                                style="background-color: #e9ecef;">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][hargajual_idr]"
-                                                                class="selling-price-value" value="{{ $item->hargajual_idr }}">
-                                                        </div>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                                                            onclick="removeItem(this)">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            @endforeach
-                                        @else
-                                            <tr class="no-items-row">
-                                                <td colspan="8">
-                                                    <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-                                                    <p class="mb-0 fw-bold">No data available</p>
-                                                    <small class="text-muted">Click "Add Item" to get started</small>
-                                                </td>
-                                            </tr>
-                                        @endif
+                                        <tr class="no-items-row">
+                                            <td colspan="8">
+                                                <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                                <p class="mb-0 fw-bold">No data available</p>
+                                                <small class="text-muted">Click "Add Item" to get started</small>
+                                            </td>
+                                        </tr>
                                     </tbody>
                                     <tfoot class="table-footer">
                                         <tr>
@@ -563,9 +473,9 @@
                     <!-- Action Buttons -->
                     <div class="d-flex gap-2 mb-5">
                         <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save me-2"></i>Update JO Contract
+                            <i class="fas fa-save me-2"></i>Save JO Tramper
                         </button>
-                        <a href="{{ route('jo-contract.show', $joContract->id_jo_cont) }}" class="btn btn-secondary btn-lg">
+                        <a href="{{ route('jo-tramper.index') }}" class="btn btn-secondary btn-lg">
                             <i class="fas fa-times me-2"></i>Cancel
                         </a>
                     </div>
@@ -574,34 +484,35 @@
         </div>
     </div>
 @endsection
-{{-- Script Jo Contract Edit --}}
+
+{{-- Script Jo Tramper Create --}}
 @push('scripts')
     <script>
-        let globalItemNumber = {{ $joContract->items->count() }};
+        let globalItemNumber = 0;
         let categories = {};
 
         // Format Rupiah Helper Functions
         function formatRupiah(value) {
-    let number = value.replace(/[^\d,]/g, '');
-    number = number.replace(/\./g, '');
-    if (number === '') return '';  // ← UBAH INI dari '0,00' jadi ''
+            let number = value.replace(/[^\d,]/g, '');
+            number = number.replace(/\./g, '');
+            if (number === '') return '';
 
-    let parts = number.split(',');
-    let integerPart = parts[0];
-    let decimalPart = parts.length > 1 ? parts[1] : '';
+            let parts = number.split(',');
+            let integerPart = parts[0];
+            let decimalPart = parts.length > 1 ? parts[1] : '';
 
-    if (decimalPart.length > 2) {
-        decimalPart = decimalPart.substring(0, 2);
-    }
+            if (decimalPart.length > 2) {
+                decimalPart = decimalPart.substring(0, 2);
+            }
 
-    integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
-    if (parts.length > 1) {
-        return integerPart + ',' + decimalPart;
-    } else {
-        return integerPart + ',00';
-    }
-}
+            if (parts.length > 1) {
+                return integerPart + ',' + decimalPart;
+            } else {
+                return integerPart + ',00';
+            }
+        }
 
         function parseRupiah(value) {
             let cleaned = value.replace(/\./g, '').replace(',', '.');
@@ -609,148 +520,148 @@
         }
 
         function setupRupiahInput(displayInput, hiddenInput) {
-    displayInput.addEventListener('input', function(e) {
-        let cursorPosition = this.selectionStart;
-        let beforeCursor = this.value.substring(0, cursorPosition);
+            displayInput.addEventListener('input', function(e) {
+                let cursorPosition = this.selectionStart;
+                let beforeCursor = this.value.substring(0, cursorPosition);
 
-        let formatted = formatRupiah(this.value);
-        this.value = formatted;
-
-        if (!beforeCursor.includes(',')) {
-            let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-            let newPos = 0;
-            let digitCount = 0;
-            for (let i = 0; i < this.value.length; i++) {
-                if (/\d/.test(this.value[i])) {
-                    digitCount++;
-                    if (digitCount === digitsBeforeCursor) {
-                        newPos = i + 1;
-                        break;
-                    }
-                }
-            }
-            this.setSelectionRange(newPos, newPos);
-        } else {
-            let commaPos = this.value.indexOf(',');
-            let decimalDigitsInput = beforeCursor.split(',')[1] || '';
-            let decimalDigits = decimalDigitsInput.length;
-            let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
-            this.setSelectionRange(newPos, newPos);
-        }
-
-        hiddenInput.value = parseRupiah(formatted);
-    });
-
-    displayInput.addEventListener('keydown', function(e) {
-        let cursorPosition = this.selectionStart;
-        let selectionEnd = this.selectionEnd;
-        let commaPos = this.value.indexOf(',');
-
-        if (e.key === 'Backspace') {
-            if (cursorPosition !== selectionEnd) {
-                return;
-            }
-
-            if (commaPos !== -1 && cursorPosition > commaPos + 1) {
-                e.preventDefault();
-
-                let posInDecimal = cursorPosition - commaPos - 1;
-                let beforeComma = this.value.substring(0, commaPos);
-                let afterComma = this.value.substring(commaPos + 1);
-
-                let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
-
-                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                let formatted = formatRupiah(newValue);
+                let formatted = formatRupiah(this.value);
                 this.value = formatted;
 
-                let newCommaPos = this.value.indexOf(',');
-                let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
-                this.setSelectionRange(newCursorPos, newCursorPos);
+                if (!beforeCursor.includes(',')) {
+                    let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+                    let newPos = 0;
+                    let digitCount = 0;
+                    for (let i = 0; i < this.value.length; i++) {
+                        if (/\d/.test(this.value[i])) {
+                            digitCount++;
+                            if (digitCount === digitsBeforeCursor) {
+                                newPos = i + 1;
+                                break;
+                            }
+                        }
+                    }
+                    this.setSelectionRange(newPos, newPos);
+                } else {
+                    let commaPos = this.value.indexOf(',');
+                    let decimalDigitsInput = beforeCursor.split(',')[1] || '';
+                    let decimalDigits = decimalDigitsInput.length;
+                    let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+                    this.setSelectionRange(newPos, newPos);
+                }
 
-                hiddenInput.value = parseRupiah(this.value);
-            }
-            else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
-                e.preventDefault();
-            }
-            else if (cursorPosition === commaPos) {
-                e.preventDefault();
-                let beforeComma = this.value.substring(0, commaPos);
-                this.value = beforeComma;
-                this.setSelectionRange(beforeComma.length, beforeComma.length);
-                hiddenInput.value = parseRupiah(this.value);
-            }
-        } else if (e.key === 'Delete') {
-            if (cursorPosition !== selectionEnd) {
-                return;
-            }
+                hiddenInput.value = parseRupiah(formatted);
+            });
 
-            if (cursorPosition === commaPos) {
-                e.preventDefault();
-                let beforeComma = this.value.substring(0, commaPos);
-                this.value = beforeComma;
-                this.setSelectionRange(beforeComma.length, beforeComma.length);
-                hiddenInput.value = parseRupiah(this.value);
-                return;
-            }
+            displayInput.addEventListener('keydown', function(e) {
+                let cursorPosition = this.selectionStart;
+                let selectionEnd = this.selectionEnd;
+                let commaPos = this.value.indexOf(',');
 
-            if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
-                e.preventDefault();
+                if (e.key === 'Backspace') {
+                    if (cursorPosition !== selectionEnd) {
+                        return;
+                    }
 
-                let posInDecimal = cursorPosition - commaPos - 1;
-                let beforeComma = this.value.substring(0, commaPos);
-                let afterComma = this.value.substring(commaPos + 1);
+                    if (commaPos !== -1 && cursorPosition > commaPos + 1) {
+                        e.preventDefault();
 
-                let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
+                        let posInDecimal = cursorPosition - commaPos - 1;
+                        let beforeComma = this.value.substring(0, commaPos);
+                        let afterComma = this.value.substring(commaPos + 1);
 
-                let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                let formatted = formatRupiah(newValue);
-                this.value = formatted;
+                        let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
 
-                let newCommaPos = this.value.indexOf(',');
-                this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
+                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                        let formatted = formatRupiah(newValue);
+                        this.value = formatted;
 
-                hiddenInput.value = parseRupiah(this.value);
-            }
-        }
-    });
+                        let newCommaPos = this.value.indexOf(',');
+                        let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
+                        this.setSelectionRange(newCursorPos, newCursorPos);
 
-    displayInput.addEventListener('blur', function(e) {
-        if (e.target.value) {
-            if (!e.target.value.includes(',')) {
-                e.target.value = e.target.value + ',00';
-            } else {
-                let parts = e.target.value.split(',');
-                if (parts[1] !== undefined) {
-                    if (parts[1].length === 0) {
-                        e.target.value = parts[0] + ',00';
-                    } else if (parts[1].length < 2) {
-                        e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                        hiddenInput.value = parseRupiah(this.value);
+                    }
+                    else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
+                        e.preventDefault();
+                    }
+                    else if (cursorPosition === commaPos) {
+                        e.preventDefault();
+                        let beforeComma = this.value.substring(0, commaPos);
+                        this.value = beforeComma;
+                        this.setSelectionRange(beforeComma.length, beforeComma.length);
+                        hiddenInput.value = parseRupiah(this.value);
+                    }
+                } else if (e.key === 'Delete') {
+                    if (cursorPosition !== selectionEnd) {
+                        return;
+                    }
+
+                    if (cursorPosition === commaPos) {
+                        e.preventDefault();
+                        let beforeComma = this.value.substring(0, commaPos);
+                        this.value = beforeComma;
+                        this.setSelectionRange(beforeComma.length, beforeComma.length);
+                        hiddenInput.value = parseRupiah(this.value);
+                        return;
+                    }
+
+                    if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
+                        e.preventDefault();
+
+                        let posInDecimal = cursorPosition - commaPos - 1;
+                        let beforeComma = this.value.substring(0, commaPos);
+                        let afterComma = this.value.substring(commaPos + 1);
+
+                        let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
+
+                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
+                        let formatted = formatRupiah(newValue);
+                        this.value = formatted;
+
+                        let newCommaPos = this.value.indexOf(',');
+                        this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
+
+                        hiddenInput.value = parseRupiah(this.value);
                     }
                 }
-            }
-            hiddenInput.value = parseRupiah(e.target.value);
-        } else {
-            e.target.value = '';
-            hiddenInput.value = '';
-        }
-    });
+            });
 
-    displayInput.addEventListener('keypress', function(e) {
-        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
-            (e.key === ',' && !this.value.includes(',')) ||
-            (e.keyCode === 65 && e.ctrlKey === true) ||
-            (e.keyCode === 67 && e.ctrlKey === true) ||
-            (e.keyCode === 86 && e.ctrlKey === true) ||
-            (e.keyCode === 88 && e.ctrlKey === true)) {
-            return;
-        }
+            displayInput.addEventListener('blur', function(e) {
+                if (e.target.value) {
+                    if (!e.target.value.includes(',')) {
+                        e.target.value = e.target.value + ',00';
+                    } else {
+                        let parts = e.target.value.split(',');
+                        if (parts[1] !== undefined) {
+                            if (parts[1].length === 0) {
+                                e.target.value = parts[0] + ',00';
+                            } else if (parts[1].length < 2) {
+                                e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                            }
+                        }
+                    }
+                    hiddenInput.value = parseRupiah(e.target.value);
+                } else {
+                    e.target.value = '';
+                    hiddenInput.value = '';
+                }
+            });
 
-        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-            e.preventDefault();
+            displayInput.addEventListener('keypress', function(e) {
+                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+                    (e.key === ',' && !this.value.includes(',')) ||
+                    (e.keyCode === 65 && e.ctrlKey === true) ||
+                    (e.keyCode === 67 && e.ctrlKey === true) ||
+                    (e.keyCode === 86 && e.ctrlKey === true) ||
+                    (e.keyCode === 88 && e.ctrlKey === true)) {
+                    return;
+                }
+
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            });
         }
-    });
-}
 
         // Setup Global Kurs Input
         const globalKursDisplay = document.getElementById('global_kurs_usd_display');
@@ -774,37 +685,16 @@
         // Get all categories
         const allCategories = Object.keys(invoicesByCategory);
 
-        // Initialize categories from existing items
-        document.addEventListener('DOMContentLoaded', function() {
-            const itemRows = document.querySelectorAll('.item-row');
-            itemRows.forEach(row => {
-                const categoryName = row.dataset.category;
-                if (categoryName) {
-                    if (!categories[categoryName]) {
-                        categories[categoryName] = {
-                            count: 0
-                        };
-                    }
-                    categories[categoryName].count++;
-                }
-
-                // Attach event listeners to existing rows
-                attachItemEventListeners(row);
-            });
-
-            // Calculate initial grand total
-            updateGrandTotal();
-        });
-
         // Add Item Button - adds new row with category dropdown
         document.getElementById('addItemBtn').addEventListener('click', function() {
             addNewItemRow();
         });
 
-        // Add new item row with category dropdown (same as create page)
+        // Add new item row with category dropdown
         function addNewItemRow() {
             globalItemNumber++;
 
+            // Remove "no items" row if exists
             const noItemsRow = document.querySelector('.no-items-row');
             if (noItemsRow) {
                 noItemsRow.remove();
@@ -816,6 +706,7 @@
             newRow.setAttribute('data-item-number', globalItemNumber);
             newRow.setAttribute('data-temp-row', 'true');
 
+            // Build category dropdown options
             let categoryOptionsHtml = '<option value="">-- Select Category --</option>';
             allCategories.forEach(cat => {
                 categoryOptionsHtml += `<option value="${cat}">${cat}</option>`;
@@ -824,12 +715,12 @@
             newRow.innerHTML = `
             <td class="item-number-cell">${globalItemNumber}</td>
             <td>
-                <select class="form-select category-dropdown-select" required>
+                <select class="form-select category-dropdown-select">
                     ${categoryOptionsHtml}
                 </select>
             </td>
             <td>
-                <select name="items[${globalItemNumber}][id_md_invoice]" class="form-select invoice-type-select" disabled required>
+                <select name="items[${globalItemNumber}][id_md_invoice]" class="form-select invoice-type-select" disabled>
                     <option value="">Select category first</option>
                 </select>
                 <input type="hidden" name="items[${globalItemNumber}][invoice_ctg]" class="invoice-ctg-input">
@@ -838,28 +729,28 @@
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
                     <input type="text" class="form-control currency-input revenue-idr-display">
-                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_idr]" class="revenue-idr-value" value="0">
+                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_idr]" class="revenue-idr-value">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">USD</span>
                     <input type="text" class="form-control currency-input revenue-usd-display">
-                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_usd]" class="revenue-usd-value" value="0">
+                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_usd]" class="revenue-usd-value">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input hpp-display" >
-                    <input type="hidden" name="items[${globalItemNumber}][hpp_ops]" class="hpp-value" value="0">
+                    <input type="text" class="form-control currency-input hpp-display">
+                    <input type="hidden" name="items[${globalItemNumber}][hpp_ops]" class="hpp-value">
                 </div>
             </td>
             <td>
                 <div class="currency-group">
                     <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input selling-price-display"   readonly style="background-color: #e9ecef;">
-                    <input type="hidden" name="items[${globalItemNumber}][hargajual_idr]" class="selling-price-value" value="0">
+                    <input type="text" class="form-control currency-input selling-price-display" readonly style="background-color: #e9ecef;">
+                    <input type="hidden" name="items[${globalItemNumber}][hargajual_idr]" class="selling-price-value">
                 </div>
             </td>
             <td class="text-center">
@@ -871,6 +762,7 @@
 
             tbody.appendChild(newRow);
 
+            // Attach category change event
             const categorySelect = newRow.querySelector('.category-dropdown-select');
             categorySelect.addEventListener('change', function() {
                 onCategorySelected(newRow, this.value);
@@ -885,8 +777,11 @@
             if (!categoryName) return;
 
             const itemNumber = row.getAttribute('data-item-number');
+
+            // Update hidden input for category
             row.querySelector('.invoice-ctg-input').value = categoryName;
 
+            // Enable and populate invoice type dropdown
             const invoiceSelect = row.querySelector('.invoice-type-select');
             const invoiceOptions = invoicesByCategory[categoryName] || [];
 
@@ -898,15 +793,23 @@
             invoiceSelect.innerHTML = invoiceOptionsHtml;
             invoiceSelect.disabled = false;
 
+            // Check if this category already exists
             const existingCategoryCell = document.querySelector(`.category-cell[data-category="${categoryName}"]`);
 
             if (existingCategoryCell) {
+                // Category exists - merge with existing
                 row.removeAttribute('data-temp-row');
                 row.setAttribute('data-category', categoryName);
+
+                // Remove the dropdown cell
                 row.querySelector('.category-dropdown-select').closest('td').remove();
+
+                // Update category count
                 categories[categoryName].count++;
                 updateCategoryRowspan(categoryName);
+
             } else {
+                // New category - convert dropdown to merged cell
                 row.removeAttribute('data-temp-row');
                 row.setAttribute('data-category', categoryName);
                 row.setAttribute('data-is-first-in-category', 'true');
@@ -916,6 +819,7 @@
                     firstRowIndex: itemNumber
                 };
 
+                // Replace dropdown cell with merged category cell
                 const dropdownCell = row.querySelector('.category-dropdown-select').closest('td');
                 dropdownCell.outerHTML = `
                 <td class="category-cell" rowspan="1" data-category="${categoryName}">
@@ -949,20 +853,23 @@
             event.stopPropagation();
 
             if (confirm(`Remove category "${categoryName}" and all its ${categories[categoryName].count} item(s)?`)) {
+                // Remove all rows with this category
                 const rows = document.querySelectorAll(`[data-category="${categoryName}"]`);
                 rows.forEach(row => row.remove());
 
+                // Remove from categories object
                 delete categories[categoryName];
 
                 renumberAllItems();
                 updateGrandTotal();
 
+                // Check if table is empty
                 const tbody = document.getElementById('itemsTableBody');
                 if (tbody.querySelectorAll('tr').length === 0) {
                     tbody.innerHTML = `
                     <tr class="no-items-row">
                         <td colspan="8">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                             <p class="mb-0 fw-bold">No data available</p>
                             <small class="text-muted">Click "Add Item" to get started</small>
                         </td>
@@ -977,6 +884,7 @@
             const row = button.closest('tr');
             const categoryName = row.dataset.category;
 
+            // If row has category dropdown (not yet selected), just remove it
             if (row.dataset.tempRow === 'true') {
                 row.remove();
                 renumberAllItems();
@@ -987,7 +895,7 @@
                     tbody.innerHTML = `
                     <tr class="no-items-row">
                         <td colspan="8">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                             <p class="mb-0 fw-bold">No data available</p>
                             <small class="text-muted">Click "Add Item" to get started</small>
                         </td>
@@ -999,17 +907,22 @@
 
             const isFirst = row.dataset.isFirstInCategory === 'true';
 
+            // If it's the last item in category, remove entire category
             if (categories[categoryName].count === 1) {
                 removeCategoryWithItems(categoryName, new Event('click'));
                 return;
             }
 
+            // If it's the first row, transfer category cell to next row
             if (isFirst) {
                 const categoryCell = row.querySelector('.category-cell');
                 const nextCategoryRow = row.nextElementSibling;
 
                 if (nextCategoryRow && nextCategoryRow.dataset.category === categoryName) {
+                    // Clone category cell
                     const newCategoryCell = categoryCell.cloneNode(true);
+
+                    // Insert at position 1 (after item number)
                     nextCategoryRow.insertBefore(newCategoryCell, nextCategoryRow.children[1]);
                     nextCategoryRow.setAttribute('data-is-first-in-category', 'true');
                 }
@@ -1029,7 +942,7 @@
                 document.getElementById('itemsTableBody').innerHTML = `
                 <tr class="no-items-row">
                     <td colspan="8">
-                        <i class="fas fa-inbox fa-3x mb-3"></i>
+                        <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                         <p class="mb-0 fw-bold">No data available</p>
                         <small class="text-muted">Click "Add Item" to get started</small>
                     </td>
@@ -1136,7 +1049,7 @@
             updateGrandTotal();
         });
 
-        // Update grand total
+        // Update grand total - FIXED TO CALCULATE ALL COLUMNS
         function updateGrandTotal() {
             const itemRows = document.querySelectorAll('.item-row');
             let totalRevenueIDR = 0;
@@ -1156,6 +1069,7 @@
                 totalSelling += selling;
             });
 
+            // Update footer dengan format angka
             document.getElementById('footerTotalIDR').textContent = formatNumber(totalRevenueIDR);
             document.getElementById('footerTotalUSD').textContent = formatNumber(totalRevenueUSD);
             document.getElementById('footerTotalHPP').textContent = formatNumber(totalHPP);
@@ -1171,7 +1085,7 @@
         }
 
         // Form submission validation
-        document.getElementById('joContractForm').addEventListener('submit', function(e) {
+        document.getElementById('joTramperForm').addEventListener('submit', function(e) {
             const itemRows = document.querySelectorAll('.item-row');
 
             if (itemRows.length === 0) {
@@ -1180,6 +1094,7 @@
                 return false;
             }
 
+            // Check for temp rows (category not selected)
             const tempRows = document.querySelectorAll('[data-temp-row="true"]');
             if (tempRows.length > 0) {
                 e.preventDefault();
