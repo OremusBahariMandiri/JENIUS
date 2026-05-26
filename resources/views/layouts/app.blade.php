@@ -777,7 +777,7 @@
 
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_tramper'))
                             <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}"
+                                <a class="nav-link {{ request()->routeIs('jo-tramper.*') ? 'active' : '' }}"
                                     href="{{ route('jo-tramper.index') }}">
                                     <i class="fas fa-truck-moving"></i>
                                     <span>JO Tramper</span>
