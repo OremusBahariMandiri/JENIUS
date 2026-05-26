@@ -1254,41 +1254,85 @@ class JoContractController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+    /**
+     * Remove the specified resource from storage.
+     */
     public function destroy(Request $request, $id)
     {
+        Log::info('=== Delete JO Contract Request START ===', [
+            'id' => $id
+        ]);
+
         DB::beginTransaction();
         try {
             $joContract = JoContract::findOrFail($id);
 
-            // Check if has items
-            if ($joContract->items()->count() > 0) {
-                DB::rollBack();
+            Log::info('JO Contract Found', [
+                'id' => $joContract->id_jo_cont,
+                'title' => $joContract->title,
+                'items_count' => $joContract->items()->count()
+            ]);
 
-                if ($request->expectsJson()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'JO Contract cannot be deleted because it has related items'
-                    ], 422);
+            // HAPUS SEMUA ITEMS TERLEBIH DAHULU
+            $itemsCount = $joContract->items()->count();
+
+            if ($itemsCount > 0) {
+                Log::info('Deleting JO Contract Items', [
+                    'items_count' => $itemsCount
+                ]);
+
+                // Delete all items (soft delete)
+                foreach ($joContract->items as $item) {
+                    $item->delete();
                 }
 
-                return back()->with('error', 'JO Contract cannot be deleted because it has related items');
+                Log::info('All items deleted successfully');
             }
 
+            // KEMUDIAN HAPUS JO CONTRACT
             $joContract->delete();
+
             DB::commit();
+
+            Log::info('JO Contract Deleted Successfully', [
+                'id' => $id,
+                'deleted_items_count' => $itemsCount
+            ]);
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'JO Contract successfully deleted'
+                    'message' => 'JO Contract and all related items successfully deleted'
                 ]);
             }
 
             return redirect()
                 ->route('jo-contract.index')
-                ->with('success', 'JO Contract successfully deleted');
+                ->with('success', "JO Contract deleted successfully along with {$itemsCount} item(s)");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+
+            Log::error('JO Contract Not Found', [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'JO Contract not found'
+                ], 404);
+            }
+
+            return back()->with('error', 'JO Contract not found');
         } catch (\Exception $e) {
             DB::rollBack();
+
+            Log::error('Delete JO Contract Failed', [
+                'id' => $id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -1300,7 +1344,6 @@ class JoContractController extends Controller
             return back()->with('error', 'Error deleting JO contract: ' . $e->getMessage());
         }
     }
-
     /**
      * Get JO contracts for select dropdown (API)
      */
