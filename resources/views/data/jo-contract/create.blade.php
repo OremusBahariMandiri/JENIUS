@@ -611,7 +611,7 @@
                             <!-- Save Header Button -->
                             <div class="d-flex justify-content-end">
                                 <button type="button" class="btn btn-success" id="btnSaveHeader">
-                                    <i class="fas fa-save me-1"></i> Save Header
+                                    <i class="fas fa-save me-1"></i> Save
                                 </button>
                             </div>
                         </div>
