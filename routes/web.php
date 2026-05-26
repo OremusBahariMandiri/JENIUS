@@ -142,9 +142,6 @@ Route::middleware(['auth'])->group(function () {
     // JO Contract Routes
     Route::prefix('data')->group(function () {
         Route::resource('jo-contract', JoContractController::class);
-        Route::get('jo-contract-select', [JoContractController::class, 'getForSelect']);
-        Route::post('jo-contract-bulk-delete', [JoContractController::class, 'bulkDelete']);
-
         Route::resource('jo-tramper', JoTramperController::class);
         Route::get('jo-tramper-select', [JoTramperController::class, 'getForSelect']);
         Route::post('jo-tramper-bulk-delete', [JoTramperController::class, 'bulkDelete']);
@@ -159,5 +156,26 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('jo-contract-item/{id}/force-delete', [JoContractItemController::class, 'forceDelete']);
         Route::post('jo-contract-item-bulk-delete', [JoContractItemController::class, 'bulkDelete']);
         Route::post('jo-contract-item-bulk-restore', [JoContractItemController::class, 'bulkRestore']);
+    });
+
+    // JO Contract - Realtime Auto-Save Routes
+    Route::prefix('jo-contract')->name('jo-contract.')->group(function () {
+        // Header operations (Realtime auto-save)
+        Route::post('/header/store', [JoContractController::class, 'storeHeader'])->name('header.store');
+        Route::post('/header/update/{id}', [JoContractController::class, 'updateHeader'])->name('header.update');
+
+        // Item operations (Realtime auto-save)
+        Route::get('/item/show/{id}', [JoContractController::class, 'showItem'])->name('item.show');
+        Route::post('/item/store', [JoContractController::class, 'storeItem'])->name('item.store');
+        Route::put('/item/update/{id}', [JoContractController::class, 'updateItem'])->name('item.update');
+        Route::delete('/item/destroy/{id}', [JoContractController::class, 'destroyItem'])->name('item.destroy');
+        Route::get('/{id}/items', [JoContractController::class, 'getItems'])->name('items.get');
+
+        // Save All Changes (NEW)
+        Route::post('/save-all/{id}', [JoContractController::class, 'saveAllChanges'])->name('save-all');
+
+        // Additional API endpoints
+        Route::get('/for-select', [JoContractController::class, 'getForSelect'])->name('for-select');
+        Route::post('/bulk-delete', [JoContractController::class, 'bulkDelete'])->name('bulk-delete');
     });
 });

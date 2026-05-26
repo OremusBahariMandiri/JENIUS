@@ -331,17 +331,30 @@
                                 @php
                                     $firstItem = $joContract->items->first();
                                 @endphp
-                                @if($firstItem)
+                                @if($firstItem && $firstItem->tgl_kurs_usd)
                                     <div>
-                                        <label class="form-label mb-1">Kurs Date</label>
+                                        <label class="form-label mb-1">Kurs Date & Time</label>
                                         <input type="text" class="form-control form-control-sm"
-                                            value="{{ $firstItem->tgl_kurs_usd ? $firstItem->tgl_kurs_usd->format('d M Y') : '-' }}"
-                                            style="min-width: 130px;" readonly>
+                                            value="{{ $firstItem->tgl_kurs_usd->format('d M Y H:i') }}"
+                                            style="min-width: 160px;" readonly>
                                     </div>
                                     <div>
                                         <label class="form-label mb-1">Kurs Rate</label>
                                         <input type="text" class="form-control form-control-sm"
                                             value="{{ number_format($firstItem->kurs_usd, 2, ',', '.') }}"
+                                            style="min-width: 120px;" readonly>
+                                    </div>
+                                @else
+                                    <div>
+                                        <label class="form-label mb-1">Kurs Date & Time</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                            value="-"
+                                            style="min-width: 160px;" readonly>
+                                    </div>
+                                    <div>
+                                        <label class="form-label mb-1">Kurs Rate</label>
+                                        <input type="text" class="form-control form-control-sm"
+                                            value="-"
                                             style="min-width: 120px;" readonly>
                                     </div>
                                 @endif
