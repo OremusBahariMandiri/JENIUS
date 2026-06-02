@@ -12,7 +12,7 @@
                         <span class="fw-bold"><i class="fas fa-ship me-2"></i>JO Tramper Data</span>
                         @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'tambah')))
                             <a href="{{ route('jo-tramper.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add JO Tramper
+                                <i class="fas fa-plus-circle me-1"></i> Add
                             </a>
                         @endif
                     </div>
@@ -61,7 +61,7 @@
                                             </td>
                                             <td>
                                                 @if ($joTramper->port)
-                                                    <span class="badge bg-info text-dark">{{ $joTramper->port->name_port }}</span>
+                                                {{ $joTramper->port->name_port }}
                                                 @else
                                                     -
                                                 @endif

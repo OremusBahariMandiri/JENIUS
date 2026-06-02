@@ -12,7 +12,7 @@
                         <span class="fw-bold"><i class="fas fa-users me-2"></i>User Management</span>
                         @if (auth()->check() && auth()->user()->is_admin)
                             <a href="{{ route('user.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add User
+                                <i class="fas fa-plus-circle me-1"></i> Add
                             </a>
                         @endif
                     </div>
@@ -37,7 +37,6 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th width="5%">No</th>
-                                        <th>Employee Code</th>
                                         <th>Employee ID</th>
                                         <th>Full Name</th>
                                         <th>Department</th>
@@ -51,17 +50,16 @@
                                     @foreach ($users as $index => $user)
                                         <tr>
                                             <td>{{ $index + 1 }}</td>
-                                            <td><span class="badge bg-primary">{{ $user->employee_code }}</span></td>
                                             <td>{{ $user->employee_id_number }}</td>
-                                            <td><strong>{{ $user->full_name }}</strong></td>
+                                            <td>{{ $user->full_name }}</td>
                                             <td>{{ $user->department }}</td>
-                                            <td><span class="badge bg-info text-dark">{{ $user->position }}</span></td>
+                                            <td>{{ $user->position }}</td>
                                             <td>{{ $user->work_location }}</td>
                                             <td>
                                                 @if ($user->is_admin)
-                                                    <span class="badge bg-danger">Admin</span>
+                                                    Admin
                                                 @else
-                                                    <span class="badge bg-secondary">User</span>
+                                                User
                                                 @endif
                                             </td>
                                             <td>

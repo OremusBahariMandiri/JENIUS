@@ -12,7 +12,7 @@
                         <span class="fw-bold"><i class="fas fa-box me-2"></i>Data Other</span>
                         @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('other', 'tambah')))
                             <a href="{{ route('other.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add Other
+                                <i class="fas fa-plus-circle me-1"></i> Add
                             </a>
                         @endif
                     </div>

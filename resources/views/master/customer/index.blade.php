@@ -11,7 +11,7 @@
                     <span class="fw-bold"><i class="fas fa-users me-2"></i>Data Customer</span>
                     @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('customer', 'tambah')))
                     <a href="{{ route('customer.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Tambah Customer
+                        <i class="fas fa-plus-circle me-1"></i> Add
                     </a>
                     @endif
                 </div>
@@ -47,8 +47,7 @@
                                 @foreach($customers as $index => $customer)
                                 <tr>
                                     <td>{{ $customers->firstItem() + $index }}</td>
-                                    <td>
-                                        <strong>{{ $customer->customer }}</strong>
+                                    <td>{{ $customer->customer }}
                                         @if($customer->address)
                                         <br><small class="text-muted">{{ Str::limit($customer->address, 50) }}</small>
                                         @endif

@@ -12,7 +12,7 @@
                         <span class="fw-bold"><i class="fas fa-file-invoice me-2"></i>JO Other Data</span>
                         @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'tambah')))
                             <a href="{{ route('jo-other.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add JO Other
+                                <i class="fas fa-plus-circle me-1"></i> Add
                             </a>
                         @endif
                     </div>
@@ -62,7 +62,7 @@
                                             </td>
                                             <td>
                                                 @if ($joOther->other)
-                                                    <span class="badge bg-info text-dark">{{ $joOther->other->other }}</span>
+                                                {{ $joOther->other->other }}
                                                 @else
                                                     -
                                                 @endif
