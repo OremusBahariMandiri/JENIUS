@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Invoice extends Model
 {
     protected $table = 'a04_md_invoice';
+    protected $primaryKey = 'id_md_invoice'; // ← tambahkan ini
+    public $incrementing = false;            // ← jika tidak pakai auto-increment DB
+    protected $keyType = 'string';
 
     protected $fillable = [
         'id_md_invoice',

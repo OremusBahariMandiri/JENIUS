@@ -17,29 +17,18 @@ class IdGenerator
      */
     public static function generate($tableCode, $tableName, $columnName)
     {
-        // Get current month and year
-        $month = date('m'); // 05
-        $year = date('y');  // 26 (2 digit terakhir)
-
-        // Prefix: B02 + 05 + 26 = B020526
+        $month  = date('m');
+        $year   = date('y');
         $prefix = $tableCode . $month . $year;
 
-        // Get last ID with same prefix
+        // Cast 5 digit terakhir ke unsigned integer agar sort numerik, bukan string
         $lastId = DB::table($tableName)
             ->where($columnName, 'LIKE', $prefix . '%')
-            ->orderBy($columnName, 'desc')
+            ->orderByRaw("CAST(RIGHT({$columnName}, 5) AS UNSIGNED) DESC")
             ->value($columnName);
 
-        if ($lastId) {
-            // Extract nomor urut dari ID terakhir (5 digit terakhir)
-            $lastNumber = (int) substr($lastId, -5);
-            $newNumber = $lastNumber + 1;
-        } else {
-            // Jika belum ada, mulai dari 1
-            $newNumber = 1;
-        }
+        $newNumber = $lastId ? ((int) substr($lastId, -5)) + 1 : 1;
 
-        // Format: B020526 + 00001 (5 digit dengan leading zeros)
         return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
     }
 }
