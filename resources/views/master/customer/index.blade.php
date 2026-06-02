@@ -40,6 +40,7 @@
                                     <th>Email</th>
                                     <th>Phone</th>
                                     <th>NPWP</th>
+                                    <th>Address</th>
                                     <th class="text-center" width="15%">Action</th>
                                 </tr>
                             </thead>
@@ -48,13 +49,11 @@
                                 <tr>
                                     <td>{{ $customers->firstItem() + $index }}</td>
                                     <td>{{ $customer->customer }}
-                                        @if($customer->address)
-                                        <br><small class="text-muted">{{ Str::limit($customer->address, 50) }}</small>
-                                        @endif
                                     </td>
                                     <td>{{ $customer->email ?? '-' }}</td>
                                     <td>{{ $customer->phone ?? '-' }}</td>
                                     <td>{{ $customer->npwp ?? '-' }}</td>
+                                    <td>{{ Str::limit($customer->address, 50) }}</td>
                                     <td>
                                         <div class="d-flex gap-1 justify-content-center">
                                             @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('customer', 'detail')))
