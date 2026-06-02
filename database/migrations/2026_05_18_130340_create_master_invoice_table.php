@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('invoice_typ')->nullable();
             $table->text('note')->nullable();
             $table->timestamps();
-            
+
             $table->index('id_md_invoice');
             $table->index('code');
         });

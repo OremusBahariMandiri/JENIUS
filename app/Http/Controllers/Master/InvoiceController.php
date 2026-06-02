@@ -7,6 +7,7 @@ use App\Models\Master\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\IdGenerator;
 
 class InvoiceController extends Controller
 {
@@ -97,42 +98,31 @@ class InvoiceController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            // 'code' => 'nullable|string|max:50|unique:a04_md_invoice,code',
             'invoice_ctg' => 'required|string|max:100',
             'invoice_typ' => 'required|string|max:100',
-            'note' => 'nullable|string',
+            'note'        => 'nullable|string',
         ], [
-            // 'code.required' => 'Kode invoice wajib diisi',
-            // 'code.unique' => 'Kode invoice sudah digunakan',
             'invoice_ctg.required' => 'Kategori invoice wajib diisi',
             'invoice_typ.required' => 'Tipe invoice wajib diisi',
         ]);
 
         if ($validator->fails()) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422);
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
             }
-
-            return back()
-                ->withErrors($validator)
-                ->withInput();
+            return back()->withErrors($validator)->withInput();
         }
 
         DB::beginTransaction();
         try {
-            // Generate ID
-            $lastInvoice = Invoice::orderBy('id_md_invoice', 'desc')->first();
-            $newId = $lastInvoice ? $lastInvoice->id_md_invoice + 1 : 1;
+            $newId = IdGenerator::generate('A04', 'a04_md_invoice', 'id_md_invoice');
 
             $invoice = Invoice::create([
                 'id_md_invoice' => $newId,
-                'code' => strtoupper($request->code),
-                'invoice_ctg' => $request->invoice_ctg,
-                'invoice_typ' => $request->invoice_typ,
-                'note' => $request->note,
+                'code'          => strtoupper($request->code),
+                'invoice_ctg'   => $request->invoice_ctg,
+                'invoice_typ'   => $request->invoice_typ,
+                'note'          => $request->note,
             ]);
 
             DB::commit();
@@ -141,29 +131,25 @@ class InvoiceController extends Controller
                 return response()->json([
                     'success' => true,
                     'message' => 'Invoice berhasil ditambahkan',
-                    'data' => $invoice
+                    'data'    => $invoice
                 ], 201);
             }
 
-            return redirect()
-                ->route('invoice.index')
-                ->with('success', 'Invoice berhasil ditambahkan');
+            return redirect()->route('invoice.index')->with('success', 'Invoice berhasil ditambahkan');
+
         } catch (\Exception $e) {
             DB::rollBack();
 
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Error creating invoice: ' . $e->getMessage()
+                    'message' => 'Error: ' . $e->getMessage()
                 ], 500);
             }
 
-            return back()
-                ->withInput()
-                ->with('error', 'Error creating invoice: ' . $e->getMessage());
+            return back()->withInput()->with('error', 'Error: ' . $e->getMessage());
         }
     }
-
     /**
      * Display the specified resource.
      */
