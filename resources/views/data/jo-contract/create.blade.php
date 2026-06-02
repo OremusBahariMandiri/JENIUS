@@ -419,6 +419,16 @@
             height: 1.2rem;
             border-width: 2px;
         }
+
+        #search_results .list-group-item-action:hover {
+            background-color: #f0fdf4 !important;
+        }
+
+        #search_results mark {
+            background: #fef08a;
+            padding: 0 1px;
+            border-radius: 2px;
+        }
     </style>
 @endpush
 
@@ -498,8 +508,11 @@
                                     </div>
 
                                     <!-- Search Results Dropdown -->
-                                    <div id="search_results" class="list-group"
-                                        style="display: none; max-height: 300px; overflow-y: auto; position: relative; z-index: 1000;">
+                                    <!-- Search Results Dropdown -->
+                                    <div style="position: relative;">
+                                        <div id="search_results" class="list-group"
+                                            style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px;">
+                                        </div>
                                     </div>
 
                                     <!-- Hidden Select for Form Submission -->
@@ -528,7 +541,7 @@
                                                             <td id="preview_no_contract">-</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><strong>Contract Name</strong></td>
+                                                            <td><strong>Contract</strong></td>
                                                             <td>:</td>
                                                             <td id="preview_contract_name">-</td>
                                                         </tr>
@@ -1043,6 +1056,34 @@
         setupRupiahInput(document.getElementById('edit_hpp'));
 
         // ========================================
+        // CONTRACT SEARCH - ENHANCED WITH INITIAL DATA DISPLAY
+        // ========================================
+
+        // Tampilkan semua data saat halaman load
+        $(document).ready(function() {
+            if (!isHeaderSaved) {
+                $('#itemsCard').addClass('items-card-disabled').css('position', 'relative');
+            }
+        });
+
+        // Tampilkan semua contract saat input fokus
+        document.getElementById('contract_search').addEventListener('focus', function() {
+            showAllContracts();
+        });
+
+        document.getElementById('contract_search').addEventListener('blur', function() {
+            setTimeout(() => {
+                hideSearchResults();
+            }, 200);
+        });
+
+
+        function showAllContracts() {
+            const searchType = document.querySelector('input[name="search_type"]:checked').value;
+            displaySearchResults(contracts, '', searchType);
+        }
+
+        // ========================================
         // CONTRACT SEARCH (SAMA SEPERTI ORIGINAL)
         // ========================================
         document.querySelectorAll('input[name="search_type"]').forEach(radio => {
@@ -1055,18 +1096,22 @@
                 };
                 searchInput.placeholder = placeholders[this.value];
                 searchInput.value = '';
-                searchInput.focus();
                 hideSearchResults();
                 clearContractPreview();
+                showAllContracts(); // ← Tampilkan semua dengan filter baru
             });
         });
 
         document.getElementById('contract_search').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
             const searchType = document.querySelector('input[name="search_type"]:checked').value;
-            const resultsContainer = document.getElementById('search_results');
 
-            if (searchTerm.length < 2) {
+            if (searchTerm.length === 0) {
+                showAllContracts();
+                return;
+            }
+
+            if (searchTerm.length < 1) {
                 hideSearchResults();
                 return;
             }
@@ -1086,65 +1131,113 @@
                 }
             });
 
-            displaySearchResults(filteredContracts, searchTerm);
+            displaySearchResults(filteredContracts, searchTerm, searchType);
         });
 
-        function displaySearchResults(contracts, searchTerm) {
+        function displaySearchResults(contractsList, searchTerm, searchType) {
             const resultsContainer = document.getElementById('search_results');
 
-            if (contracts.length === 0) {
+            const filterLabels = {
+                'nomor': 'Nomor',
+                'name': 'Contract',
+                'customer': 'Customer'
+            };
+            const activeLabel = filterLabels[searchType] || 'Contract';
+
+            if (contractsList.length === 0) {
                 resultsContainer.innerHTML = `
-            <div class="list-group-item text-center text-muted py-3">
-                <i class="fas fa-search mb-2 d-block" style="font-size: 2rem;"></i>
-                <p class="mb-0">No contracts found for "${searchTerm}"</p>
-            </div>
-        `;
+            <div class="list-group-item text-center text-muted py-4">
+                <i class="fas fa-search-minus mb-2 d-block" style="font-size:1.8rem;opacity:0.4;"></i>
+                <p class="mb-0 small">No contracts found</p>
+            </div>`;
                 resultsContainer.style.display = 'block';
                 return;
             }
 
-            resultsContainer.innerHTML = contracts.map(contract => {
-                const customerName = contract.customer ? contract.customer.customer : 'N/A';
+            const headerHtml = `
+        <div class="search-results-header d-flex justify-content-between px-3 py-1"
+             style="font-size:11px; color:#6c757d; background:#f8f9fa; border:1px solid #dee2e6; border-bottom:none; border-radius:6px 6px 0 0;">
+            <small><i class="fas fa-filter me-1"></i>By ${activeLabel}</small>
+            <small>${contractsList.length} result${contractsList.length > 1 ? 's' : ''}</small>
+        </div>`;
+
+            const itemsHtml = contractsList.map((contract, index) => {
+                const isLast = index === contractsList.length - 1;
+                const customerName = contract.customer ? contract.customer.customer : '-';
+                const contractName = contract.contract || '-';
+                const noContract = contract.no_contract || '-';
                 const expenditure = contract.expenditure ?
                     new Intl.NumberFormat('id-ID', {
                         style: 'currency',
-                        currency: 'IDR'
+                        currency: 'IDR',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
                     }).format(contract.expenditure) :
-                    'N/A';
+                    '-';
+
+                const periode = (contract.date_start && contract.date_end) ?
+                    `${formatDate(contract.date_start)} – ${formatDate(contract.date_end)}` :
+                    '-';
+
+                // Highlight kolom yang aktif
+                const noContractHtml = searchType === 'nomor' ? highlightText(noContract, searchTerm) : noContract;
+                const namaContractHtml = searchType === 'name' ? highlightText(contractName, searchTerm) :
+                    contractName;
+                const customerHtml = searchType === 'customer' ? highlightText(customerName, searchTerm) :
+                    customerName;
+
+                const borderRadius = isLast ? 'border-radius:0 0 6px 6px;' : '';
 
                 return `
-            <a href="#" class="list-group-item list-group-item-action contract-search-item"
-               data-contract-id="${contract.id_md_cont}">
-                <div class="d-flex w-100 justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">
-                            <span class="badge bg-primary contract-badge me-2">${contract.no_contract}</span>
-                            ${contract.contract}
-                        </h6>
-                        <p class="mb-1 text-muted small">
-                            <i class="fas fa-user me-1"></i>${customerName}
-                        </p>
-                        <small class="text-muted">
-                            <i class="fas fa-calendar me-1"></i>${formatDate(contract.date_start)} - ${formatDate(contract.date_end)}
-                        </small>
-                    </div>
-                    <div class="text-end">
-                        <span class="badge bg-success">${expenditure}</span>
-                    </div>
-                </div>
-            </a>
-        `;
+    <a href="#" class="list-group-item list-group-item-action contract-search-item px-3 py-2"
+       data-contract-id="${contract.id_md_cont}"
+       style="display:flex; align-items:center; gap:0; ${borderRadius}">
+
+        <span style="font-size:13px; white-space:nowrap; width:130px;">
+            ${noContractHtml}
+        </span>
+
+        <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
+
+        <span style="font-size:13px; white-space:nowrap; width:200px; overflow:hidden; text-overflow:ellipsis;">
+            ${namaContractHtml}
+        </span>
+
+        <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
+
+        <span style="font-size:13px; color:#6c757d; white-space:nowrap; width:160px; overflow:hidden; text-overflow:ellipsis;">
+            ${customerHtml}
+        </span>
+
+        <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
+
+        <span style="font-size:12px; color:#6c757d; white-space:nowrap; width:160px;">
+            ${periode}
+        </span>
+
+        <span style="font-size:13px; white-space:nowrap; text-align:right; margin-left:auto; padding-left:16px; color:#2c3e50;">
+            ${expenditure}
+        </span>
+    </a>`;
             }).join('');
 
+            resultsContainer.innerHTML = headerHtml + itemsHtml;
             resultsContainer.style.display = 'block';
 
             resultsContainer.querySelectorAll('.contract-search-item').forEach(item => {
                 item.addEventListener('click', function(e) {
                     e.preventDefault();
-                    const contractId = this.getAttribute('data-contract-id');
-                    selectContract(contractId);
+                    selectContract(this.getAttribute('data-contract-id'));
                 });
             });
+        }
+
+        // Helper: highlight teks yang match
+        function highlightText(text, term) {
+            if (!term || !text) return text || '';
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp(`(${escaped})`, 'gi'),
+                '<mark style="background:#fef08a;padding:0;border-radius:2px;">$1</mark>');
         }
 
         function selectContract(contractId) {
@@ -1172,9 +1265,12 @@
             const expenditure = contract.expenditure ?
                 new Intl.NumberFormat('id-ID', {
                     style: 'currency',
-                    currency: 'IDR'
+                    currency: 'IDR',
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
                 }).format(contract.expenditure) :
                 '-';
+
             document.getElementById('preview_expenditure').textContent = expenditure;
 
             document.getElementById('preview_start_date').textContent = formatDate(contract.date_start);
@@ -1216,20 +1312,6 @@
             };
             return date.toLocaleDateString('en-US', options);
         }
-
-        document.addEventListener('click', function(e) {
-            const searchContainer = document.getElementById('contract_search').parentElement.parentElement;
-            if (!searchContainer.contains(e.target)) {
-                hideSearchResults();
-            }
-        });
-
-        // ========================================
-        // SAVE HEADER (REALTIME)
-        // ========================================
-        $('#btnSaveHeader').on('click', function() {
-            saveHeaderToDatabase();
-        });
 
         // ========================================
         // SAVE HEADER (REALTIME) - UPDATE

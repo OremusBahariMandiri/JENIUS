@@ -522,8 +522,11 @@
                                     </div>
 
                                     <!-- Search Results Dropdown -->
-                                    <div id="search_results" class="list-group"
-                                        style="display: none; max-height: 300px; overflow-y: auto; position: relative; z-index: 1000;">
+                                    <!-- Search Results Dropdown -->
+                                    <div style="position: relative;">
+                                        <div id="search_results" class="list-group"
+                                            style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px;">
+                                        </div>
                                     </div>
 
                                     <!-- Hidden Select for Form Submission -->
@@ -554,7 +557,7 @@
                                                                 {{ $joContract->contract->no_contract }}</td>
                                                         </tr>
                                                         <tr>
-                                                            <td><strong>Contract Name</strong></td>
+                                                            <td><strong>Contract</strong></td>
                                                             <td>:</td>
                                                             <td id="preview_contract_name">
                                                                 {{ $joContract->contract->contract }}</td>
@@ -904,7 +907,8 @@
                     @foreach ($invoiceGroup as $invoice)
                         {
                             id: '{{ $invoice->id_md_invoice }}',
-                            type: '{{ $invoice->invoice_typ }}'
+                            type: '{{ $invoice->invoice_typ }}',
+                            note: {!! json_encode($invoice->note ?? '') !!},
                         },
                     @endforeach
                 ],
@@ -1005,6 +1009,224 @@
         setupRupiahInput(document.getElementById('input_pendapatan_idr'));
         setupRupiahInput(document.getElementById('input_pendapatan_usd'));
         setupRupiahInput(document.getElementById('input_hpp'));
+
+        // ========================================
+        // CONTRACT SEARCH
+        // ========================================
+
+        // Tampilkan saat fokus saja
+        document.getElementById('contract_search').addEventListener('focus', function() {
+            const searchType = document.querySelector('input[name="search_type"]:checked').value;
+            displaySearchResults(contracts, '', searchType);
+        });
+
+        // Sembunyikan saat blur (delay agar klik item sempat terproses)
+        document.getElementById('contract_search').addEventListener('blur', function() {
+            setTimeout(() => {
+                hideSearchResults();
+            }, 200);
+        });
+
+        // Filter saat mengetik
+        document.getElementById('contract_search').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase().trim();
+            const searchType = document.querySelector('input[name="search_type"]:checked').value;
+
+            if (searchTerm.length === 0) {
+                const searchType2 = document.querySelector('input[name="search_type"]:checked').value;
+                displaySearchResults(contracts, '', searchType2);
+                return;
+            }
+
+            const filteredContracts = contracts.filter(contract => {
+                switch (searchType) {
+                    case 'nomor':
+                        return contract.no_contract && contract.no_contract.toLowerCase().includes(
+                            searchTerm);
+                    case 'name':
+                        return contract.contract && contract.contract.toLowerCase().includes(searchTerm);
+                    case 'customer':
+                        return contract.customer && contract.customer.customer &&
+                            contract.customer.customer.toLowerCase().includes(searchTerm);
+                    default:
+                        return false;
+                }
+            });
+
+            displaySearchResults(filteredContracts, searchTerm, searchType);
+        });
+
+        // Ganti filter saat radio berubah
+        document.querySelectorAll('input[name="search_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const searchInput = document.getElementById('contract_search');
+                const placeholders = {
+                    'nomor': 'Search contract by number...',
+                    'name': 'Search contract by name...',
+                    'customer': 'Search contract by customer name...'
+                };
+                searchInput.placeholder = placeholders[this.value];
+                searchInput.value = '';
+                hideSearchResults();
+                clearContractPreview();
+            });
+        });
+
+        document.getElementById('clear_search').addEventListener('click', function() {
+            document.getElementById('contract_search').value = '';
+            hideSearchResults();
+            clearContractPreview();
+        });
+
+        function hideSearchResults() {
+            document.getElementById('search_results').style.display = 'none';
+        }
+
+        function clearContractPreview() {
+            document.getElementById('contract_preview').style.display = 'none';
+            document.getElementById('id_md_cont').innerHTML = '<option value="">Select Contract</option>';
+            selectedContract = null;
+        }
+
+        function highlightText(text, term) {
+            if (!term || !text) return text || '';
+            const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp(`(${escaped})`, 'gi'),
+                '<mark style="background:#fef08a;padding:0;border-radius:2px;">$1</mark>');
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return '-';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        }
+
+        function selectContract(contractId) {
+            selectedContract = contracts.find(c => c.id_md_cont == contractId);
+            if (!selectedContract) return;
+
+            const selectElement = document.getElementById('id_md_cont');
+            selectElement.innerHTML =
+                `<option value="${selectedContract.id_md_cont}" selected>${selectedContract.no_contract}</option>`;
+
+            document.getElementById('contract_search').value = selectedContract.no_contract + ' - ' + selectedContract
+                .contract;
+
+            hideSearchResults();
+            displayContractPreview(selectedContract);
+        }
+
+        function displayContractPreview(contract) {
+            document.getElementById('preview_no_contract').textContent = contract.no_contract || '-';
+            document.getElementById('preview_contract_name').textContent = contract.contract || '-';
+            document.getElementById('preview_customer').textContent = contract.customer ? contract.customer.customer : '-';
+
+            const expenditure = contract.expenditure ?
+                new Intl.NumberFormat('id-ID', {
+                    style: 'currency',
+                    currency: 'IDR'
+                }).format(contract.expenditure) :
+                '-';
+            document.getElementById('preview_expenditure').textContent = expenditure;
+            document.getElementById('preview_start_date').textContent = formatDate(contract.date_start);
+            document.getElementById('preview_end_date').textContent = formatDate(contract.date_end);
+
+            const noteSection = document.getElementById('preview_note_section');
+            if (noteSection) {
+                if (contract.note) {
+                    document.getElementById('preview_note').textContent = contract.note;
+                    noteSection.style.display = 'block';
+                } else {
+                    noteSection.style.display = 'none';
+                }
+            }
+
+            document.getElementById('contract_preview').style.display = 'block';
+        }
+
+        function displaySearchResults(contractsList, searchTerm, searchType) {
+            const resultsContainer = document.getElementById('search_results');
+
+            const filterLabels = {
+                'nomor': 'Nomor',
+                'name': 'Contract',
+                'customer': 'Customer'
+            };
+            const activeLabel = filterLabels[searchType] || 'Contract';
+
+            if (contractsList.length === 0) {
+                resultsContainer.innerHTML = `
+            <div class="list-group-item text-center text-muted py-4">
+                <i class="fas fa-search-minus mb-2 d-block" style="font-size:1.8rem;opacity:0.4;"></i>
+                <p class="mb-0 small">No contracts found</p>
+            </div>`;
+                resultsContainer.style.display = 'block';
+                return;
+            }
+
+            const headerHtml = `
+        <div class="d-flex justify-content-between px-3 py-1"
+             style="font-size:11px; color:#6c757d; background:#f8f9fa; border:1px solid #dee2e6; border-bottom:none; border-radius:6px 6px 0 0;">
+            <small><i class="fas fa-filter me-1"></i>By ${activeLabel}</small>
+            <small>${contractsList.length} result${contractsList.length > 1 ? 's' : ''}</small>
+        </div>`;
+
+            const itemsHtml = contractsList.map((contract, index) => {
+                const isLast = index === contractsList.length - 1;
+                const customerName = contract.customer ? contract.customer.customer : '-';
+                const contractName = contract.contract || '-';
+                const noContract = contract.no_contract || '-';
+
+                const expenditure = contract.expenditure ?
+                    new Intl.NumberFormat('id-ID', {
+                        style: 'currency',
+                        currency: 'IDR',
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    }).format(contract.expenditure) :
+                    '-';
+
+                const periode = (contract.date_start && contract.date_end) ?
+                    `${formatDate(contract.date_start)} – ${formatDate(contract.date_end)}` :
+                    '-';
+
+                const noContractHtml = searchType === 'nomor' ? highlightText(noContract, searchTerm) : noContract;
+                const namaContractHtml = searchType === 'name' ? highlightText(contractName, searchTerm) :
+                    contractName;
+                const customerHtml = searchType === 'customer' ? highlightText(customerName, searchTerm) :
+                    customerName;
+
+                const borderRadius = isLast ? 'border-radius:0 0 6px 6px;' : '';
+
+                return `
+            <a href="#" class="list-group-item list-group-item-action contract-search-item px-3 py-2"
+               data-contract-id="${contract.id_md_cont}"
+               style="display:flex; align-items:center; gap:0; ${borderRadius}">
+                <span style="font-size:13px; white-space:nowrap; width:130px;">${noContractHtml}</span>
+                <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
+                <span style="font-size:13px; white-space:nowrap; width:200px; overflow:hidden; text-overflow:ellipsis;">${namaContractHtml}</span>
+                <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
+                <span style="font-size:13px; color:#6c757d; white-space:nowrap; width:160px; overflow:hidden; text-overflow:ellipsis;">${customerHtml}</span>
+                <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
+                <span style="font-size:12px; color:#6c757d; white-space:nowrap; width:160px;">${periode}</span>
+                <span style="font-size:13px; white-space:nowrap; text-align:right; margin-left:auto; padding-left:16px; color:#2c3e50;">${expenditure}</span>
+            </a>`;
+            }).join('');
+
+            resultsContainer.innerHTML = headerHtml + itemsHtml;
+            resultsContainer.style.display = 'block';
+
+            resultsContainer.querySelectorAll('.contract-search-item').forEach(item => {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    selectContract(this.getAttribute('data-contract-id'));
+                });
+            });
+        }
 
         // ========================================
         // FLOATING BADGE ALERT FUNCTIONS
@@ -1111,10 +1333,20 @@
             let options = '<option value="">Select Item</option>';
 
             invoices.forEach(invoice => {
-                options += `<option value="${invoice.id}">${invoice.type}</option>`;
+                options +=
+                    `<option value="${invoice.id}" data-note="${invoice.note}">${invoice.type}</option>`;
             });
 
             itemSelect.prop('disabled', false).html(options);
+        });
+
+        // Tambahkan event baru ini SETELAH event #input_category di atas
+        $('#input_item').on('change', function() {
+            const editingItemId = $('#editing_item_id').val();
+            if (editingItemId) return; // Saat mode edit, jangan overwrite note dari DB
+
+            const masterNote = $(this).find('option:selected').data('note') || '';
+            $('#input_note').val(masterNote);
         });
 
         // ========================================
