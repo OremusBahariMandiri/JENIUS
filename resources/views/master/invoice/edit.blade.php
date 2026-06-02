@@ -74,7 +74,7 @@
                                     <label class="form-label fw-semibold">Note</label>
                                     <textarea name="note"
                                               class="form-control @error('note') is-invalid @enderror"
-                                              rows="4">{{ old('note', $invoice->note) }}</textarea>
+                                              rows="7">{{ old('note', $invoice->note) }}</textarea>
                                     @error('note')
                                     <div class="invalid-feedback">
                                         <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}

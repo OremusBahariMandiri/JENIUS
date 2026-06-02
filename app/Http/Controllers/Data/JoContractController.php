@@ -287,7 +287,7 @@ class JoContractController extends Controller
                 'pendapatan_idr' => 'nullable|numeric|min:0',
                 'pendapatan_usd' => 'nullable|numeric|min:0',
                 'hpp_ops' => 'nullable|numeric|min:0',
-                'note' => 'nullable|string|max:1000',
+                'note' => 'nullable|string',
             ];
 
             // Di storeItem
