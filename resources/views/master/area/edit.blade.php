@@ -15,17 +15,6 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <!-- Info Alert -->
-                    <div class="alert alert-light border-start border-4 border-primary mb-4">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-info-circle text-primary me-2 fa-lg"></i>
-                            <div>
-                                <strong>Editing:</strong> {{ $area->area }}
-                                <br>
-                                <small class="text-muted">ID: {{ $area->id_md_area }}</small>
-                            </div>
-                        </div>
-                    </div>
 
                     <form action="{{ route('area.update', $area->id_md_area) }}" method="POST" id="areaForm">
                         @csrf

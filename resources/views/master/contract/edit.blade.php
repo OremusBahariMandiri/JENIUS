@@ -15,17 +15,6 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <!-- Info Alert -->
-                    <div class="alert alert-light border-start border-4 border-primary mb-4">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-info-circle text-primary me-2 fa-lg"></i>
-                            <div>
-                                <strong>Editing:</strong> {{ $contract->contract }}
-                                <br>
-                                <small class="text-muted">ID: {{ $contract->id_md_cont }} | Contract No: {{ $contract->no_contract }}</small>
-                            </div>
-                        </div>
-                    </div>
 
                     <form action="{{ route('contract.update', $contract->id_md_cont) }}" method="POST" id="contractForm">
                         @csrf

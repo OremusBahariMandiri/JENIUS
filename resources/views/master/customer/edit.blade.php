@@ -15,18 +15,6 @@
                 </div>
 
                 <div class="card-body p-4">
-                    <!-- Info Alert -->
-                    <div class="alert alert-light border-start border-4 border-primary mb-4">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-info-circle text-primary me-2 fa-lg"></i>
-                            <div>
-                                <strong>Editing:</strong> {{ $customer->customer }}
-                                <br>
-                                <small class="text-muted">ID: {{ $customer->id_md_cust }}</small>
-                            </div>
-                        </div>
-                    </div>
-
                     <form action="{{ route('customer.update', $customer->id_md_cust) }}" method="POST" id="customerForm">
                         @csrf
                         @method('PUT')
