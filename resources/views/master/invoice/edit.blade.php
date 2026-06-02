@@ -130,7 +130,6 @@
         </div>
     </div>
 </div>
-@endsection
 
 @push('styles')
 <style>
