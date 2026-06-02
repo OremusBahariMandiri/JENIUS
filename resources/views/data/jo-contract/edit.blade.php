@@ -445,6 +445,28 @@
         .btn-final-save i {
             margin-right: 10px;
         }
+
+        .btn-final-back {
+            background: linear-gradient(135deg, #868686 0%, #5e5e5e 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(27, 27, 27, 0.4);
+            transition: all 0.3s;
+        }
+
+        .btn-final-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(49, 49, 49, 0.5);
+            color: white;
+        }
+
+        .btn-final-back i {
+            margin-right: 10px;
+        }
     </style>
 @endpush
 
@@ -699,7 +721,7 @@
 
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Note (Optional)</label>
-                                        <textarea id="input_note" class="form-control" rows="2" placeholder="Add notes for this item..."></textarea>
+                                        <textarea id="input_note" class="form-control" rows="5" placeholder="Add notes for this item..."></textarea>
                                     </div>
 
                                     <!-- Pendapatan IDR -->
@@ -878,9 +900,14 @@
                             <h6 class="mb-1"><i class="fas fa-info-circle me-2"></i>Ready to Save?</h6>
                             <small class="text-muted">Click the button to save all changes permanently</small>
                         </div>
-                        <button type="button" class="btn btn-final-save" id="btnFinalSave">
-                            <i class="fas fa-save"></i> Save All Changes
-                        </button>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('jo-contract.index') }}" class="btn btn-final-back">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                            <button type="button" class="btn btn-final-save" id="btnFinalSave">
+                                <i class="fas fa-save"></i> Save All Changes
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
