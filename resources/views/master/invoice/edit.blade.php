@@ -95,25 +95,6 @@
                             </div>
                         </div>
 
-                        <!-- Metadata -->
-                        <div class="card bg-light border-0 mb-4">
-                            <div class="card-body">
-                                <h6 class="card-title text-muted mb-3">
-                                    <i class="fas fa-clock me-1"></i>Record Information
-                                </h6>
-                                <div class="row text-sm">
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted">Created:</small><br>
-                                        <small><i class="fas fa-calendar-plus me-1"></i>{{ $invoice->created_at->format('d M Y, H:i') }}</small>
-                                    </div>
-                                    <div class="col-md-6 mb-2">
-                                        <small class="text-muted">Last Updated:</small><br>
-                                        <small><i class="fas fa-calendar-check me-1"></i>{{ $invoice->updated_at->format('d M Y, H:i') }}</small>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         <hr class="my-4">
 
                         <div class="d-flex gap-2 justify-content-end">
