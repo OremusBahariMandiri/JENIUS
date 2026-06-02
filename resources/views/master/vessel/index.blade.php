@@ -11,7 +11,7 @@
                     <span class="fw-bold"><i class="fas fa-ship me-2"></i>Data Vessel</span>
                     @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('vessel', 'tambah')))
                     <a href="{{ route('vessel.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Add Vessel
+                        <i class="fas fa-plus-circle me-1"></i> Add
                     </a>
                     @endif
                 </div>
@@ -48,8 +48,8 @@
                                 @foreach($vessels as $index => $vessel)
                                 <tr>
                                     <td>{{ $vessels->firstItem() + $index }}</td>
-                                    <td><strong>{{ $vessel->vessel_name }}</strong></td>
-                                    <td><span class="badge bg-info text-dark">{{ $vessel->vessel_type ?? '-' }}</span></td>
+                                    <td>{{ $vessel->vessel_name }}</td>
+                                    <td>{{ $vessel->vessel_type ?? '-' }}</td>
                                     <td>{{ $vessel->no_imo ?? '-' }}</td>
                                     <td>{{ $vessel->call_sign ?? '-' }}</td>
                                     <td>{{ $vessel->flag ?? '-' }}</td>

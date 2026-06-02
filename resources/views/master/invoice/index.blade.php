@@ -11,7 +11,7 @@
                     <span class="fw-bold"><i class="fas fa-file-invoice me-2"></i>Data Invoice</span>
                     @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('invoice', 'tambah')))
                     <a href="{{ route('invoice.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Add Invoice
+                        <i class="fas fa-plus-circle me-1"></i> Add
                     </a>
                     @endif
                 </div>
@@ -46,8 +46,8 @@
                                 @foreach($invoices as $index => $invoice)
                                 <tr>
                                     <td>{{ $invoices->firstItem() + $index }}</td>
-                                    <td><strong>{{ $invoice->invoice_ctg }}</strong></td>
-                                    <td><span class="badge bg-info text-dark">{{ $invoice->invoice_typ }}</span></td>
+                                    <td>{{ $invoice->invoice_ctg }}</td>
+                                    <td>{{ $invoice->invoice_typ }}</td>
                                     <td>{{ $invoice->note ? Str::limit($invoice->note, 50) : '-' }}</td>
                                     <td>
                                         <div class="d-flex gap-1 justify-content-center">

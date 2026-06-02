@@ -12,7 +12,7 @@
                         <span class="fw-bold"><i class="fas fa-file-contract me-2"></i>JO Contract Data</span>
                         @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'tambah')))
                             <a href="{{ route('jo-contract.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add JO Contract
+                                <i class="fas fa-plus-circle me-1"></i> Add
                             </a>
                         @endif
                     </div>
@@ -54,8 +54,7 @@
                                             <td>{{ $joContract->title }}</td>
                                             <td>
                                                 @if ($joContract->contract)
-                                                    <span
-                                                        class="badge bg-info text-dark">{{ $joContract->contract->no_contract }}</span>
+                                                {{ $joContract->contract->no_contract }}
                                                 @else
                                                     -
                                                 @endif

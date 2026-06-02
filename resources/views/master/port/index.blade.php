@@ -11,7 +11,7 @@
                     <span class="fw-bold"><i class="fas fa-anchor me-2"></i>Data Port</span>
                     @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('port', 'tambah')))
                     <a href="{{ route('port.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Add Port
+                        <i class="fas fa-plus-circle me-1"></i> Add
                     </a>
                     @endif
                 </div>
@@ -50,7 +50,7 @@
                                     {{-- <td><strong>{{ $port->no_port ?? '-' }}</strong></td> --}}
                                     <td>{{ $port->name_port }}</td>
                                     <td>{{ $port->kota ?? '-' }}</td>
-                                    <td><span class="badge bg-info text-dark">{{ $port->provinsi ?? '-' }}</span></td>
+                                    <td>{{ $port->provinsi ?? '-' }}</td>
                                     <td>{{ $port->negara ?? '-' }}</td>
                                     <td>
                                         <div class="d-flex gap-1 justify-content-center">

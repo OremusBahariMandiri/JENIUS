@@ -11,7 +11,7 @@
                     <span class="fw-bold"><i class="fas fa-globe me-2"></i>Area Management</span>
                     @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('area', 'tambah')))
                     <a href="{{ route('area.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Add Area
+                        <i class="fas fa-plus-circle me-1"></i> Add
                     </a>
                     @endif
                 </div>
@@ -45,7 +45,7 @@
                                 @foreach($areas as $area)
                                 <tr>
                                     <td>{{ $loop->iteration }}</td>
-                                    <td><strong>{{ $area->area }}</strong></td>
+                                    <td>{{ $area->area }}</td>
                                     <td>{{ $area->note ?? '-' }}</td>
                                     <td>
                                         <div class="d-flex gap-1 justify-content-center">

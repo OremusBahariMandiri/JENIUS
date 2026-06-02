@@ -12,7 +12,7 @@
                         <span class="fw-bold"><i class="fas fa-file-contract me-2"></i>Data Contract</span>
                         @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('contract', 'tambah')))
                             <a href="{{ route('contract.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add Contract
+                                <i class="fas fa-plus-circle me-1"></i> Add
                             </a>
                         @endif
                     </div>
@@ -49,8 +49,8 @@
                                     @foreach ($contracts as $index => $contract)
                                         <tr>
                                             <td>{{ $contracts->firstItem() + $index }}</td>
-                                            <td><span class="badge bg-primary">{{ $contract->no_contract }}</span></td>
-                                            <td><strong>{{ $contract->contract }}</strong></td>
+                                            <td>{{ $contract->no_contract }}</td>
+                                            <td>{{ $contract->contract }}</td>
                                             <td>{{ $contract->customer->customer ?? '-' }}</td>
                                             <td>IDR {{ number_format($contract->expenditure, 2, ',', '.') }}</td>
                                             <td>
