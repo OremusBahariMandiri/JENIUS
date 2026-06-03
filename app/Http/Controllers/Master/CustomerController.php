@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Exports\DataMaster\CustomerExport;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\IdGenerator;
 
 class CustomerController extends Controller
 {
@@ -40,11 +42,11 @@ class CustomerController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('code', 'like', "%{$search}%")
-                  ->orWhere('customer', 'like', "%{$search}%")
-                  ->orWhere('address', 'like', "%{$search}%")
-                  ->orWhere('phone', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%")
-                  ->orWhere('npwp', 'like', "%{$search}%");
+                    ->orWhere('customer', 'like', "%{$search}%")
+                    ->orWhere('address', 'like', "%{$search}%")
+                    ->orWhere('phone', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('npwp', 'like', "%{$search}%");
             });
         }
 
@@ -93,119 +95,37 @@ class CustomerController extends Controller
     /**
      * Export customers — supports format=excel|pdf, respects active filter.
      */
+
     public function export(Request $request)
     {
-        $format = $request->get('format', 'excel');
+        $format    = $request->get('format', 'excel');
+        $customers = $this->buildFilteredQuery($request)
+            ->orderBy('customer', 'asc')
+            ->get();
 
-        try {
-            $customers = $this->buildFilteredQuery($request)
-                ->orderBy('customer', 'asc')
-                ->get();
+        if ($format === 'pdf') {
+            // Jika DomPDF tersedia — download langsung
+            if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'master.customer.export_pdf',
+                    compact('customers')
+                )->setPaper('a4', 'portrait');
 
-            if ($format === 'pdf') {
-                return $this->exportPdf($customers);
+                $filename = 'customers_' . date('Ymd_His') . '.pdf';
+                return $pdf->download($filename);
             }
 
-            // Default: Excel
-            return $this->exportExcel($customers);
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error exporting customers: ' . $e->getMessage());
-        }
-    }
+            // Fallback — buka di browser untuk Print / Save as PDF
+            $filename = 'customers_' . date('Ymd_His') . '.pdf';
+            $html     = view('master.customer.export_pdf', compact('customers'))->render();
 
-    /**
-     * Export to Excel using PhpSpreadsheet (no Laravel Excel package needed).
-     */
-    private function exportExcel($customers)
-    {
-        // Use PhpSpreadsheet if available, otherwise fallback to CSV
-        if (class_exists('\PhpOffice\PhpSpreadsheet\Spreadsheet')) {
-            return $this->exportXlsx($customers);
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
         }
 
-        // Fallback: CSV
-        $filename = 'customers_' . date('Ymd_His') . '.csv';
-        $headers  = [
-            'Content-Type'        => 'text/csv',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ];
-
-        $callback = function () use ($customers) {
-            $handle = fopen('php://output', 'w');
-
-            // Header row
-            fputcsv($handle, ['No', 'Customer', 'Email', 'Phone', 'NPWP', 'Address', 'Website', 'Note', 'Created At']);
-
-            foreach ($customers as $i => $customer) {
-                fputcsv($handle, [
-                    $i + 1,
-                    $customer->customer     ?? '',
-                    $customer->email        ?? '',
-                    $customer->phone        ?? '',
-                    $customer->npwp         ?? '',
-                    $customer->address      ?? '',
-                    $customer->website      ?? '',
-                    $customer->note         ?? '',
-                    $customer->created_at ? $customer->created_at->format('d/m/Y H:i') : '',
-                ]);
-            }
-
-            fclose($handle);
-        };
-
-        return response()->stream($callback, 200, $headers);
-    }
-
-    /**
-     * Export to XLSX using PhpSpreadsheet.
-     */
-    private function exportXlsx($customers)
-    {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet       = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Data Customer');
-
-        // Header
-        $headers = ['No', 'Customer', 'Email', 'Phone', 'NPWP', 'Address', 'Website', 'Note', 'Created At'];
-        foreach ($headers as $col => $header) {
-            $cellCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1);
-            $sheet->setCellValue("{$cellCol}1", $header);
-            $sheet->getStyle("{$cellCol}1")->getFont()->setBold(true);
-            $sheet->getStyle("{$cellCol}1")->getFill()
-                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
-                ->getStartColor()->setRGB('D1FAE5');
-        }
-
-        // Data rows
-        foreach ($customers as $i => $customer) {
-            $row = $i + 2;
-            $sheet->setCellValue("A{$row}", $i + 1);
-            $sheet->setCellValue("C{$row}", $customer->customer   ?? '');
-            $sheet->setCellValue("D{$row}", $customer->email      ?? '');
-            $sheet->setCellValue("E{$row}", $customer->phone      ?? '');
-            $sheet->setCellValue("F{$row}", $customer->npwp       ?? '');
-            $sheet->setCellValue("G{$row}", $customer->address    ?? '');
-            $sheet->setCellValue("H{$row}", $customer->website    ?? '');
-            $sheet->setCellValue("I{$row}", $customer->note       ?? '');
-            $sheet->setCellValue("J{$row}", $customer->created_at ? $customer->created_at->format('d/m/Y H:i') : '');
-        }
-
-        // Auto-width
-        foreach (range('A', 'J') as $col) {
-            $sheet->getColumnDimension($col)->setAutoSize(true);
-        }
-
-        $filename = 'customers_' . date('Ymd_His') . '.xlsx';
-        $writer   = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
-
-        ob_start();
-        $writer->save('php://output');
-        $content = ob_get_clean();
-
-        return response($content, 200, [
-            'Content-Type'        => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-        ]);
+        return (new CustomerExport($customers))->download();
     }
 
     /**
@@ -331,8 +251,7 @@ HTML;
 
         DB::beginTransaction();
         try {
-            $lastCustomer = Customer::withTrashed()->orderBy('id_md_cust', 'desc')->first();
-            $newId = $lastCustomer ? $lastCustomer->id_md_cust + 1 : 1;
+            $newId = IdGenerator::generate('A01', 'a01_md_customer', 'id_md_cust');
 
             $customer = Customer::create([
                 'id_md_cust' => $newId,
@@ -373,7 +292,7 @@ HTML;
             $summary = [
                 'total_contracts'  => $customer->contracts->count(),
                 'active_contracts' => $customer->contracts->filter(fn($c) => $c->date_end >= now())->count(),
-                'total_expenditure'=> $customer->contracts->sum('expenditure'),
+                'total_expenditure' => $customer->contracts->sum('expenditure'),
             ];
 
             if ($request->expectsJson()) {
@@ -424,7 +343,7 @@ HTML;
             $customer = Customer::findOrFail($id);
             $customer->update([
                 'code'    => strtoupper($request->code),
-                'customer'=> $request->customer,
+                'customer' => $request->customer,
                 'address' => $request->address,
                 'phone'   => $request->phone,
                 'email'   => $request->email,

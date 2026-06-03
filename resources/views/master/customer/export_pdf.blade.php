@@ -27,8 +27,8 @@
             border-collapse: collapse;
         }
         thead th {
-            background: #000;
-            color: #fff;
+            background: #fff;        
+            color: #000;
             font-size: 8.5px;
             font-weight: bold;
             text-transform: uppercase;
