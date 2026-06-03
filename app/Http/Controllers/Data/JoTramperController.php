@@ -8,6 +8,7 @@ use App\Models\Data\JoTramperItem;
 use App\Models\Master\Customer;
 use App\Models\Master\Port;
 use App\Models\Master\Invoice;
+use App\Helpers\IdGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -23,7 +24,6 @@ class JoTramperController extends Controller
         try {
             $query = JoTramper::with(['customer', 'port']);
 
-            // Search functionality
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
@@ -42,22 +42,18 @@ class JoTramperController extends Controller
                 });
             }
 
-            // Filter by customer
             if ($request->has('id_md_cust') && !empty($request->id_md_cust)) {
                 $query->where('id_md_cust', $request->id_md_cust);
             }
 
-            // Filter by port
             if ($request->has('id_md_port') && !empty($request->id_md_port)) {
                 $query->where('id_md_port', $request->id_md_port);
             }
 
-            // Filter by status
             if ($request->has('sts_proses') && !empty($request->sts_proses)) {
                 $query->where('sts_proses', $request->sts_proses);
             }
 
-            // Filter by date range
             if ($request->has('date_start') && !empty($request->date_start)) {
                 $query->where('date_start', '>=', $request->date_start);
             }
@@ -66,35 +62,25 @@ class JoTramperController extends Controller
                 $query->where('date_end', '<=', $request->date_end);
             }
 
-            // Sorting
-            $sortBy = $request->get('sort_by', 'created_at');
+            $sortBy    = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            // Pagination
-            $perPage = $request->get('per_page', 15);
+            $perPage    = $request->get('per_page', 15);
             $joTrampers = $query->paginate($perPage);
 
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $joTrampers
-                ]);
+                return response()->json(['success' => true, 'data' => $joTrampers]);
             }
 
-            // Get customers and ports for filter
             $customers = Customer::orderBy('customer')->get();
-            $ports = Port::orderBy('name_port')->get();
+            $ports     = Port::orderBy('name_port')->get();
 
             return view('data.jo-tramper.index', compact('joTrampers', 'customers', 'ports'));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error retrieving JO Trampers: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error retrieving JO Trampers: ' . $e->getMessage()], 500);
             }
-
             return back()->with('error', 'Error retrieving JO Trampers: ' . $e->getMessage());
         }
     }
@@ -105,196 +91,548 @@ class JoTramperController extends Controller
     public function create()
     {
         $customers = Customer::orderBy('customer')->get();
-        $ports = Port::orderBy('name_port')->get();
-        $invoices = Invoice::orderBy('id')->get();
+        $ports     = Port::orderBy('name_port')->get();
+        $invoices  = Invoice::orderBy('id')->get();
 
         return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices'));
     }
 
+    // =========================================================================
+    // REALTIME AUTO-SAVE METHODS
+    // =========================================================================
+
     /**
-     * Store a newly created resource in storage.
+     * Store JO Tramper Header (Realtime Auto-save via AJAX)
      */
-    public function store(Request $request)
+    public function storeHeader(Request $request)
     {
-        // Log input data untuk debugging
-        Log::info('JO Tramper Store Request', [
-            'all_data' => $request->all()
-        ]);
+        Log::info('=== JO Tramper Store Header Request START ===', ['data' => $request->all()]);
 
-        $validator = Validator::make($request->all(), [
-            'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
-            'id_md_port' => 'required|exists:a06_md_port,id_md_port',
-            'date_start' => 'required|date',
-            'date_end' => 'required|date|after_or_equal:date_start',
-            'title' => 'required|string|max:255',
-            'note' => 'nullable|string',
-            'sts_proses' => 'nullable|string|max:50',
-
-            // Global kurs validation
-            'global_kurs_usd' => 'nullable|numeric|min:0',
-            'global_tgl_kurs_usd' => 'nullable|date',
-
-            // Validation untuk items
-            'items' => 'nullable|array|min:1',
-            'items.*.id_md_invoice' => 'nullable|exists:a04_md_invoice,id_md_invoice',
-            'items.*.invoice_ctg' => 'nullable|string',
-            'items.*.pendapatan_idr' => 'nullable|numeric|min:0',
-            'items.*.pendapatan_usd' => 'nullable|numeric|min:0',
-            'items.*.hpp_ops' => 'nullable|numeric|min:0',
-            'items.*.hargajual_idr' => 'nullable|numeric|min:0',
-        ], [
-            'id_md_cust.required' => 'Customer is required',
-            'id_md_cust.exists' => 'Selected customer does not exist',
-            'id_md_port.required' => 'Port is required',
-            'id_md_port.exists' => 'Selected port does not exist',
-            'date_start.required' => 'Start date is required',
-            'date_end.required' => 'End date is required',
-            'date_end.after_or_equal' => 'End date must be after or equal to start date',
-            'title.required' => 'Title is required',
-            'global_kurs_usd.required' => 'Exchange rate is required',
-            'global_tgl_kurs_usd.required' => 'Exchange rate date is required',
-            'items.required' => 'At least one item is required',
-            'items.min' => 'At least one item is required',
-            'items.*.id_md_invoice.required' => 'Invoice is required for each item',
-            'items.*.id_md_invoice.exists' => 'Selected invoice does not exist',
-            'items.*.pendapatan_idr.required' => 'Revenue IDR is required for each item',
-            'items.*.pendapatan_usd.required' => 'Revenue USD is required for each item',
-            'items.*.hpp_ops.required' => 'HPP Operational is required for each item',
-            'items.*.hargajual_idr.required' => 'Selling price is required for each item',
-        ]);
-
-        if ($validator->fails()) {
-            Log::error('JO Tramper Validation Failed', [
-                'errors' => $validator->errors()->toArray()
+        try {
+            $validator = Validator::make($request->all(), [
+                'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
+                'id_md_port' => 'required|exists:a06_md_port,id_md_port',
+                'date_start' => 'required|date',
+                'date_end'   => 'required|date|after_or_equal:date_start',
+                'title'      => 'required|string|max:255',
+                'note'       => 'nullable|string',
+            ], [
+                'id_md_cust.required'     => 'Customer is required',
+                'id_md_cust.exists'       => 'Selected customer does not exist',
+                'id_md_port.required'     => 'Port is required',
+                'id_md_port.exists'       => 'Selected port does not exist',
+                'date_start.required'     => 'Start date is required',
+                'date_end.required'       => 'End date is required',
+                'date_end.after_or_equal' => 'End date must be after or equal to start date',
+                'title.required'          => 'Title is required',
             ]);
 
-            if ($request->expectsJson()) {
+            if ($validator->fails()) {
                 return response()->json([
                     'success' => false,
-                    'errors' => $validator->errors()
+                    'message' => 'Validation failed',
+                    'errors'  => $validator->errors()
                 ], 422);
             }
 
-            return back()
-                ->withErrors($validator)
-                ->withInput();
+            DB::beginTransaction();
+
+            $newJoTramId = IdGenerator::generate('B03', 'b03_jo_tram', 'id_jo_tram');
+
+            DB::table('b03_jo_tram')->insert([
+                'id_jo_tram' => $newJoTramId,
+                'id_md_cust' => $request->id_md_cust,
+                'id_md_port' => $request->id_md_port,
+                'date_start' => $request->date_start,
+                'date_end'   => $request->date_end,
+                'title'      => $request->title,
+                'note'       => $request->note,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            DB::commit();
+
+            Log::info('JO Tramper Header Created Successfully', ['id_jo_tram' => $newJoTramId]);
+
+            return response()->json([
+                'success'      => true,
+                'message'      => 'JO Tramper header saved successfully',
+                'redirect_url' => route('jo-tramper.edit', $newJoTramId),
+                'data'         => [
+                    'id'         => $newJoTramId,
+                    'id_md_cust' => $request->id_md_cust,
+                    'id_md_port' => $request->id_md_port,
+                    'date_start' => $request->date_start,
+                    'date_end'   => $request->date_end,
+                    'title'      => $request->title,
+                    'note'       => $request->note,
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('JO Tramper Store Header Failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to save JO Tramper header', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Update JO Tramper Header (Realtime Auto-save via AJAX)
+     */
+    public function updateHeader(Request $request, $id)
+    {
+        Log::info('=== JO Tramper Update Header Request START ===', ['id' => $id, 'data' => $request->all()]);
+
+        try {
+            $validator = Validator::make($request->all(), [
+                'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
+                'id_md_port' => 'required|exists:a06_md_port,id_md_port',
+                'date_start' => 'required|date',
+                'date_end'   => 'required|date|after_or_equal:date_start',
+                'title'      => 'required|string|max:255',
+                'note'       => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $joTramper = JoTramper::where('id_jo_tram', (string) $id)->firstOrFail();
+
+            $joTramper->update([
+                'id_md_cust' => $request->id_md_cust,
+                'id_md_port' => $request->id_md_port,
+                'date_start' => $request->date_start,
+                'date_end'   => $request->date_end,
+                'title'      => $request->title,
+                'note'       => $request->note,
+            ]);
+
+            DB::commit();
+
+            $joTramper->load(['customer', 'port']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'JO Tramper header updated successfully',
+                'data'    => $joTramper
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('JO Tramper Update Header Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to update JO Tramper header', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Store JO Tramper Item (Realtime Auto-save via AJAX)
+     */
+    public function storeItem(Request $request)
+    {
+        Log::info('=== JO Tramper Store Item Request START ===', ['data' => $request->all()]);
+
+        try {
+            $rules = [
+                'id_jo_tram'    => 'required|exists:b03_jo_tram,id_jo_tram',
+                'id_md_invoice' => 'required|exists:a04_md_invoice,id_md_invoice',
+                'invoice_ctg'   => 'required|string',
+                'pendapatan_idr' => 'nullable|numeric|min:0',
+                'pendapatan_usd' => 'nullable|numeric|min:0',
+                'hpp_ops'        => 'nullable|numeric|min:0',
+                'note' => 'nullable|string',
+            ];
+
+            if ($request->pendapatan_usd && $request->pendapatan_usd > 0) {
+                $rules['kurs_usd']     = 'required|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'required|date';
+            } else {
+                $rules['kurs_usd']     = 'nullable|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'nullable|date';
+            }
+
+            $validator = Validator::make($request->all(), $rules);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $pendapatanIDR = $request->pendapatan_idr ?? 0;
+            $pendapatanUSD = $request->pendapatan_usd ?? 0;
+            $kursUSD       = $request->kurs_usd ?? 0;
+            $hppOps        = $request->hpp_ops ?? 0;
+
+            $hargajualIDR = $pendapatanIDR > 0
+                ? $pendapatanIDR + $hppOps
+                : ($pendapatanUSD * $kursUSD) + $hppOps;
+
+            $item = JoTramperItem::create([
+                'id_jo_tram'     => $request->id_jo_tram,
+                'id_md_invoice'  => $request->id_md_invoice,
+                'pendapatan_idr' => $pendapatanIDR,
+                'pendapatan_usd' => $pendapatanUSD,
+                'kurs_usd'       => $kursUSD,
+                'tgl_kurs_usd'   => $request->tgl_kurs_usd,
+                'hpp_ops'        => $hppOps,
+                'hargajual_idr'  => $hargajualIDR,
+                'note' => $request->note,
+            ]);
+
+            $item->load('invoice');
+
+            DB::commit();
+
+            Log::info('JO Tramper Item Created Successfully', ['id_jo_tram_item' => $item->id_jo_tram_item]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item added successfully',
+                'data'    => [
+                    'id'              => $item->id_jo_tram_item,
+                    'id_jo_tram_item' => $item->id_jo_tram_item,
+                    'id_jo_tram'      => $item->id_jo_tram,
+                    'id_md_invoice'   => $item->id_md_invoice,
+                    'invoice_ctg'     => $request->invoice_ctg,
+                    'invoice_typ'     => $item->invoice ? $item->invoice->invoice_typ : null,
+                    'pendapatan_idr'  => (float) $item->pendapatan_idr,
+                    'pendapatan_usd'  => (float) $item->pendapatan_usd,
+                    'kurs_usd'        => $item->kurs_usd ? (float) $item->kurs_usd : null,
+                    'tgl_kurs_usd'    => $item->tgl_kurs_usd ? $item->tgl_kurs_usd->format('Y-m-d') : null,
+                    'hpp_ops'         => (float) $item->hpp_ops,
+                    'hargajual_idr'   => (float) $item->hargajual_idr,
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) DB::rollBack();
+            Log::error('JO Tramper Store Item Failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
+            return response()->json(['success' => false, 'message' => 'Failed to add item', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Show single JO Tramper Item (for edit form)
+     */
+    public function showItem($id)
+    {
+        try {
+            $item = JoTramperItem::with('invoice')->where('id_jo_tram_item', (string) $id)->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'id_jo_tram_item' => $item->id_jo_tram_item,
+                    'id_md_invoice'   => $item->id_md_invoice,
+                    'invoice_ctg'     => $item->invoice->invoice_ctg,
+                    'invoice_typ'     => $item->invoice->invoice_typ,
+                    'pendapatan_idr'  => $item->pendapatan_idr,
+                    'pendapatan_usd'  => $item->pendapatan_usd,
+                    'hpp_ops'         => $item->hpp_ops,
+                    'kurs_usd'        => $item->kurs_usd,
+                    'tgl_kurs_usd'    => $item->tgl_kurs_usd ? $item->tgl_kurs_usd->format('Y-m-d') : null,
+                    'hargajual_idr'   => $item->hargajual_idr,
+                    'note'            => $item->note,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Item not found: ' . $e->getMessage()], 404);
+        }
+    }
+
+    /**
+     * Update JO Tramper Item (Realtime Auto-save via AJAX)
+     */
+    public function updateItem(Request $request, $id)
+    {
+        Log::info('=== JO Tramper Update Item Request START ===', ['id' => $id, 'data' => $request->all()]);
+
+        try {
+            $rules = [
+                'id_jo_tram'     => 'required|exists:b03_jo_tram,id_jo_tram',
+                'id_md_invoice'  => 'required|exists:a04_md_invoice,id_md_invoice',
+                'invoice_ctg'    => 'required|string',
+                'pendapatan_idr' => 'nullable|numeric|min:0',
+                'pendapatan_usd' => 'nullable|numeric|min:0',
+                'hpp_ops'        => 'nullable|numeric|min:0',
+                'note' => 'nullable|string',
+            ];
+
+            if ($request->pendapatan_usd && $request->pendapatan_usd > 0) {
+                $rules['kurs_usd']     = 'required|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'required';
+            } else {
+                $rules['kurs_usd']     = 'nullable|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'nullable';
+            }
+
+            $validator = Validator::make($request->all(), $rules);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $item = JoTramperItem::where('id_jo_tram_item', (string) $id)->firstOrFail();
+
+            $pendapatanIDR = $request->pendapatan_idr ?? 0;
+            $pendapatanUSD = $request->pendapatan_usd ?? 0;
+            $kursUSD       = $request->kurs_usd ?? 0;
+            $hppOps        = $request->hpp_ops ?? 0;
+
+            $hargajualIDR = $pendapatanIDR > 0
+                ? $pendapatanIDR + $hppOps
+                : ($pendapatanUSD * $kursUSD) + $hppOps;
+
+            $item->update([
+                'id_md_invoice'  => $request->id_md_invoice,
+                'pendapatan_idr' => $pendapatanIDR,
+                'pendapatan_usd' => $pendapatanUSD,
+                'kurs_usd'       => $kursUSD,
+                'tgl_kurs_usd'   => $request->tgl_kurs_usd ?? null,
+                'hpp_ops'        => $hppOps,
+                'hargajual_idr'  => $hargajualIDR,
+                'note' => $request->note,
+            ]);
+
+            $item->refresh();
+            $item->load('invoice');
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item updated successfully',
+                'data'    => [
+                    'id'              => $item->id_jo_tram_item,
+                    'id_jo_tram_item' => $item->id_jo_tram_item,
+                    'id_jo_tram'      => $item->id_jo_tram,
+                    'id_md_invoice'   => $item->id_md_invoice,
+                    'invoice_ctg'     => $request->invoice_ctg,
+                    'invoice_typ'     => $item->invoice ? $item->invoice->invoice_typ : null,
+                    'pendapatan_idr'  => (float) $item->pendapatan_idr,
+                    'pendapatan_usd'  => (float) $item->pendapatan_usd,
+                    'kurs_usd'        => $item->kurs_usd ? (float) $item->kurs_usd : null,
+                    'tgl_kurs_usd'    => $request->tgl_kurs_usd,
+                    'hpp_ops'         => (float) $item->hpp_ops,
+                    'hargajual_idr'   => (float) $item->hargajual_idr,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('JO Tramper Update Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to update item', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Delete JO Tramper Item (Realtime Auto-delete via AJAX)
+     */
+    public function destroyItem($id)
+    {
+        Log::info('=== JO Tramper Delete Item Request START ===', ['id' => $id]);
+
+        try {
+            DB::beginTransaction();
+
+            $item = JoTramperItem::where('id_jo_tram_item', (string) $id)->firstOrFail();
+            $item->delete();
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Item deleted successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('JO Tramper Delete Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to delete item', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get all items for a JO Tramper
+     */
+    public function getItems($joTramperId)
+    {
+        try {
+            $items = JoTramperItem::where('id_jo_tram', $joTramperId)
+                ->with('invoice')
+                ->orderBy('created_at')
+                ->get();
+
+            $formattedItems = $items->map(function ($item) {
+                return [
+                    'id'              => $item->id_jo_tram_item,
+                    'id_jo_tram'      => $item->id_jo_tram,
+                    'id_md_invoice'   => $item->id_md_invoice,
+                    'invoice_typ'     => $item->invoice ? $item->invoice->invoice_typ : 'Unknown',
+                    'invoice_ctg'     => $item->invoice ? $item->invoice->invoice_ctg : 'Unknown',
+                    'pendapatan_idr'  => $item->pendapatan_idr,
+                    'pendapatan_usd'  => $item->pendapatan_usd,
+                    'kurs_usd'        => $item->kurs_usd,
+                    'tgl_kurs_usd'    => $item->tgl_kurs_usd,
+                    'hpp_ops'         => $item->hpp_ops,
+                    'hargajual_idr'   => $item->hargajual_idr,
+                ];
+            });
+
+            return response()->json(['success' => true, 'data' => $formattedItems]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to fetch items', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Save All Changes (Header + Update all items with global kurs)
+     */
+    public function saveAllChanges(Request $request, $id)
+    {
+        Log::info('=== JO Tramper Save All Changes Request START ===', ['id' => $id, 'data' => $request->all()]);
+
+        try {
+            $validator = Validator::make($request->all(), [
+                'id_md_cust'         => 'required|exists:a01_md_customer,id_md_cust',
+                'id_md_port'         => 'required|exists:a06_md_port,id_md_port',
+                'date_start'         => 'required|date',
+                'date_end'           => 'required|date|after_or_equal:date_start',
+                'title'              => 'required|string|max:255',
+                'note'               => 'nullable|string',
+                'global_tgl_kurs_usd' => 'nullable|date',
+                'global_kurs_usd'    => 'nullable|numeric|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $joTramper = JoTramper::where('id_jo_tram', (string) $id)->firstOrFail();
+
+            $joTramper->update([
+                'id_md_cust' => $request->id_md_cust,
+                'id_md_port' => $request->id_md_port,
+                'date_start' => $request->date_start,
+                'date_end'   => $request->date_end,
+                'title'      => $request->title,
+                'note'       => $request->note,
+            ]);
+
+            $globalKursUsd    = $request->global_kurs_usd;
+            $globalTglKursUsd = $request->global_tgl_kurs_usd;
+
+            $items = JoTramperItem::where('id_jo_tram', $id)->get();
+
+            foreach ($items as $item) {
+                if ($item->pendapatan_usd > 0 && $globalKursUsd) {
+                    $hargajualIDR = ($item->pendapatan_usd * $globalKursUsd) + $item->hpp_ops;
+                    $item->update([
+                        'kurs_usd'     => $globalKursUsd,
+                        'tgl_kurs_usd' => $globalTglKursUsd,
+                        'hargajual_idr' => $hargajualIDR,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            Log::info('JO Tramper Save All Changes SUCCESS');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'All changes saved successfully',
+                'data'    => [
+                    'jo_tramper'          => $joTramper,
+                    'updated_items_count' => $items->count()
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('JO Tramper Save All Changes Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to save all changes', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    // =========================================================================
+    // TRADITIONAL METHODS
+    // =========================================================================
+
+    /**
+     * Store a newly created resource in storage (traditional fallback).
+     */
+    public function store(Request $request)
+    {
+        Log::info('JO Tramper Store Request', ['all_data' => $request->all()]);
+
+        $validator = Validator::make($request->all(), [
+            'id_md_cust'             => 'required|exists:a01_md_customer,id_md_cust',
+            'id_md_port'             => 'required|exists:a06_md_port,id_md_port',
+            'date_start'             => 'required|date',
+            'date_end'               => 'required|date|after_or_equal:date_start',
+            'title'                  => 'required|string|max:255',
+            'note'                   => 'nullable|string',
+            'global_kurs_usd'        => 'nullable|numeric|min:0',
+            'global_tgl_kurs_usd'    => 'nullable|date',
+            'items'                  => 'nullable|array|min:1',
+            'items.*.id_md_invoice'  => 'nullable|exists:a04_md_invoice,id_md_invoice',
+            'items.*.pendapatan_idr' => 'nullable|numeric|min:0',
+            'items.*.pendapatan_usd' => 'nullable|numeric|min:0',
+            'items.*.hpp_ops'        => 'nullable|numeric|min:0',
+            'items.*.hargajual_idr'  => 'nullable|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+            }
+            return back()->withErrors($validator)->withInput();
         }
 
         DB::beginTransaction();
         try {
-            // Generate ID untuk JO Tramper
-            $lastJoTramper = JoTramper::orderBy('id_jo_tram', 'desc')->first();
-            $newJoTramId = $lastJoTramper ? $lastJoTramper->id_jo_tram + 1 : 1;
+            $newJoTramId = IdGenerator::generate('B03', 'b03_jo_tram', 'id_jo_tram');
 
-            Log::info('Creating JO Tramper', [
-                'new_id' => $newJoTramId,
-                'tramper_data' => [
-                    'id_md_cust' => $request->id_md_cust,
-                    'id_md_port' => $request->id_md_port,
-                    'date_start' => $request->date_start,
-                    'date_end' => $request->date_end,
-                    'title' => $request->title,
-                    'note' => $request->note,
-                    'sts_proses' => $request->sts_proses,
-                ]
-            ]);
-
-            // Create JO Tramper
             $joTramper = JoTramper::create([
                 'id_jo_tram' => $newJoTramId,
                 'id_md_cust' => $request->id_md_cust,
                 'id_md_port' => $request->id_md_port,
                 'date_start' => $request->date_start,
-                'date_end' => $request->date_end,
-                'title' => $request->title,
-                'note' => $request->note,
-                'sts_proses' => $request->sts_proses,
+                'date_end'   => $request->date_end,
+                'title'      => $request->title,
+                'note'       => $request->note,
+                'sts_proses' => null,
             ]);
 
-            Log::info('JO Tramper Created Successfully', [
-                'jo_tramper_id' => $joTramper->id_jo_tram
-            ]);
-
-            // Get global kurs
-            $globalKursUsd = $request->global_kurs_usd;
+            $globalKursUsd    = $request->global_kurs_usd;
             $globalTglKursUsd = $request->global_tgl_kurs_usd;
 
-            // Create JO Tramper Items - ID akan di-generate otomatis oleh Model
-            foreach ($request->items as $index => $item) {
-                Log::info('Creating JO Tramper Item', [
-                    'item_index' => $index,
-                    'item_data' => [
-                        'id_jo_tram' => $newJoTramId,
-                        'id_md_invoice' => $item['id_md_invoice'],
-                        'pendapatan_idr' => $item['pendapatan_idr'],
-                        'pendapatan_usd' => $item['pendapatan_usd'],
-                        'kurs_usd' => $globalKursUsd,
-                        'tgl_kurs_usd' => $globalTglKursUsd,
-                        'hpp_ops' => $item['hpp_ops'],
-                        'hargajual_idr' => $item['hargajual_idr'],
-                    ]
-                ]);
-
-                // ID akan di-generate otomatis oleh boot() method di Model
-                $createdItem = JoTramperItem::create([
-                    // TIDAK PERLU SET id_jo_tram_item, akan auto-generate
-                    'id_jo_tram' => $newJoTramId,
-                    'id_md_invoice' => $item['id_md_invoice'],
+            foreach ($request->items ?? [] as $item) {
+                JoTramperItem::create([
+                    'id_jo_tram'     => $newJoTramId,
+                    'id_md_invoice'  => $item['id_md_invoice'],
                     'pendapatan_idr' => $item['pendapatan_idr'],
                     'pendapatan_usd' => $item['pendapatan_usd'],
-                    'kurs_usd' => $globalKursUsd,
-                    'tgl_kurs_usd' => $globalTglKursUsd,
-                    'hpp_ops' => $item['hpp_ops'],
-                    'hargajual_idr' => $item['hargajual_idr'],
-                ]);
-
-                Log::info('JO Tramper Item Created', [
-                    'item_id' => $createdItem->id_jo_tram_item
+                    'kurs_usd'       => $globalKursUsd,
+                    'tgl_kurs_usd'   => $globalTglKursUsd,
+                    'hpp_ops'        => $item['hpp_ops'],
+                    'hargajual_idr'  => $item['hargajual_idr'],
                 ]);
             }
 
             DB::commit();
 
-            Log::info('JO Tramper Transaction Committed Successfully', [
-                'jo_tramper_id' => $newJoTramId,
-                'total_items' => count($request->items)
-            ]);
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'JO Tramper successfully added',
-                    'data' => $joTramper->load('items')
-                ], 201);
+                return response()->json(['success' => true, 'message' => 'JO Tramper successfully added', 'data' => $joTramper->load('items')], 201);
             }
 
-            return redirect()
-                ->route('jo-tramper.index')
-                ->with('success', 'JO Tramper successfully added with ' . count($request->items) . ' item(s)');
+            return redirect()->route('jo-tramper.index')->with('success', 'JO Tramper successfully added');
         } catch (\Exception $e) {
             DB::rollBack();
-
-            Log::error('JO Tramper Store Failed', [
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
-                'error_line' => $e->getLine(),
-                'error_file' => $e->getFile()
-            ]);
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error creating JO Tramper: ' . $e->getMessage(),
-                    'error_detail' => [
-                        'line' => $e->getLine(),
-                        'file' => $e->getFile()
-                    ]
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error creating JO Tramper: ' . $e->getMessage()], 500);
             }
-
-            return back()
-                ->withInput()
-                ->with('error', 'Error creating JO Tramper: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')');
+            return back()->withInput()->with('error', 'Error creating JO Tramper: ' . $e->getMessage());
         }
     }
 
@@ -303,99 +641,33 @@ class JoTramperController extends Controller
      */
     public function show(Request $request, $id)
     {
-        Log::info('=== JO Tramper Show Request START ===', [
-            'id' => $id,
-            'url' => $request->fullUrl(),
-            'method' => $request->method(),
-            'user_id' => auth()->id() ?? 'guest',
-            'ip' => $request->ip()
-        ]);
-
         try {
-            Log::info('Attempting to load JO Tramper', [
-                'id' => $id
-            ]);
+            $joTramper = JoTramper::with(['customer', 'port', 'items.invoice'])
+                ->where('id_jo_tram', (string) $id)->firstOrFail();
 
-            $joTramper = JoTramper::with([
-                'customer',
-                'port',
-                'items.invoice'
-            ])->findOrFail($id);
-
-            Log::info('JO Tramper loaded successfully', [
-                'id' => $joTramper->id_jo_tram,
-                'title' => $joTramper->title,
-                'items_count' => $joTramper->items->count()
-            ]);
-
-            // Calculate summary
             $summary = [
-                'total_items' => $joTramper->items->count(),
-                'total_revenue_idr' => $joTramper->items->sum('pendapatan_idr'),
-                'total_revenue_usd' => $joTramper->items->sum('pendapatan_usd'),
-                'total_hpp_ops' => $joTramper->items->sum('hpp_ops'),
+                'total_items'         => $joTramper->items->count(),
+                'total_revenue_idr'   => $joTramper->items->sum('pendapatan_idr'),
+                'total_revenue_usd'   => $joTramper->items->sum('pendapatan_usd'),
+                'total_hpp_ops'       => $joTramper->items->sum('hpp_ops'),
                 'total_selling_price' => $joTramper->items->sum('hargajual_idr'),
             ];
 
-            Log::info('Summary calculated', $summary);
-
             if ($request->expectsJson()) {
-                Log::info('Returning JSON response');
-                return response()->json([
-                    'success' => true,
-                    'data' => $joTramper,
-                    'summary' => $summary
-                ]);
+                return response()->json(['success' => true, 'data' => $joTramper, 'summary' => $summary]);
             }
-
-            Log::info('Attempting to load view: data.jo-tramper.show');
-
-            // Check if view exists
-            if (!view()->exists('data.jo-tramper.show')) {
-                Log::error('VIEW NOT FOUND: data.jo-tramper.show', [
-                    'expected_path' => 'resources/views/data/jo-tramper/show.blade.php',
-                    'searched_paths' => config('view.paths')
-                ]);
-
-                return back()->with('error', 'View file not found: data.jo-tramper.show');
-            }
-
-            Log::info('View exists, rendering...');
 
             return view('data.jo-tramper.show', compact('joTramper', 'summary'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error('JO Tramper NOT FOUND in database', [
-                'id' => $id,
-                'error' => $e->getMessage()
-            ]);
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'JO Tramper not found'
-                ], 404);
+                return response()->json(['success' => false, 'message' => 'JO Tramper not found'], 404);
             }
-
             return back()->with('error', 'JO Tramper not found');
         } catch (\Exception $e) {
-            Log::error('JO Tramper Show Failed', [
-                'id' => $id,
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
-                'error_line' => $e->getLine(),
-                'error_file' => $e->getFile()
-            ]);
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error loading JO Tramper: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error loading JO Tramper: ' . $e->getMessage()], 500);
             }
-
             return back()->with('error', 'Error loading JO Tramper: ' . $e->getMessage());
-        } finally {
-            Log::info('=== JO Tramper Show Request END ===');
         }
     }
 
@@ -404,75 +676,27 @@ class JoTramperController extends Controller
      */
     public function edit($id)
     {
-        Log::info('=== JO Tramper Edit Request START ===', [
-            'id' => $id,
-            'url' => request()->fullUrl(),
-            'method' => request()->method(),
-            'user_id' => auth()->id() ?? 'guest',
-            'ip' => request()->ip()
-        ]);
+        Log::info('=== JO Tramper Edit Request START ===', ['id' => $id]);
 
         try {
-            Log::info('Attempting to load JO Tramper for editing', [
-                'id' => $id
-            ]);
-
-            $joTramper = JoTramper::with(['items.invoice'])->findOrFail($id);
-
-            Log::info('JO Tramper loaded successfully', [
-                'id' => $joTramper->id_jo_tram,
-                'title' => $joTramper->title,
-                'items_count' => $joTramper->items->count()
-            ]);
-
-            Log::info('Loading related data (customers, ports, invoices)');
+            $joTramper = JoTramper::with(['items.invoice'])
+                ->where('id_jo_tram', (string) $id)
+                ->firstOrFail();
 
             $customers = Customer::orderBy('customer')->get();
+            $ports     = Port::orderBy('name_port')->get();
+            $invoices  = Invoice::orderBy('id')->get();
 
-            Log::info('Customers loaded', ['count' => $customers->count()]);
-
-            $ports = Port::orderBy('name_port')->get();
-
-            Log::info('Ports loaded', ['count' => $ports->count()]);
-
-            $invoices = Invoice::orderBy('id')->get();
-
-            Log::info('Invoices loaded', ['count' => $invoices->count()]);
-
-            Log::info('Attempting to load view: data.jo-tramper.edit');
-
-            // Check if view exists
             if (!view()->exists('data.jo-tramper.edit')) {
-                Log::error('VIEW NOT FOUND: data.jo-tramper.edit', [
-                    'expected_path' => 'resources/views/data/jo-tramper/edit.blade.php',
-                    'searched_paths' => config('view.paths')
-                ]);
-
                 return back()->with('error', 'View file not found: data.jo-tramper.edit');
             }
 
-            Log::info('View exists, rendering...');
-
             return view('data.jo-tramper.edit', compact('joTramper', 'customers', 'ports', 'invoices'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            Log::error('JO Tramper NOT FOUND in database', [
-                'id' => $id,
-                'error' => $e->getMessage()
-            ]);
-
             return back()->with('error', 'JO Tramper not found in database');
         } catch (\Exception $e) {
-            Log::error('JO Tramper Edit Failed', [
-                'id' => $id,
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
-                'error_line' => $e->getLine(),
-                'error_file' => $e->getFile()
-            ]);
-
+            Log::error('JO Tramper Edit Failed', ['id' => $id, 'error_message' => $e->getMessage()]);
             return back()->with('error', 'Error loading JO Tramper: ' . $e->getMessage());
-        } finally {
-            Log::info('=== JO Tramper Edit Request END ===');
         }
     }
 
@@ -481,183 +705,76 @@ class JoTramperController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // Log input data untuk debugging
-        Log::info('JO Tramper Update Request', [
-            'id' => $id,
-            'all_data' => $request->all()
-        ]);
-
         $validator = Validator::make($request->all(), [
-            'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
-            'id_md_port' => 'required|exists:a06_md_port,id_md_port',
-            'date_start' => 'required|date',
-            'date_end' => 'required|date|after_or_equal:date_start',
-            'title' => 'required|string|max:255',
-            'note' => 'nullable|string',
-            'sts_proses' => 'nullable|string|max:50',
-
-            // Global kurs validation
-            'global_kurs_usd' => 'nullable|numeric|min:0',
-            'global_tgl_kurs_usd' => 'nullable|date',
-
-            // Validation untuk items
-            'items' => 'nullable|array|min:1',
-            'items.*.id_md_invoice' => 'nullable|exists:a04_md_invoice,id_md_invoice',
+            'id_md_cust'             => 'required|exists:a01_md_customer,id_md_cust',
+            'id_md_port'             => 'required|exists:a06_md_port,id_md_port',
+            'date_start'             => 'required|date',
+            'date_end'               => 'required|date|after_or_equal:date_start',
+            'title'                  => 'required|string|max:255',
+            'note'                   => 'nullable|string',
+            'global_kurs_usd'        => 'nullable|numeric|min:0',
+            'global_tgl_kurs_usd'    => 'nullable|date',
+            'items'                  => 'nullable|array|min:1',
+            'items.*.id_md_invoice'  => 'nullable|exists:a04_md_invoice,id_md_invoice',
             'items.*.pendapatan_idr' => 'nullable|numeric|min:0',
             'items.*.pendapatan_usd' => 'nullable|numeric|min:0',
-            'items.*.hpp_ops' => 'nullable|numeric|min:0',
-            'items.*.hargajual_idr' => 'nullable|numeric|min:0',
-        ], [
-            'id_md_cust.required' => 'Customer is required',
-            'id_md_cust.exists' => 'Selected customer does not exist',
-            'id_md_port.required' => 'Port is required',
-            'id_md_port.exists' => 'Selected port does not exist',
-            'date_start.required' => 'Start date is required',
-            'date_end.required' => 'End date is required',
-            'date_end.after_or_equal' => 'End date must be after or equal to start date',
-            'title.required' => 'Title is required',
-            'global_kurs_usd.required' => 'Exchange rate is required',
-            'global_tgl_kurs_usd.required' => 'Exchange rate date is required',
-            'items.required' => 'At least one item is required',
-            'items.min' => 'At least one item is required',
+            'items.*.hpp_ops'        => 'nullable|numeric|min:0',
+            'items.*.hargajual_idr'  => 'nullable|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
-            Log::error('JO Tramper Update Validation Failed', [
-                'id' => $id,
-                'errors' => $validator->errors()->toArray()
-            ]);
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422);
+                return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
             }
-
-            return back()
-                ->withErrors($validator)
-                ->withInput();
+            return back()->withErrors($validator)->withInput();
         }
 
         DB::beginTransaction();
         try {
-            $joTramper = JoTramper::findOrFail($id);
+            $joTramper = JoTramper::where('id_jo_tram', (string) $id)->firstOrFail();
 
-            Log::info('Updating JO Tramper', [
-                'id' => $id,
-                'old_data' => $joTramper->toArray()
-            ]);
-
-            // Update JO Tramper
             $joTramper->update([
                 'id_md_cust' => $request->id_md_cust,
                 'id_md_port' => $request->id_md_port,
                 'date_start' => $request->date_start,
-                'date_end' => $request->date_end,
-                'title' => $request->title,
-                'note' => $request->note,
-                'sts_proses' => $request->sts_proses,
+                'date_end'   => $request->date_end,
+                'title'      => $request->title,
+                'note'       => $request->note,
             ]);
 
-            Log::info('JO Tramper Updated Successfully', [
-                'id' => $id
-            ]);
-
-            // Delete old items
-            $oldItems = $joTramper->items;
-            Log::info('Deleting old JO Tramper Items', [
-                'jo_tram_id' => $id,
-                'old_items_count' => $oldItems->count(),
-                'old_item_ids' => $oldItems->pluck('id_jo_tram_item')->toArray()
-            ]);
-
-            foreach ($oldItems as $oldItem) {
-                $oldItem->delete(); // Soft delete
+            foreach ($joTramper->items as $oldItem) {
+                $oldItem->delete();
             }
 
-            Log::info('Old items deleted successfully');
-
-            // Get global kurs
-            $globalKursUsd = $request->global_kurs_usd;
+            $globalKursUsd    = $request->global_kurs_usd;
             $globalTglKursUsd = $request->global_tgl_kurs_usd;
 
-            // Create new items - ID akan di-generate otomatis
-            foreach ($request->items as $index => $item) {
-                Log::info('Creating new JO Tramper Item', [
-                    'item_index' => $index,
-                    'item_data' => [
-                        'id_jo_tram' => $id,
-                        'id_md_invoice' => $item['id_md_invoice'],
-                        'pendapatan_idr' => $item['pendapatan_idr'],
-                        'pendapatan_usd' => $item['pendapatan_usd'],
-                        'kurs_usd' => $globalKursUsd,
-                        'tgl_kurs_usd' => $globalTglKursUsd,
-                        'hpp_ops' => $item['hpp_ops'],
-                        'hargajual_idr' => $item['hargajual_idr'],
-                    ]
-                ]);
-
-                // ID akan di-generate otomatis
-                $createdItem = JoTramperItem::create([
-                    'id_jo_tram' => $id,
-                    'id_md_invoice' => $item['id_md_invoice'],
+            foreach ($request->items ?? [] as $item) {
+                JoTramperItem::create([
+                    'id_jo_tram'     => $id,
+                    'id_md_invoice'  => $item['id_md_invoice'],
                     'pendapatan_idr' => $item['pendapatan_idr'],
                     'pendapatan_usd' => $item['pendapatan_usd'],
-                    'kurs_usd' => $globalKursUsd,
-                    'tgl_kurs_usd' => $globalTglKursUsd,
-                    'hpp_ops' => $item['hpp_ops'],
-                    'hargajual_idr' => $item['hargajual_idr'],
-                ]);
-
-                Log::info('JO Tramper Item Created Successfully', [
-                    'item_id' => $createdItem->id_jo_tram_item
+                    'kurs_usd'       => $globalKursUsd,
+                    'tgl_kurs_usd'   => $globalTglKursUsd,
+                    'hpp_ops'        => $item['hpp_ops'],
+                    'hargajual_idr'  => $item['hargajual_idr'],
                 ]);
             }
 
             DB::commit();
 
-            Log::info('JO Tramper Update Transaction Committed Successfully', [
-                'jo_tramper_id' => $id,
-                'total_new_items' => count($request->items)
-            ]);
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'JO Tramper successfully updated',
-                    'data' => $joTramper->fresh()->load('items')
-                ]);
+                return response()->json(['success' => true, 'message' => 'JO Tramper successfully updated', 'data' => $joTramper->fresh()->load('items')]);
             }
 
-            return redirect()
-                ->route('jo-tramper.index')
-                ->with('success', 'JO Tramper successfully updated with ' . count($request->items) . ' item(s)');
+            return redirect()->route('jo-tramper.index')->with('success', 'JO Tramper successfully updated');
         } catch (\Exception $e) {
             DB::rollBack();
-
-            Log::error('JO Tramper Update Failed', [
-                'id' => $id,
-                'error_message' => $e->getMessage(),
-                'error_trace' => $e->getTraceAsString(),
-                'error_line' => $e->getLine(),
-                'error_file' => $e->getFile()
-            ]);
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error updating JO Tramper: ' . $e->getMessage(),
-                    'error_detail' => [
-                        'line' => $e->getLine(),
-                        'file' => $e->getFile()
-                    ]
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error updating JO Tramper: ' . $e->getMessage()], 500);
             }
-
-            return back()
-                ->withInput()
-                ->with('error', 'Error updating JO Tramper: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')');
+            return back()->withInput()->with('error', 'Error updating JO Tramper: ' . $e->getMessage());
         }
     }
 
@@ -668,40 +785,25 @@ class JoTramperController extends Controller
     {
         DB::beginTransaction();
         try {
-            $joTramper = JoTramper::findOrFail($id);
+            $joTramper = JoTramper::where('id_jo_tram', (string) $id)->firstOrFail();
 
-            // Check if has items
-            if ($joTramper->items()->count() > 0) {
-                // Soft delete all items first
-                foreach ($joTramper->items as $item) {
-                    $item->delete();
-                }
+            foreach ($joTramper->items as $item) {
+                $item->delete();
             }
 
-            // Soft delete the tramper
             $joTramper->delete();
             DB::commit();
 
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'JO Tramper successfully deleted'
-                ]);
+                return response()->json(['success' => true, 'message' => 'JO Tramper successfully deleted']);
             }
 
-            return redirect()
-                ->route('jo-tramper.index')
-                ->with('success', 'JO Tramper successfully deleted');
+            return redirect()->route('jo-tramper.index')->with('success', 'JO Tramper successfully deleted');
         } catch (\Exception $e) {
             DB::rollBack();
-
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error deleting JO Tramper: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error deleting JO Tramper: ' . $e->getMessage()], 500);
             }
-
             return back()->with('error', 'Error deleting JO Tramper: ' . $e->getMessage());
         }
     }
@@ -714,42 +816,23 @@ class JoTramperController extends Controller
         try {
             $query = JoTramper::with(['customer', 'port']);
 
-            // Filter by customer if provided
-            if ($request->has('id_md_cust')) {
-                $query->where('id_md_cust', $request->id_md_cust);
-            }
+            if ($request->has('id_md_cust')) $query->where('id_md_cust', $request->id_md_cust);
+            if ($request->has('id_md_port')) $query->where('id_md_port', $request->id_md_port);
+            if ($request->has('sts_proses')) $query->where('sts_proses', $request->sts_proses);
 
-            // Filter by port if provided
-            if ($request->has('id_md_port')) {
-                $query->where('id_md_port', $request->id_md_port);
-            }
+            $joTrampers = $query->orderBy('id_jo_tram', 'desc')->get()->map(function ($joTramper) {
+                return [
+                    'id'       => $joTramper->id_jo_tram,
+                    'text'     => 'JOT-' . $joTramper->id_jo_tram . ' - ' . $joTramper->title,
+                    'customer' => $joTramper->customer ? $joTramper->customer->customer : null,
+                    'port'     => $joTramper->port ? $joTramper->port->name_port : null,
+                    'status'   => $joTramper->sts_proses,
+                ];
+            });
 
-            // Filter by status if provided
-            if ($request->has('sts_proses')) {
-                $query->where('sts_proses', $request->sts_proses);
-            }
-
-            $joTrampers = $query->orderBy('id_jo_tram', 'desc')
-                ->get()
-                ->map(function ($joTramper) {
-                    return [
-                        'id' => $joTramper->id_jo_tram,
-                        'text' => 'JOT-' . $joTramper->id_jo_tram . ' - ' . $joTramper->title,
-                        'customer' => $joTramper->customer ? $joTramper->customer->customer : null,
-                        'port' => $joTramper->port ? $joTramper->port->name_port : null,
-                        'status' => $joTramper->sts_proses,
-                    ];
-                });
-
-            return response()->json([
-                'success' => true,
-                'data' => $joTrampers
-            ]);
+            return response()->json(['success' => true, 'data' => $joTrampers]);
         } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Error retrieving JO Trampers: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error retrieving JO Trampers: ' . $e->getMessage()], 500);
         }
     }
 
@@ -759,42 +842,28 @@ class JoTramperController extends Controller
     public function bulkDelete(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'ids' => 'required|array',
-            'ids.*' => 'required|integer|exists:b03_jo_tram,id_jo_tram'
+            'ids'   => 'required|array',
+            'ids.*' => 'required|exists:b03_jo_tram,id_jo_tram'
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
         DB::beginTransaction();
         try {
             $joTrampers = JoTramper::whereIn('id_jo_tram', $request->ids)->get();
-
             foreach ($joTrampers as $joTramper) {
-                // Soft delete all items
                 foreach ($joTramper->items as $item) {
                     $item->delete();
                 }
-                // Soft delete the tramper
                 $joTramper->delete();
             }
-
             DB::commit();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'JO Trampers successfully deleted'
-            ]);
+            return response()->json(['success' => true, 'message' => 'JO Trampers successfully deleted']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json([
-                'success' => false,
-                'message' => 'Error deleting JO Trampers: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Error deleting JO Trampers: ' . $e->getMessage()], 500);
         }
     }
 }

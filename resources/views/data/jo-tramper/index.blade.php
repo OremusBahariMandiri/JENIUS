@@ -42,7 +42,6 @@
                                         <th>Customer</th>
                                         <th>Port</th>
                                         <th>Period</th>
-                                        <th>Status</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
@@ -72,17 +71,6 @@
                                                     <i class="fas fa-arrow-right mx-1"></i>
                                                     {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}
                                                 </small>
-                                            </td>
-                                            <td>
-                                                @if ($joTramper->sts_proses == 'Draft')
-                                                    <span class="badge bg-secondary">Draft</span>
-                                                @elseif ($joTramper->sts_proses == 'Approved')
-                                                    <span class="badge bg-success">Approved</span>
-                                                @elseif ($joTramper->sts_proses == 'Pending')
-                                                    <span class="badge bg-warning text-dark">Pending</span>
-                                                @else
-                                                    <span class="badge bg-info">{{ $joTramper->sts_proses }}</span>
-                                                @endif
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center">

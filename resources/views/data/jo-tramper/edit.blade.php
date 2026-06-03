@@ -55,6 +55,81 @@
             font-weight: 600;
         }
 
+        /* FLOATING BADGE ALERT */
+        .floating-badge-alert {
+            position: fixed;
+            top: 80px;
+            right: 30px;
+            z-index: 9999;
+            min-width: 250px;
+            padding: 15px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            animation: slideInRight 0.4s ease-out;
+            backdrop-filter: blur(10px);
+        }
+
+        .floating-badge-alert.show {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .floating-badge-alert.alert-saving {
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+        }
+
+        .floating-badge-alert.alert-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .floating-badge-alert.alert-error {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .floating-badge-alert i {
+            font-size: 1.3rem;
+        }
+
+        .floating-badge-alert .alert-text {
+            flex: 1;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+
+        .floating-badge-alert.hiding {
+            animation: slideOutRight 0.4s ease-in;
+        }
+
+        /* KURS SECTION */
         .kurs-section {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             border-radius: 10px;
@@ -77,6 +152,128 @@
             font-weight: 500;
         }
 
+        /* ADD ITEM FORM SECTION */
+        .add-item-form-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px dashed #10b981;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: all 0.3s;
+        }
+
+        .add-item-form-section.edit-mode {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px solid #3b82f6;
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .add-item-form-section h6 {
+            color: #2c3e50;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .add-item-form-section.edit-mode h6 {
+            color: #1e40af;
+        }
+
+        .add-item-form-section h6 i {
+            color: var(--primary-green);
+            font-size: 1.2rem;
+        }
+
+        .add-item-form-section.edit-mode h6 i {
+            color: #3b82f6;
+        }
+
+        .add-item-form-section .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.875rem;
+        }
+
+        .add-item-form-section .form-control,
+        .add-item-form-section .form-select {
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            padding: 0.6rem 0.75rem;
+            transition: all 0.3s;
+        }
+
+        .add-item-form-section .form-control:focus,
+        .add-item-form-section .form-select:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.3rem rgba(16, 185, 129, 0.15);
+        }
+
+        .add-item-form-section .currency-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .add-item-form-section .currency-label {
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid #2c3e50;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.7rem;
+            border-radius: 6px 0 0 6px;
+            min-width: 50px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .add-item-form-section .currency-input {
+            border-radius: 0 6px 6px 0 !important;
+            border-left: none !important;
+        }
+
+        .btn-add-to-table {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: all 0.3s;
+        }
+
+        .btn-add-to-table:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+            color: white;
+        }
+
+        .btn-add-to-table i {
+            margin-right: 8px;
+        }
+
+        .btn-cancel-edit-style {
+            background: linear-gradient(135deg, #bbbbbb 0%, #5c5c5c 100%);
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(153, 153, 153, 0.4);
+            transition: all 0.3s;
+        }
+
+        .btn-cancel-edit-style:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(128, 128, 128, 0.5);
+            color: white;
+        }
+
+        /* TABLE STYLES */
         .table-items {
             width: 100%;
             margin-bottom: 1rem;
@@ -84,9 +281,9 @@
         }
 
         .table-items thead th {
-            background-color: #f8f9fa;
-            color: #2c3e50;
-            border: 1px solid #dee2e6;
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid #2c3e50;
             padding: 12px 10px;
             font-weight: 600;
             font-size: 0.875rem;
@@ -102,107 +299,43 @@
             padding: 10px;
             vertical-align: middle;
             background-color: #fff;
+            text-align: center;
         }
 
-        .table-items tbody tr:hover td:not(.category-cell) {
+        .table-items tbody tr:hover {
             background-color: #f8f9fa;
         }
 
-        .category-cell {
-            background: #f1f5f9 !important;
-            color: #2c3e50 !important;
+        .table-items .item-number-cell {
             font-weight: 600;
-            font-size: 0.875rem;
-            border-right: 2px solid #dee2e6 !important;
-            text-align: center;
-            vertical-align: middle;
-            position: relative;
-            padding: 10px !important;
+            color: #2c3e50;
+            background-color: #ecf0f1 !important;
         }
 
-        .category-cell .category-content {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .category-cell .category-name {
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: #1e293b;
-        }
-
-        .category-cell .category-count {
-            background: #e2e8f0;
-            color: #475569;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+        .table-items .category-cell {
+            background: #e8f5e9 !important;
+            color: #2c3e50;
             font-weight: 600;
         }
 
-        .category-cell .btn-remove-category {
-            background: #dc3545;
-            border: none;
-            color: white;
-            border-radius: 6px;
-            width: 100%;
-            max-width: 70px;
-            padding: 4px 8px;
-            font-size: 0.7rem;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .category-cell .btn-remove-category:hover {
-            background: #c82333;
-            transform: scale(1.05);
-        }
-
-        .table-items input,
-        .table-items select {
-            font-size: 0.875rem;
-            padding: 0.5rem;
-            border-radius: 6px;
-            border: 1px solid #ced4da;
-            transition: all 0.3s;
-        }
-
-        .table-items input:focus,
-        .table-items select:focus {
-            border-color: var(--primary-green);
-            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
-        }
-
-        .currency-group {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .currency-label {
-            background-color: #2c3e50;
-            color: white;
-            border: 1px solid #2c3e50;
-            padding: 0.5rem;
-            font-size: 0.8rem;
-            border-radius: 6px 0 0 6px;
-            min-width: 50px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .currency-input {
-            border-radius: 0 6px 6px 0 !important;
-            border-left: none !important;
-        }
-
-        .btn-remove-row {
+        .btn-remove-row,
+        .btn-edit-row {
             padding: 0.4rem 0.6rem;
             font-size: 0.875rem;
             border-radius: 6px;
             transition: all 0.3s;
+        }
+
+        .btn-edit-row {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+        }
+
+        .btn-edit-row:hover {
+            background-color: #2563eb;
+            border-color: #2563eb;
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
         }
 
         .btn-remove-row:hover {
@@ -216,9 +349,35 @@
             font-weight: 700;
         }
 
-        .table-footer .currency-label {
-            background-color: rgba(255, 255, 255, 0.2);
+        .table-footer td {
+            padding: 15px 10px;
+            font-size: 0.95rem;
+        }
+
+        .currency-group-footer {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .currency-label-footer {
+            background-color: #2c3e50;
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.6rem 0.75rem;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            min-width: 55px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .value-footer {
+            flex: 1;
+            color: rgb(0, 0, 0);
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding-left: 10px;
         }
 
         .no-items-row td {
@@ -228,52 +387,88 @@
             background: #f8f9fa !important;
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+        /* FINAL SAVE */
+        .final-save-section {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px 12px 0 0;
+            margin-top: 30px;
+            z-index: 100;
         }
 
-        .action-buttons .btn {
-            border-radius: 8px;
-            padding: 0.6rem 1.2rem;
-            font-weight: 600;
+        .btn-final-save {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
             transition: all 0.3s;
         }
 
-        .action-buttons .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        .btn-final-save:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.5);
+            color: white;
         }
 
-        .item-number-cell {
-            text-align: center;
-            font-weight: 600;
-            color: #2c3e50;
-            background-color: #ecf0f1 !important;
-            font-size: 0.9rem;
+        .btn-final-save i {
+            margin-right: 10px;
+        }
+
+        .btn-final-back {
+            background: linear-gradient(135deg, #868686 0%, #5e5e5e 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(27, 27, 27, 0.4);
+            transition: all 0.3s;
+        }
+
+        .btn-final-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(49, 49, 49, 0.5);
+            color: white;
+        }
+
+        .btn-final-back i {
+            margin-right: 10px;
         }
     </style>
 @endpush
 
 @section('content')
+    <!-- FLOATING BADGE ALERT -->
+    <div id="floatingBadgeAlert" class="floating-badge-alert">
+        <i class="fas fa-circle-notch fa-spin" id="alertIcon"></i>
+        <div class="alert-text" id="alertText">Processing...</div>
+    </div>
+
     <div class="container-fluid joTramperEditPage">
         <div class="row">
             <div class="col-lg-12">
+
                 <!-- Page Header Card -->
                 <div class="card shadow mb-4">
-                    <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
+                    <div class="card-header text-black d-flex justify-content-between align-items-center"
+                        style="background-color: #d1fae5">
                         <span class="fw-bold"><i class="fas fa-edit me-2"></i>Edit JO Tramper</span>
-                        <a href="{{ route('jo-tramper.index') }}" class="btn btn-light btn-sm">
-                            <i class="fas fa-arrow-left me-1"></i> Back
-                        </a>
                     </div>
                 </div>
 
-                <form action="{{ route('jo-tramper.update', $joTramper->id_jo_tram) }}" method="POST" id="joTramperForm">
+                <!-- Hidden State -->
+                <input type="hidden" id="current_jo_tramper_id" value="{{ $joTramper->id_jo_tram }}">
+
+                <form id="joTramperForm">
                     @csrf
-                    @method('PUT')
 
                     <!-- JO Tramper Info Card -->
                     <div class="card shadow mb-4">
@@ -284,12 +479,12 @@
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Customer</label>
-                                    <select name="id_md_cust" id="id_md_cust"
-                                        class="form-select @error('id_md_cust') is-invalid @enderror">
-                                        <option value="">Select Customer</option>
+                                    <select name="id_md_cust" id="id_md_cust" class="form-select select2"
+                                        data-placeholder="Search Customer...">
+                                        <option value=""></option>
                                         @foreach ($customers as $customer)
                                             <option value="{{ $customer->id_md_cust }}"
-                                                {{ old('id_md_cust', $joTramper->id_md_cust) == $customer->id_md_cust ? 'selected' : '' }}>
+                                                {{ $joTramper->id_md_cust == $customer->id_md_cust ? 'selected' : '' }}>
                                                 {{ $customer->customer }}
                                                 @if ($customer->no_customer)
                                                     ({{ $customer->no_customer }})
@@ -297,19 +492,15 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('id_md_cust')
-                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                    @enderror
                                 </div>
-
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Port</label>
-                                    <select name="id_md_port" id="id_md_port"
-                                        class="form-select @error('id_md_port') is-invalid @enderror">
-                                        <option value="">Select Port</option>
+                                    <select name="id_md_port" id="id_md_port" class="form-select select2"
+                                        data-placeholder="Search Port...">
+                                        <option value=""></option>
                                         @foreach ($ports as $port)
                                             <option value="{{ $port->id_md_port }}"
-                                                {{ old('id_md_port', $joTramper->id_md_port) == $port->id_md_port ? 'selected' : '' }}>
+                                                {{ $joTramper->id_md_port == $port->id_md_port ? 'selected' : '' }}>
                                                 {{ $port->name_port }}
                                                 @if ($port->no_port)
                                                     ({{ $port->no_port }})
@@ -317,235 +508,229 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    @error('id_md_port')
-                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                    @enderror
                                 </div>
                             </div>
 
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Start Date</label>
-                                    <input type="date" name="date_start" id="date_start"
-                                        class="form-control @error('date_start') is-invalid @enderror"
-                                        value="{{ old('date_start', $joTramper->date_start ? $joTramper->date_start->format('Y-m-d') : '') }}">
-                                    @error('date_start')
-                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                    @enderror
+                                    <input type="date" name="date_start" id="date_start" class="form-control"
+                                        value="{{ $joTramper->date_start ? $joTramper->date_start->format('Y-m-d') : '' }}">
                                 </div>
-
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">End Date</label>
-                                    <input type="date" name="date_end" id="date_end"
-                                        class="form-control @error('date_end') is-invalid @enderror"
-                                        value="{{ old('date_end', $joTramper->date_end ? $joTramper->date_end->format('Y-m-d') : '') }}">
-                                    @error('date_end')
-                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                    @enderror
+                                    <input type="date" name="date_end" id="date_end" class="form-control"
+                                        value="{{ $joTramper->date_end ? $joTramper->date_end->format('Y-m-d') : '' }}">
                                 </div>
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label required-field">Title</label>
-                                <input type="text" name="title" id="title"
-                                    class="form-control @error('title') is-invalid @enderror"
-                                    value="{{ old('title', $joTramper->title) }}">
-                                @error('title')
-                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                @enderror
+                                <input type="text" name="title" id="title" class="form-control"
+                                    value="{{ $joTramper->title }}">
                             </div>
 
                             <div class="mb-3">
                                 <label class="form-label">Note</label>
-                                <textarea name="note" id="note" class="form-control @error('note') is-invalid @enderror" rows="3">{{ old('note', $joTramper->note) }}</textarea>
-                                @error('note')
-                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                @enderror
+                                <textarea name="note" id="note" class="form-control" rows="3">{{ $joTramper->note }}</textarea>
                             </div>
 
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <input type="number" name="sts_proses" id="title"
-                                    class="form-control @error('sts_proses') is-invalid @enderror"
-                                    value="{{ old('sts_proses', $joTramper->sts_proses) }}">
-                                @error('sts_proses')
-                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <!-- Metadata -->
-                        <div class="card-body bg-light border-top p-4">
-                            <h6 class="text-muted mb-3">
-                                <i class="fas fa-clock me-1"></i>Record Information
-                            </h6>
-                            <div class="row text-sm">
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted">Created:</small><br>
-                                    <small><i class="fas fa-calendar-plus me-1"></i>{{ $joTramper->created_at->format('d M Y, H:i') }}</small>
-                                </div>
-                                <div class="col-md-6 mb-2">
-                                    <small class="text-muted">Last Updated:</small><br>
-                                    <small><i class="fas fa-calendar-check me-1"></i>{{ $joTramper->updated_at->format('d M Y, H:i') }}</small>
-                                </div>
+                            <!-- Save Header Button -->
+                            <div class="d-flex justify-content-end">
+                                <button type="button" class="btn btn-success" id="btnSaveHeader">
+                                    <i class="fas fa-save me-1"></i> Update
+                                </button>
                             </div>
                         </div>
                     </div>
 
                     <!-- JO Tramper Items Card -->
-                    <div class="card shadow mb-4">
+                    <div class="card shadow mb-4" id="itemsCard">
                         <div class="card-header text-black" style="background-color: #d1fae5">
                             <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Tramper Items</h6>
+                                <!-- KURS SECTION -->
                                 <div class="kurs-section d-flex gap-3 align-items-center mb-0" style="padding: 10px 15px;">
                                     <div>
                                         <label class="form-label mb-1">Kurs Date</label>
                                         @php
                                             $firstItem = $joTramper->items->first();
-                                            $defaultDate = $firstItem && $firstItem->tgl_kurs_usd
-                                                ? $firstItem->tgl_kurs_usd->format('Y-m-d')
-                                                : '';
+                                            $defaultDate =
+                                                $firstItem && $firstItem->tgl_kurs_usd
+                                                    ? $firstItem->tgl_kurs_usd->format('Y-m-d\TH:i')
+                                                    : '';
                                         @endphp
-                                        <input type="date" name="global_tgl_kurs_usd" id="global_tgl_kurs_usd"
-                                            class="form-control form-control-sm"
-                                            value="{{ old('global_tgl_kurs_usd', $defaultDate) }}"
-                                            style="min-width: 150px;">
+                                        <input type="datetime-local" id="global_tgl_kurs_usd"
+                                            class="form-control form-control-sm" value="{{ $defaultDate }}"
+                                            style="min-width: 190px;">
                                     </div>
                                     <div>
                                         <label class="form-label mb-1">Kurs Rate</label>
-                                        @php
-                                            $defaultKurs = $firstItem && $firstItem->kurs_usd
-                                                ? $firstItem->kurs_usd
-                                                : 17600;
-                                        @endphp
+                                        @php $defaultKurs = $firstItem && $firstItem->kurs_usd ? $firstItem->kurs_usd : 0; @endphp
                                         <input type="text" id="global_kurs_usd_display"
                                             class="form-control form-control-sm"
-                                            value="{{ number_format($defaultKurs, 2, ',', '.') }}" style="min-width: 130px;">
-                                        <input type="hidden" name="global_kurs_usd" id="global_kurs_usd" value="{{ $defaultKurs }}">
+                                            value="{{ $defaultKurs > 0 ? number_format($defaultKurs, 2, ',', '.') : '' }}"
+                                            style="min-width: 130px;">
+                                        <input type="hidden" id="global_kurs_usd" value="{{ $defaultKurs }}">
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="card-body p-4">
-                            <div class="action-buttons">
-                                <button type="button" class="btn btn-primary" id="addItemBtn">
-                                    <i class="fas fa-plus me-1"></i>Add Item
-                                </button>
-                                <button type="button" class="btn btn-danger" id="resetAllBtn">
-                                    <i class="fas fa-trash-alt me-1"></i>Reset All
-                                </button>
+
+                            <!-- ADD ITEM FORM SECTION -->
+                            <div class="add-item-form-section" id="addItemFormSection">
+                                <h6 id="formSectionTitle">
+                                    <i class="fas fa-plus-square"></i> Add New Item
+                                </h6>
+
+                                <!-- Hidden field for edit mode -->
+                                <input type="hidden" id="editing_item_id" value="">
+
+                                <div class="row">
+                                    <!-- Category -->
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label required-field">Category</label>
+                                        <select id="input_category" class="form-select select2"
+                                            data-placeholder="Select Category" data-allow-clear="false">
+                                            <option value=""></option>
+                                            @foreach ($invoices->groupBy('invoice_ctg') as $category => $invoiceGroup)
+                                                <option value="{{ $category }}">{{ $category }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <!-- Item -->
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label required-field">Item</label>
+                                        <select id="input_item" class="form-select select2" disabled
+                                            data-placeholder="Select category first" data-allow-clear="false">
+                                            <option value=""></option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Note -->
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">Note (Optional)</label>
+                                        <textarea id="input_note" class="form-control" rows="5" placeholder="Add notes for this item..."></textarea>
+                                    </div>
+
+                                    <!-- Pendapatan IDR -->
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Pendapatan IDR</label>
+                                        <div class="currency-group">
+                                            <span class="currency-label">IDR</span>
+                                            <input type="text" id="input_pendapatan_idr"
+                                                class="form-control currency-input">
+                                        </div>
+                                    </div>
+
+                                    <!-- Pendapatan USD -->
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Pendapatan USD</label>
+                                        <div class="currency-group">
+                                            <span class="currency-label">USD</span>
+                                            <input type="text" id="input_pendapatan_usd"
+                                                class="form-control currency-input">
+                                        </div>
+                                    </div>
+
+                                    <!-- HPP -->
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">HPP (Biaya Ops)</label>
+                                        <div class="currency-group">
+                                            <span class="currency-label">IDR</span>
+                                            <input type="text" id="input_hpp" class="form-control currency-input">
+                                        </div>
+                                    </div>
+
+                                    <!-- Harga Jual (Auto Calculate) -->
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">Harga Jual (IDR)</label>
+                                        <div class="currency-group">
+                                            <span class="currency-label">IDR</span>
+                                            <input type="text" id="input_harga_jual"
+                                                class="form-control currency-input" readonly
+                                                style="background-color:#e9ecef;">
+                                        </div>
+                                    </div>
+
+                                    <!-- Buttons -->
+                                    <div class="col-md-12 mb-3 d-flex gap-2 justify-content-end">
+                                        <button type="button" class="btn btn-add-to-table" id="btnAddToTable">
+                                            <i class="fas fa-arrow-down"></i> Add to Table
+                                        </button>
+                                        <button type="button" class="btn btn-cancel-edit-style" id="btnCancelEdit"
+                                            style="display: none;">
+                                            <i class="fas fa-times"></i> Cancel Edit
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
 
+                            <!-- TABLE DISPLAY -->
                             <div class="table-responsive">
                                 <table class="table table-items table-bordered">
                                     <thead>
                                         <tr>
-                                            <th style="width: 3%;">No</th>
-                                            <th style="width: 10%;">Category</th>
-                                            <th style="width: 15%;">Item</th>
-                                            <th style="width: 13%;">Pendapatan IDR</th>
-                                            <th style="width: 13%;">Pendapatan USD</th>
-                                            <th style="width: 13%;">HPP (Biaya Ops)</th>
-                                            <th style="width: 13%;">Harga Jual (IDR)</th>
-                                            <th style="width: 4%;">Action</th>
+                                            <th style="width:5%;">No</th>
+                                            <th style="width:13%;">Category</th>
+                                            <th style="width:13%;">Item</th>
+                                            <th style="width:12%;">Pendapatan IDR</th>
+                                            <th style="width:12%;">Pendapatan USD</th>
+                                            <th style="width:12%;">HPP (Biaya Ops)</th>
+                                            <th style="width:12%;">Harga Jual (IDR)</th>
+                                            <th style="width:11%;">Action</th>
                                         </tr>
                                     </thead>
                                     <tbody id="itemsTableBody">
                                         @if ($joTramper->items->count() > 0)
-                                            @foreach ($joTramper->items as $index => $item)
-                                                <tr class="item-row" data-item-number="{{ $index + 1 }}"
-                                                    data-category="{{ $item->invoice->invoice_ctg }}"
-                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joTramper->items[$index - 1]->invoice->invoice_ctg) data-is-first-in-category="true" @endif>
-                                                    <td class="item-number-cell">{{ $index + 1 }}</td>
-
-                                                    @if ($loop->first || $item->invoice->invoice_ctg != $joTramper->items[$index - 1]->invoice->invoice_ctg)
-                                                        @php
-                                                            $categoryCount = $joTramper->items
-                                                                ->where('invoice.invoice_ctg', $item->invoice->invoice_ctg)
-                                                                ->count();
-                                                        @endphp
-                                                        <td class="category-cell" rowspan="{{ $categoryCount }}"
-                                                            data-category="{{ $item->invoice->invoice_ctg }}">
-                                                            <div class="category-content">
-                                                                <span
-                                                                    class="category-name">{{ $item->invoice->invoice_ctg }}</span>
-                                                                <span
-                                                                    class="category-count">{{ $categoryCount }}
-                                                                    item{{ $categoryCount > 1 ? 's' : '' }}</span>
-                                                                <button type="button" class="btn-remove-category"
-                                                                    onclick="removeCategoryWithItems('{{ $item->invoice->invoice_ctg }}', event)">
-                                                                    <i class="fas fa-times"></i> Remove
-                                                                </button>
-                                                            </div>
+                                            @php
+                                                $groupedItems = $joTramper->items->groupBy(
+                                                    fn($i) => $i->invoice->invoice_ctg,
+                                                );
+                                                $globalIndex = 1;
+                                            @endphp
+                                            @foreach ($groupedItems as $category => $items)
+                                                @foreach ($items as $index => $item)
+                                                    <tr class="item-row" data-item-id="{{ $item->id_jo_tram_item }}"
+                                                        data-invoice-id="{{ $item->id_md_invoice }}"
+                                                        data-category="{{ $item->invoice->invoice_ctg }}"
+                                                        data-item-text="{{ $item->invoice->invoice_typ }}"
+                                                        data-item-number="{{ $globalIndex }}">
+                                                        <td class="item-number-cell">{{ $globalIndex }}</td>
+                                                        @if ($index === 0)
+                                                            <td class="category-cell" rowspan="{{ $items->count() }}">
+                                                                {{ $category }}</td>
+                                                        @endif
+                                                        <td class="item-text-cell">{{ $item->invoice->invoice_typ }}</td>
+                                                        <td>{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
+                                                        <td>{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
+                                                        <td>{{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
+                                                        <td>{{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
+                                                        <td class="text-center">
+                                                            <button type="button"
+                                                                class="btn btn-primary btn-sm btn-edit-row"
+                                                                onclick="editItem('{{ $item->id_jo_tram_item }}')">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                            <button type="button"
+                                                                class="btn btn-danger btn-sm btn-remove-row"
+                                                                onclick="removeItem(this, '{{ $item->id_jo_tram_item }}')">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
                                                         </td>
-                                                    @endif
-
-                                                    <td>
-                                                        <select name="items[{{ $index + 1 }}][id_md_invoice]"
-                                                            class="form-select invoice-type-select">
-                                                            <option value="">Select Invoice Type</option>
-                                                            @foreach ($invoices->where('invoice_ctg', $item->invoice->invoice_ctg) as $invoice)
-                                                                <option value="{{ $invoice->id_md_invoice }}"
-                                                                    {{ $item->id_md_invoice == $invoice->id_md_invoice ? 'selected' : '' }}>
-                                                                    {{ $invoice->invoice_typ }}
-                                                                </option>
-                                                            @endforeach
-                                                        </select>
-                                                        <input type="hidden" name="items[{{ $index + 1 }}][invoice_ctg]"
-                                                            class="invoice-ctg-input"
-                                                            value="{{ $item->invoice->invoice_ctg }}">
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">IDR</span>
-                                                            <input type="text" class="form-control currency-input revenue-idr-display"
-                                                                value="{{ number_format($item->pendapatan_idr, 2, ',', '.') }}">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_idr]"
-                                                                class="revenue-idr-value" value="{{ $item->pendapatan_idr }}">
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">USD</span>
-                                                            <input type="text" class="form-control currency-input revenue-usd-display"
-                                                                value="{{ number_format($item->pendapatan_usd, 2, ',', '.') }}">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][pendapatan_usd]"
-                                                                class="revenue-usd-value" value="{{ $item->pendapatan_usd }}">
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">IDR</span>
-                                                            <input type="text" class="form-control currency-input hpp-display"
-                                                                value="{{ number_format($item->hpp_ops, 2, ',', '.') }}">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][hpp_ops]"
-                                                                class="hpp-value" value="{{ $item->hpp_ops }}">
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div class="currency-group">
-                                                            <span class="currency-label">IDR</span>
-                                                            <input type="text" class="form-control currency-input selling-price-display"
-                                                                value="{{ number_format($item->hargajual_idr, 2, ',', '.') }}" readonly
-                                                                style="background-color: #e9ecef;">
-                                                            <input type="hidden" name="items[{{ $index + 1 }}][hargajual_idr]"
-                                                                class="selling-price-value" value="{{ $item->hargajual_idr }}">
-                                                        </div>
-                                                    </td>
-                                                    <td class="text-center">
-                                                        <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                                                            onclick="removeItem(this)">
-                                                            <i class="fas fa-trash"></i>
-                                                        </button>
-                                                    </td>
-                                                </tr>
+                                                    </tr>
+                                                    @php $globalIndex++; @endphp
+                                                @endforeach
                                             @endforeach
                                         @else
                                             <tr class="no-items-row">
                                                 <td colspan="8">
                                                     <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
                                                     <p class="mb-0 fw-bold">No data available</p>
-                                                    <small class="text-muted">Click "Add Item" to get started</small>
+                                                    <small class="text-muted">Fill the form above and click "Add to
+                                                        Table"</small>
                                                 </td>
                                             </tr>
                                         @endif
@@ -554,32 +739,24 @@
                                         <tr>
                                             <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
                                             <td>
-                                                <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
-                                                    <span id="footerTotalIDR"
-                                                        style="color: #000000; font-weight: 700;">0,00</span>
-                                                </div>
+                                                <div class="currency-group-footer"><span
+                                                        class="currency-label-footer">IDR</span><span class="value-footer"
+                                                        id="footerTotalIDR">0,00</span></div>
                                             </td>
                                             <td>
-                                                <div class="currency-group">
-                                                    <span class="currency-label text-black">USD</span>
-                                                    <span id="footerTotalUSD"
-                                                        style="color: #000000; font-weight: 700;">0,00</span>
-                                                </div>
+                                                <div class="currency-group-footer"><span
+                                                        class="currency-label-footer">USD</span><span class="value-footer"
+                                                        id="footerTotalUSD">0,00</span></div>
                                             </td>
                                             <td>
-                                                <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
-                                                    <span id="footerTotalHPP"
-                                                        style="color: #000000; font-weight: 700;">0,00</span>
-                                                </div>
+                                                <div class="currency-group-footer"><span
+                                                        class="currency-label-footer">IDR</span><span class="value-footer"
+                                                        id="footerTotalHPP">0,00</span></div>
                                             </td>
                                             <td>
-                                                <div class="currency-group">
-                                                    <span class="currency-label text-black">IDR</span>
-                                                    <span id="footerTotalSelling"
-                                                        style="color: #000000; font-weight: 700;">0,00</span>
-                                                </div>
+                                                <div class="currency-group-footer"><span
+                                                        class="currency-label-footer">IDR</span><span class="value-footer"
+                                                        id="footerTotalSelling">0,00</span></div>
                                             </td>
                                             <td></td>
                                         </tr>
@@ -587,649 +764,763 @@
                                 </table>
                             </div>
 
-                            @error('items')
-                                <div class="alert alert-danger mt-3">
-                                    <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
-                                </div>
-                            @enderror
+                            <div class="d-flex justify-content-end mt-2">
+                                <button type="button" class="btn btn-danger" id="resetAllBtn">
+                                    <i class="fas fa-trash-alt me-1"></i>Reset All Items
+                                </button>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex gap-2 mb-5">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save me-2"></i>Update JO Tramper
-                        </button>
-                        <a href="{{ route('jo-tramper.show', $joTramper->id_jo_tram) }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-times me-2"></i>Cancel
-                        </a>
-                    </div>
                 </form>
+
+                <!-- FINAL SAVE SECTION -->
+                <div class="final-save-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1"><i class="fas fa-info-circle me-2"></i>Ready to Save?</h6>
+                            <small class="text-muted">Click the button to save all changes permanently</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('jo-tramper.index') }}" class="btn btn-final-back">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                            <button type="button" class="btn btn-final-save" id="btnFinalSave">
+                                <i class="fas fa-save"></i> Save All Changes
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
 @endsection
-{{-- Script Jo Tramper Edit --}}
+
 @push('scripts')
     <script>
+        // ========================================
+        // GLOBAL VARIABLES
+        // ========================================
+        const currentJoTramperId = '{{ $joTramper->id_jo_tram }}';
         let globalItemNumber = {{ $joTramper->items->count() }};
-        let categories = {};
 
-        // Format Rupiah Helper Functions
-        function formatRupiah(value) {
-            let number = value.replace(/[^\d,]/g, '');
-            number = number.replace(/\./g, '');
-            if (number === '') return '';
-
-            let parts = number.split(',');
-            let integerPart = parts[0];
-            let decimalPart = parts.length > 1 ? parts[1] : '';
-
-            if (decimalPart.length > 2) {
-                decimalPart = decimalPart.substring(0, 2);
-            }
-
-            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-
-            if (parts.length > 1) {
-                return integerPart + ',' + decimalPart;
-            } else {
-                return integerPart + ',00';
-            }
-        }
-
-        function parseRupiah(value) {
-            let cleaned = value.replace(/\./g, '').replace(',', '.');
-            return parseFloat(cleaned) || 0;
-        }
-
-        function setupRupiahInput(displayInput, hiddenInput) {
-            displayInput.addEventListener('input', function(e) {
-                let cursorPosition = this.selectionStart;
-                let beforeCursor = this.value.substring(0, cursorPosition);
-
-                let formatted = formatRupiah(this.value);
-                this.value = formatted;
-
-                if (!beforeCursor.includes(',')) {
-                    let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-                    let newPos = 0;
-                    let digitCount = 0;
-                    for (let i = 0; i < this.value.length; i++) {
-                        if (/\d/.test(this.value[i])) {
-                            digitCount++;
-                            if (digitCount === digitsBeforeCursor) {
-                                newPos = i + 1;
-                                break;
-                            }
-                        }
-                    }
-                    this.setSelectionRange(newPos, newPos);
-                } else {
-                    let commaPos = this.value.indexOf(',');
-                    let decimalDigitsInput = beforeCursor.split(',')[1] || '';
-                    let decimalDigits = decimalDigitsInput.length;
-                    let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
-                    this.setSelectionRange(newPos, newPos);
-                }
-
-                hiddenInput.value = parseRupiah(formatted);
-            });
-
-            displayInput.addEventListener('keydown', function(e) {
-                let cursorPosition = this.selectionStart;
-                let selectionEnd = this.selectionEnd;
-                let commaPos = this.value.indexOf(',');
-
-                if (e.key === 'Backspace') {
-                    if (cursorPosition !== selectionEnd) {
-                        return;
-                    }
-
-                    if (commaPos !== -1 && cursorPosition > commaPos + 1) {
-                        e.preventDefault();
-
-                        let posInDecimal = cursorPosition - commaPos - 1;
-                        let beforeComma = this.value.substring(0, commaPos);
-                        let afterComma = this.value.substring(commaPos + 1);
-
-                        let newDecimal = afterComma.substring(0, posInDecimal - 1) + afterComma.substring(posInDecimal);
-
-                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                        let formatted = formatRupiah(newValue);
-                        this.value = formatted;
-
-                        let newCommaPos = this.value.indexOf(',');
-                        let newCursorPos = newCommaPos + Math.max(1, posInDecimal);
-                        this.setSelectionRange(newCursorPos, newCursorPos);
-
-                        hiddenInput.value = parseRupiah(this.value);
-                    }
-                    else if (commaPos !== -1 && cursorPosition === commaPos + 1) {
-                        e.preventDefault();
-                    }
-                    else if (cursorPosition === commaPos) {
-                        e.preventDefault();
-                        let beforeComma = this.value.substring(0, commaPos);
-                        this.value = beforeComma;
-                        this.setSelectionRange(beforeComma.length, beforeComma.length);
-                        hiddenInput.value = parseRupiah(this.value);
-                    }
-                } else if (e.key === 'Delete') {
-                    if (cursorPosition !== selectionEnd) {
-                        return;
-                    }
-
-                    if (cursorPosition === commaPos) {
-                        e.preventDefault();
-                        let beforeComma = this.value.substring(0, commaPos);
-                        this.value = beforeComma;
-                        this.setSelectionRange(beforeComma.length, beforeComma.length);
-                        hiddenInput.value = parseRupiah(this.value);
-                        return;
-                    }
-
-                    if (commaPos !== -1 && cursorPosition > commaPos && cursorPosition < this.value.length) {
-                        e.preventDefault();
-
-                        let posInDecimal = cursorPosition - commaPos - 1;
-                        let beforeComma = this.value.substring(0, commaPos);
-                        let afterComma = this.value.substring(commaPos + 1);
-
-                        let newDecimal = afterComma.substring(0, posInDecimal) + afterComma.substring(posInDecimal + 1);
-
-                        let newValue = beforeComma.replace(/\./g, '') + ',' + newDecimal;
-                        let formatted = formatRupiah(newValue);
-                        this.value = formatted;
-
-                        let newCommaPos = this.value.indexOf(',');
-                        this.setSelectionRange(newCommaPos + posInDecimal + 1, newCommaPos + posInDecimal + 1);
-
-                        hiddenInput.value = parseRupiah(this.value);
-                    }
-                }
-            });
-
-            displayInput.addEventListener('blur', function(e) {
-                if (e.target.value) {
-                    if (!e.target.value.includes(',')) {
-                        e.target.value = e.target.value + ',00';
-                    } else {
-                        let parts = e.target.value.split(',');
-                        if (parts[1] !== undefined) {
-                            if (parts[1].length === 0) {
-                                e.target.value = parts[0] + ',00';
-                            } else if (parts[1].length < 2) {
-                                e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
-                            }
-                        }
-                    }
-                    hiddenInput.value = parseRupiah(e.target.value);
-                } else {
-                    e.target.value = '';
-                    hiddenInput.value = '';
-                }
-            });
-
-            displayInput.addEventListener('keypress', function(e) {
-                if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
-                    (e.key === ',' && !this.value.includes(',')) ||
-                    (e.keyCode === 65 && e.ctrlKey === true) ||
-                    (e.keyCode === 67 && e.ctrlKey === true) ||
-                    (e.keyCode === 86 && e.ctrlKey === true) ||
-                    (e.keyCode === 88 && e.ctrlKey === true)) {
-                    return;
-                }
-
-                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-                    e.preventDefault();
-                }
-            });
-        }
-
-        // Setup Global Kurs Input
-        const globalKursDisplay = document.getElementById('global_kurs_usd_display');
-        const globalKursValue = document.getElementById('global_kurs_usd');
-        setupRupiahInput(globalKursDisplay, globalKursValue);
-
-        // Group invoices by category
         const invoicesByCategory = {
             @foreach ($invoices->groupBy('invoice_ctg') as $category => $invoiceGroup)
                 '{{ $category }}': [
                     @foreach ($invoiceGroup as $invoice)
                         {
                             id: '{{ $invoice->id_md_invoice }}',
-                            type: '{{ $invoice->invoice_typ }}'
+                            type: '{{ $invoice->invoice_typ }}',
+                            note: {!! json_encode($invoice->note ?? '') !!},
                         },
                     @endforeach
                 ],
             @endforeach
         };
 
-        // Get all categories
-        const allCategories = Object.keys(invoicesByCategory);
+        // ========================================
+        // FLOATING BADGE ALERT
+        // ========================================
+        function showFloatingAlert(type, message) {
+            const alert = $('#floatingBadgeAlert');
+            const icon = $('#alertIcon');
+            const text = $('#alertText');
 
-        // Initialize categories from existing items
-        document.addEventListener('DOMContentLoaded', function() {
-            const itemRows = document.querySelectorAll('.item-row');
-            itemRows.forEach(row => {
-                const categoryName = row.dataset.category;
-                if (categoryName) {
-                    if (!categories[categoryName]) {
-                        categories[categoryName] = {
-                            count: 0
-                        };
-                    }
-                    categories[categoryName].count++;
-                }
+            alert.removeClass('alert-saving alert-success alert-error hiding');
 
-                // Attach event listeners to existing rows
-                attachItemEventListeners(row);
-            });
-
-            // Calculate initial grand total
-            updateGrandTotal();
-        });
-
-        // Add Item Button - adds new row with category dropdown
-        document.getElementById('addItemBtn').addEventListener('click', function() {
-            addNewItemRow();
-        });
-
-        // Add new item row with category dropdown (same as create page)
-        function addNewItemRow() {
-            globalItemNumber++;
-
-            const noItemsRow = document.querySelector('.no-items-row');
-            if (noItemsRow) {
-                noItemsRow.remove();
+            switch (type) {
+                case 'saving':
+                    alert.addClass('alert-saving');
+                    icon.attr('class', 'fas fa-circle-notch fa-spin');
+                    break;
+                case 'success':
+                    alert.addClass('alert-success');
+                    icon.attr('class', 'fas fa-check-circle');
+                    break;
+                case 'error':
+                    alert.addClass('alert-error');
+                    icon.attr('class', 'fas fa-exclamation-circle');
+                    break;
             }
 
-            const tbody = document.getElementById('itemsTableBody');
-            const newRow = document.createElement('tr');
-            newRow.classList.add('item-row');
-            newRow.setAttribute('data-item-number', globalItemNumber);
-            newRow.setAttribute('data-temp-row', 'true');
+            text.text(message);
+            alert.addClass('show');
 
-            let categoryOptionsHtml = '<option value="">-- Select Category --</option>';
-            allCategories.forEach(cat => {
-                categoryOptionsHtml += `<option value="${cat}">${cat}</option>`;
-            });
-
-            newRow.innerHTML = `
-            <td class="item-number-cell">${globalItemNumber}</td>
-            <td>
-                <select class="form-select category-dropdown-select" required>
-                    ${categoryOptionsHtml}
-                </select>
-            </td>
-            <td>
-                <select name="items[${globalItemNumber}][id_md_invoice]" class="form-select invoice-type-select" disabled required>
-                    <option value="">Select category first</option>
-                </select>
-                <input type="hidden" name="items[${globalItemNumber}][invoice_ctg]" class="invoice-ctg-input">
-            </td>
-            <td>
-                <div class="currency-group">
-                    <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input revenue-idr-display">
-                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_idr]" class="revenue-idr-value" value="0">
-                </div>
-            </td>
-            <td>
-                <div class="currency-group">
-                    <span class="currency-label">USD</span>
-                    <input type="text" class="form-control currency-input revenue-usd-display">
-                    <input type="hidden" name="items[${globalItemNumber}][pendapatan_usd]" class="revenue-usd-value" value="0">
-                </div>
-            </td>
-            <td>
-                <div class="currency-group">
-                    <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input hpp-display">
-                    <input type="hidden" name="items[${globalItemNumber}][hpp_ops]" class="hpp-value" value="0">
-                </div>
-            </td>
-            <td>
-                <div class="currency-group">
-                    <span class="currency-label">IDR</span>
-                    <input type="text" class="form-control currency-input selling-price-display" readonly style="background-color: #e9ecef;">
-                    <input type="hidden" name="items[${globalItemNumber}][hargajual_idr]" class="selling-price-value" value="0">
-                </div>
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-danger btn-sm btn-remove-row" onclick="removeItem(this)">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        `;
-
-            tbody.appendChild(newRow);
-
-            const categorySelect = newRow.querySelector('.category-dropdown-select');
-            categorySelect.addEventListener('change', function() {
-                onCategorySelected(newRow, this.value);
-            });
-
-            attachItemEventListeners(newRow);
-            renumberAllItems();
-        }
-
-        // When category is selected from dropdown
-        function onCategorySelected(row, categoryName) {
-            if (!categoryName) return;
-
-            const itemNumber = row.getAttribute('data-item-number');
-            row.querySelector('.invoice-ctg-input').value = categoryName;
-
-            const invoiceSelect = row.querySelector('.invoice-type-select');
-            const invoiceOptions = invoicesByCategory[categoryName] || [];
-
-            let invoiceOptionsHtml = '<option value="">Select Invoice Type</option>';
-            invoiceOptions.forEach(invoice => {
-                invoiceOptionsHtml += `<option value="${invoice.id}">${invoice.type}</option>`;
-            });
-
-            invoiceSelect.innerHTML = invoiceOptionsHtml;
-            invoiceSelect.disabled = false;
-
-            const existingCategoryCell = document.querySelector(`.category-cell[data-category="${categoryName}"]`);
-
-            if (existingCategoryCell) {
-                row.removeAttribute('data-temp-row');
-                row.setAttribute('data-category', categoryName);
-                row.querySelector('.category-dropdown-select').closest('td').remove();
-                categories[categoryName].count++;
-                updateCategoryRowspan(categoryName);
-            } else {
-                row.removeAttribute('data-temp-row');
-                row.setAttribute('data-category', categoryName);
-                row.setAttribute('data-is-first-in-category', 'true');
-
-                categories[categoryName] = {
-                    count: 1,
-                    firstRowIndex: itemNumber
-                };
-
-                const dropdownCell = row.querySelector('.category-dropdown-select').closest('td');
-                dropdownCell.outerHTML = `
-                <td class="category-cell" rowspan="1" data-category="${categoryName}">
-                    <div class="category-content">
-                        <span class="category-name">${categoryName}</span>
-                        <span class="category-count">1 item</span>
-                        <button type="button" class="btn-remove-category" onclick="removeCategoryWithItems('${categoryName}', event)">
-                            <i class="fas fa-times"></i> Remove
-                        </button>
-                    </div>
-                </td>
-            `;
-            }
-
-            renumberAllItems();
-        }
-
-        // Update category rowspan
-        function updateCategoryRowspan(categoryName) {
-            const categoryCell = document.querySelector(`.category-cell[data-category="${categoryName}"]`);
-            if (categoryCell) {
-                const count = categories[categoryName].count;
-                categoryCell.setAttribute('rowspan', count);
-                const countText = count === 1 ? '1 item' : count + ' items';
-                categoryCell.querySelector('.category-count').textContent = countText;
+            if (type === 'success' || type === 'error') {
+                setTimeout(hideFloatingAlert, 3000);
             }
         }
 
-        // Remove category with all items
-        function removeCategoryWithItems(categoryName, event) {
-            event.stopPropagation();
-
-            if (confirm(`Remove category "${categoryName}" and all its ${categories[categoryName].count} item(s)?`)) {
-                const rows = document.querySelectorAll(`[data-category="${categoryName}"]`);
-                rows.forEach(row => row.remove());
-
-                delete categories[categoryName];
-
-                renumberAllItems();
-                updateGrandTotal();
-
-                const tbody = document.getElementById('itemsTableBody');
-                if (tbody.querySelectorAll('tr').length === 0) {
-                    tbody.innerHTML = `
-                    <tr class="no-items-row">
-                        <td colspan="8">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
-                            <p class="mb-0 fw-bold">No data available</p>
-                            <small class="text-muted">Click "Add Item" to get started</small>
-                        </td>
-                    </tr>
-                `;
-                }
-            }
+        function hideFloatingAlert() {
+            const alert = $('#floatingBadgeAlert');
+            alert.addClass('hiding');
+            setTimeout(() => alert.removeClass('show hiding'), 400);
         }
 
-        // Remove item
-        function removeItem(button) {
-            const row = button.closest('tr');
-            const categoryName = row.dataset.category;
-
-            if (row.dataset.tempRow === 'true') {
-                row.remove();
-                renumberAllItems();
-                updateGrandTotal();
-
-                const tbody = document.getElementById('itemsTableBody');
-                if (tbody.querySelectorAll('tr').length === 0) {
-                    tbody.innerHTML = `
-                    <tr class="no-items-row">
-                        <td colspan="8">
-                            <i class="fas fa-inbox fa-3x mb-3"></i>
-                            <p class="mb-0 fw-bold">No data available</p>
-                            <small class="text-muted">Click "Add Item" to get started</small>
-                        </td>
-                    </tr>
-                `;
-                }
-                return;
-            }
-
-            const isFirst = row.dataset.isFirstInCategory === 'true';
-
-            if (categories[categoryName].count === 1) {
-                removeCategoryWithItems(categoryName, new Event('click'));
-                return;
-            }
-
-            if (isFirst) {
-                const categoryCell = row.querySelector('.category-cell');
-                const nextCategoryRow = row.nextElementSibling;
-
-                if (nextCategoryRow && nextCategoryRow.dataset.category === categoryName) {
-                    const newCategoryCell = categoryCell.cloneNode(true);
-                    nextCategoryRow.insertBefore(newCategoryCell, nextCategoryRow.children[1]);
-                    nextCategoryRow.setAttribute('data-is-first-in-category', 'true');
-                }
-            }
-
-            row.remove();
-            categories[categoryName].count--;
-
-            updateCategoryRowspan(categoryName);
-            renumberAllItems();
-            updateGrandTotal();
+        // ========================================
+        // RUPIAH FORMATTING
+        // ========================================
+        function formatRupiah(value) {
+            let number = value.replace(/[^\d,]/g, '').replace(/\./g, '');
+            if (!number) return '';
+            let [int, dec] = number.split(',');
+            if (dec !== undefined && dec.length > 2) dec = dec.substring(0, 2);
+            int = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return (dec !== undefined) ? int + ',' + dec : int + ',00';
         }
 
-        // Reset All Button
-        document.getElementById('resetAllBtn').addEventListener('click', function() {
-            if (confirm('Are you sure you want to remove all items?')) {
-                document.getElementById('itemsTableBody').innerHTML = `
-                <tr class="no-items-row">
-                    <td colspan="8">
-                        <i class="fas fa-inbox fa-3x mb-3"></i>
-                        <p class="mb-0 fw-bold">No data available</p>
-                        <small class="text-muted">Click "Add Item" to get started</small>
-                    </td>
-                </tr>
-            `;
-
-                globalItemNumber = 0;
-                categories = {};
-                updateGrandTotal();
-            }
-        });
-
-        // Renumber all items
-        function renumberAllItems() {
-            const itemRows = document.querySelectorAll('.item-row');
-            itemRows.forEach((row, index) => {
-                const newNumber = index + 1;
-                row.querySelector('.item-number-cell').textContent = newNumber;
-                row.setAttribute('data-item-number', newNumber);
-            });
-            globalItemNumber = itemRows.length;
+        function parseRupiah(value) {
+            if (!value) return 0;
+            return parseFloat(value.toString().replace(/\./g, '').replace(',', '.')) || 0;
         }
 
-        // Attach event listeners to item - WITH RUPIAH FORMAT
-        function attachItemEventListeners(row) {
-            const revenueIDRDisplay = row.querySelector('.revenue-idr-display');
-            const revenueIDRValue = row.querySelector('.revenue-idr-value');
-            const revenueUSDDisplay = row.querySelector('.revenue-usd-display');
-            const revenueUSDValue = row.querySelector('.revenue-usd-value');
-            const hppDisplay = row.querySelector('.hpp-display');
-            const hppValue = row.querySelector('.hpp-value');
-            const sellingPriceDisplay = row.querySelector('.selling-price-display');
-            const sellingPriceValue = row.querySelector('.selling-price-value');
-
-            // Setup Rupiah formatting for all inputs
-            setupRupiahInput(revenueIDRDisplay, revenueIDRValue);
-            setupRupiahInput(revenueUSDDisplay, revenueUSDValue);
-            setupRupiahInput(hppDisplay, hppValue);
-
-            function calculateSellingPrice() {
-                const kursRate = parseRupiah(globalKursDisplay.value);
-                const idrValue = parseRupiah(revenueIDRDisplay.value);
-                const usdValue = parseRupiah(revenueUSDDisplay.value);
-
-                let sellingPrice = 0;
-                if (idrValue > 0) {
-                    sellingPrice = idrValue;
-                } else if (usdValue > 0) {
-                    sellingPrice = usdValue * kursRate;
-                }
-
-                sellingPriceValue.value = sellingPrice.toFixed(2);
-                sellingPriceDisplay.value = formatRupiah(sellingPrice.toFixed(2).replace('.', ','));
-                updateGrandTotal();
-            }
-
-            // Event listener untuk Pendapatan IDR
-            revenueIDRDisplay.addEventListener('input', function() {
-                // Jika IDR diisi, kosongkan USD
-                if (parseRupiah(this.value) > 0) {
-                    revenueUSDDisplay.value = '0,00';
-                    revenueUSDValue.value = '0';
-                }
-                calculateSellingPrice();
-            });
-
-            // Event listener untuk Pendapatan USD
-            revenueUSDDisplay.addEventListener('input', function() {
-                // Jika USD diisi, kosongkan IDR
-                if (parseRupiah(this.value) > 0) {
-                    revenueIDRDisplay.value = '0,00';
-                    revenueIDRValue.value = '0';
-                }
-                calculateSellingPrice();
-            });
-
-            // Event listener untuk HPP
-            hppDisplay.addEventListener('input', updateGrandTotal);
-        }
-
-        // Global kurs change handler - UPDATED WITH RUPIAH FORMAT
-        globalKursDisplay.addEventListener('input', function() {
-            const allRows = document.querySelectorAll('.item-row');
-            allRows.forEach(row => {
-                const revenueIDRDisplay = row.querySelector('.revenue-idr-display');
-                const revenueUSDDisplay = row.querySelector('.revenue-usd-display');
-                const sellingPriceDisplay = row.querySelector('.selling-price-display');
-                const sellingPriceValue = row.querySelector('.selling-price-value');
-
-                const idrValue = parseRupiah(revenueIDRDisplay.value);
-                const usdValue = parseRupiah(revenueUSDDisplay.value);
-                const kursRate = parseRupiah(this.value);
-
-                let sellingPrice = 0;
-                if (idrValue > 0) {
-                    sellingPrice = idrValue;
-                } else if (usdValue > 0) {
-                    sellingPrice = usdValue * kursRate;
-                }
-
-                sellingPriceValue.value = sellingPrice.toFixed(2);
-                sellingPriceDisplay.value = formatRupiah(sellingPrice.toFixed(2).replace('.', ','));
-            });
-            updateGrandTotal();
-        });
-
-        // Update grand total
-        function updateGrandTotal() {
-            const itemRows = document.querySelectorAll('.item-row');
-            let totalRevenueIDR = 0;
-            let totalRevenueUSD = 0;
-            let totalHPP = 0;
-            let totalSelling = 0;
-
-            itemRows.forEach(row => {
-                const idr = parseRupiah(row.querySelector('.revenue-idr-display')?.value || '0');
-                const usd = parseRupiah(row.querySelector('.revenue-usd-display')?.value || '0');
-                const hpp = parseRupiah(row.querySelector('.hpp-display')?.value || '0');
-                const selling = parseRupiah(row.querySelector('.selling-price-display')?.value || '0');
-
-                totalRevenueIDR += idr;
-                totalRevenueUSD += usd;
-                totalHPP += hpp;
-                totalSelling += selling;
-            });
-
-            document.getElementById('footerTotalIDR').textContent = formatNumber(totalRevenueIDR);
-            document.getElementById('footerTotalUSD').textContent = formatNumber(totalRevenueUSD);
-            document.getElementById('footerTotalHPP').textContent = formatNumber(totalHPP);
-            document.getElementById('footerTotalSelling').textContent = formatNumber(totalSelling);
-        }
-
-        // Format number
         function formatNumber(amount) {
-            return amount.toLocaleString('id-ID', {
+            return Number(amount).toLocaleString('id-ID', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
         }
 
-        // Form submission validation
-        document.getElementById('joTramperForm').addEventListener('submit', function(e) {
-            const itemRows = document.querySelectorAll('.item-row');
+        function setupRupiahInput(input) {
+            input.addEventListener('input', function() {
+                const cursorPos = this.selectionStart;
+                const before = this.value.substring(0, cursorPos);
+                this.value = formatRupiah(this.value);
 
-            if (itemRows.length === 0) {
-                e.preventDefault();
-                alert('Please add at least one item!');
-                return false;
+                if (!before.includes(',')) {
+                    const digits = before.replace(/\D/g, '').length;
+                    let pos = 0,
+                        cnt = 0;
+                    for (let i = 0; i < this.value.length; i++) {
+                        if (/\d/.test(this.value[i]) && ++cnt === digits) {
+                            pos = i + 1;
+                            break;
+                        }
+                    }
+                    this.setSelectionRange(pos, pos);
+                } else {
+                    const cp = this.value.indexOf(',');
+                    const dec = (before.split(',')[1] || '').length;
+                    const np = cp + 1 + Math.min(dec, 2);
+                    this.setSelectionRange(np, np);
+                }
+            });
+
+            input.addEventListener('blur', function() {
+                if (!this.value) return;
+                if (!this.value.includes(',')) {
+                    this.value += ',00';
+                } else {
+                    const p = this.value.split(',');
+                    if (!p[1] || p[1].length === 0) this.value = p[0] + ',00';
+                    else if (p[1].length < 2) this.value = p[0] + ',' + p[1].padEnd(2, '0');
+                }
+            });
+        }
+
+        // Setup all rupiah inputs
+        ['global_kurs_usd_display', 'input_pendapatan_idr', 'input_pendapatan_usd', 'input_hpp'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) setupRupiahInput(el);
+        });
+
+        // ========================================
+        // AUTO-CALCULATE HARGA JUAL
+        // ========================================
+        function calculateHargaJual() {
+            const kursRate = parseRupiah($('#global_kurs_usd_display').val());
+            const idrValue = parseRupiah($('#input_pendapatan_idr').val());
+            const usdValue = parseRupiah($('#input_pendapatan_usd').val());
+            const hppValue = parseRupiah($('#input_hpp').val());
+
+            let hargaJual = 0;
+            if (idrValue > 0) {
+                hargaJual = idrValue + hppValue;
+            } else if (usdValue > 0 && kursRate > 0) {
+                hargaJual = (usdValue * kursRate) + hppValue;
+            } else {
+                hargaJual = hppValue;
             }
 
-            const tempRows = document.querySelectorAll('[data-temp-row="true"]');
-            if (tempRows.length > 0) {
-                e.preventDefault();
-                alert('Please select a category for all items!');
-                return false;
+            $('#input_harga_jual').val(formatRupiah(hargaJual.toFixed(2).replace('.', ',')));
+        }
+
+        $('#input_pendapatan_idr').on('input', function() {
+            if (parseRupiah($(this).val()) > 0) $('#input_pendapatan_usd').val('');
+            calculateHargaJual();
+        });
+
+        $('#input_pendapatan_usd').on('input', function() {
+            if (parseRupiah($(this).val()) > 0) $('#input_pendapatan_idr').val('');
+            calculateHargaJual();
+        });
+
+        $('#input_hpp').on('input', calculateHargaJual);
+
+        $('#global_kurs_usd_display').on('input', function() {
+            $('#global_kurs_usd').val(parseRupiah($(this).val()));
+            calculateHargaJual();
+        });
+
+        // ========================================
+        // CATEGORY DROPDOWN CHANGE
+        // ========================================
+        $('#input_category').on('change', function() {
+            const category = $(this).val();
+            const itemSelect = $('#input_item');
+
+            if (!category) {
+                itemSelect.prop('disabled', true).html('<option value="">Select category first</option>');
+                return;
             }
 
-            const kursDate = document.getElementById('global_tgl_kurs_usd').value;
-            const kursRate = document.getElementById('global_kurs_usd').value;
+            const invoices = invoicesByCategory[category] || [];
+            let options = '<option value="">Select Item</option>';
+            invoices.forEach(inv => {
+                options += `<option value="${inv.id}" data-note="${inv.note ?? ''}">${inv.type}</option>`;
+            });
+            itemSelect.prop('disabled', false).html(options);
+        });
 
-            if (!kursDate || !kursRate || parseFloat(kursRate) <= 0) {
-                e.preventDefault();
-                alert('Please fill in the exchange rate information!');
-                return false;
+        // Isi note dari master saat item dipilih (hanya saat mode tambah baru)
+        $('#input_item').on('change', function() {
+            const editingItemId = $('#editing_item_id').val();
+            if (editingItemId) return; // Saat edit mode, jangan overwrite note dari DB
+
+            const masterNote = $(this).find('option:selected').data('note') || '';
+            $('#input_note').val(masterNote);
+        });
+
+        // ========================================
+        // UPDATE HEADER
+        // ========================================
+        $('#btnSaveHeader').on('click', function() {
+            const custId = $('#id_md_cust').val();
+            const portId = $('#id_md_port').val();
+            const title = $('#title').val();
+            const ds = $('#date_start').val();
+            const de = $('#date_end').val();
+            const note = $('#note').val();
+
+            if (!custId || !portId || !title || !ds || !de) {
+                showFloatingAlert('error', 'Please fill all required fields');
+                return;
             }
+
+            showFloatingAlert('saving', 'Updating header...');
+
+            $.ajax({
+                url: `/data/jo-tramper/header/update/${currentJoTramperId}`,
+                method: 'POST',
+                data: {
+                    id_md_cust: custId,
+                    id_md_port: portId,
+                    date_start: ds,
+                    date_end: de,
+                    title: title,
+                    note: note,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(r) {
+                    if (r.success) {
+                        showFloatingAlert('success', 'Header updated successfully!');
+                    } else {
+                        showFloatingAlert('error', r.message || 'Failed to update header');
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to update header';
+                    showFloatingAlert('error', msg);
+                }
+            });
+        });
+
+        // ========================================
+        // ADD / UPDATE ITEM TO TABLE
+        // ========================================
+        $('#btnAddToTable').on('click', function() {
+            const editingId = $('#editing_item_id').val();
+            const category = $('#input_category').val();
+            const itemId = $('#input_item').val();
+            const itemText = $('#input_item option:selected').text();
+            const note = $('#input_note').val();
+            const pendapatanIDR = parseRupiah($('#input_pendapatan_idr').val());
+            const pendapatanUSD = parseRupiah($('#input_pendapatan_usd').val());
+            const hpp = parseRupiah($('#input_hpp').val());
+            const hargaJual = parseRupiah($('#input_harga_jual').val());
+            const kursRate = parseRupiah($('#global_kurs_usd_display').val()) || 0;
+            const kursDate = $('#global_tgl_kurs_usd').val() || null;
+
+            if (!category || !itemId) {
+                showFloatingAlert('error', 'Please select category and item');
+                return;
+            }
+
+            if (pendapatanUSD > 0 && (!kursDate || kursRate <= 0)) {
+                showFloatingAlert('error', 'Kurs rate and date are required when USD is filled');
+                return;
+            }
+
+            if (editingId) {
+                updateItemToDatabase(
+                    editingId, category, itemId, itemText,
+                    pendapatanIDR, pendapatanUSD, hpp, hargaJual,
+                    kursRate, kursDate, note
+                );
+                return;
+            }
+
+            showFloatingAlert('saving', 'Adding item...');
+
+            $.ajax({
+                url: '/data/jo-tramper/item/store',
+                method: 'POST',
+                data: {
+                    id_jo_tram: currentJoTramperId,
+                    id_md_invoice: itemId,
+                    invoice_ctg: category,
+                    pendapatan_idr: pendapatanIDR,
+                    pendapatan_usd: pendapatanUSD,
+                    hpp_ops: hpp,
+                    kurs_usd: kursRate,
+                    tgl_kurs_usd: kursDate,
+                    note: note,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(r) {
+                    if (!r.success) {
+                        showFloatingAlert('error', 'Failed to add item');
+                        return;
+                    }
+
+                    showFloatingAlert('success', 'Item added successfully!');
+                    $('.no-items-row').remove();
+
+                    const newItemId = r.data.id_jo_tram_item || r.data.id;
+                    if (!newItemId) {
+                        showFloatingAlert('error', 'Item created but ID is invalid. Please refresh.');
+                        return;
+                    }
+
+                    insertRowWithCategoryGrouping(newItemId, category, itemText, r.data);
+                    updateGrandTotal();
+                    clearItemForm();
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to add item';
+                    showFloatingAlert('error', msg);
+                }
+            });
+        });
+
+        // ========================================
+        // INSERT ROW WITH CATEGORY GROUPING
+        // ========================================
+        function insertRowWithCategoryGrouping(itemId, category, itemText, data) {
+            globalItemNumber++;
+
+            let categoryExists = false;
+            let insertAfterRow = null;
+
+            $('#itemsTableBody tr.item-row').each(function() {
+                if ($(this).data('category') === category) {
+                    categoryExists = true;
+                    insertAfterRow = $(this);
+                    const catCell = $(this).find('.category-cell');
+                    if (catCell.length) {
+                        const span = parseInt(catCell.attr('rowspan') || 1);
+                        catCell.attr('rowspan', span + 1);
+                    }
+                }
+            });
+
+            const actionBtns = `
+        <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+            onclick="editItem('${itemId}')"><i class="fas fa-edit"></i></button>
+        <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+            onclick="removeItem(this,'${itemId}')"><i class="fas fa-trash"></i></button>`;
+
+            let newRow;
+            if (categoryExists) {
+                newRow = `<tr class="item-row" data-item-id="${itemId}" data-category="${category}" data-item-text="${itemText}">
+            <td class="item-number-cell">${globalItemNumber}</td>
+            <td class="item-text-cell">${itemText}</td>
+            <td>${formatNumber(data.pendapatan_idr)}</td>
+            <td>${formatNumber(data.pendapatan_usd)}</td>
+            <td>${formatNumber(data.hpp_ops)}</td>
+            <td>${formatNumber(data.hargajual_idr)}</td>
+            <td class="text-center">${actionBtns}</td>
+        </tr>`;
+                insertAfterRow.after(newRow);
+            } else {
+                newRow = `<tr class="item-row" data-item-id="${itemId}" data-category="${category}" data-item-text="${itemText}">
+            <td class="item-number-cell">${globalItemNumber}</td>
+            <td class="category-cell" rowspan="1">${category}</td>
+            <td class="item-text-cell">${itemText}</td>
+            <td>${formatNumber(data.pendapatan_idr)}</td>
+            <td>${formatNumber(data.pendapatan_usd)}</td>
+            <td>${formatNumber(data.hpp_ops)}</td>
+            <td>${formatNumber(data.hargajual_idr)}</td>
+            <td class="text-center">${actionBtns}</td>
+        </tr>`;
+                $('#itemsTableBody').append(newRow);
+            }
+
+            renumberAllItems();
+        }
+
+        // ========================================
+        // EDIT ITEM — LOAD TO FORM
+        // ========================================
+        function editItem(itemId) {
+            if (!itemId) {
+                showFloatingAlert('error', 'Invalid item ID');
+                return;
+            }
+
+            showFloatingAlert('saving', 'Loading item data...');
+
+            $.ajax({
+                url: `/data/jo-tramper/item/show/${itemId}`,
+                method: 'GET',
+                success: function(r) {
+                    if (!r.success) {
+                        showFloatingAlert('error', 'Failed to load item data');
+                        return;
+                    }
+                    hideFloatingAlert();
+
+                    const item = r.data;
+
+                    $('#editing_item_id').val(itemId);
+                    $('#formSectionTitle').html('<i class="fas fa-edit"></i> Edit Item');
+                    $('#addItemFormSection').addClass('edit-mode');
+                    $('#btnAddToTable').html('<i class="fas fa-save"></i> Update Item');
+                    $('#btnCancelEdit').show();
+
+                    $('#input_category').val(item.invoice_ctg).trigger('change');
+
+                    setTimeout(() => {
+                        $('#input_item').val(item.id_md_invoice);
+
+                        const idr = parseFloat(item.pendapatan_idr) || 0;
+                        const usd = parseFloat(item.pendapatan_usd) || 0;
+                        const hpp = parseFloat(item.hpp_ops) || 0;
+                        const kurs = parseFloat(item.kurs_usd) || 0;
+
+                        $('#input_pendapatan_idr').val(idr > 0 ? formatRupiah(idr.toFixed(2).replace(
+                            '.', ',')) : '');
+                        $('#input_pendapatan_usd').val(usd > 0 ? formatRupiah(usd.toFixed(2).replace(
+                            '.', ',')) : '');
+                        $('#input_hpp').val(formatRupiah(hpp.toFixed(2).replace('.', ',')));
+                        $('#input_note').val(item.note || '');
+
+                        if (usd > 0 && kurs > 0) {
+                            $('#global_kurs_usd_display').val(formatRupiah(kurs.toFixed(2).replace('.',
+                                ',')));
+                            $('#global_kurs_usd').val(kurs);
+                        }
+
+                        if (item.tgl_kurs_usd) {
+                            // Format: "2024-01-15T08:30" untuk datetime-local input
+                            const dt = item.tgl_kurs_usd.substring(0, 16).replace(' ', 'T');
+                            $('#global_tgl_kurs_usd').val(dt);
+                        }
+
+                        calculateHargaJual();
+                    }, 300);
+
+                    $('html, body').animate({
+                        scrollTop: $('#addItemFormSection').offset().top - 100
+                    }, 500);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to load item data';
+                    showFloatingAlert('error', msg);
+                }
+            });
+        }
+
+        $('#btnCancelEdit').on('click', function() {
+            clearItemForm();
+            $('html, body').animate({
+                scrollTop: $('#itemsTableBody').offset().top - 200
+            }, 500);
+        });
+
+        // ========================================
+        // UPDATE ITEM TO DATABASE
+        // ========================================
+        function updateItemToDatabase(
+            itemId, category, invoiceId, itemText,
+            pendapatanIDR, pendapatanUSD, hpp, hargaJual,
+            kursRate, kursDate, note
+        ) {
+            showFloatingAlert('saving', 'Updating item...');
+
+            $.ajax({
+                url: `/data/jo-tramper/item/update/${itemId}`,
+                method: 'PUT',
+                data: {
+                    id_jo_tram: currentJoTramperId,
+                    id_md_invoice: invoiceId,
+                    invoice_ctg: category,
+                    pendapatan_idr: pendapatanIDR,
+                    pendapatan_usd: pendapatanUSD,
+                    hpp_ops: hpp,
+                    kurs_usd: kursRate,
+                    tgl_kurs_usd: kursDate,
+                    note: note,
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(r) {
+                    if (!r.success) {
+                        showFloatingAlert('error', 'Failed to update item');
+                        return;
+                    }
+                    showFloatingAlert('success', 'Item updated successfully!');
+
+                    const row = $(`.item-row[data-item-id="${itemId}"]`);
+                    const oldCat = row.data('category');
+
+                    if (oldCat !== category) {
+                        removeRowFromTable(row, oldCat);
+                        insertRowWithCategoryGrouping(itemId, category, itemText, r.data);
+                    } else {
+                        row.attr('data-item-text', itemText);
+                        row.find('.item-text-cell').text(itemText);
+
+                        // Offset: row dengan category cell = 0, tanpa = -1
+                        const hasCat = row.find('.category-cell').length > 0;
+                        const off = hasCat ? 0 : -1;
+                        row.find('td').eq(3 + off).text(formatNumber(r.data.pendapatan_idr));
+                        row.find('td').eq(4 + off).text(formatNumber(r.data.pendapatan_usd));
+                        row.find('td').eq(5 + off).text(formatNumber(r.data.hpp_ops));
+                        row.find('td').eq(6 + off).text(formatNumber(r.data.hargajual_idr));
+                    }
+
+                    updateGrandTotal();
+                    clearItemForm();
+
+                    $('html, body').animate({
+                        scrollTop: $(`.item-row[data-item-id="${itemId}"]`).offset().top - 200
+                    }, 500);
+                },
+                error: function(xhr) {
+                    const errors = xhr.responseJSON?.errors ?
+                        Object.values(xhr.responseJSON.errors).flat().join(', ') :
+                        xhr.responseJSON?.message || 'Failed to update item';
+                    showFloatingAlert('error', errors);
+                }
+            });
+        }
+
+        // ========================================
+        // REMOVE ITEM (REALTIME DELETE)
+        // ========================================
+        function removeItem(button, itemId) {
+            if (!itemId) {
+                showFloatingAlert('error', 'Invalid item ID');
+                return;
+            }
+            if (!confirm('Are you sure you want to delete this item?')) return;
+
+            showFloatingAlert('saving', 'Deleting item...');
+
+            $.ajax({
+                url: `/data/jo-tramper/item/destroy/${itemId}`,
+                method: 'DELETE',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(r) {
+                    if (!r.success) {
+                        showFloatingAlert('error', 'Failed to delete item');
+                        return;
+                    }
+                    showFloatingAlert('success', 'Item deleted successfully!');
+
+                    const row = $(button).closest('tr');
+                    const category = row.data('category');
+                    removeRowFromTable(row, category);
+                    renumberAllItems();
+                    updateGrandTotal();
+
+                    if ($('#itemsTableBody tr.item-row').length === 0) {
+                        $('#itemsTableBody').html(emptyRowHtml());
+                    }
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to delete item';
+                    showFloatingAlert('error', msg);
+                }
+            });
+        }
+
+        function removeRowFromTable(row, category) {
+            const catCell = row.find('.category-cell');
+            if (catCell.length) {
+                const span = parseInt(catCell.attr('rowspan') || 1);
+                if (span > 1) {
+                    const next = row.next(`.item-row[data-category="${category}"]`);
+                    if (next.length) {
+                        next.find('.item-text-cell').before(
+                            `<td class="category-cell" rowspan="${span - 1}">${category}</td>`
+                        );
+                    }
+                }
+            } else {
+                const prev = row.prevAll(`.item-row[data-category="${category}"]`).first();
+                const prevCat = prev.find('.category-cell');
+                if (prevCat.length) {
+                    const s = parseInt(prevCat.attr('rowspan') || 1);
+                    if (s > 1) prevCat.attr('rowspan', s - 1);
+                }
+            }
+            row.remove();
+        }
+
+        // ========================================
+        // RESET ALL ITEMS
+        // ========================================
+        $('#resetAllBtn').on('click', function() {
+            if (!confirm('Are you sure you want to remove ALL items? This will delete them from the database.'))
+                return;
+
+            const ids = [];
+            $('.item-row').each(function() {
+                const id = $(this).data('item-id');
+                if (id) ids.push(id);
+            });
+
+            if (!ids.length) {
+                showFloatingAlert('error', 'No items to delete');
+                return;
+            }
+
+            showFloatingAlert('saving', 'Deleting all items...');
+
+            Promise.all(ids.map(id => $.ajax({
+                url: `/data/jo-tramper/item/destroy/${id}`,
+                method: 'DELETE',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                }
+            }))).then(() => {
+                showFloatingAlert('success', 'All items deleted successfully!');
+                $('#itemsTableBody').html(emptyRowHtml());
+                globalItemNumber = 0;
+                updateGrandTotal();
+            }).catch(() => {
+                showFloatingAlert('error', 'Some items could not be deleted');
+            });
+        });
+
+        // ========================================
+        // FINAL SAVE ALL CHANGES
+        // ========================================
+        $('#btnFinalSave').on('click', function() {
+            const custId = $('#id_md_cust').val();
+            const portId = $('#id_md_port').val();
+            const title = $('#title').val();
+            const ds = $('#date_start').val();
+            const de = $('#date_end').val();
+
+            if (!custId || !portId || !title || !ds || !de) {
+                showFloatingAlert('error', 'Please fill all required fields');
+                return;
+            }
+
+            if (!confirm('Save all changes and return to JO Tramper list?')) return;
+
+            showFloatingAlert('saving', 'Saving all changes...');
+
+            $.ajax({
+                url: `/data/jo-tramper/save-all/${currentJoTramperId}`,
+                method: 'POST',
+                data: {
+                    id_md_cust: custId,
+                    id_md_port: portId,
+                    date_start: ds,
+                    date_end: de,
+                    title: title,
+                    note: $('#note').val(),
+                    global_kurs_usd: parseRupiah($('#global_kurs_usd_display').val()),
+                    global_tgl_kurs_usd: $('#global_tgl_kurs_usd').val(),
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(r) {
+                    if (!r.success) {
+                        showFloatingAlert('error', r.message || 'Failed to save changes');
+                        return;
+                    }
+                    showFloatingAlert('success', 'All changes saved successfully!');
+                    setTimeout(() => {
+                        window.location.href = '{{ route('jo-tramper.index') }}';
+                    }, 1500);
+                },
+                error: function(xhr) {
+                    const msg = xhr.responseJSON?.message || 'Failed to save all changes';
+                    showFloatingAlert('error', msg);
+                }
+            });
+        });
+
+        // ========================================
+        // UTILITY FUNCTIONS
+        // ========================================
+        function clearItemForm() {
+            $('#editing_item_id').val('');
+            $('#formSectionTitle').html('<i class="fas fa-plus-square"></i> Add New Item');
+            $('#addItemFormSection').removeClass('edit-mode');
+            $('#btnAddToTable').html('<i class="fas fa-arrow-down"></i> Add to Table');
+            $('#btnCancelEdit').hide();
+            $('#input_category').val('');
+            $('#input_item').prop('disabled', true).html('<option value="">Select category first</option>');
+            $('#input_note').val('');
+            ['input_pendapatan_idr', 'input_pendapatan_usd', 'input_hpp', 'input_harga_jual']
+            .forEach(id => $('#' + id).val(''));
+        }
+
+        function renumberAllItems() {
+            $('.item-row').each(function(i) {
+                $(this).find('.item-number-cell').text(i + 1);
+                $(this).attr('data-item-number', i + 1);
+            });
+            globalItemNumber = $('.item-row').length;
+        }
+
+        function updateGrandTotal() {
+            let idr = 0,
+                usd = 0,
+                hpp = 0,
+                sell = 0;
+
+            $('.item-row').each(function() {
+                const hasCat = $(this).find('.category-cell').length > 0;
+                const off = hasCat ? 0 : -1;
+                idr += parseRupiah($(this).find('td').eq(3 + off).text());
+                usd += parseRupiah($(this).find('td').eq(4 + off).text());
+                hpp += parseRupiah($(this).find('td').eq(5 + off).text());
+                sell += parseRupiah($(this).find('td').eq(6 + off).text());
+            });
+
+            $('#footerTotalIDR').text(formatNumber(idr));
+            $('#footerTotalUSD').text(formatNumber(usd));
+            $('#footerTotalHPP').text(formatNumber(hpp));
+            $('#footerTotalSelling').text(formatNumber(sell));
+        }
+
+        function emptyRowHtml() {
+            return `<tr class="no-items-row"><td colspan="8">
+        <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+        <p class="mb-0 fw-bold">No data available</p>
+        <small class="text-muted">Fill the form above and click "Add to Table"</small>
+    </td></tr>`;
+        }
+
+        $(document).ready(function() {
+            updateGrandTotal();
         });
     </script>
 @endpush

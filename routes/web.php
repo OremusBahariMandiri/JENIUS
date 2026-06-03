@@ -15,25 +15,19 @@ use App\Http\Controllers\Master\PortController;
 use App\Http\Controllers\Master\VesselController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+Route::get('/', fn() => redirect()->route('login'));
 
 Auth::routes();
 
-// Semua route di bawah ini memerlukan login
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-
-    // User Management Routes
+    // ── Admin ─────────────────────────────────────────────────
     Route::prefix('admin')->middleware(['auth'])->group(function () {
         Route::resource('user', UserController::class);
         Route::get('user/api/select', [UserController::class, 'getForSelect'])->name('user.api.select');
         Route::get('user/api/statistics', [UserController::class, 'statistics'])->name('user.api.statistics');
-
-        // User Access Routes
         Route::get('user/{user}/access/edit', [UserAccessController::class, 'edit'])->name('user-access.edit');
         Route::put('user/{user}/access', [UserAccessController::class, 'update'])->name('user-access.update');
         Route::post('user/{user}/access/grant-full', [UserAccessController::class, 'grantFullAccess'])->name('user-access.grant-full');
@@ -41,7 +35,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('user/{user}/access/copy', [UserAccessController::class, 'copyAccess'])->name('user-access.copy');
     });
 
-    // Customer Routes
+    // ── Master routes ─────────────────────────────────────────
     Route::prefix('master/customer')->name('customer.')->group(function () {
         Route::get('/', [CustomerController::class, 'index'])->name('index');
         Route::get('/create', [CustomerController::class, 'create'])->name('create');
@@ -53,7 +47,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/{id}/restore', [CustomerController::class, 'restore'])->name('restore');
     });
 
-    // Contract Routes
     Route::prefix('master/contract')->name('contract.')->group(function () {
         Route::get('/', [ContractController::class, 'index'])->name('index');
         Route::get('/create', [ContractController::class, 'create'])->name('create');
@@ -64,7 +57,6 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [ContractController::class, 'destroy'])->name('destroy');
     });
 
-    // Area Routes
     Route::prefix('master/area')->name('area.')->group(function () {
         Route::get('/', [AreaController::class, 'index'])->name('index');
         Route::get('/create', [AreaController::class, 'create'])->name('create');
@@ -75,7 +67,6 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [AreaController::class, 'destroy'])->name('destroy');
     });
 
-    // Invoice Routes
     Route::prefix('master/invoice')->name('invoice.')->group(function () {
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
         Route::get('/create', [InvoiceController::class, 'create'])->name('create');
@@ -86,7 +77,6 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [InvoiceController::class, 'destroy'])->name('destroy');
     });
 
-    // Master Vessel Routes
     Route::prefix('master/vessel')->name('vessel.')->group(function () {
         Route::get('/', [VesselController::class, 'index'])->name('index');
         Route::get('/create', [VesselController::class, 'create'])->name('create');
@@ -95,8 +85,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [VesselController::class, 'edit'])->name('edit');
         Route::put('/{id}', [VesselController::class, 'update'])->name('update');
         Route::delete('/{id}', [VesselController::class, 'destroy'])->name('destroy');
-
-        // API Routes
         Route::get('/api/select', [VesselController::class, 'getForSelect'])->name('api.select');
         Route::get('/api/vessel-types', [VesselController::class, 'getVesselTypes'])->name('api.vessel-types');
         Route::get('/api/flags', [VesselController::class, 'getFlags'])->name('api.flags');
@@ -104,7 +92,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/api/bulk-delete', [VesselController::class, 'bulkDelete'])->name('api.bulk-delete');
     });
 
-    // Master Port Routes
     Route::prefix('master/port')->name('port.')->group(function () {
         Route::get('/', [PortController::class, 'index'])->name('index');
         Route::get('/create', [PortController::class, 'create'])->name('create');
@@ -113,8 +100,6 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [PortController::class, 'edit'])->name('edit');
         Route::put('/{id}', [PortController::class, 'update'])->name('update');
         Route::delete('/{id}', [PortController::class, 'destroy'])->name('destroy');
-
-        // API Routes
         Route::get('/api/select', [PortController::class, 'getForSelect'])->name('api.select');
         Route::get('/api/countries', [PortController::class, 'getCountries'])->name('api.countries');
         Route::get('/api/provinces', [PortController::class, 'getProvinces'])->name('api.provinces');
@@ -122,7 +107,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/api/bulk-delete', [PortController::class, 'bulkDelete'])->name('api.bulk-delete');
     });
 
-    // Master Other Routes
     Route::prefix('master/other')->name('other.')->group(function () {
         Route::get('/', [OtherController::class, 'index'])->name('index');
         Route::get('/create', [OtherController::class, 'create'])->name('create');
@@ -131,26 +115,47 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [OtherController::class, 'edit'])->name('edit');
         Route::put('/{id}', [OtherController::class, 'update'])->name('update');
         Route::delete('/{id}', [OtherController::class, 'destroy'])->name('destroy');
-
-        // API Routes
         Route::get('/api/select', [OtherController::class, 'getForSelect'])->name('api.select');
         Route::get('/api/codes', [OtherController::class, 'getCodes'])->name('api.codes');
         Route::get('/api/statistics', [OtherController::class, 'statistics'])->name('api.statistics');
         Route::post('/api/bulk-delete', [OtherController::class, 'bulkDelete'])->name('api.bulk-delete');
     });
 
-    // JO Contract Routes
+    // ── Data routes ───────────────────────────────────────────
     Route::prefix('data')->group(function () {
-        Route::resource('jo-contract', JoContractController::class);
-        Route::resource('jo-tramper', JoTramperController::class);
+
+        // ── JO Tramper — custom routes BEFORE resource ──────────
+        Route::post('jo-tramper/header/store', [JoTramperController::class, 'storeHeader'])
+            ->name('jo-tramper.header.store');
+        Route::post('jo-tramper/header/update/{id}', [JoTramperController::class, 'updateHeader'])
+            ->name('jo-tramper.header.update');
+        Route::get('jo-tramper/item/show/{id}', [JoTramperController::class, 'showItem'])
+            ->name('jo-tramper.item.show');
+        Route::post('jo-tramper/item/store', [JoTramperController::class, 'storeItem'])
+            ->name('jo-tramper.item.store');
+        Route::put('jo-tramper/item/update/{id}', [JoTramperController::class, 'updateItem'])
+            ->name('jo-tramper.item.update');
+        Route::delete('jo-tramper/item/destroy/{id}', [JoTramperController::class, 'destroyItem'])
+            ->name('jo-tramper.item.destroy');
+        Route::get('jo-tramper/{id}/items', [JoTramperController::class, 'getItems'])
+            ->name('jo-tramper.items.get');
+        Route::post('jo-tramper/save-all/{id}', [JoTramperController::class, 'saveAllChanges'])
+            ->name('jo-tramper.save-all');
         Route::get('jo-tramper-select', [JoTramperController::class, 'getForSelect']);
         Route::post('jo-tramper-bulk-delete', [JoTramperController::class, 'bulkDelete']);
 
+        // Resource AFTER custom routes
+        Route::resource('jo-tramper', JoTramperController::class);
+
+        // ── JO Other ─────────────────────────────────────────────
         Route::resource('jo-other', JoOtherController::class);
         Route::get('jo-other-select', [JoOtherController::class, 'getForSelect']);
         Route::post('jo-other-bulk-delete', [JoOtherController::class, 'bulkDelete']);
 
-        // JO Contract Item Routes
+        // ── JO Contract ──────────────────────────────────────────
+        Route::resource('jo-contract', JoContractController::class);
+
+        // JO Contract Items
         Route::resource('jo-contract-item', JoContractItemController::class);
         Route::post('jo-contract-item/{id}/restore', [JoContractItemController::class, 'restore']);
         Route::delete('jo-contract-item/{id}/force-delete', [JoContractItemController::class, 'forceDelete']);
@@ -158,23 +163,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('jo-contract-item-bulk-restore', [JoContractItemController::class, 'bulkRestore']);
     });
 
-    // JO Contract - Realtime Auto-Save Routes
+    // ── JO Contract realtime routes ───────────────────────────
     Route::prefix('jo-contract')->name('jo-contract.')->group(function () {
-        // Header operations (Realtime auto-save)
         Route::post('/header/store', [JoContractController::class, 'storeHeader'])->name('header.store');
         Route::post('/header/update/{id}', [JoContractController::class, 'updateHeader'])->name('header.update');
-
-        // Item operations (Realtime auto-save)
         Route::get('/item/show/{id}', [JoContractController::class, 'showItem'])->name('item.show');
         Route::post('/item/store', [JoContractController::class, 'storeItem'])->name('item.store');
         Route::put('/item/update/{id}', [JoContractController::class, 'updateItem'])->name('item.update');
         Route::delete('/item/destroy/{id}', [JoContractController::class, 'destroyItem'])->name('item.destroy');
         Route::get('/{id}/items', [JoContractController::class, 'getItems'])->name('items.get');
-
-        // Save All Changes (NEW)
         Route::post('/save-all/{id}', [JoContractController::class, 'saveAllChanges'])->name('save-all');
-
-        // Additional API endpoints
         Route::get('/for-select', [JoContractController::class, 'getForSelect'])->name('for-select');
         Route::post('/bulk-delete', [JoContractController::class, 'bulkDelete'])->name('bulk-delete');
     });

@@ -11,6 +11,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet">
 
     <style>
         :root {
@@ -613,6 +616,43 @@
         .dataTables_wrapper {
             transition: all 0.3s ease;
         }
+
+        .select2-container--bootstrap-5 .select2-selection {
+            border-color: var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            min-height: 38px;
+        }
+
+        .select2-container--bootstrap-5 .select2-selection--single {
+            padding: 6px 12px;
+        }
+
+        .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+        .select2-container--bootstrap-5.select2-container--open .select2-selection {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25);
+        }
+
+        .select2-container--bootstrap-5 .select2-dropdown {
+            border-color: var(--primary-green);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .select2-container--bootstrap-5 .select2-results__option--highlighted {
+            background-color: var(--primary-green) !important;
+        }
+
+        .select2-container--bootstrap-5 .select2-search__field:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.15rem rgba(16, 185, 129, 0.2);
+        }
+
+        /* Sesuaikan lebar agar mengikuti parent */
+        .select2-container {
+            width: 100% !important;
+        }
     </style>
     @stack('styles')
 </head>
@@ -854,6 +894,7 @@
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         class SidebarManager {
             constructor() {
@@ -1098,6 +1139,27 @@
 
         function closeMobileSidebar() {
             sidebarManager?.closeMobileSidebar();
+        }
+
+        // ===== SELECT2 GLOBAL INIT =====
+        // Semua <select> dengan class "select2" akan otomatis diinisiasi
+        $(document).ready(function() {
+            initSelect2();
+        });
+
+        function initSelect2(context) {
+            const scope = context || document;
+            $(scope).find('select.select2').each(function() {
+                const placeholder = $(this).data('placeholder') || 'Select an option';
+                const allowClear = $(this).data('allow-clear') !== false; // default true
+
+                $(this).select2({
+                    theme: 'bootstrap-5',
+                    placeholder: placeholder,
+                    allowClear: allowClear,
+                    width: '100%',
+                });
+            });
         }
     </script>
     @stack('scripts')

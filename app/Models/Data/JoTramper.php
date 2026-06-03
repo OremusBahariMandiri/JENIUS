@@ -4,17 +4,15 @@ namespace App\Models\Data;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Master\Customer;
-use App\Models\Master\Port;
 
 class JoTramper extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'b03_jo_tram';
-    protected $primaryKey = 'id_jo_tram';
-    public $incrementing = true; // Auto-increment
-    protected $keyType = 'int'; // Type integer
+    protected $table      = 'b03_jo_tram';
+    protected $primaryKey = 'id_jo_tram';   // ← kolom PK yang benar
+    public $incrementing  = false;           // ← bukan auto-increment (string ID)
+    protected $keyType    = 'string';        // ← tipe string seperti "B03062600001"
 
     protected $fillable = [
         'id_jo_tram',
@@ -28,22 +26,22 @@ class JoTramper extends Model
     ];
 
     protected $casts = [
-        'date_start' => 'date',
-        'date_end' => 'date',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'date_start'  => 'date',
+        'date_end'    => 'date',
+        'created_at'  => 'datetime',
+        'updated_at'  => 'datetime',
+        'deleted_at'  => 'datetime',
     ];
 
     // Relationships
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'id_md_cust', 'id_md_cust');
+        return $this->belongsTo(\App\Models\Master\Customer::class, 'id_md_cust', 'id_md_cust');
     }
 
     public function port()
     {
-        return $this->belongsTo(Port::class, 'id_md_port', 'id_md_port');
+        return $this->belongsTo(\App\Models\Master\Port::class, 'id_md_port', 'id_md_port');
     }
 
     public function items()
