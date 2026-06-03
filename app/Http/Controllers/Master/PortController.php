@@ -7,6 +7,7 @@ use App\Models\Master\Port;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\IdGenerator;
 
 class PortController extends Controller
 {
@@ -140,8 +141,7 @@ class PortController extends Controller
         DB::beginTransaction();
         try {
             // Generate ID
-            $lastPort = Port::orderBy('id_md_port', 'desc')->first();
-            $newId = $lastPort ? $lastPort->id_md_port + 1 : 1;
+            $newId = IdGenerator::generate('A06', 'a06_md_port', 'id_md_port');
 
             $port = Port::create([
                 'id_md_port' => $newId,
