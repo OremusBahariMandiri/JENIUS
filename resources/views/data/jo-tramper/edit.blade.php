@@ -1201,7 +1201,7 @@
                     $('#input_category').val(item.invoice_ctg).trigger('change');
 
                     setTimeout(() => {
-                        $('#input_item').val(item.id_md_invoice);
+                        $('#input_item').val(item.id_md_invoice).trigger('change.select2');
 
                         const idr = parseFloat(item.pendapatan_idr) || 0;
                         const usd = parseFloat(item.pendapatan_usd) || 0;
