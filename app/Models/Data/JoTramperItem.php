@@ -11,8 +11,10 @@ class JoTramperItem extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'b04_jo_tram_item';
+    protected $table      = 'b04_jo_tram_item';
     protected $primaryKey = 'id_jo_tram_item';
+    public $incrementing  = false;       // ID bukan auto-increment
+    protected $keyType    = 'string';    // ID berupa string dari IdGenerator
 
     protected $fillable = [
         'id_jo_tram_item',
@@ -24,18 +26,19 @@ class JoTramperItem extends Model
         'tgl_kurs_usd',
         'hpp_ops',
         'hargajual_idr',
+        'note',
     ];
 
     protected $casts = [
         'pendapatan_idr' => 'decimal:2',
         'pendapatan_usd' => 'decimal:2',
-        'kurs_usd' => 'decimal:4',
+        'kurs_usd'       => 'decimal:4',
         'tgl_kurs_usd' => 'datetime',
-        'hpp_ops' => 'decimal:2',
-        'hargajual_idr' => 'decimal:2',
-        'created_at' => 'datetime',
-        'updated_at' => 'datetime',
-        'deleted_at' => 'datetime',
+        'hpp_ops'        => 'decimal:2',
+        'hargajual_idr'  => 'decimal:2',
+        'created_at'     => 'datetime',
+        'updated_at'     => 'datetime',
+        'deleted_at'     => 'datetime',
     ];
 
     protected static function boot()
@@ -45,15 +48,14 @@ class JoTramperItem extends Model
         static::creating(function ($model) {
             if (empty($model->id_jo_tram_item)) {
                 $model->id_jo_tram_item = IdGenerator::generate(
-                    'B04',                  // Kode tabel
-                    'b04_jo_tram_item',     // Nama tabel
-                    'id_jo_tram_item'       // Nama kolom
+                    'B04',
+                    'b04_jo_tram_item',
+                    'id_jo_tram_item'
                 );
             }
         });
     }
 
-    // Relationships
     public function joTramper()
     {
         return $this->belongsTo(JoTramper::class, 'id_jo_tram', 'id_jo_tram');
