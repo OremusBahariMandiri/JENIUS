@@ -1305,17 +1305,12 @@
             const kursRate = parseRupiah($('#global_kurs_usd_display').val());
             const idrValue = parseRupiah($('#input_pendapatan_idr').val());
             const usdValue = parseRupiah($('#input_pendapatan_usd').val());
-            const hppValue = parseRupiah($('#input_hpp').val());
 
             let hargaJual = 0;
-
-            // Formula: (Pendapatan IDR OR (Pendapatan USD * Kurs)) + HPP = Harga Jual
             if (idrValue > 0) {
-                hargaJual = idrValue + hppValue;
+                hargaJual = idrValue;
             } else if (usdValue > 0 && kursRate > 0) {
-                hargaJual = (usdValue * kursRate) + hppValue;
-            } else {
-                hargaJual = hppValue;
+                hargaJual = usdValue * kursRate;
             }
 
             $('#input_harga_jual').val(formatRupiah(hargaJual.toFixed(2).replace('.', ',')));

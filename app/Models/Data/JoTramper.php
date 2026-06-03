@@ -18,6 +18,7 @@ class JoTramper extends Model
         'id_jo_tram',
         'id_md_cust',
         'id_md_port',
+        'id_md_vessel',
         'date_start',
         'date_end',
         'title',
@@ -47,5 +48,10 @@ class JoTramper extends Model
     public function items()
     {
         return $this->hasMany(JoTramperItem::class, 'id_jo_tram', 'id_jo_tram');
+    }
+
+    public function vessel()
+    {
+        return $this->belongsTo(\App\Models\Master\Vessel::class, 'id_md_vessel', 'id_md_vessel');
     }
 }

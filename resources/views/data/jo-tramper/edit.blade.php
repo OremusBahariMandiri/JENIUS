@@ -477,7 +477,7 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-12 mb-3">
                                     <label class="form-label required-field">Customer</label>
                                     <select name="id_md_cust" id="id_md_cust" class="form-select select2"
                                         data-placeholder="Search Customer...">
@@ -504,6 +504,22 @@
                                                 {{ $port->name_port }}
                                                 @if ($port->no_port)
                                                     ({{ $port->no_port }})
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Vessel</label>
+                                    <select name="id_md_vessel" id="id_md_vessel" class="form-select select2"
+                                        data-placeholder="Search Vessel...">
+                                        <option value=""></option>
+                                        @foreach ($vessels as $vessel)
+                                            <option value="{{ $vessel->id_md_vessel }}"
+                                                {{ $joTramper->id_md_vessel == $vessel->id_md_vessel ? 'selected' : '' }}>
+                                                {{ $vessel->vessel_name }}
+                                                @if ($vessel->no_imo)
+                                                    (IMO: {{ $vessel->no_imo }})
                                                 @endif
                                             </option>
                                         @endforeach
@@ -931,15 +947,12 @@
             const kursRate = parseRupiah($('#global_kurs_usd_display').val());
             const idrValue = parseRupiah($('#input_pendapatan_idr').val());
             const usdValue = parseRupiah($('#input_pendapatan_usd').val());
-            const hppValue = parseRupiah($('#input_hpp').val());
 
             let hargaJual = 0;
             if (idrValue > 0) {
-                hargaJual = idrValue + hppValue;
+                hargaJual = idrValue;
             } else if (usdValue > 0 && kursRate > 0) {
-                hargaJual = (usdValue * kursRate) + hppValue;
-            } else {
-                hargaJual = hppValue;
+                hargaJual = usdValue * kursRate;
             }
 
             $('#input_harga_jual').val(formatRupiah(hargaJual.toFixed(2).replace('.', ',')));
@@ -983,10 +996,10 @@
         });
 
         // Isi note dari master saat item dipilih (hanya saat mode tambah baru)
-        $('#input_item').on('change', function() {
-            const editingItemId = $('#editing_item_id').val();
-            if (editingItemId) return; // Saat edit mode, jangan overwrite note dari DB
+        let _skipNoteUpdate = false;
 
+        $('#input_item').on('change', function() {
+            if (_skipNoteUpdate) return;
             const masterNote = $(this).find('option:selected').data('note') || '';
             $('#input_note').val(masterNote);
         });
@@ -1015,6 +1028,7 @@
                 data: {
                     id_md_cust: custId,
                     id_md_port: portId,
+                    id_md_vessel: $('#id_md_vessel').val(), // tambah ini
                     date_start: ds,
                     date_end: de,
                     title: title,
@@ -1201,6 +1215,7 @@
                     $('#input_category').val(item.invoice_ctg).trigger('change');
 
                     setTimeout(() => {
+                        _skipNoteUpdate = true;
                         $('#input_item').val(item.id_md_invoice).trigger('change.select2');
 
                         const idr = parseFloat(item.pendapatan_idr) || 0;
@@ -1226,6 +1241,8 @@
                             const dt = item.tgl_kurs_usd.substring(0, 16).replace(' ', 'T');
                             $('#global_tgl_kurs_usd').val(dt);
                         }
+
+                        _skipNoteUpdate = false;
 
                         calculateHargaJual();
                     }, 300);
@@ -1441,6 +1458,7 @@
                 data: {
                     id_md_cust: custId,
                     id_md_port: portId,
+                    id_md_vessel: $('#id_md_vessel').val(), // tambah ini
                     date_start: ds,
                     date_end: de,
                     title: title,
@@ -1470,6 +1488,7 @@
         // UTILITY FUNCTIONS
         // ========================================
         function clearItemForm() {
+            _skipNoteUpdate = false;
             $('#editing_item_id').val('');
             $('#formSectionTitle').html('<i class="fas fa-plus-square"></i> Add New Item');
             $('#addItemFormSection').removeClass('edit-mode');

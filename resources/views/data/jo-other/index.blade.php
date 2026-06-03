@@ -43,7 +43,6 @@
                                         <th>Other Type</th>
                                         <th>Port</th>
                                         <th>Date Range</th>
-                                        <th>Status</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
@@ -82,21 +81,6 @@
                                                     <br>
                                                     {{ $joOther->date_end ? $joOther->date_end->format('d M Y') : '-' }}
                                                 </small>
-                                            </td>
-                                            <td>
-                                                @if ($joOther->sts_proses)
-                                                    @if ($joOther->sts_proses == 'Draft')
-                                                        <span class="badge bg-secondary">{{ $joOther->sts_proses }}</span>
-                                                    @elseif ($joOther->sts_proses == 'On Progress')
-                                                        <span class="badge bg-warning text-dark">{{ $joOther->sts_proses }}</span>
-                                                    @elseif ($joOther->sts_proses == 'Completed')
-                                                        <span class="badge bg-success">{{ $joOther->sts_proses }}</span>
-                                                    @else
-                                                        <span class="badge bg-primary">{{ $joOther->sts_proses }}</span>
-                                                    @endif
-                                                @else
-                                                    <span class="badge bg-secondary">Draft</span>
-                                                @endif
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center">

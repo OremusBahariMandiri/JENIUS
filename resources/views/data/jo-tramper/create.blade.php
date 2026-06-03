@@ -456,7 +456,7 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-12 mb-3">
                                     <label class="form-label required-field">Customer</label>
                                     <select name="id_md_cust" id="id_md_cust"
                                         class="form-select select2 @error('id_md_cust') is-invalid @enderror"
@@ -498,6 +498,23 @@
                                         <div class="invalid-feedback"><i
                                                 class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
+                                </div>
+
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Vessel</label>
+                                    <select name="id_md_vessel" id="id_md_vessel" class="form-select select2"
+                                        data-placeholder="Search Vessel...">
+                                        <option value=""></option>
+                                        @foreach ($vessels as $vessel)
+                                            <option value="{{ $vessel->id_md_vessel }}"
+                                                {{ old('id_md_vessel') == $vessel->id_md_vessel ? 'selected' : '' }}>
+                                                {{ $vessel->vessel_name }}
+                                                @if ($vessel->no_imo)
+                                                    (IMO: {{ $vessel->no_imo }})
+                                                @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
                                 </div>
                             </div>
 
@@ -902,6 +919,7 @@
             const formData = {
                 id_md_cust: custId,
                 id_md_port: portId,
+                id_md_vessel: $('#id_md_vessel').val(), // tambah ini
                 date_start: dateStart,
                 date_end: dateEnd,
                 title: title,

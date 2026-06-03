@@ -9,11 +9,19 @@
             <div class="card shadow">
                 <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
                     <span class="fw-bold"><i class="fas fa-users me-2"></i>Data Customer</span>
-                    @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('customer', 'tambah')))
-                    <a href="{{ route('customer.create') }}" class="btn btn-light">
-                        <i class="fas fa-plus-circle me-1"></i> Add
-                    </a>
-                    @endif
+                    <div>
+                        <button type="button" class="btn btn-light me-2" id="filterButton">
+                            <i class="fas fa-filter me-1"></i> Filter
+                        </button>
+                        <button type="button" class="btn btn-light me-2" id="exportButton">
+                            <i class="fas fa-download me-1"></i> Export
+                        </button>
+                        @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('customer', 'tambah')))
+                        <a href="{{ route('customer.create') }}" class="btn btn-light">
+                            <i class="fas fa-plus-circle me-1"></i> Add
+                        </a>
+                        @endif
+                    </div>
                 </div>
 
                 <div class="card-body">
@@ -28,6 +36,20 @@
                     <div class="alert alert-danger alert-dismissible fade show" role="alert">
                         <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    @endif
+
+                    {{-- Active Filter Display --}}
+                    @if(!empty($currentFilters['search']))
+                    <div class="alert alert-info" role="alert" id="filterActiveAlert">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Filter Aktif:</strong>
+                        @if(!empty($currentFilters['search']))
+                            Pencarian: <span class="badge bg-primary">{{ $currentFilters['search'] }}</span>
+                        @endif
+                        <a href="{{ route('customer.index') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                            <i class="fas fa-times me-1"></i> Reset Filter
+                        </a>
                     </div>
                     @endif
 
@@ -48,7 +70,12 @@
                                 @foreach($customers as $index => $customer)
                                 <tr>
                                     <td>{{ $customers->firstItem() + $index }}</td>
-                                    <td>{{ $customer->customer }}
+                                    <td>
+                                        @if(!empty($currentFilters['search']))
+                                            {!! str_ireplace($currentFilters['search'], '<mark>' . e($currentFilters['search']) . '</mark>', e($customer->customer)) !!}
+                                        @else
+                                            {{ $customer->customer }}
+                                        @endif
                                     </td>
                                     <td>{{ $customer->email ?? '-' }}</td>
                                     <td>{{ $customer->phone ?? '-' }}</td>
@@ -92,7 +119,95 @@
                             </tbody>
                         </table>
                     </div>
+
+                    {{-- Laravel Pagination --}}
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div class="text-muted small">
+                            Showing {{ $customers->firstItem() ?? 0 }} to {{ $customers->lastItem() ?? 0 }} of {{ $customers->total() }} entries
+                        </div>
+                        <div>
+                            {{ $customers->appends(request()->query())->links() }}
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ===================== FILTER MODAL ===================== --}}
+<div class="modal fade" id="filterModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header text-black" style="background-color: #d1fae5">
+                <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filter Data Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="filterForm" method="GET" action="{{ route('customer.index') }}">
+                    <div class="row mb-3">
+                        {{-- Search --}}
+                        <div class="col-md-12 mb-3">
+                            <label for="filter_search" class="form-label fw-bold">Cari Customer</label>
+                            <input type="text" class="form-control" id="filter_search" name="search"
+                                placeholder="Nama, kode, email, telepon, NPWP, alamat..."
+                                value="{{ $currentFilters['search'] ?? '' }}">
+                            <small class="text-muted">Cari berdasarkan nama, kode, email, telepon, NPWP, atau alamat.</small>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-secondary" id="resetFilter">
+                            <i class="fas fa-redo me-1"></i> Reset
+                        </button>
+                        <button type="button" class="btn btn-success" id="applyFilter">
+                            <i class="fas fa-search me-1"></i> Terapkan Filter
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{-- ===================== EXPORT MODAL ===================== --}}
+<div class="modal fade" id="exportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header text-black" style="background-color: #d1fae5">
+                <h5 class="modal-title"><i class="fas fa-download me-2"></i>Export Data Customer</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Pilih format export yang diinginkan:</p>
+                @if(!empty($currentFilters['search']))
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <small>Export akan menggunakan filter aktif: <strong>{{ $currentFilters['search'] }}</strong></small>
+                </div>
+                @else
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-1"></i>
+                    <small>Export akan mengekspor <strong>semua data customer</strong> (tidak ada filter aktif).</small>
+                </div>
+                @endif
+                @php
+                    $exportBase   = route('customer.export');
+                    $exportParams = array_merge(request()->only(['search']), []);
+                    $excelUrl     = $exportBase . '?' . http_build_query(array_merge($exportParams, ['format' => 'excel']));
+                    $pdfUrl       = $exportBase . '?' . http_build_query(array_merge($exportParams, ['format' => 'pdf']));
+                @endphp
+                <div class="d-grid gap-2">
+                    <a href="{{ $excelUrl }}" class="btn btn-outline-success">
+                        <i class="fas fa-file-excel me-2"></i> Export ke Excel (.xlsx)
+                    </a>
+                    <a href="{{ $pdfUrl }}" class="btn btn-outline-danger">
+                        <i class="fas fa-file-pdf me-2"></i> Export ke PDF
+                    </a>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
@@ -105,117 +220,81 @@
 @endsection
 
 @push('styles')
-<!-- DataTables CSS -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
 <style>
-    /* Custom styling untuk Customer Page */
     .customerPage .card {
         border: none;
         border-radius: 10px;
     }
-
     .customerPage .card-header {
         border-radius: 10px 10px 0 0 !important;
         padding: 1rem 1.5rem;
     }
-
-    /* DataTables styling */
-    .customerPage .dataTables_wrapper {
-        width: 100%;
-        transition: all 0.3s ease;
-    }
-
-    .customerPage .dataTables_wrapper .dataTables_length,
-    .customerPage .dataTables_wrapper .dataTables_filter {
+    .customerPage .dataTables_wrapper .dataTables_filter,
+    .customerPage .dataTables_wrapper .dataTables_length {
         margin-bottom: 1rem !important;
     }
-
     .customerPage .dataTables_wrapper .dataTables_filter {
         text-align: right !important;
     }
-
     .customerPage .dataTables_wrapper .dataTables_filter input {
         margin-left: 5px !important;
         border-radius: 4px !important;
         border: 1px solid #ced4da !important;
         padding: 0.375rem 0.75rem !important;
     }
-
     .customerPage .dataTables_wrapper .dataTables_length select {
         border-radius: 4px !important;
         border: 1px solid #ced4da !important;
         padding: 0.375rem 2rem 0.375rem 0.75rem !important;
     }
-
-    /* Table styling */
-    .customerPage #customerTable {
-        width: 100% !important;
-        transition: all 0.3s ease;
-    }
-
-    .customerPage #customerTable tbody tr {
-        transition: all 0.2s ease;
-    }
-
     .customerPage #customerTable tbody tr:hover {
         background-color: #f8f9fa;
         cursor: pointer;
     }
-
     .customerPage .btn-sm {
         transition: transform 0.2s;
     }
-
     .customerPage .btn-sm:hover {
         transform: scale(1.1);
     }
-
-    /* Pagination styling */
-    .customerPage .dataTables_wrapper .dataTables_paginate .paginate_button {
-        padding: 0.375rem 0.75rem !important;
-        margin: 0 2px !important;
-        border-radius: 4px !important;
-    }
-
     .customerPage .dataTables_wrapper .dataTables_paginate .paginate_button.current {
-        background: var(--primary-green) !important;
+        background: #10b981 !important;
         color: white !important;
-        border: 1px solid var(--primary-green) !important;
+        border: 1px solid #10b981 !important;
     }
-
     .customerPage .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-        background: var(--primary-green) !important;
+        background: #10b981 !important;
         color: white !important;
-        border: 1px solid var(--primary-green) !important;
+        border: 1px solid #10b981 !important;
     }
-
-    /* Responsive table container */
     .customerPage .table-responsive {
         width: 100%;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
     }
+    #filterActiveAlert {
+        display: block !important;
+    }
 </style>
 @endpush
 
 @push('scripts')
-<!-- DataTables JS -->
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
 <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
 $(document).ready(function() {
-    // Destroy existing DataTable if exists
+    // ===== DATATABLE =====
     if ($.fn.DataTable.isDataTable('#customerTable')) {
         $('#customerTable').DataTable().destroy();
     }
 
-    // Initialize DataTable
     var table = $('#customerTable').DataTable({
         responsive: true,
         pageLength: 10,
@@ -227,34 +306,24 @@ $(document).ready(function() {
         ],
         language: {
             search: "Search:",
-            lengthMenu: "Show _MENU_ entries per page",
+            lengthMenu: "Show _MENU_ entries",
             info: "Showing _START_ to _END_ of _TOTAL_ entries",
             infoEmpty: "Showing 0 to 0 of 0 entries",
             infoFiltered: "(filtered from _MAX_ total entries)",
-            paginate: {
-                first: "First",
-                last: "Last",
-                next: "Next",
-                previous: "Previous"
-            }
+            paginate: { first: "First", last: "Last", next: "Next", previous: "Previous" }
         },
         autoWidth: true,
         drawCallback: function(settings) {
-        var api = this.api();
-        var pageInfo = api.page.info();
-        var startIndex = pageInfo.start;
-
-        // Update nomor urut pada kolom pertama
-        api.column(0, {page: 'current'}).nodes().each(function(cell, i) {
-            cell.innerHTML = startIndex + i + 1;
-        });
-
-        // Adjust columns
-        api.columns.adjust();
-    }
+            var api = this.api();
+            var pageInfo = api.page.info();
+            var startIndex = pageInfo.start;
+            api.column(0, {page: 'current'}).nodes().each(function(cell, i) {
+                cell.innerHTML = startIndex + i + 1;
+            });
+            api.columns.adjust();
+        }
     });
 
-    // Re-adjust columns when sidebar toggles
     let resizeTimer;
     $(window).on('resize', function() {
         clearTimeout(resizeTimer);
@@ -265,34 +334,44 @@ $(document).ready(function() {
         }, 300);
     });
 
-    setTimeout(function() {
-        if ($.fn.DataTable.isDataTable('#customerTable')) {
-            $('#customerTable').DataTable().columns.adjust().responsive.recalc();
-        }
-    }, 100);
-
-    // Initialize tooltips
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    // ===== FILTER BUTTON =====
+    $('#filterButton').click(function() {
+        $('#filterModal').modal('show');
     });
 
-    // Handle delete with SweetAlert2
+    // ===== APPLY FILTER =====
+    $('#applyFilter').click(function() {
+        $('#filterForm').submit();
+    });
+
+    // ===== RESET FILTER =====
+    $('#resetFilter').click(function() {
+        $('#filter_search').val('');
+    });
+
+    // ===== EXPORT BUTTON =====
+    $('#exportButton').click(function() {
+        $('#exportModal').modal('show');
+    });
+
+    // ===== TOOLTIPS =====
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(el) { return new bootstrap.Tooltip(el); });
+
+    // ===== DELETE =====
     $(document).on('click', '.btn-delete', function(e) {
         e.stopPropagation();
-
         const name = $(this).data('name');
         const url = $(this).data('url');
-
         Swal.fire({
             title: 'Delete Customer?',
-            html: `Customer <strong>${name}</strong> will be permanently deleted.`,
+            html: `Customer <strong>${name}</strong> akan dihapus.`,
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
-            cancelButtonText: 'Cancel',
+            confirmButtonText: '<i class="fas fa-trash me-1"></i> Ya, Hapus!',
+            cancelButtonText: 'Batal',
             focusCancel: true,
         }).then((result) => {
             if (result.isConfirmed) {
@@ -301,23 +380,15 @@ $(document).ready(function() {
         });
     });
 
-    // Click row to view detail (optional)
+    // ===== CLICK ROW TO DETAIL =====
     $('#customerTable tbody').on('click', 'tr', function(e) {
-        if ($(e.target).is('button') || $(e.target).is('a') || $(e.target).is('i') ||
-            $(e.target).closest('button').length || $(e.target).closest('a').length) {
-            return;
-        }
-
+        if ($(e.target).is('button,a,i') || $(e.target).closest('button,a').length) return;
         var detailLink = $(this).find('a[title="Detail"]').attr('href');
-        if (detailLink) {
-            window.location.href = detailLink;
-        }
+        if (detailLink) window.location.href = detailLink;
     });
 
-    // Auto-hide alerts after 5 seconds
-    setTimeout(function() {
-        $(".alert").fadeOut("slow");
-    }, 5000);
+    // ===== AUTO-HIDE ALERTS =====
+    setTimeout(function() { $(".alert-success, .alert-danger").fadeOut("slow"); }, 5000);
 });
 </script>
 @endpush

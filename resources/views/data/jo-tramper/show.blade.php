@@ -254,7 +254,8 @@
             <div class="col-lg-12">
                 <!-- Page Header Card -->
                 <div class="card shadow mb-4">
-                    <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
+                    <div class="card-header text-black d-flex justify-content-between align-items-center"
+                        style="background-color: #d1fae5">
                         <span class="fw-bold"><i class="fas fa-ship me-2"></i>JO Tramper Detail</span>
                         <div class="d-flex gap-2">
                             <a href="{{ route('jo-tramper.edit', $joTramper->id_jo_tram) }}" class="btn btn-warning btn-sm">
@@ -283,75 +284,106 @@
 
                         <hr>
 
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">JO Tramper ID</span>
-                                <span class="info-value">
-                                    <span class="badge bg-secondary fs-6 px-3 py-2">JOT-{{ $joTramper->id_jo_tram }}</span>
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Customer</span>
-                                <span class="info-value">
-                                    <strong>{{ $joTramper->customer->customer }}</strong>
-                                    @if ($joTramper->customer->no_customer)
-                                        <br><small class="text-muted">({{ $joTramper->customer->no_customer }})</small>
-                                    @endif
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Port</span>
-                                <span class="info-value">
-                                    <span class="badge bg-info text-dark fs-6">{{ $joTramper->port->name_port }}</span>
-                                    @if ($joTramper->port->no_port)
-                                        <br><small class="text-muted">({{ $joTramper->port->no_port }})</small>
-                                    @endif
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Period</span>
-                                <span class="info-value">
-                                    <span class="period-badge">
-                                        <i class="fas fa-calendar-alt"></i>
-                                        {{ $joTramper->date_start ? $joTramper->date_start->format('d M Y') : '-' }}
-                                        <i class="fas fa-arrow-right"></i>
-                                        {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}
-                                    </span>
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Status</span>
-                                <span class="info-value">
-                                    @if ($joTramper->sts_proses == 'Draft')
-                                        <span class="badge bg-secondary fs-6 px-3 py-2">Draft</span>
-                                    @elseif ($joTramper->sts_proses == 'Approved')
-                                        <span class="badge bg-success fs-6 px-3 py-2">Approved</span>
-                                    @elseif ($joTramper->sts_proses == 'Pending')
-                                        <span class="badge bg-warning text-dark fs-6 px-3 py-2">Pending</span>
-                                    @else
-                                        <span class="badge bg-info fs-6 px-3 py-2">{{ $joTramper->sts_proses }}</span>
-                                    @endif
-                                </span>
-                            </div>
-                            @if ($joTramper->note)
-                                <div class="info-row">
-                                    <span class="info-label">Note</span>
-                                    <span class="info-value">{{ $joTramper->note }}</span>
+                        <div class="row">
+                            <!-- Kolom Kiri -->
+                            <div class="col-md-6">
+                                <div class="info-card">
+                                    <div class="info-row">
+                                        <span class="info-label"><i class="fas fa-hashtag me-2 text-secondary"></i>JO
+                                            Tramper ID</span>
+                                        <span class="info-value">
+                                            <span
+                                                class="badge bg-secondary fs-6 px-3 py-2">JOT-{{ $joTramper->id_jo_tram }}</span>
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label"><i
+                                                class="fas fa-user me-2 text-primary"></i>Customer</span>
+                                        <span class="info-value">
+                                            <strong>{{ $joTramper->customer->customer ?? '-' }}</strong>
+                                            @if ($joTramper->customer?->no_customer)
+                                                <br><small
+                                                    class="text-muted">({{ $joTramper->customer->no_customer }})</small>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label"><i class="fas fa-anchor me-2 text-info"></i>Port</span>
+                                        <span class="info-value">
+                                            <span
+                                                class="badge bg-info text-dark fs-6">{{ $joTramper->port->name_port ?? '-' }}</span>
+                                            @if ($joTramper->port?->no_port)
+                                                <br><small class="text-muted">({{ $joTramper->port->no_port }})</small>
+                                            @endif
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label"><i class="fas fa-ship me-2 text-success"></i>Vessel</span>
+                                        <span class="info-value">
+                                            @if ($joTramper->vessel)
+                                                <strong>{{ $joTramper->vessel->vessel_name }}</strong>
+                                                @if ($joTramper->vessel->no_imo)
+                                                    <br><small class="text-muted">IMO:
+                                                        {{ $joTramper->vessel->no_imo }}</small>
+                                                @endif
+                                            @else
+                                                <span class="text-muted fst-italic">— Not specified —</span>
+                                            @endif
+                                        </span>
+                                    </div>
                                 </div>
-                            @endif
-                            <div class="info-row">
-                                <span class="info-label">Created At</span>
-                                <span class="info-value">
-                                    <i class="fas fa-calendar-plus me-1 text-primary"></i>
-                                    {{ $joTramper->created_at->format('d M Y H:i') }}
-                                </span>
                             </div>
-                            <div class="info-row">
-                                <span class="info-label">Last Updated</span>
-                                <span class="info-value">
-                                    <i class="fas fa-calendar-check me-1 text-success"></i>
-                                    {{ $joTramper->updated_at->format('d M Y H:i') }}
-                                </span>
+
+                            <!-- Kolom Kanan -->
+                            <div class="col-md-6">
+                                <div class="info-card">
+                                    <div class="info-row">
+                                        <span class="info-label"><i
+                                                class="fas fa-calendar-alt me-2 text-primary"></i>Period</span>
+                                        <span class="info-value">
+                                            <span class="period-badge">
+                                                <i class="fas fa-calendar-day"></i>
+                                                {{ $joTramper->date_start?->format('d M Y') ?? '-' }}
+                                                <i class="fas fa-arrow-right mx-1"></i>
+                                                {{ $joTramper->date_end?->format('d M Y') ?? '-' }}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label"><i class="fas fa-tag me-2 text-warning"></i>Status</span>
+                                        <span class="info-value">
+                                            @php
+                                                $statusMap = [
+                                                    'Draft' => 'bg-secondary',
+                                                    'Approved' => 'bg-success',
+                                                    'Pending' => 'bg-warning text-dark',
+                                                ];
+                                                $badgeClass = $statusMap[$joTramper->sts_proses] ?? 'bg-info';
+                                            @endphp
+                                            <span class="badge {{ $badgeClass }} fs-6 px-3 py-2">
+                                                {{ $joTramper->sts_proses ?? 'Draft' }}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label"><i
+                                                class="fas fa-calendar-plus me-2 text-primary"></i>Created At</span>
+                                        <span class="info-value">{{ $joTramper->created_at->format('d M Y, H:i') }}</span>
+                                    </div>
+                                    <div class="info-row">
+                                        <span class="info-label"><i class="fas fa-calendar-check me-2 text-success"></i>Last
+                                            Updated</span>
+                                        <span class="info-value">{{ $joTramper->updated_at->format('d M Y, H:i') }}</span>
+                                    </div>
+                                    @if ($joTramper->note)
+                                        <div class="info-row">
+                                            <span class="info-label"><i
+                                                    class="fas fa-sticky-note me-2 text-warning"></i>Note</span>
+                                            <span class="info-value"
+                                                style="max-width: 300px; word-wrap: break-word; white-space: pre-line;">{{ $joTramper->note }}</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -369,7 +401,7 @@
                                 @php
                                     $firstItem = $joTramper->items->first();
                                 @endphp
-                                @if($firstItem)
+                                @if ($firstItem)
                                     <div>
                                         <label class="form-label mb-1">Kurs Date</label>
                                         <input type="text" class="form-control form-control-sm"
@@ -427,7 +459,8 @@
                                                     <td class="category-cell" rowspan="{{ count($items) }}">
                                                         <div class="category-content">
                                                             <span class="category-name">{{ $category }}</span>
-                                                            <span class="category-count">{{ count($items) }} item{{ count($items) > 1 ? 's' : '' }}</span>
+                                                            <span class="category-count">{{ count($items) }}
+                                                                item{{ count($items) > 1 ? 's' : '' }}</span>
                                                         </div>
                                                     </td>
                                                 @endif
@@ -438,25 +471,29 @@
                                                 <td>
                                                     <div class="currency-group">
                                                         <span class="currency-label">IDR</span>
-                                                        <span class="currency-value">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
+                                                        <span
+                                                            class="currency-value">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="currency-group">
                                                         <span class="currency-label">USD</span>
-                                                        <span class="currency-value">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
+                                                        <span
+                                                            class="currency-value">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="currency-group">
                                                         <span class="currency-label">IDR</span>
-                                                        <span class="currency-value">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
+                                                        <span
+                                                            class="currency-value">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="currency-group">
                                                         <span class="currency-label">IDR</span>
-                                                        <span class="currency-value">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
+                                                        <span
+                                                            class="currency-value">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -518,29 +555,29 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script>
-    function confirmDelete() {
-        Swal.fire({
-            title: 'Delete JO Tramper?',
-            html: `JO Tramper <strong>{{ $joTramper->title }}</strong> will be permanently deleted.<br><small class="text-muted">This action cannot be undone.</small>`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
-            cancelButtonText: 'Cancel',
-            focusCancel: true,
-            customClass: {
-                confirmButton: 'btn btn-danger',
-                cancelButton: 'btn btn-secondary'
-            },
-            buttonsStyling: false
-        }).then((result) => {
-            if (result.isConfirmed) {
-                document.getElementById('deleteForm').submit();
-            }
-        });
-    }
-</script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        function confirmDelete() {
+            Swal.fire({
+                title: 'Delete JO Tramper?',
+                html: `JO Tramper <strong>{{ $joTramper->title }}</strong> will be permanently deleted.<br><small class="text-muted">This action cannot be undone.</small>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
+                cancelButtonText: 'Cancel',
+                focusCancel: true,
+                customClass: {
+                    confirmButton: 'btn btn-danger',
+                    cancelButton: 'btn btn-secondary'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteForm').submit();
+                }
+            });
+        }
+    </script>
 @endpush

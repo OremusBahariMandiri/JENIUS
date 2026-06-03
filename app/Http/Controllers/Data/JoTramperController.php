@@ -9,6 +9,7 @@ use App\Models\Master\Customer;
 use App\Models\Master\Port;
 use App\Models\Master\Invoice;
 use App\Helpers\IdGenerator;
+use App\Models\Master\Vessel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -93,8 +94,9 @@ class JoTramperController extends Controller
         $customers = Customer::orderBy('customer')->get();
         $ports     = Port::orderBy('name_port')->get();
         $invoices  = Invoice::orderBy('id')->get();
+        $vessels = Vessel::orderBy('vessel_name')->get();
 
-        return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices'));
+        return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices', 'vessels'));
     }
 
     // =========================================================================
@@ -112,6 +114,7 @@ class JoTramperController extends Controller
             $validator = Validator::make($request->all(), [
                 'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
                 'id_md_port' => 'required|exists:a06_md_port,id_md_port',
+                'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
                 'date_start' => 'required|date',
                 'date_end'   => 'required|date|after_or_equal:date_start',
                 'title'      => 'required|string|max:255',
@@ -143,6 +146,7 @@ class JoTramperController extends Controller
                 'id_jo_tram' => $newJoTramId,
                 'id_md_cust' => $request->id_md_cust,
                 'id_md_port' => $request->id_md_port,
+                'id_md_vessel' => $request->id_md_vessel,
                 'date_start' => $request->date_start,
                 'date_end'   => $request->date_end,
                 'title'      => $request->title,
@@ -163,6 +167,7 @@ class JoTramperController extends Controller
                     'id'         => $newJoTramId,
                     'id_md_cust' => $request->id_md_cust,
                     'id_md_port' => $request->id_md_port,
+                    'id_md_vessel' => $request->id_md_vessel,
                     'date_start' => $request->date_start,
                     'date_end'   => $request->date_end,
                     'title'      => $request->title,
@@ -187,6 +192,7 @@ class JoTramperController extends Controller
             $validator = Validator::make($request->all(), [
                 'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
                 'id_md_port' => 'required|exists:a06_md_port,id_md_port',
+                'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
                 'date_start' => 'required|date',
                 'date_end'   => 'required|date|after_or_equal:date_start',
                 'title'      => 'required|string|max:255',
@@ -204,6 +210,7 @@ class JoTramperController extends Controller
             $joTramper->update([
                 'id_md_cust' => $request->id_md_cust,
                 'id_md_port' => $request->id_md_port,
+                'id_md_vessel' => $request->id_md_vessel,
                 'date_start' => $request->date_start,
                 'date_end'   => $request->date_end,
                 'title'      => $request->title,
@@ -237,6 +244,7 @@ class JoTramperController extends Controller
             $rules = [
                 'id_jo_tram'    => 'required|exists:b03_jo_tram,id_jo_tram',
                 'id_md_invoice' => 'required|exists:a04_md_invoice,id_md_invoice',
+                'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
                 'invoice_ctg'   => 'required|string',
                 'pendapatan_idr' => 'nullable|numeric|min:0',
                 'pendapatan_usd' => 'nullable|numeric|min:0',
@@ -266,12 +274,13 @@ class JoTramperController extends Controller
             $hppOps        = $request->hpp_ops ?? 0;
 
             $hargajualIDR = $pendapatanIDR > 0
-                ? $pendapatanIDR + $hppOps
-                : ($pendapatanUSD * $kursUSD) + $hppOps;
+                ? $pendapatanIDR
+                : ($pendapatanUSD * $kursUSD);
 
             $item = JoTramperItem::create([
                 'id_jo_tram'     => $request->id_jo_tram,
                 'id_md_invoice'  => $request->id_md_invoice,
+                'id_md_vessel' => $request->id_md_vessel,
                 'pendapatan_idr' => $pendapatanIDR,
                 'pendapatan_usd' => $pendapatanUSD,
                 'kurs_usd'       => $kursUSD,
@@ -494,6 +503,7 @@ class JoTramperController extends Controller
             $validator = Validator::make($request->all(), [
                 'id_md_cust'         => 'required|exists:a01_md_customer,id_md_cust',
                 'id_md_port'         => 'required|exists:a06_md_port,id_md_port',
+                'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
                 'date_start'         => 'required|date',
                 'date_end'           => 'required|date|after_or_equal:date_start',
                 'title'              => 'required|string|max:255',
@@ -513,6 +523,7 @@ class JoTramperController extends Controller
             $joTramper->update([
                 'id_md_cust' => $request->id_md_cust,
                 'id_md_port' => $request->id_md_port,
+                'id_md_vessel' => $request->id_md_vessel,
                 'date_start' => $request->date_start,
                 'date_end'   => $request->date_end,
                 'title'      => $request->title,
@@ -526,7 +537,7 @@ class JoTramperController extends Controller
 
             foreach ($items as $item) {
                 if ($item->pendapatan_usd > 0 && $globalKursUsd) {
-                    $hargajualIDR = ($item->pendapatan_usd * $globalKursUsd) + $item->hpp_ops;
+                    $hargajualIDR = $item->pendapatan_usd * $globalKursUsd;
                     $item->update([
                         'kurs_usd'     => $globalKursUsd,
                         'tgl_kurs_usd' => $globalTglKursUsd,
@@ -642,7 +653,7 @@ class JoTramperController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $joTramper = JoTramper::with(['customer', 'port', 'items.invoice'])
+            $joTramper = JoTramper::with(['customer', 'port', 'vessel', 'items.invoice'])
                 ->where('id_jo_tram', (string) $id)->firstOrFail();
 
             $summary = [
@@ -686,12 +697,13 @@ class JoTramperController extends Controller
             $customers = Customer::orderBy('customer')->get();
             $ports     = Port::orderBy('name_port')->get();
             $invoices  = Invoice::orderBy('id')->get();
+            $vessels = Vessel::orderBy('vessel_name')->get();
 
             if (!view()->exists('data.jo-tramper.edit')) {
                 return back()->with('error', 'View file not found: data.jo-tramper.edit');
             }
 
-            return view('data.jo-tramper.edit', compact('joTramper', 'customers', 'ports', 'invoices'));
+            return view('data.jo-tramper.edit', compact('joTramper', 'customers', 'ports', 'invoices', 'vessels'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return back()->with('error', 'JO Tramper not found in database');
         } catch (\Exception $e) {

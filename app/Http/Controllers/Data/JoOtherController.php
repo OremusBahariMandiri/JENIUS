@@ -9,10 +9,12 @@ use App\Models\Master\Customer;
 use App\Models\Master\Other;
 use App\Models\Master\Port;
 use App\Models\Master\Invoice;
+use App\Models\Master\Vessel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Helpers\IdGenerator;
 
 class JoOtherController extends Controller
 {
@@ -116,11 +118,12 @@ class JoOtherController extends Controller
     public function create()
     {
         $customers = Customer::orderBy('customer')->get();
-        $others = Other::orderBy('other')->get();
-        $ports = Port::orderBy('name_port')->get();
-        $invoices = Invoice::orderBy('id')->get();
+        $others    = Other::orderBy('other')->get();
+        $ports     = Port::orderBy('name_port')->get();
+        $invoices  = Invoice::orderBy('id')->get();
+        $vessels   = Vessel::orderBy('vessel_name')->get();
 
-        return view('data.jo-other.create', compact('customers', 'others', 'ports', 'invoices'));
+        return view('data.jo-other.create', compact('customers', 'others', 'ports', 'invoices', 'vessels'));
     }
 
     /**
@@ -444,20 +447,11 @@ class JoOtherController extends Controller
             ]);
 
             Log::info('Loading related data (customers, others, ports, invoices)');
-
             $customers = Customer::orderBy('customer')->get();
-
-            Log::info('Customers loaded', ['count' => $customers->count()]);
-
-            $others = Other::orderBy('other')->get();
-
-            Log::info('Others loaded', ['count' => $others->count()]);
-
-            $ports = Port::orderBy('name_port')->get();
-
-            Log::info('Ports loaded', ['count' => $ports->count()]);
-
-            $invoices = Invoice::orderBy('id')->get();
+            $others    = Other::orderBy('other')->get();
+            $ports     = Port::orderBy('name_port')->get();
+            $invoices  = Invoice::orderBy('id')->get();
+            $vessels   = Vessel::orderBy('vessel_name')->get();
 
             Log::info('Invoices loaded', ['count' => $invoices->count()]);
 
@@ -474,8 +468,7 @@ class JoOtherController extends Controller
             }
 
             Log::info('View exists, rendering...');
-
-            return view('data.jo-other.edit', compact('joOther', 'customers', 'others', 'ports', 'invoices'));
+            return view('data.jo-other.edit', compact('joOther', 'customers', 'others', 'ports', 'invoices', 'vessels'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('JO Other NOT FOUND in database', [
                 'id' => $id,
@@ -827,6 +820,359 @@ class JoOtherController extends Controller
                 'success' => false,
                 'message' => 'Error deleting JO Others: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    // Tambah storeHeader()
+    public function storeHeader(Request $request)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'id_md_cust'   => 'required|exists:a01_md_customer,id_md_cust',
+                'id_md_other'  => 'required|exists:a07_md_other,id_md_other',
+                'id_md_port'   => 'required|exists:a06_md_port,id_md_port',
+                'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
+                'date_start'   => 'required|date',
+                'date_end'     => 'required|date|after_or_equal:date_start',
+                'title'        => 'required|string|max:255',
+                'note'         => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $newId = IdGenerator::generate('B05', 'b05_jo_other', 'id_jo_other');
+
+            $joOther = JoOther::create([
+                'id_jo_other'  => $newId,
+                'id_md_cust'   => $request->id_md_cust,
+                'id_md_other'  => $request->id_md_other,
+                'id_md_port'   => $request->id_md_port,
+                'id_md_vessel' => $request->id_md_vessel,
+                'date_start'   => $request->date_start,
+                'date_end'     => $request->date_end,
+                'title'        => $request->title,
+                'note'         => $request->note,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success'      => true,
+                'message'      => 'JO Other header saved successfully',
+                'redirect_url' => route('jo-other.edit', $newId),
+                'data'         => ['id' => $newId]
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Tambah updateHeader()
+    public function updateHeader(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'id_md_cust'   => 'required|exists:a01_md_customer,id_md_cust',
+                'id_md_other'  => 'required|exists:a07_md_other,id_md_other',
+                'id_md_port'   => 'required|exists:a06_md_port,id_md_port',
+                'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
+                'date_start'   => 'required|date',
+                'date_end'     => 'required|date|after_or_equal:date_start',
+                'title'        => 'required|string|max:255',
+                'note'         => 'nullable|string',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $joOther = JoOther::findOrFail($id);
+            $joOther->update([
+                'id_md_cust'   => $request->id_md_cust,
+                'id_md_other'  => $request->id_md_other,
+                'id_md_port'   => $request->id_md_port,
+                'id_md_vessel' => $request->id_md_vessel,
+                'date_start'   => $request->date_start,
+                'date_end'     => $request->date_end,
+                'title'        => $request->title,
+                'note'         => $request->note,
+            ]);
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Header updated successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Tambah storeItem()
+    public function storeItem(Request $request)
+    {
+        try {
+            $rules = [
+                'id_jo_other'    => 'required|exists:b05_jo_other,id_jo_other',
+                'id_md_invoice'  => 'required|exists:a04_md_invoice,id_md_invoice',
+                'invoice_ctg'    => 'required|string',
+                'pendapatan_idr' => 'nullable|numeric|min:0',
+                'pendapatan_usd' => 'nullable|numeric|min:0',
+                'hpp_ops'        => 'nullable|numeric|min:0',
+                'note'           => 'nullable|string',
+            ];
+
+            if ($request->pendapatan_usd && $request->pendapatan_usd > 0) {
+                $rules['kurs_usd']     = 'required|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'required|date';
+            } else {
+                $rules['kurs_usd']     = 'nullable|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'nullable|date';
+            }
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $pendapatanIDR = $request->pendapatan_idr ?? 0;
+            $pendapatanUSD = $request->pendapatan_usd ?? 0;
+            $kursUSD       = $request->kurs_usd ?? 0;
+            $hppOps        = $request->hpp_ops ?? 0;
+
+            $hargajualIDR = $pendapatanIDR > 0
+                ? $pendapatanIDR
+                : ($pendapatanUSD * $kursUSD);
+
+            $item = JoOtherItem::create([
+                'id_jo_other'    => $request->id_jo_other,
+                'id_md_invoice'  => $request->id_md_invoice,
+                'pendapatan_idr' => $pendapatanIDR,
+                'pendapatan_usd' => $pendapatanUSD,
+                'kurs_usd'       => $kursUSD,
+                'tgl_kurs_usd'   => $request->tgl_kurs_usd,
+                'hpp_ops'        => $hppOps,
+                'hargajual_idr'  => $hargajualIDR,
+                'note'           => $request->note,
+            ]);
+
+            $item->load('invoice');
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item added successfully',
+                'data'    => [
+                    'id'             => $item->id_jo_other_item,
+                    'id_jo_other_item' => $item->id_jo_other_item,
+                    'invoice_ctg'    => $request->invoice_ctg,
+                    'invoice_typ'    => $item->invoice?->invoice_typ,
+                    'pendapatan_idr' => (float) $item->pendapatan_idr,
+                    'pendapatan_usd' => (float) $item->pendapatan_usd,
+                    'kurs_usd'       => $item->kurs_usd ? (float) $item->kurs_usd : null,
+                    'tgl_kurs_usd'   => $item->tgl_kurs_usd?->format('Y-m-d'),
+                    'hpp_ops'        => (float) $item->hpp_ops,
+                    'hargajual_idr'  => (float) $item->hargajual_idr,
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Tambah showItem()
+    public function showItem($id)
+    {
+        try {
+            $item = JoOtherItem::with('invoice')
+                ->where('id_jo_other_item', (string) $id)
+                ->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'id_jo_other_item' => $item->id_jo_other_item,
+                    'id_md_invoice'    => $item->id_md_invoice,
+                    'invoice_ctg'      => $item->invoice->invoice_ctg,
+                    'invoice_typ'      => $item->invoice->invoice_typ,
+                    'pendapatan_idr'   => $item->pendapatan_idr,
+                    'pendapatan_usd'   => $item->pendapatan_usd,
+                    'hpp_ops'          => $item->hpp_ops,
+                    'kurs_usd'         => $item->kurs_usd,
+                    'tgl_kurs_usd'     => $item->tgl_kurs_usd?->format('Y-m-d'),
+                    'hargajual_idr'    => $item->hargajual_idr,
+                    'note'             => $item->note,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Item not found: ' . $e->getMessage()], 404);
+        }
+    }
+
+    // Tambah updateItem()
+    public function updateItem(Request $request, $id)
+    {
+        try {
+            $rules = [
+                'id_jo_other'    => 'required|exists:b05_jo_other,id_jo_other',
+                'id_md_invoice'  => 'required|exists:a04_md_invoice,id_md_invoice',
+                'invoice_ctg'    => 'required|string',
+                'pendapatan_idr' => 'nullable|numeric|min:0',
+                'pendapatan_usd' => 'nullable|numeric|min:0',
+                'hpp_ops'        => 'nullable|numeric|min:0',
+                'note'           => 'nullable|string',
+            ];
+
+            if ($request->pendapatan_usd && $request->pendapatan_usd > 0) {
+                $rules['kurs_usd']     = 'required|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'required';
+            } else {
+                $rules['kurs_usd']     = 'nullable|numeric|min:0';
+                $rules['tgl_kurs_usd'] = 'nullable';
+            }
+
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $item = JoOtherItem::where('id_jo_other_item', (string) $id)->firstOrFail();
+            $pendapatanIDR = $request->pendapatan_idr ?? 0;
+            $pendapatanUSD = $request->pendapatan_usd ?? 0;
+            $kursUSD       = $request->kurs_usd ?? 0;
+            $hppOps        = $request->hpp_ops ?? 0;
+
+            $hargajualIDR = $pendapatanIDR > 0
+                ? $pendapatanIDR
+                : ($pendapatanUSD * $kursUSD);
+
+            $item->update([
+                'id_md_invoice'  => $request->id_md_invoice,
+                'pendapatan_idr' => $pendapatanIDR,
+                'pendapatan_usd' => $pendapatanUSD,
+                'kurs_usd'       => $kursUSD,
+                'tgl_kurs_usd'   => $request->tgl_kurs_usd ?? null,
+                'hpp_ops'        => $hppOps,
+                'hargajual_idr'  => $hargajualIDR,
+                'note'           => $request->note,
+            ]);
+
+            $item->refresh()->load('invoice');
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item updated successfully',
+                'data'    => [
+                    'id'             => $item->id_jo_other_item,
+                    'id_jo_other_item' => $item->id_jo_other_item,
+                    'invoice_ctg'    => $request->invoice_ctg,
+                    'invoice_typ'    => $item->invoice?->invoice_typ,
+                    'pendapatan_idr' => (float) $item->pendapatan_idr,
+                    'pendapatan_usd' => (float) $item->pendapatan_usd,
+                    'kurs_usd'       => $item->kurs_usd ? (float) $item->kurs_usd : null,
+                    'tgl_kurs_usd'   => $request->tgl_kurs_usd,
+                    'hpp_ops'        => (float) $item->hpp_ops,
+                    'hargajual_idr'  => (float) $item->hargajual_idr,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Tambah destroyItem()
+    public function destroyItem($id)
+    {
+        try {
+            DB::beginTransaction();
+            $item = JoOtherItem::where('id_jo_other_item', (string) $id)->firstOrFail();
+            $item->delete();
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Item deleted successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Tambah getItems()
+    public function getItems($joOtherId)
+    {
+        try {
+            $items = JoOtherItem::where('id_jo_other', $joOtherId)->with('invoice')->orderBy('created_at')->get();
+            return response()->json(['success' => true, 'data' => $items]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // Tambah saveAllChanges()
+    public function saveAllChanges(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'id_md_cust'          => 'required|exists:a01_md_customer,id_md_cust',
+                'id_md_other'         => 'required|exists:a07_md_other,id_md_other',
+                'id_md_port'          => 'required|exists:a06_md_port,id_md_port',
+                'id_md_vessel'        => 'nullable|exists:a05_md_vessel,id_md_vessel',
+                'date_start'          => 'required|date',
+                'date_end'            => 'required|date|after_or_equal:date_start',
+                'title'               => 'required|string|max:255',
+                'note'                => 'nullable|string',
+                'global_tgl_kurs_usd' => 'nullable|date',
+                'global_kurs_usd'     => 'nullable|numeric|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            }
+
+            DB::beginTransaction();
+
+            $joOther = JoOther::findOrFail($id);
+            $joOther->update([
+                'id_md_cust'   => $request->id_md_cust,
+                'id_md_other'  => $request->id_md_other,
+                'id_md_port'   => $request->id_md_port,
+                'id_md_vessel' => $request->id_md_vessel,
+                'date_start'   => $request->date_start,
+                'date_end'     => $request->date_end,
+                'title'        => $request->title,
+                'note'         => $request->note,
+            ]);
+
+            $globalKursUsd    = $request->global_kurs_usd;
+            $globalTglKursUsd = $request->global_tgl_kurs_usd;
+
+            foreach (JoOtherItem::where('id_jo_other', $id)->get() as $item) {
+                if ($item->pendapatan_usd > 0 && $globalKursUsd) {
+                    $item->update([
+                        'kurs_usd'      => $globalKursUsd,
+                        'tgl_kurs_usd'  => $globalTglKursUsd,
+                        'hargajual_idr' => $item->pendapatan_usd * $globalKursUsd,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'All changes saved successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }

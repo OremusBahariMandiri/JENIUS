@@ -13,6 +13,8 @@ class JoOtherItem extends Model
 
     protected $table = 'b06_jo_other_item';
     protected $primaryKey = 'id_jo_other_item';
+    public $incrementing  = false;   // tambah ini
+    protected $keyType    = 'string'; // tambah ini
 
     protected $fillable = [
         'id_jo_other_item',
@@ -24,6 +26,7 @@ class JoOtherItem extends Model
         'tgl_kurs_usd',
         'hpp_ops',
         'hargajual_idr',
+        'note',
     ];
 
     protected $casts = [
