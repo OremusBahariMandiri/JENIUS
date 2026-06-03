@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Exports\DataMaster\ContractExport;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Contract;
 use App\Models\Master\Customer;
@@ -9,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+
 
 class ContractController extends Controller
 {
@@ -31,12 +33,12 @@ class ContractController extends Controller
             // Search functionality
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;
-                $query->where(function($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('no_contract', 'like', "%{$search}%")
-                      ->orWhere('contract', 'like', "%{$search}%")
-                      ->orWhereHas('customer', function($q) use ($search) {
-                          $q->where('customer', 'like', "%{$search}%");
-                      });
+                        ->orWhere('contract', 'like', "%{$search}%")
+                        ->orWhereHas('customer', function ($q) use ($search) {
+                            $q->where('customer', 'like', "%{$search}%");
+                        });
                 });
             }
 
@@ -203,7 +205,7 @@ class ContractController extends Controller
 
             // Calculate contract summary
             $summary = [
-                'total_items' => $contract->joContracts->sum(function($jo) {
+                'total_items' => $contract->joContracts->sum(function ($jo) {
                     return $jo->items->count();
                 }),
                 'status' => $contract->date_end >= Carbon::today() ? 'Active' : 'Expired',
@@ -397,7 +399,7 @@ class ContractController extends Controller
 
             $contracts = $query->orderBy('no_contract', 'asc')
                 ->get()
-                ->map(function($contract) {
+                ->map(function ($contract) {
                     return [
                         'id' => $contract->id_md_cont,
                         'text' => $contract->no_contract . ' - ' . $contract->contract,
@@ -500,5 +502,66 @@ class ContractController extends Controller
                 'message' => 'Error deleting contracts: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+
+    public function export(Request $request)
+    {
+        $format    = $request->get('format', 'excel');
+        $contracts = $this->buildExportQuery($request)->get();
+
+        if ($format === 'pdf') {
+            // Jika DomPDF tersedia — download langsung
+            if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'master.contract.export_pdf',
+                    compact('contracts')
+                )->setPaper('a4', 'portrait');
+
+                $filename = 'contracts_' . date('Ymd_His') . '.pdf';
+                return $pdf->download($filename);
+            }
+
+            // Fallback — tampil di browser untuk Ctrl+P / Save as PDF
+            $filename = 'contracts_' . date('Ymd_His') . '.pdf';
+            $html     = view('master.contract.export_pdf', compact('contracts'))->render();
+
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        return (new ContractExport($contracts))->download();
+    }
+
+    // Tambahkan helper private method ini di ContractController
+    private function buildExportQuery(Request $request)
+    {
+        $today = Carbon::today();
+        $query = Contract::with('customer');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('no_contract', 'like', "%{$search}%")
+                    ->orWhere('contract', 'like', "%{$search}%")
+                    ->orWhereHas('customer', fn($q) => $q->where('customer', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($request->filled('customer_id'))  $query->where('id_md_cust', $request->customer_id);
+        if ($request->filled('date_from'))    $query->where('date_start', '>=', $request->date_from);
+        if ($request->filled('date_to'))      $query->where('date_end', '<=', $request->date_to);
+
+        if ($request->filled('status')) {
+            match ($request->status) {
+                'active'  => $query->where('date_end', '>=', $today),
+                'expired' => $query->where('date_end', '<',  $today),
+                default   => null,
+            };
+        }
+
+        return $query->orderBy('no_contract', 'asc');
     }
 }

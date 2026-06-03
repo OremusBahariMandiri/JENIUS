@@ -10,6 +10,9 @@ class Customer extends Model
     use SoftDeletes;
 
     protected $table = 'a01_md_customer';
+    protected $primaryKey = 'id_md_cust'; // ← tambahkan ini
+    public $incrementing = false;          // ← jika tidak pakai auto-increment DB
+    protected $keyType = 'string';         // ← tambahkan ini
 
     protected $fillable = [
         'id_md_cust',

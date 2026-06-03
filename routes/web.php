@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix('master/contract')->name('contract.')->group(function () {
+        Route::get('/export', [ContractController::class, 'export'])->name('export');
         Route::get('/', [ContractController::class, 'index'])->name('index');
         Route::get('/create', [ContractController::class, 'create'])->name('create');
         Route::post('/', [ContractController::class, 'store'])->name('store');
