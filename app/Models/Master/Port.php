@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Port extends Model
 {
     protected $table = 'a06_md_port';
+    protected $primaryKey = 'id_md_port'; // ← tambahkan
+    public $incrementing = false;          // ← tambahkan
+    protected $keyType = 'string';         // ← tambahkan
 
     protected $fillable = [
         'id_md_port',

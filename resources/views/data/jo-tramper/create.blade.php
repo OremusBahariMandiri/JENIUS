@@ -361,14 +361,14 @@
                                 @enderror
                             </div>
 
-                            <div class="mb-3">
+                            {{-- <div class="mb-3">
                                 <label class="form-label">Status</label>
                                 <input type="text" name="sts_proses" id="sts_proses"
                                     class="form-control @error('sts_proses') is-invalid @enderror" value="{{ old('sts_proses') }}">
                                 @error('sts_proses')
                                     <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                 @enderror
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
 
