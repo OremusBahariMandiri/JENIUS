@@ -354,8 +354,8 @@ class JoContractController extends Controller
 
                 // Calculate hargajual_idr based on formula
                 $hargajualIDR = $pendapatanIDR > 0
-                    ? $pendapatanIDR + $hppOps
-                    : ($pendapatanUSD * $kursUSD) + $hppOps;
+                    ? $pendapatanIDR
+                    : ($pendapatanUSD * $kursUSD);
 
                 Log::info('Calculated Values', [
                     'pendapatan_idr' => $pendapatanIDR,
@@ -521,8 +521,8 @@ class JoContractController extends Controller
             $hppOps = $request->hpp_ops ?? 0;
 
             $hargajualIDR = $pendapatanIDR > 0
-                ? $pendapatanIDR + $hppOps
-                : ($pendapatanUSD * $kursUSD) + $hppOps;
+                ? $pendapatanIDR
+                : ($pendapatanUSD * $kursUSD);
 
             $item->update([
                 'id_md_invoice' => $request->id_md_invoice,
@@ -1497,7 +1497,7 @@ class JoContractController extends Controller
                 // Hanya update item yang punya pendapatan USD
                 if ($item->pendapatan_usd > 0) {
                     // Recalculate hargajual_idr dengan kurs baru
-                    $hargajualIDR = ($item->pendapatan_usd * $globalKursUsd) + $item->hpp_ops;
+                    $hargajualIDR = $item->pendapatan_usd * $globalKursUsd;
 
                     $item->update([
                         'kurs_usd' => $globalKursUsd,

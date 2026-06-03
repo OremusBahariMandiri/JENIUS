@@ -14,7 +14,7 @@ class JoOther extends Model
 
     protected $table = 'b05_jo_other';
     protected $primaryKey = 'id_jo_other';
-    public $incrementing = true; // Auto-increment
+    public $incrementing = false; // Auto-increment
     protected $keyType = 'int'; // Type integer
 
     protected $fillable = [
@@ -22,6 +22,7 @@ class JoOther extends Model
         'id_md_cust',
         'id_md_other',
         'id_md_port',
+        'id_md_vessel',
         'date_start',
         'date_end',
         'title',
@@ -56,5 +57,10 @@ class JoOther extends Model
     public function items()
     {
         return $this->hasMany(JoOtherItem::class, 'id_jo_other', 'id_jo_other');
+    }
+
+    public function vessel()
+    {
+        return $this->belongsTo(Vessel::class, 'id_md_vessel', 'id_md_vessel');
     }
 }

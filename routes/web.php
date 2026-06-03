@@ -37,6 +37,7 @@ Route::middleware(['auth'])->group(function () {
 
     // ── Master routes ─────────────────────────────────────────
     Route::prefix('master/customer')->name('customer.')->group(function () {
+        Route::get('/export', [CustomerController::class, 'export'])->name('export');
         Route::get('/', [CustomerController::class, 'index'])->name('index');
         Route::get('/create', [CustomerController::class, 'create'])->name('create');
         Route::post('/', [CustomerController::class, 'store'])->name('store');
@@ -148,6 +149,22 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('jo-tramper', JoTramperController::class);
 
         // ── JO Other ─────────────────────────────────────────────
+        Route::post('jo-other/header/store', [JoOtherController::class, 'storeHeader'])
+            ->name('jo-other.header.store');
+        Route::post('jo-other/header/update/{id}', [JoOtherController::class, 'updateHeader'])
+            ->name('jo-other.header.update');
+        Route::get('jo-other/item/show/{id}', [JoOtherController::class, 'showItem'])
+            ->name('jo-other.item.show');
+        Route::post('jo-other/item/store', [JoOtherController::class, 'storeItem'])
+            ->name('jo-other.item.store');
+        Route::put('jo-other/item/update/{id}', [JoOtherController::class, 'updateItem'])
+            ->name('jo-other.item.update');
+        Route::delete('jo-other/item/destroy/{id}', [JoOtherController::class, 'destroyItem'])
+            ->name('jo-other.item.destroy');
+        Route::get('jo-other/{id}/items', [JoOtherController::class, 'getItems'])
+            ->name('jo-other.items.get');
+        Route::post('jo-other/save-all/{id}', [JoOtherController::class, 'saveAllChanges'])
+            ->name('jo-other.save-all');
         Route::resource('jo-other', JoOtherController::class);
         Route::get('jo-other-select', [JoOtherController::class, 'getForSelect']);
         Route::post('jo-other-bulk-delete', [JoOtherController::class, 'bulkDelete']);
