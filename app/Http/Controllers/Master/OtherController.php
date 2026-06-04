@@ -7,6 +7,7 @@ use App\Models\Master\Other;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\IdGenerator;
 
 class OtherController extends Controller
 {
@@ -112,8 +113,7 @@ class OtherController extends Controller
         DB::beginTransaction();
         try {
             // Generate ID
-            $lastOther = Other::orderBy('id_md_other', 'desc')->first();
-            $newId = $lastOther ? $lastOther->id_md_other + 1 : 1;
+            $newId = IdGenerator::generate('A07', 'a07_md_other', 'id_md_other');
 
             $other = Other::create([
                 'id_md_other' => $newId,

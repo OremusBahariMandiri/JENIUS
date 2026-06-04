@@ -7,6 +7,7 @@ use App\Models\Master\Vessel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\IdGenerator;
 
 class VesselController extends Controller
 {
@@ -132,8 +133,7 @@ class VesselController extends Controller
         DB::beginTransaction();
         try {
             // Generate ID
-            $lastVessel = Vessel::orderBy('id_md_vessel', 'desc')->first();
-            $newId = $lastVessel ? $lastVessel->id_md_vessel + 1 : 1;
+            $newId = IdGenerator::generate('A05', 'a05_md_vessel', 'id_md_vessel');
 
             $vessel = Vessel::create([
                 'id_md_vessel' => $newId,

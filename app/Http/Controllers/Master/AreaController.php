@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Master;
 
+use App\Exports\DataMaster\AreaExport;
 use App\Http\Controllers\Controller;
 use App\Models\Master\Area;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Helpers\IdGenerator;
 
 class AreaController extends Controller
 {
@@ -14,7 +16,7 @@ class AreaController extends Controller
      * Display a listing of the resource.
      */
 
-     public function __construct()
+    public function __construct()
     {
         $this->middleware('auth');
         $this->middleware('check.access:area')->only('index');
@@ -29,8 +31,7 @@ class AreaController extends Controller
         try {
             $query = Area::query();
 
-            // Search functionality
-            if ($request->has('search') && !empty($request->search)) {
+            if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
@@ -39,31 +40,26 @@ class AreaController extends Controller
                 });
             }
 
-            // Sorting
-            $sortBy = $request->get('sort_by', 'created_at');
+            $sortBy    = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            // Pagination
             $perPage = $request->get('per_page', 15);
-            $areas = $query->paginate($perPage);
+            $areas   = $query->paginate($perPage)->withQueryString();
 
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $areas
-                ]);
+                return response()->json(['success' => true, 'data' => $areas]);
             }
 
-            return view('master.area.index', compact('areas'));
+            $currentFilters = [
+                'search' => $request->get('search', ''),
+            ];
+
+            return view('master.area.index', compact('areas', 'currentFilters'));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error retrieving areas: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error retrieving areas: ' . $e->getMessage()], 500);
             }
-
             return back()->with('error', 'Error retrieving areas: ' . $e->getMessage());
         }
     }
@@ -107,8 +103,7 @@ class AreaController extends Controller
         DB::beginTransaction();
         try {
             // Generate ID
-            $lastArea = Area::orderBy('id_md_area', 'desc')->first();
-            $newId = $lastArea ? $lastArea->id_md_area + 1 : 1;
+            $newId = IdGenerator::generate('A03', 'a03_md_area', 'id_md_area');
 
             $area = Area::create([
                 'id_md_area' => $newId,
@@ -385,5 +380,45 @@ class AreaController extends Controller
                 'message' => 'Error deleting areas: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    public function export(Request $request)
+    {
+        $format = $request->get('format', 'excel');
+        $areas  = $this->buildExportQuery($request)->get();
+
+        if ($format === 'pdf') {
+            if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf      = \Barryvdh\DomPDF\Facade\Pdf::loadView('master.area.export_pdf', compact('areas'))
+                    ->setPaper('a4', 'portrait');
+                $filename = 'areas_' . date('Ymd_His') . '.pdf';
+                return $pdf->download($filename);
+            }
+
+            $filename = 'areas_' . date('Ymd_His') . '.pdf';
+            $html     = view('master.area.export_pdf', compact('areas'))->render();
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        return (new AreaExport($areas))->download();
+    }
+
+    private function buildExportQuery(Request $request)
+    {
+        $query = Area::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('area', 'like', "%{$search}%")
+                    ->orWhere('note', 'like', "%{$search}%");
+            });
+        }
+
+        return $query->orderBy('area', 'asc');
     }
 }

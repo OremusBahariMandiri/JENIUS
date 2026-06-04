@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Other extends Model
 {
     protected $table = 'a07_md_other';
+    protected $primaryKey = 'id_md_other'; // ← tambahkan ini
+    public $incrementing = false;           // ← tambahkan ini
+    protected $keyType = 'string'; 
 
     protected $fillable = [
         'id_md_other',

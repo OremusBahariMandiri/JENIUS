@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use App\Helpers\IdGenerator;
 
 
 class ContractController extends Controller
@@ -147,8 +148,7 @@ class ContractController extends Controller
         DB::beginTransaction();
         try {
             // Generate ID
-            $lastContract = Contract::orderBy('id_md_cont', 'desc')->first();
-            $newId = $lastContract ? $lastContract->id_md_cont + 1 : 1;
+            $newId = IdGenerator::generate('A02', 'a02_md_contract', 'id_md_cont');
 
             $contract = Contract::create([
                 'id_md_cont' => $newId,

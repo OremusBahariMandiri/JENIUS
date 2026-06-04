@@ -9,7 +9,6 @@ use App\Models\Master\Invoice;
 
 class JoTramperItem extends Model
 {
-    use SoftDeletes;
 
     protected $table      = 'b04_jo_tram_item';
     protected $primaryKey = 'id_jo_tram_item';

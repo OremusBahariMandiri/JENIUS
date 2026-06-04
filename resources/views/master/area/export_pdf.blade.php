@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Customer List</title>
+    <title>Area List</title>
     <style>
         @page { size: A4 portrait; margin: 15mm 12mm; }
         body {
@@ -39,11 +39,10 @@
         tbody td {
             font-size: 9px;
             padding: 4px 6px;
-            border: 1px solid #000000;
+            border: 1px solid #000;
             vertical-align: top;
         }
-        tbody tr:nth-child(even) td { background: #fff; }
-        tbody tr:nth-child(odd)  td { background: #fff; }
+        tbody tr td { background: #fff; }
         td.center { text-align: center; }
         .footer {
             margin-top: 10px;
@@ -56,35 +55,33 @@
 </head>
 <body>
 
-    <h2>Customer List</h2>
-    <p class="subtitle">Printed: {{ now()->format('d/m/Y H:i') }} &nbsp;&mdash;&nbsp; Total: {{ $customers->count() }} records</p>
+    <h2>Area List</h2>
+    <p class="subtitle">
+        Printed: {{ now()->format('d/m/Y H:i') }} &nbsp;&mdash;&nbsp; Total: {{ $areas->count() }} records
+    </p>
 
     <table>
         <thead>
             <tr>
-                <th width="4%">No</th>
-                <th width="22%">Customer Name</th>
-                <th width="19%">Email</th>
-                <th width="12%">Phone</th>
-                <th width="13%">NPWP</th>
-                <th width="21%">Address</th>
+                <th width="5%">No</th>
+                <th width="35%">Area</th>
+                <th width="60%">Note</th>
             </tr>
         </thead>
         <tbody>
-            @foreach($customers as $i => $customer)
+            @foreach($areas as $i => $area)
             <tr>
                 <td class="center">{{ $i + 1 }}</td>
-                <td>{{ $customer->customer ?? '-' }}</td>
-                <td>{{ $customer->email    ?? '-' }}</td>
-                <td>{{ $customer->phone    ?? '-' }}</td>
-                <td>{{ $customer->npwp     ?? '-' }}</td>
-                <td>{{ \Str::limit($customer->address ?? '-', 55) }}</td>
+                <td>{{ $area->area ?? '-' }}</td>
+                <td>{{ $area->note ?? '-' }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
-    <div class="footer">{{ $customers->count() }} customer(s) &mdash; {{ now()->format('d/m/Y H:i') }}</div>
+    <div class="footer">
+        {{ $areas->count() }} area(s) &mdash; {{ now()->format('d/m/Y H:i') }}
+    </div>
 
 </body>
 </html>

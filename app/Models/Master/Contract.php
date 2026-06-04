@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Contract extends Model
 {
     protected $table = 'a02_md_contract';
+    protected $primaryKey = 'id_md_cont'; // ← tambahkan ini
+    public $incrementing = false;          // ← tambahkan ini
+    protected $keyType = 'string';         // ← tambahkan ini
 
     protected $fillable = [
         'id_md_cont',

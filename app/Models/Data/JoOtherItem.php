@@ -9,7 +9,6 @@ use App\Models\Master\Invoice;
 
 class JoOtherItem extends Model
 {
-    use SoftDeletes;
 
     protected $table = 'b06_jo_other_item';
     protected $primaryKey = 'id_jo_other_item';

@@ -330,16 +330,38 @@
 
                 Swal.fire({
                     title: 'Delete JO Other?',
-                    html: `JO Other <strong>${name}</strong> will be permanently deleted.`,
+                    html: `
+            <div class="text-start">
+                <p>JO Other <strong>${name}</strong> will be permanently deleted.</p>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Warning:</strong> All items related to this JO Other will also be deleted.
+                </div>
+            </div>
+        `,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
+                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete All!',
                     cancelButtonText: 'Cancel',
                     focusCancel: true,
+                    customClass: {
+                        htmlContainer: 'text-start'
+                    }
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        // Show loading
+                        Swal.fire({
+                            title: 'Deleting...',
+                            html: 'Please wait while we delete the JO Other and all related items.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
                         $('#deleteForm').attr('action', url).submit();
                     }
                 });

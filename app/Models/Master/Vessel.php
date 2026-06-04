@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 class Vessel extends Model
 {
     protected $table = 'a05_md_vessel';
+    protected $primaryKey = 'id_md_vessel'; // ← tambahkan ini
+    public $incrementing = false;            // ← tambahkan ini
+    protected $keyType = 'string';           // ← tambahkan ini
 
     protected $fillable = [
         'id_md_vessel',
