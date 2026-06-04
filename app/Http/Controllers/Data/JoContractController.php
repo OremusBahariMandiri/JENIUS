@@ -94,7 +94,7 @@ class JoContractController extends Controller
             ->orderBy('no_contract')
             ->get();
         $areas = Area::orderBy('area')->get();
-        $invoices = Invoice::orderBy('id')->get();
+        $invoices = Invoice::where('jo_ctg', 'contract')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
 
         return view('data.jo-contract.create', compact('contracts', 'areas', 'invoices'));
     }
@@ -1034,7 +1034,7 @@ class JoContractController extends Controller
 
             Log::info('Areas loaded', ['count' => $areas->count()]);
 
-            $invoices = Invoice::orderBy('id')->get();
+            $invoices = Invoice::where('jo_ctg', 'contract')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
 
             Log::info('Invoices loaded', ['count' => $invoices->count()]);
 

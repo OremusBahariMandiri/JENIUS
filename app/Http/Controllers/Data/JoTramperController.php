@@ -93,7 +93,7 @@ class JoTramperController extends Controller
     {
         $customers = Customer::orderBy('customer')->get();
         $ports     = Port::orderBy('name_port')->get();
-        $invoices  = Invoice::orderBy('id')->get();
+        $invoices = Invoice::where('jo_ctg', 'tramper')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
         $vessels = Vessel::orderBy('vessel_name')->get();
 
         return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices', 'vessels'));
@@ -392,8 +392,8 @@ class JoTramperController extends Controller
             $hppOps        = $request->hpp_ops ?? 0;
 
             $hargajualIDR = $pendapatanIDR > 0
-                ? $pendapatanIDR + $hppOps
-                : ($pendapatanUSD * $kursUSD) + $hppOps;
+                ? $pendapatanIDR
+                : ($pendapatanUSD * $kursUSD);
 
             $item->update([
                 'id_md_invoice'  => $request->id_md_invoice,
@@ -696,7 +696,7 @@ class JoTramperController extends Controller
 
             $customers = Customer::orderBy('customer')->get();
             $ports     = Port::orderBy('name_port')->get();
-            $invoices  = Invoice::orderBy('id')->get();
+            $invoices = Invoice::where('jo_ctg', 'tramper')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
             $vessels = Vessel::orderBy('vessel_name')->get();
 
             if (!view()->exists('data.jo-tramper.edit')) {
@@ -795,24 +795,47 @@ class JoTramperController extends Controller
      */
     public function destroy(Request $request, $id)
     {
+        Log::info('=== Delete JO Tramper Request START ===', ['id' => $id]);
+
         DB::beginTransaction();
         try {
             $joTramper = JoTramper::where('id_jo_tram', (string) $id)->firstOrFail();
 
-            foreach ($joTramper->items as $item) {
-                $item->delete();
+            $itemsCount = $joTramper->items()->count();
+
+            Log::info('JO Tramper Found', [
+                'id'          => $joTramper->id_jo_tram,
+                'title'       => $joTramper->title,
+                'items_count' => $itemsCount,
+            ]);
+
+            if ($itemsCount > 0) {
+                foreach ($joTramper->items as $item) {
+                    $item->delete();
+                }
+                Log::info('All items deleted successfully');
             }
 
             $joTramper->delete();
             DB::commit();
 
+            Log::info('JO Tramper Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
+
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'JO Tramper successfully deleted']);
             }
 
-            return redirect()->route('jo-tramper.index')->with('success', 'JO Tramper successfully deleted');
+            return redirect()->route('jo-tramper.index')
+                ->with('success', "JO Tramper deleted successfully along with {$itemsCount} item(s)");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'JO Tramper not found'], 404);
+            }
+            return back()->with('error', 'JO Tramper not found');
         } catch (\Exception $e) {
             DB::rollBack();
+            Log::error('Delete JO Tramper Failed', ['id' => $id, 'error' => $e->getMessage()]);
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Error deleting JO Tramper: ' . $e->getMessage()], 500);
             }

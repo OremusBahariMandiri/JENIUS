@@ -302,6 +302,16 @@
             text-align: center;
         }
 
+        .table-items tbody td.num-cell {
+            text-align: right;
+        }
+
+        .table-items tbody td.item-text-cell,
+        .table-items tbody td.category-cell,
+        .table-items tbody td.item-number-cell {
+            text-align: left;
+        }
+
         .table-items tbody tr:hover {
             background-color: #f8f9fa;
         }
@@ -377,7 +387,8 @@
             color: rgb(0, 0, 0);
             font-weight: 700;
             font-size: 0.95rem;
-            padding-left: 10px;
+            padding-right: 10px;
+            text-align: right;
         }
 
         .no-items-row td {
@@ -720,10 +731,14 @@
                                                                 {{ $category }}</td>
                                                         @endif
                                                         <td class="item-text-cell">{{ $item->invoice->invoice_typ }}</td>
-                                                        <td>{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
-                                                        <td>{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
-                                                        <td>{{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
-                                                        <td>{{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
+                                                        <td class="num-cell">
+                                                            {{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
+                                                        <td class="num-cell">
+                                                            {{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
+                                                        <td class="num-cell">
+                                                            {{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
+                                                        <td class="num-cell">
+                                                            {{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
                                                         <td class="text-center">
                                                             <button type="button"
                                                                 class="btn btn-primary btn-sm btn-edit-row"
@@ -792,17 +807,18 @@
                 <!-- FINAL SAVE SECTION -->
                 <div class="final-save-section">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                        <div></div>
+                        {{-- <div>
                             <h6 class="mb-1"><i class="fas fa-info-circle me-2"></i>Ready to Save?</h6>
                             <small class="text-muted">Click the button to save all changes permanently</small>
-                        </div>
+                        </div> --}}
                         <div class="d-flex gap-2">
                             <a href="{{ route('jo-tramper.index') }}" class="btn btn-final-back">
                                 <i class="fas fa-arrow-left me-1"></i> Back
                             </a>
-                            <button type="button" class="btn btn-final-save" id="btnFinalSave">
+                            {{-- <button type="button" class="btn btn-final-save" id="btnFinalSave">
                                 <i class="fas fa-save"></i> Save All Changes
-                            </button>
+                            </button> --}}
                         </div>
                     </div>
                 </div>
@@ -1159,10 +1175,10 @@
                 newRow = `<tr class="item-row" data-item-id="${itemId}" data-category="${category}" data-item-text="${itemText}">
             <td class="item-number-cell">${globalItemNumber}</td>
             <td class="item-text-cell">${itemText}</td>
-            <td>${formatNumber(data.pendapatan_idr)}</td>
-            <td>${formatNumber(data.pendapatan_usd)}</td>
-            <td>${formatNumber(data.hpp_ops)}</td>
-            <td>${formatNumber(data.hargajual_idr)}</td>
+<td class="num-cell">${formatNumber(data.pendapatan_idr)}</td>
+<td class="num-cell">${formatNumber(data.pendapatan_usd)}</td>
+<td class="num-cell">${formatNumber(data.hpp_ops)}</td>
+<td class="num-cell">${formatNumber(data.hargajual_idr)}</td>
             <td class="text-center">${actionBtns}</td>
         </tr>`;
                 insertAfterRow.after(newRow);
@@ -1171,10 +1187,10 @@
             <td class="item-number-cell">${globalItemNumber}</td>
             <td class="category-cell" rowspan="1">${category}</td>
             <td class="item-text-cell">${itemText}</td>
-            <td>${formatNumber(data.pendapatan_idr)}</td>
-            <td>${formatNumber(data.pendapatan_usd)}</td>
-            <td>${formatNumber(data.hpp_ops)}</td>
-            <td>${formatNumber(data.hargajual_idr)}</td>
+<td class="num-cell">${formatNumber(data.pendapatan_idr)}</td>
+<td class="num-cell">${formatNumber(data.pendapatan_usd)}</td>
+<td class="num-cell">${formatNumber(data.hpp_ops)}</td>
+<td class="num-cell">${formatNumber(data.hargajual_idr)}</td>
             <td class="text-center">${actionBtns}</td>
         </tr>`;
                 $('#itemsTableBody').append(newRow);
@@ -1492,9 +1508,9 @@
             $('#editing_item_id').val('');
             $('#formSectionTitle').html('<i class="fas fa-plus-square"></i> Add New Item');
             $('#addItemFormSection').removeClass('edit-mode');
-            $('#btnAddToTable').html('<i class="fas fa-arrow-down"></i> Add to Table');
+            $('#btnAddToTable').html('<i class="fas fa-arrow-down"></i> Save to Table');
             $('#btnCancelEdit').hide();
-            $('#input_category').val('');
+            $('#input_category').val(null).trigger('change');
             $('#input_item').prop('disabled', true).html('<option value="">Select category first</option>');
             $('#input_note').val('');
             ['input_pendapatan_idr', 'input_pendapatan_usd', 'input_hpp', 'input_harga_jual']
@@ -1534,7 +1550,7 @@
             return `<tr class="no-items-row"><td colspan="8">
         <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
         <p class="mb-0 fw-bold">No data available</p>
-        <small class="text-muted">Fill the form above and click "Add to Table"</small>
+        <small class="text-muted">Fill the form above and click "Save to Table"</small>
     </td></tr>`;
         }
 

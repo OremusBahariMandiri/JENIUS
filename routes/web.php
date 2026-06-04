@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix('master/area')->name('area.')->group(function () {
+        Route::get('/export', [AreaController::class, 'export'])->name('export');
         Route::get('/', [AreaController::class, 'index'])->name('index');
         Route::get('/create', [AreaController::class, 'create'])->name('create');
         Route::post('/', [AreaController::class, 'store'])->name('store');
@@ -70,6 +71,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::prefix('master/invoice')->name('invoice.')->group(function () {
+        Route::get('/export', [InvoiceController::class, 'export'])->name('export');
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
         Route::get('/create', [InvoiceController::class, 'create'])->name('create');
         Route::post('/', [InvoiceController::class, 'store'])->name('store');

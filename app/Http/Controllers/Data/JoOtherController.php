@@ -120,7 +120,7 @@ class JoOtherController extends Controller
         $customers = Customer::orderBy('customer')->get();
         $others    = Other::orderBy('other')->get();
         $ports     = Port::orderBy('name_port')->get();
-        $invoices  = Invoice::orderBy('id')->get();
+        $invoices = Invoice::where('jo_ctg', 'other')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
         $vessels   = Vessel::orderBy('vessel_name')->get();
 
         return view('data.jo-other.create', compact('customers', 'others', 'ports', 'invoices', 'vessels'));
@@ -450,7 +450,7 @@ class JoOtherController extends Controller
             $customers = Customer::orderBy('customer')->get();
             $others    = Other::orderBy('other')->get();
             $ports     = Port::orderBy('name_port')->get();
-            $invoices  = Invoice::orderBy('id')->get();
+            $invoices = Invoice::where('jo_ctg', 'other')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
             $vessels   = Vessel::orderBy('vessel_name')->get();
 
             Log::info('Invoices loaded', ['count' => $invoices->count()]);
@@ -685,42 +685,50 @@ class JoOtherController extends Controller
      */
     public function destroy(Request $request, $id)
     {
+        Log::info('=== Delete JO Other Request START ===', ['id' => $id]);
+
         DB::beginTransaction();
         try {
             $joOther = JoOther::findOrFail($id);
 
-            // Check if has items
-            if ($joOther->items()->count() > 0) {
-                // Soft delete all items first
+            $itemsCount = $joOther->items()->count();
+
+            Log::info('JO Other Found', [
+                'id'          => $joOther->id_jo_other,
+                'title'       => $joOther->title,
+                'items_count' => $itemsCount,
+            ]);
+
+            if ($itemsCount > 0) {
                 foreach ($joOther->items as $item) {
                     $item->delete();
                 }
+                Log::info('All items deleted successfully');
             }
 
-            // Soft delete the other
             $joOther->delete();
             DB::commit();
 
+            Log::info('JO Other Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
+
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'JO Other successfully deleted'
-                ]);
+                return response()->json(['success' => true, 'message' => 'JO Other successfully deleted']);
             }
 
-            return redirect()
-                ->route('jo-other.index')
-                ->with('success', 'JO Other successfully deleted');
+            return redirect()->route('jo-other.index')
+                ->with('success', "JO Other deleted successfully along with {$itemsCount} item(s)");
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            DB::rollBack();
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'JO Other not found'], 404);
+            }
+            return back()->with('error', 'JO Other not found');
         } catch (\Exception $e) {
             DB::rollBack();
-
+            Log::error('Delete JO Other Failed', ['id' => $id, 'error' => $e->getMessage()]);
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error deleting JO Other: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error deleting JO Other: ' . $e->getMessage()], 500);
             }
-
             return back()->with('error', 'Error deleting JO Other: ' . $e->getMessage());
         }
     }
