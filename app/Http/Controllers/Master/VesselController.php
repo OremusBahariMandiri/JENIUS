@@ -55,8 +55,7 @@ class VesselController extends Controller
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 15);
-            $vessels = $query->paginate($perPage);
+            $vessels = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json([

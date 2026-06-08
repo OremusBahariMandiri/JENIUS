@@ -85,7 +85,7 @@
                                 <tbody>
                                     @foreach ($invoices as $index => $invoice)
                                         <tr>
-                                            <td>{{ $invoices->firstItem() + $index }}</td>
+                                            <td>{{ $loop->iteration }}</td>
                                             <td>
                                                 @if ($invoice->jo_ctg === 'contract')
                                                     Contract
@@ -145,12 +145,8 @@
 
                         {{-- Pagination --}}
                         <div class="d-flex justify-content-between align-items-center mt-3">
-                            <div class="text-muted small">
-                                Showing {{ $invoices->firstItem() ?? 0 }} to {{ $invoices->lastItem() ?? 0 }}
-                                of {{ $invoices->total() }} entries
-                            </div>
-                            <div>
-                                {{ $invoices->appends(request()->query())->links() }}
+                            <div class="text-muted small" id="paginationInfo">
+                                {{-- DataTables will handle this --}}
                             </div>
                         </div>
                     </div>

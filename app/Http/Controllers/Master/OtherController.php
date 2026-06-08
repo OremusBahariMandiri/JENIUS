@@ -47,8 +47,7 @@ class OtherController extends Controller
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 15);
-            $others = $query->paginate($perPage);
+            $others = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json([

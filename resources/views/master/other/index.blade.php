@@ -45,7 +45,7 @@
                                 <tbody>
                                     @foreach ($others as $index => $other)
                                         <tr>
-                                            <td>{{ $others->firstItem() + $index }}</td>
+                                            <td>{{ $loop->iteration }}</td>
                                             <td>{{ $other->other }}</td>
                                             <td>{{ $other->note ? Str::limit($other->note, 50) : '-' }}</td>
                                             <td>

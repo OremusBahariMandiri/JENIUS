@@ -73,8 +73,7 @@ class ContractController extends Controller
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 15);
-            $contracts = $query->paginate($perPage);
+            $contracts = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json([
