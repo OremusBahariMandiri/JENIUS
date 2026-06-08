@@ -54,8 +54,7 @@ class UserController extends Controller
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 15);
-            $users = $query->paginate($perPage);
+            $users = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json([

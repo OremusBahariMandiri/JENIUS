@@ -49,7 +49,7 @@
                                 <tbody>
                                     @foreach ($users as $index => $user)
                                         <tr>
-                                            <td>{{ $index + 1 }}</td>
+                                            <td>{{ $loop->iteration }}</td>
                                             <td>{{ $user->employee_id_number }}</td>
                                             <td>{{ $user->full_name }}</td>
                                             <td>{{ $user->department }}</td>
