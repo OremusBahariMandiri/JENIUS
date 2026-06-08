@@ -54,8 +54,7 @@ class InvoiceController extends Controller
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            $perPage  = $request->get('per_page', 15);
-            $invoices = $query->paginate($perPage)->withQueryString();
+            $invoices = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'data' => $invoices]);

@@ -46,7 +46,7 @@
                             <tbody>
                                 @foreach($ports as $index => $port)
                                 <tr>
-                                    <td>{{ $ports->firstItem() + $index }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     {{-- <td><strong>{{ $port->no_port ?? '-' }}</strong></td> --}}
                                     <td>{{ $port->name_port }}</td>
                                     <td>{{ $port->kota ?? '-' }}</td>

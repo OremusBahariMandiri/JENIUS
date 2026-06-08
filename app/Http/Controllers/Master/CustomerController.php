@@ -69,8 +69,7 @@ class CustomerController extends Controller
             ];
 
             // Pagination
-            $perPage   = $request->get('per_page', 15);
-            $customers = $query->paginate($perPage)->withQueryString();
+            $customers = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json([

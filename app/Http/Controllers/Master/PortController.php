@@ -59,8 +59,7 @@ class PortController extends Controller
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 15);
-            $ports = $query->paginate($perPage);
+            $ports = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json([

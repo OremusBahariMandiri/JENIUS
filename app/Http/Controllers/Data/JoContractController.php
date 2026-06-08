@@ -56,8 +56,7 @@ class JoContractController extends Controller
             $query->orderBy($sortBy, $sortOrder);
 
             // Pagination
-            $perPage = $request->get('per_page', 15);
-            $joContracts = $query->paginate($perPage);
+            $joContracts = $query->get();
 
             if ($request->expectsJson()) {
                 return response()->json([

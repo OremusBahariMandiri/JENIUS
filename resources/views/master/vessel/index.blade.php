@@ -47,7 +47,7 @@
                             <tbody>
                                 @foreach($vessels as $index => $vessel)
                                 <tr>
-                                    <td>{{ $vessels->firstItem() + $index }}</td>
+                                    <td>{{ $loop->iteration }}</td>
                                     <td>{{ $vessel->vessel_name }}</td>
                                     <td>{{ $vessel->vessel_type ?? '-' }}</td>
                                     <td>{{ $vessel->no_imo ?? '-' }}</td>
