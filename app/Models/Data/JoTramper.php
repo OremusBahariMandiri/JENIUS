@@ -16,6 +16,8 @@ class JoTramper extends Model
 
     protected $fillable = [
         'id_jo_tram',
+        'no_jo_tram',
+        'tgl_jo_tram',
         'id_md_cust',
         'id_md_port',
         'id_md_vessel',
@@ -27,6 +29,7 @@ class JoTramper extends Model
     ];
 
     protected $casts = [
+        'tgl_jo_tram' => 'date',
         'date_start'  => 'date',
         'date_end'    => 'date',
         'created_at'  => 'datetime',

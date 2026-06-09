@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Data;
 
+use App\Helpers\IdGenerator;
 use App\Http\Controllers\Controller;
 use App\Models\Data\JoContract;
 use App\Models\Data\JoContractItem;
@@ -89,13 +90,17 @@ class JoContractController extends Controller
      */
     public function create()
     {
-        $contracts = Contract::with('customer')
-            ->orderBy('no_contract')
-            ->get();
-        $areas = Area::orderBy('area')->get();
-        $invoices = Invoice::where('jo_ctg', 'contract')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
+        $contracts = Contract::with('customer')->orderBy('no_contract')->get();
+        $areas     = Area::orderBy('area')->get();
+        $invoices  = Invoice::where('jo_ctg', 'contract')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
+        $previewNoJo = IdGenerator::generateDocNo('b01_jo_cont', 'no_jo_cont'); // ← tambah
 
-        return view('data.jo-contract.create', compact('contracts', 'areas', 'invoices'));
+        return view('data.jo-contract.create', compact(
+            'contracts',
+            'areas',
+            'invoices',
+            'previewNoJo' // ← tambah previewNoJo
+        ));
     }
 
     // ========================================
@@ -115,6 +120,7 @@ class JoContractController extends Controller
             $validator = Validator::make($request->all(), [
                 'id_md_cont' => 'required|exists:a02_md_contract,id_md_cont',
                 'id_md_area' => 'required|exists:a03_md_area,id_md_area',
+                'tgl_jo_cont'  => 'required|date',
                 'title' => 'required|string|max:255',
                 'note' => 'nullable|string',
             ], [
@@ -145,6 +151,7 @@ class JoContractController extends Controller
                 ->first();
 
             $newJoContId = $lastJoContract ? $lastJoContract->id_jo_cont + 1 : 1;
+            $noJoCont = IdGenerator::generateDocNo('b01_jo_cont', 'no_jo_cont');
 
             Log::info('Creating JO Contract Header', [
                 'new_id' => $newJoContId
@@ -152,6 +159,8 @@ class JoContractController extends Controller
 
             $joContract = JoContract::create([
                 'id_jo_cont' => $newJoContId,
+                'no_jo_cont'  => $noJoCont,              // ← tambah
+                'tgl_jo_cont' => $request->tgl_jo_cont,  // ← tambah
                 'id_md_cont' => $request->id_md_cont,
                 'id_md_area' => $request->id_md_area,
                 'title' => $request->title,
@@ -210,6 +219,7 @@ class JoContractController extends Controller
             $validator = Validator::make($request->all(), [
                 'id_md_cont' => 'required|exists:a02_md_contract,id_md_cont',
                 'id_md_area' => 'required|exists:a03_md_area,id_md_area',
+                'tgl_jo_cont'         => 'required|date',
                 'title' => 'required|string|max:255',
                 'note' => 'nullable|string',
                 'global_tgl_kurs_usd' => 'required|date',
@@ -229,6 +239,7 @@ class JoContractController extends Controller
             $joContract = JoContract::findOrFail($id);
 
             $joContract->update([
+                'tgl_jo_cont' => $request->tgl_jo_cont,
                 'id_md_cont' => $request->id_md_cont,
                 'id_md_area' => $request->id_md_area,
                 'title' => $request->title,

@@ -471,6 +471,27 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">No. JO</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-success text-white">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <input type="text" class="form-control fw-bold"
+                                                value="{{ $previewNoJo }}" readonly
+                                                style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                        </div>
+                                        <small class="text-muted"><i
+                                                class="fas fa-info-circle me-1"></i>Auto-generate on save</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required-field">JO date</label>
+                                        <input type="date" name="tgl_jo_cont" id="tgl_jo_cont"
+                                            class="form-control" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                </div>
+
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label required-field">Contract</label>
 
@@ -515,6 +536,7 @@
                                         </div>
                                     </div>
 
+
                                     <!-- Hidden Select for Form Submission -->
                                     <select name="id_md_cont" id="id_md_cont"
                                         class="form-select d-none @error('id_md_cont') is-invalid @enderror" required>
@@ -533,6 +555,7 @@
                                         </div>
                                         <div class="card-body">
                                             <div class="row">
+
                                                 <div class="col-md-6">
                                                     <table class="table table-sm table-borderless">
                                                         <tr>
@@ -680,7 +703,7 @@
 
                                     <!-- Pendapatan IDR -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan IDR</label>
+                                        <label class="form-label">Income (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_pendapatan_idr"
@@ -690,7 +713,7 @@
 
                                     <!-- Pendapatan USD -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan USD</label>
+                                        <label class="form-label">Income (USD)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">USD</span>
                                             <input type="text" id="input_pendapatan_usd"
@@ -700,7 +723,7 @@
 
                                     <!-- HPP -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">HPP (Biaya Ops)</label>
+                                        <label class="form-label">HPP (Ops Costs)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_hpp" class="form-control currency-input">
@@ -709,7 +732,7 @@
 
                                     <!-- Harga Jual (Auto Calculate) -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Harga Jual (IDR)</label>
+                                        <label class="form-label">Selling Price (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_harga_jual"
@@ -742,10 +765,10 @@
                                             <th style="width: 5%;">No</th>
                                             <th style="width: 15%;">Category</th>
                                             <th style="width: 15%;">Item</th>
-                                            <th style="width: 13%;">Pendapatan IDR</th>
-                                            <th style="width: 13%;">Pendapatan USD</th>
-                                            <th style="width: 13%;">HPP (Biaya Ops)</th>
-                                            <th style="width: 13%;">Harga Jual (IDR)</th>
+                                            <th style="width: 13%;">Income (IDR)</th>
+                                            <th style="width: 13%;">Income (USD)</th>
+                                            <th style="width: 13%;">HPP (Ops Costs)</th>
+                                            <th style="width: 13%;">Selling Price (IDR)</th>
                                             <th style="width: 8%;">Action</th>
                                         </tr>
                                     </thead>
@@ -844,22 +867,22 @@
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Pendapatan IDR</label>
+                            <label class="form-label">Income (IDR)</label>
                             <input type="text" id="edit_pendapatan_idr" class="form-control">
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Pendapatan USD</label>
+                            <label class="form-label">Income (USD)</label>
                             <input type="text" id="edit_pendapatan_usd" class="form-control">
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">HPP (Biaya Ops)</label>
+                            <label class="form-label">HPP (Ops Costs)</label>
                             <input type="text" id="edit_hpp" class="form-control">
                         </div>
 
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Harga Jual</label>
+                            <label class="form-label">Selling Price</label>
                             <input type="text" id="edit_harga_jual" class="form-control" readonly
                                 style="background-color: #e9ecef;">
                         </div>
@@ -1325,6 +1348,7 @@
             const areaId = $('#id_md_area').val();
             const title = $('#title').val();
             const note = $('#note').val();
+            const tglJo      = $('#tgl_jo_cont').val();
 
             if (!contractId || !areaId || !title) {
                 showFloatingAlert('error', 'Please fill all required fields');
@@ -1334,6 +1358,7 @@
             const formData = {
                 id_md_cont: contractId,
                 id_md_area: areaId,
+                tgl_jo_cont:  tglJo,
                 title: title,
                 note: note,
                 _token: $('input[name="_token"]').val()

@@ -15,6 +15,8 @@ class JoContract extends Model
 
     protected $fillable = [
         'id_jo_cont',
+        'no_jo_cont',
+        'tgl_jo_cont',
         'id_md_cont',
         'id_md_area',
         'title',
@@ -22,6 +24,7 @@ class JoContract extends Model
     ];
 
     protected $casts = [
+        'tgl_jo_cont' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

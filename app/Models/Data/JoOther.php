@@ -19,6 +19,8 @@ class JoOther extends Model
 
     protected $fillable = [
         'id_jo_other',
+        'no_jo_other',
+        'tgl_jo_other',
         'id_md_cust',
         'id_md_other',
         'id_md_port',
@@ -31,6 +33,7 @@ class JoOther extends Model
     ];
 
     protected $casts = [
+        'tgl_jo_other' => 'date',
         'date_start' => 'date',
         'date_end' => 'date',
         'created_at' => 'datetime',

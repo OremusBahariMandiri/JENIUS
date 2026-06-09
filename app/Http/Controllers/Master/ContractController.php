@@ -113,7 +113,7 @@ class ContractController extends Controller
         $validator = Validator::make($request->all(), [
             'no_contract' => 'required|string|max:100|unique:a02_md_contract,no_contract',
             'contract' => 'required|string|max:255',
-            'id_md_cust' => 'required|integer|exists:a01_md_customer,id_md_cust',
+            'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
             'expenditure' => 'required|numeric|min:0',
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
@@ -254,7 +254,7 @@ class ContractController extends Controller
         $validator = Validator::make($request->all(), [
             'no_contract' => 'required|string|max:100|unique:a02_md_contract,no_contract,' . $id . ',id_md_cont',
             'contract' => 'required|string|max:255',
-            'id_md_cust' => 'required|integer|exists:a01_md_customer,id_md_cust',
+            'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
             'expenditure' => 'required|numeric|min:0',
             'date_start' => 'required|date',
             'date_end' => 'required|date|after_or_equal:date_start',
