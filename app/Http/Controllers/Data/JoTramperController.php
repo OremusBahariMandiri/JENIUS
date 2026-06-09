@@ -94,8 +94,9 @@ class JoTramperController extends Controller
         $ports     = Port::orderBy('name_port')->get();
         $invoices = Invoice::where('jo_ctg', 'tramper')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
         $vessels = Vessel::orderBy('vessel_name')->get();
+        $previewNoJot = IdGenerator::generateDocNo('b03_jo_tram', 'no_jo_tram');
 
-        return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices', 'vessels'));
+        return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices', 'vessels','previewNoJot'));
     }
 
     // =========================================================================
@@ -114,6 +115,7 @@ class JoTramperController extends Controller
                 'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
                 'id_md_port' => 'required|exists:a06_md_port,id_md_port',
                 'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
+                'tgl_jo_tram'  => 'required|date',
                 'date_start' => 'required|date',
                 'date_end'   => 'required|date|after_or_equal:date_start',
                 'title'      => 'required|string|max:255',
@@ -140,9 +142,12 @@ class JoTramperController extends Controller
             DB::beginTransaction();
 
             $newJoTramId = IdGenerator::generate('B03', 'b03_jo_tram', 'id_jo_tram');
+            $noJoTram = IdGenerator::generateDocNo('b03_jo_tram', 'no_jo_tram');
 
             DB::table('b03_jo_tram')->insert([
                 'id_jo_tram' => $newJoTramId,
+                'no_jo_tram'   => $noJoTram,
+                'tgl_jo_tram'  => $request->tgl_jo_tram,
                 'id_md_cust' => $request->id_md_cust,
                 'id_md_port' => $request->id_md_port,
                 'id_md_vessel' => $request->id_md_vessel,
@@ -192,6 +197,7 @@ class JoTramperController extends Controller
                 'id_md_cust' => 'required|exists:a01_md_customer,id_md_cust',
                 'id_md_port' => 'required|exists:a06_md_port,id_md_port',
                 'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
+                'tgl_jo_tram'  => 'required|date',
                 'date_start' => 'required|date',
                 'date_end'   => 'required|date|after_or_equal:date_start',
                 'title'      => 'required|string|max:255',
@@ -207,6 +213,7 @@ class JoTramperController extends Controller
             $joTramper = JoTramper::where('id_jo_tram', (string) $id)->firstOrFail();
 
             $joTramper->update([
+                'tgl_jo_tram'  => $request->tgl_jo_tram,
                 'id_md_cust' => $request->id_md_cust,
                 'id_md_port' => $request->id_md_port,
                 'id_md_vessel' => $request->id_md_vessel,

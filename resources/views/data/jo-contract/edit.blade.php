@@ -479,6 +479,7 @@
 
     <div class="container-fluid joContractEditPage">
         <div class="row">
+
             <div class="col-lg-12">
                 <!-- Page Header Card -->
                 <div class="card shadow mb-4">
@@ -506,6 +507,23 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
+                                <div class="row mb-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label">No. JO</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-success text-white">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <input type="text" class="form-control fw-bold" value="{{ $joContract->no_jo_cont ?? '-' }}"
+                                                readonly style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required-field">JO date</label>
+                                        <input type="date" name="tgl_jo_cont" id="tgl_jo_cont" class="form-control"
+                                            value="{{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('Y-m-d') : '' }}">
+                                    </div>
+                                </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label required-field">Contract</label>
 
@@ -724,9 +742,9 @@
                                         <textarea id="input_note" class="form-control" rows="5" placeholder="Add notes for this item..."></textarea>
                                     </div>
 
-                                    <!-- Pendapatan IDR -->
+                                    <!-- Income (IDR) -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan IDR</label>
+                                        <label class="form-label">Income (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_pendapatan_idr"
@@ -734,9 +752,9 @@
                                         </div>
                                     </div>
 
-                                    <!-- Pendapatan USD -->
+                                    <!-- Income (USD) -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan USD</label>
+                                        <label class="form-label">Income (USD)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">USD</span>
                                             <input type="text" id="input_pendapatan_usd"
@@ -746,16 +764,16 @@
 
                                     <!-- HPP -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">HPP (Biaya Ops)</label>
+                                        <label class="form-label">HPP (Ops Costs)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_hpp" class="form-control currency-input">
                                         </div>
                                     </div>
 
-                                    <!-- Harga Jual (Auto Calculate) -->
+                                    <!-- Selling Price (Auto Calculate) -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Harga Jual (IDR)</label>
+                                        <label class="form-label">Selling Price (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_harga_jual"
@@ -787,10 +805,10 @@
                                             <th style="width: 5%;">No</th>
                                             <th style="width: 13%;">Category</th>
                                             <th style="width: 13%;">Item</th>
-                                            <th style="width: 12%;">Pendapatan IDR</th>
-                                            <th style="width: 12%;">Pendapatan USD</th>
-                                            <th style="width: 12%;">HPP (Biaya Ops)</th>
-                                            <th style="width: 12%;">Harga Jual (IDR)</th>
+                                            <th style="width: 12%;">Income (IDR)</th>
+                                            <th style="width: 12%;">Income (USD)</th>
+                                            <th style="width: 12%;">HPP (Ops Costs)</th>
+                                            <th style="width: 12%;">Selling Price (IDR)</th>
                                             <th style="width: 11%;">Action</th>
                                         </tr>
                                     </thead>
@@ -1299,7 +1317,7 @@
         }
 
         // ========================================
-        // AUTO-CALCULATE HARGA JUAL (FIXED FORMULA)
+        // AUTO-CALCULATE Selling Price (FIXED FORMULA)
         // ========================================
         function calculateHargaJual() {
             const kursRate = parseRupiah($('#global_kurs_usd_display').val());
@@ -1379,6 +1397,7 @@
             const areaId = $('#id_md_area').val();
             const title = $('#title').val();
             const note = $('#note').val();
+            const tglJo = $('#tgl_jo_cont').val();
             const kursDate = $('#global_tgl_kurs_usd').val();
             const kursRate = parseRupiah($('#global_kurs_usd_display').val());
 
@@ -1390,6 +1409,7 @@
             const formData = {
                 id_md_cont: contractId,
                 id_md_area: areaId,
+                tgl_jo_cont: tglJo,
                 title: title,
                 note: note,
                 global_tgl_kurs_usd: kursDate,
@@ -1682,7 +1702,7 @@
                                 console.log('Set datetime value:', datetimeValue);
                             }
 
-                            // Recalculate harga jual
+                            // Recalculate Selling Price
                             calculateHargaJual();
 
                             console.log('=== FORM POPULATED ===');
@@ -2007,6 +2027,7 @@
             const formData = {
                 id_md_cont: contractId,
                 id_md_area: areaId,
+                tgl_jo_cont:          $('#tgl_jo_cont').val(),
                 title: title,
                 note: note,
                 global_tgl_kurs_usd: kursDate,

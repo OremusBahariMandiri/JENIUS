@@ -579,6 +579,25 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">No. JO</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-success text-white">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <input type="text" class="form-control fw-bold" value="{{ $previewNoJo }}"
+                                                readonly
+                                                style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                        </div>
+                                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Auto-generate on save</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required-field">JO Date</label>
+                                        <input type="date" name="tgl_jo_other" id="tgl_jo_other" class="form-control"
+                                            value="{{ date('Y-m-d') }}">
+                                    </div>
+                                </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label required-field">Customer</label>
                                     <select name="id_md_cust" id="id_md_cust" class="form-select select2"
@@ -697,7 +716,7 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan IDR</label>
+                                        <label class="form-label">Income (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_pendapatan_idr"
@@ -705,7 +724,7 @@
                                         </div>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan USD</label>
+                                        <label class="form-label">Income (USD)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">USD</span>
                                             <input type="text" id="input_pendapatan_usd"
@@ -713,14 +732,14 @@
                                         </div>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">HPP (Biaya Ops)</label>
+                                        <label class="form-label">HPP (Ops Costs)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_hpp" class="form-control currency-input">
                                         </div>
                                     </div>
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Harga Jual (IDR)</label>
+                                        <label class="form-label">Selling Price (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_harga_jual"
@@ -753,10 +772,10 @@
                                             <th style="width:5%;">No</th>
                                             <th style="width:15%;">Category</th>
                                             <th style="width:15%;">Item</th>
-                                            <th style="width:13%;">Pendapatan IDR</th>
-                                            <th style="width:13%;">Pendapatan USD</th>
-                                            <th style="width:13%;">HPP (Biaya Ops)</th>
-                                            <th style="width:13%;">Harga Jual (IDR)</th>
+                                            <th style="width:13%;">Income (IDR)</th>
+                                            <th style="width:13%;">Income (USD)</th>
+                                            <th style="width:13%;">HPP (Ops Costs)</th>
+                                            <th style="width:13%;">Selling Price (IDR)</th>
                                             <th style="width:8%;">Action</th>
                                         </tr>
                                     </thead>
@@ -944,6 +963,7 @@
                     id_md_other: otherId,
                     id_md_port: portId,
                     id_md_vessel: $('#id_md_vessel').val(),
+                    tgl_jo_other:  $('#tgl_jo_other').val(),
                     date_start: ds,
                     date_end: de,
                     title: title,
@@ -985,7 +1005,7 @@
             itemSelect.disabled = !this.value;
         });
 
-        // ── Harga Jual ─────────────────────────────────────────
+        // ── Selling Price ─────────────────────────────────────────
         function calculateHargaJual() {
             const kurs = parseRupiah($('#global_kurs_usd_display').val());
             const idr = parseRupiah($('#input_pendapatan_idr').val());

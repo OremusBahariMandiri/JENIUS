@@ -488,6 +488,24 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">No. JO</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text bg-success text-white">
+                                                <i class="fas fa-file-alt"></i>
+                                            </span>
+                                            <input type="text" class="form-control fw-bold"
+                                                value="{{ $joTramper->no_jo_tram ?? '-' }}" readonly
+                                                style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label required-field">JO Date</label>
+                                        <input type="date" name="tgl_jo_tram" id="tgl_jo_tram" class="form-control"
+                                            value="{{ $joTramper->tgl_jo_tram ? $joTramper->tgl_jo_tram->format('Y-m-d') : '' }}">
+                                    </div>
+                                </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label required-field">Customer</label>
                                     <select name="id_md_cust" id="id_md_cust" class="form-select select2"
@@ -577,7 +595,8 @@
                             <div class="d-flex justify-content-between align-items-center">
                                 <h6 class="mb-0"><i class="fas fa-list me-2"></i>JO Tramper Items</h6>
                                 <!-- KURS SECTION -->
-                                <div class="kurs-section d-flex gap-3 align-items-center mb-0" style="padding: 10px 15px;">
+                                <div class="kurs-section d-flex gap-3 align-items-center mb-0"
+                                    style="padding: 10px 15px;">
                                     <div>
                                         <label class="form-label mb-1">Kurs Date</label>
                                         @php
@@ -642,9 +661,9 @@
                                         <textarea id="input_note" class="form-control" rows="5" placeholder="Add notes for this item..."></textarea>
                                     </div>
 
-                                    <!-- Pendapatan IDR -->
+                                    <!-- Income (IDR) -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan IDR</label>
+                                        <label class="form-label">Income (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_pendapatan_idr"
@@ -652,9 +671,9 @@
                                         </div>
                                     </div>
 
-                                    <!-- Pendapatan USD -->
+                                    <!-- Income (USD) -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Pendapatan USD</label>
+                                        <label class="form-label">Income (USD)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">USD</span>
                                             <input type="text" id="input_pendapatan_usd"
@@ -664,16 +683,16 @@
 
                                     <!-- HPP -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">HPP (Biaya Ops)</label>
+                                        <label class="form-label">HPP (Ops Costs)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_hpp" class="form-control currency-input">
                                         </div>
                                     </div>
 
-                                    <!-- Harga Jual (Auto Calculate) -->
+                                    <!-- Selling Price (Auto Calculate) -->
                                     <div class="col-md-3 mb-3">
-                                        <label class="form-label">Harga Jual (IDR)</label>
+                                        <label class="form-label">Selling Price (IDR)</label>
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_harga_jual"
@@ -703,10 +722,10 @@
                                             <th style="width:5%;">No</th>
                                             <th style="width:13%;">Category</th>
                                             <th style="width:13%;">Item</th>
-                                            <th style="width:12%;">Pendapatan IDR</th>
-                                            <th style="width:12%;">Pendapatan USD</th>
-                                            <th style="width:12%;">HPP (Biaya Ops)</th>
-                                            <th style="width:12%;">Harga Jual (IDR)</th>
+                                            <th style="width:12%;">Income (IDR)</th>
+                                            <th style="width:12%;">Income (USD)</th>
+                                            <th style="width:12%;">HPP (Ops Costs)</th>
+                                            <th style="width:12%;">Selling Price (IDR)</th>
                                             <th style="width:11%;">Action</th>
                                         </tr>
                                     </thead>
@@ -957,7 +976,7 @@
         });
 
         // ========================================
-        // AUTO-CALCULATE HARGA JUAL
+        // AUTO-CALCULATE Selling Price
         // ========================================
         function calculateHargaJual() {
             const kursRate = parseRupiah($('#global_kurs_usd_display').val());
@@ -1030,6 +1049,7 @@
             const ds = $('#date_start').val();
             const de = $('#date_end').val();
             const note = $('#note').val();
+            const tglJo  = $('#tgl_jo_tram').val();
 
             if (!custId || !portId || !title || !ds || !de) {
                 showFloatingAlert('error', 'Please fill all required fields');
@@ -1045,6 +1065,7 @@
                     id_md_cust: custId,
                     id_md_port: portId,
                     id_md_vessel: $('#id_md_vessel').val(), // tambah ini
+                    tgl_jo_tram:  tglJo,
                     date_start: ds,
                     date_end: de,
                     title: title,

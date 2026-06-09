@@ -121,8 +121,16 @@ class JoOtherController extends Controller
         $ports     = Port::orderBy('name_port')->get();
         $invoices = Invoice::where('jo_ctg', 'other')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
         $vessels   = Vessel::orderBy('vessel_name')->get();
+        $previewNoJo  = IdGenerator::generateDocNo('b05_jo_other', 'no_jo_other');
 
-        return view('data.jo-other.create', compact('customers', 'others', 'ports', 'invoices', 'vessels'));
+        return view('data.jo-other.create', compact(
+            'customers',
+            'others',
+            'ports',
+            'invoices',
+            'vessels',
+            'previewNoJo'
+        ));
     }
 
     /**
@@ -839,6 +847,7 @@ class JoOtherController extends Controller
                 'id_md_other'  => 'required|exists:a07_md_other,id_md_other',
                 'id_md_port'   => 'required|exists:a06_md_port,id_md_port',
                 'id_md_vessel' => 'nullable|exists:a05_md_vessel,id_md_vessel',
+                'tgl_jo_other' => 'required|date',
                 'date_start'   => 'required|date',
                 'date_end'     => 'required|date|after_or_equal:date_start',
                 'title'        => 'required|string|max:255',
@@ -852,9 +861,12 @@ class JoOtherController extends Controller
             DB::beginTransaction();
 
             $newId = IdGenerator::generate('B05', 'b05_jo_other', 'id_jo_other');
+            $noJoOther = IdGenerator::generateDocNo('b05_jo_other', 'no_jo_other');
 
             $joOther = JoOther::create([
                 'id_jo_other'  => $newId,
+                'no_jo_other'  => $noJoOther,
+                'tgl_jo_other' => $request->tgl_jo_other,
                 'id_md_cust'   => $request->id_md_cust,
                 'id_md_other'  => $request->id_md_other,
                 'id_md_port'   => $request->id_md_port,
@@ -902,6 +914,7 @@ class JoOtherController extends Controller
 
             $joOther = JoOther::findOrFail($id);
             $joOther->update([
+                'tgl_jo_other' => $request->tgl_jo_other,
                 'id_md_cust'   => $request->id_md_cust,
                 'id_md_other'  => $request->id_md_other,
                 'id_md_port'   => $request->id_md_port,
