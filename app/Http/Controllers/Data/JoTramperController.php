@@ -96,7 +96,7 @@ class JoTramperController extends Controller
         $vessels = Vessel::orderBy('vessel_name')->get();
         $previewNoJot = IdGenerator::generateDocNo('b03_jo_tram', 'no_jo_tram');
 
-        return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices', 'vessels','previewNoJot'));
+        return view('data.jo-tramper.create', compact('customers', 'ports', 'invoices', 'vessels', 'previewNoJot'));
     }
 
     // =========================================================================
@@ -906,5 +906,104 @@ class JoTramperController extends Controller
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Error deleting JO Trampers: ' . $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Export JO Tramper as PDF
+     *
+     * Route: GET /data/jo-tramper/{id}/export-pdf
+     * Name:  jo-tramper.export-pdf
+     */
+    public function exportPdf($id)
+    {
+        try {
+            $joTramper = JoTramper::with([
+                'customer',
+                'port',
+                'vessel',
+                'items.invoice',
+            ])->where('id_jo_tram', (string) $id)->firstOrFail();
+
+            // Terbilang (number-to-words) — uses a helper if available,
+            // otherwise falls back to a simple inline conversion.
+            $totalSell = $joTramper->items->sum('hargajual_idr');
+            $terbilang = $this->toTerbilang((int) round($totalSell)) . ' Rupiah';
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                'data.jo-tramper.pdf',          // resources/views/data/jo-tramper/pdf.blade.php
+                compact('joTramper', 'terbilang')
+            )
+                ->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => false,
+                    'defaultFont'          => 'Arial',
+                    'dpi'                  => 150,
+                ]);
+
+            $noJo = str_replace(['/', '\\'], '-', $joTramper->no_jo_tram ?? $id);
+            $filename = 'JO-Tramper-' . $noJo . '.pdf';
+
+            return $pdf->download($filename);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'JO Tramper not found'], 404);
+            }
+            return back()->with('error', 'JO Tramper not found');
+        } catch (\Exception $e) {
+            Log::error('JO Tramper Export PDF Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to export PDF: ' . $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Failed to export PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Simple Indonesian number-to-words (terbilang) helper.
+     * Replace with your existing App\Helpers\Terbilang if you have one.
+     */
+    private function toTerbilang(int $number): string
+    {
+        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
+
+        $words = [
+            '',
+            'Satu',
+            'Dua',
+            'Tiga',
+            'Empat',
+            'Lima',
+            'Enam',
+            'Tujuh',
+            'Delapan',
+            'Sembilan',
+            'Sepuluh',
+            'Sebelas'
+        ];
+
+        if ($number === 0)  return 'Nol';
+        if ($number < 12)   return $words[$number];
+        if ($number < 20)   return $this->toTerbilang($number - 10) . ' Belas';
+        if ($number < 100)  return $words[(int)($number / 10)] . ' Puluh' .
+            ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
+        if ($number < 200)  return 'Seratus' .
+            ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 1000) return $words[(int)($number / 100)] . ' Ratus' .
+            ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 2000) return 'Seribu' .
+            ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000)
+            return $this->toTerbilang((int)($number / 1000)) . ' Ribu' .
+                ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000_000)
+            return $this->toTerbilang((int)($number / 1_000_000)) . ' Juta' .
+                ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
+        if ($number < 1_000_000_000_000)
+            return $this->toTerbilang((int)($number / 1_000_000_000)) . ' Miliar' .
+                ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
+
+        return $this->toTerbilang((int)($number / 1_000_000_000_000)) . ' Triliun' .
+            ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
     }
 }

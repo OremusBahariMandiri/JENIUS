@@ -10,6 +10,7 @@
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
                         <span class="fw-bold"><i class="fas fa-ship me-2"></i>JO Tramper Data</span>
+
                         @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'tambah')))
                             <a href="{{ route('jo-tramper.create') }}" class="btn btn-light">
                                 <i class="fas fa-plus-circle me-1"></i> Add
@@ -60,7 +61,7 @@
                                             </td>
                                             <td>
                                                 @if ($joTramper->port)
-                                                {{ $joTramper->port->name_port }}
+                                                    {{ $joTramper->port->name_port }}
                                                 @else
                                                     -
                                                 @endif
@@ -79,6 +80,12 @@
                                                             class="btn btn-sm btn-info" data-bs-toggle="tooltip"
                                                             title="Detail">
                                                             <i class="fas fa-eye"></i>
+                                                        </a>
+
+                                                        <a href="{{ route('jo-tramper.export-pdf', $joTramper->id_jo_tram) }}"
+                                                            class="btn btn-sm btn-danger" target="_blank"
+                                                            data-bs-toggle="tooltip" title="Export PDF">
+                                                            <i class="fas fa-file-pdf"></i>
                                                         </a>
                                                     @endif
 
@@ -231,7 +238,7 @@
         $(document).ready(function() {
             // Cek apakah tabel memiliki data
             var hasData = $('#joTramperTable tbody tr').length > 0 &&
-                          !$('#joTramperTable tbody tr td[colspan]').length;
+                !$('#joTramperTable tbody tr td[colspan]').length;
 
             if (hasData) {
                 if ($.fn.DataTable.isDataTable('#joTramperTable')) {
