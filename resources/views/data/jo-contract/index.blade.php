@@ -56,7 +56,7 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
-                                                {{ $joContract->tgl_jo_cont->format('d/m/y') }}
+                                                {{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('d/m/y') : '-' }}
                                             </td>
                                             <td>{{ $joContract->no_jo_cont ?? '-' }}</td>
                                             <td>{{ $joContract->contract ? $joContract->contract->no_contract : '-' }}</td>
@@ -188,7 +188,6 @@
 
         .joContractPage #joContractTable tbody tr:hover {
             background-color: #f8f9fa;
-            cursor: pointer;
         }
 
         .joContractPage .btn-sm {
@@ -265,7 +264,15 @@
                         {
                             orderable: false,
                             targets: -1
-                        }
+                        },
+                        {
+                            responsivePriority: 1,
+                            targets: 12
+                        },
+                        {
+                            responsivePriority: 2,
+                            targets: 0
+                        },
                     ],
                     language: {
                         search: "Search:",
@@ -367,19 +374,6 @@
                 });
             });
             // Row click to detail
-            if (hasData) {
-                $('#joContractTable tbody').on('click', 'tr', function(e) {
-                    if ($(e.target).is('button') || $(e.target).is('a') || $(e.target).is('i') ||
-                        $(e.target).closest('button').length || $(e.target).closest('a').length) {
-                        return;
-                    }
-
-                    var detailLink = $(this).find('a[title="Detail"]').attr('href');
-                    if (detailLink) {
-                        window.location.href = detailLink;
-                    }
-                });
-            }
 
             // Auto hide alerts
             setTimeout(function() {

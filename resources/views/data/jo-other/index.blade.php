@@ -56,7 +56,7 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
-                                                {{ $joOther->tgl_jo_other->format('d/m/y') }}
+                                                {{ $joOther->tgl_jo_other ? $joOther->tgl_jo_other->format('d/m/y') : '-' }}
                                             </td>
                                             <td>{{ $joOther->no_jo_other ?? '-' }}</td>
                                             <td>{{ $joOther->customer ? $joOther->customer->customer : '-' }}</td>
@@ -65,9 +65,9 @@
                                             <td>{{ $joOther->other ? $joOther->other->other : '-' }}</td>
                                             <td>
                                                 <small>
-                                                    {{ $joOther->date_start->format('d/m/y') }}
+                                                    {{ $joOther->date_start ? $joOther->date_start->format('d/m/y') : '-' }}
                                                     –
-                                                    {{ $joOther->date_end->format('d/m/y') }}
+                                                    {{ $joOther->date_end ? $joOther->date_end->format('d/m/y') : '-' }}
                                                 </small>
                                             </td>
                                             <td>{{ $joOther->title }}</td>
@@ -186,7 +186,6 @@
 
         .joOtherPage #joOtherTable tbody tr:hover {
             background-color: #f8f9fa;
-            cursor: pointer;
         }
 
         .joOtherPage .btn-sm {
@@ -275,7 +274,15 @@
                         {
                             orderable: false,
                             targets: 12
-                        }, // Action
+                        },
+                        {
+                            responsivePriority: 1,
+                            targets: 12
+                        },
+                        {
+                            responsivePriority: 2,
+                            targets: 0
+                        },
                     ],
                     language: {
                         search: "Search:",
@@ -375,21 +382,6 @@
                     }
                 });
             });
-
-            // Row click to detail
-            if (hasData) {
-                $('#joOtherTable tbody').on('click', 'tr', function(e) {
-                    if ($(e.target).is('button') || $(e.target).is('a') || $(e.target).is('i') ||
-                        $(e.target).closest('button').length || $(e.target).closest('a').length) {
-                        return;
-                    }
-
-                    var detailLink = $(this).find('a[title="Detail"]').attr('href');
-                    if (detailLink) {
-                        window.location.href = detailLink;
-                    }
-                });
-            }
 
             // Auto hide alerts
             setTimeout(function() {
