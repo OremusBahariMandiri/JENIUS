@@ -23,7 +23,7 @@ class JoTramperController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = JoTramper::with(['customer', 'port']);
+            $query = JoTramper::with(['customer', 'port', 'vessel', 'items']);
 
             if ($request->has('search') && !empty($request->search)) {
                 $search = $request->search;

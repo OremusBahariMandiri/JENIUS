@@ -22,7 +22,7 @@ class JoContractController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = Jocontract::with(['contract.customer', 'area']);
+            $query = JoContract::with(['contract.customer', 'area', 'items']);
 
             // Search functionality
             if ($request->has('search') && !empty($request->search)) {
