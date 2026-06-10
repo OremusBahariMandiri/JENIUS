@@ -55,7 +55,7 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
-                                                {{ $joTramper->tgl_jo_tram->format('d/m/y') }}
+                                                {{ $joTramper->tgl_jo_tram ? $joTramper->tgl_jo_tram->format('d/m/y') : '-' }}
                                             </td>
                                             <td>{{ $joTramper->no_jo_tram ?? '-' }}</td>
                                             <td>{{ $joTramper->customer ? $joTramper->customer->customer : '-' }}</td>
@@ -63,9 +63,9 @@
                                             <td>{{ $joTramper->port ? $joTramper->port->name_port : '-' }}</td>
                                             <td>
                                                 <small>
-                                                    {{ $joTramper->date_start->format('d/m/y') }}
+                                                    {{ $joTramper->date_start ? $joTramper->date_start->format('d/m/y') : '-' }}
                                                     –
-                                                    {{ $joTramper->date_end->format('d/m/y') }}
+                                                    {{ $joTramper->date_end ? $joTramper->date_end->format('d/m/y') : '-' }}
                                                 </small>
                                             </td>
                                             <td>{{ $joTramper->title }}</td>
@@ -184,7 +184,6 @@
 
         .joTramperPage #joTramperTable tbody tr:hover {
             background-color: #f8f9fa;
-            cursor: pointer;
         }
 
         .joTramperPage .btn-sm {
@@ -260,7 +259,15 @@
                         {
                             orderable: false,
                             targets: -1
-                        }
+                        },
+                        {
+                            responsivePriority: 1,
+                            targets: 11
+                        },
+                        {
+                            responsivePriority: 2,
+                            targets: 0
+                        },
                     ],
                     language: {
                         search: "Search:",
@@ -361,20 +368,6 @@
                     }
                 });
             });
-
-            if (hasData) {
-                $('#joTramperTable tbody').on('click', 'tr', function(e) {
-                    if ($(e.target).is('button') || $(e.target).is('a') || $(e.target).is('i') ||
-                        $(e.target).closest('button').length || $(e.target).closest('a').length) {
-                        return;
-                    }
-
-                    var detailLink = $(this).find('a[title="Detail"]').attr('href');
-                    if (detailLink) {
-                        window.location.href = detailLink;
-                    }
-                });
-            }
 
             setTimeout(function() {
                 $(".alert").fadeOut("slow");
