@@ -1230,8 +1230,7 @@ class JoOtherController extends Controller
 
             $noJo     = str_replace(['/', '\\'], '-', $joOther->no_jo_other ?? $id);
             $filename = 'JO-Other-' . $noJo . '.pdf';
-
-            return $pdf->download($filename);
+            return $pdf->stream($filename);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             if (request()->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'JO Other not found'], 404);

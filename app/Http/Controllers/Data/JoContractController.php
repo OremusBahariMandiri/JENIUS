@@ -1580,8 +1580,7 @@ class JoContractController extends Controller
 
             $noJo     = str_replace(['/', '\\'], '-', $joContract->no_jo_cont ?? $id);
             $filename = 'JO-Contract-' . $noJo . '.pdf';
-
-            return $pdf->download($filename);
+            return $pdf->stream($filename);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             if (request()->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'JO Contract not found'], 404);

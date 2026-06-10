@@ -43,7 +43,7 @@
                                         <th>Customer</th>
                                         <th>Area</th>
                                         <th>Department</th>
-                                        <th class="text-center" width="15%">Generate Invoice</th>
+                                        <th class="text-center">Invoice</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
