@@ -429,6 +429,57 @@
             padding: 0 1px;
             border-radius: 2px;
         }
+
+        .final-save-section {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px 12px 0 0;
+            margin-top: 30px;
+            z-index: 100;
+        }
+
+        .btn-final-back {
+            background: linear-gradient(135deg, #868686 0%, #5e5e5e 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(27, 27, 27, 0.4);
+            transition: all 0.3s;
+        }
+
+        .btn-final-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(49, 49, 49, 0.5);
+            color: white;
+        }
+
+        /* Radio button group — override Bootstrap blue dengan hijau */
+        .btn-check:checked+.btn-outline-primary {
+            background-color: #059669 !important;
+            border-color: #059669 !important;
+            color: white !important;
+        }
+
+        .btn-outline-primary {
+            color: #059669 !important;
+            border-color: #059669 !important;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #d1fae5 !important;
+            border-color: #059669 !important;
+            color: #059669 !important;
+        }
+
+        .btn-check:focus+.btn-outline-primary {
+            box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25) !important;
+        }
     </style>
 @endpush
 
@@ -478,17 +529,17 @@
                                             <span class="input-group-text bg-success text-white">
                                                 <i class="fas fa-file-alt"></i>
                                             </span>
-                                            <input type="text" class="form-control fw-bold"
-                                                value="{{ $previewNoJo }}" readonly
+                                            <input type="text" class="form-control fw-bold" value="{{ $previewNoJo }}"
+                                                readonly
                                                 style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
                                         </div>
-                                        <small class="text-muted"><i
-                                                class="fas fa-info-circle me-1"></i>Auto-generate on save</small>
+                                        <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Auto-generate on
+                                            save</small>
                                     </div>
                                     <div class="col-md-6">
                                         <label class="form-label required-field">JO date</label>
-                                        <input type="date" name="tgl_jo_cont" id="tgl_jo_cont"
-                                            class="form-control" value="{{ date('Y-m-d') }}">
+                                        <input type="date" name="tgl_jo_cont" id="tgl_jo_cont" class="form-control"
+                                            value="{{ date('Y-m-d') }}">
                                     </div>
                                 </div>
 
@@ -822,17 +873,29 @@
                             @enderror
                         </div>
                     </div>
-
-                    <!-- Action Buttons -->
-                    <div class="d-flex gap-2 mb-5">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            <i class="fas fa-save me-2"></i>Save JO Contract
-                        </button>
-                        <a href="{{ route('jo-contract.index') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-times me-2"></i>Cancel
-                        </a>
-                    </div>
                 </form>
+                <!-- FINAL SAVE SECTION -->
+                <div class="final-save-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div></div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <div class="d-flex flex-column align-items-center">
+                                <button type="button" class="btn disabled" id="btnGeneratePdf"
+                                    style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; opacity:0.55; cursor:not-allowed; border-color:red; background-color:rgb(255, 237, 237); color:red"
+                                    title="Save header first to generate PDF">
+                                    <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                                </button>
+                                <small class="text-muted mt-1" id="pdfHintText">
+                                    <i class="fas fa-info-circle me-1"></i>Save JO Contract Information first
+                                </small>
+                            </div>
+                            <a href="{{ route('jo-contract.index') }}" class="btn btn-final-back"
+                                style="margin-top:-25px">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1348,7 +1411,7 @@
             const areaId = $('#id_md_area').val();
             const title = $('#title').val();
             const note = $('#note').val();
-            const tglJo      = $('#tgl_jo_cont').val();
+            const tglJo = $('#tgl_jo_cont').val();
 
             if (!contractId || !areaId || !title) {
                 showFloatingAlert('error', 'Please fill all required fields');
@@ -1358,7 +1421,7 @@
             const formData = {
                 id_md_cont: contractId,
                 id_md_area: areaId,
-                tgl_jo_cont:  tglJo,
+                tgl_jo_cont: tglJo,
                 title: title,
                 note: note,
                 _token: $('input[name="_token"]').val()

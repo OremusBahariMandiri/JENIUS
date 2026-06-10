@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Master\Customer;
 use App\Models\Master\Other;
 use App\Models\Master\Port;
+use App\Models\Master\Vessel;
 
 class JoOther extends Model
 {

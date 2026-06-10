@@ -467,6 +467,28 @@
         .btn-final-back i {
             margin-right: 10px;
         }
+
+        /* Radio button group — override Bootstrap blue dengan hijau */
+        .btn-check:checked+.btn-outline-primary {
+            background-color: #059669 !important;
+            border-color: #059669 !important;
+            color: white !important;
+        }
+
+        .btn-outline-primary {
+            color: #059669 !important;
+            border-color: #059669 !important;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: #d1fae5 !important;
+            border-color: #059669 !important;
+            color: #059669 !important;
+        }
+
+        .btn-check:focus+.btn-outline-primary {
+            box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25) !important;
+        }
     </style>
 @endpush
 
@@ -514,8 +536,9 @@
                                             <span class="input-group-text bg-success text-white">
                                                 <i class="fas fa-file-alt"></i>
                                             </span>
-                                            <input type="text" class="form-control fw-bold" value="{{ $joContract->no_jo_cont ?? '-' }}"
-                                                readonly style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                            <input type="text" class="form-control fw-bold"
+                                                value="{{ $joContract->no_jo_cont ?? '-' }}" readonly
+                                                style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -914,17 +937,16 @@
                 <!-- FINAL SAVE SECTION -->
                 <div class="final-save-section">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1"><i class="fas fa-info-circle me-2"></i>Ready to Save?</h6>
-                            <small class="text-muted">Click the button to save all changes permanently</small>
-                        </div>
+                        <div></div>
                         <div class="d-flex gap-2">
+                            <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}" target="_blank"
+                                class="btn"
+                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; border-color:red; background-color:rgb(255, 237, 237); color:red">
+                                <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                            </a>
                             <a href="{{ route('jo-contract.index') }}" class="btn btn-final-back">
                                 <i class="fas fa-arrow-left me-1"></i> Back
                             </a>
-                            <button type="button" class="btn btn-final-save" id="btnFinalSave">
-                                <i class="fas fa-save"></i> Save All Changes
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -1392,50 +1414,39 @@
         // ========================================
         // UPDATE HEADER
         // ========================================
+        // Ganti dari save-all menjadi update header saja
         $('#btnSaveHeader').on('click', function() {
             const contractId = $('#id_md_cont').val();
             const areaId = $('#id_md_area').val();
             const title = $('#title').val();
-            const note = $('#note').val();
             const tglJo = $('#tgl_jo_cont').val();
-            const kursDate = $('#global_tgl_kurs_usd').val();
-            const kursRate = parseRupiah($('#global_kurs_usd_display').val());
 
-            if (!contractId || !areaId || !title || !kursDate || !kursRate) {
+            if (!contractId || !areaId || !title) {
                 showFloatingAlert('error', 'Please fill all required fields');
                 return;
             }
 
-            const formData = {
-                id_md_cont: contractId,
-                id_md_area: areaId,
-                tgl_jo_cont: tglJo,
-                title: title,
-                note: note,
-                global_tgl_kurs_usd: kursDate,
-                global_kurs_usd: kursRate,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            };
-
-            showFloatingAlert('saving', 'Updating header and syncing kurs...');
+            showFloatingAlert('saving', 'Updating header...');
 
             $.ajax({
-                url: `/jo-contract/save-all/${currentJoContractId}`,
+                url: `/jo-contract/header/update/${currentJoContractId}`,
                 method: 'POST',
-                data: formData,
-                success: function(response) {
-                    if (response.success) {
-                        showFloatingAlert('success', 'Header updated and kurs synced to all items!');
-
-                        // Reload page untuk refresh table dengan harga baru
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1500);
-                    }
+                data: {
+                    id_md_cont: contractId,
+                    id_md_area: areaId,
+                    tgl_jo_cont: tglJo,
+                    title: title,
+                    note: $('#note').val(),
+                    global_tgl_kurs_usd: $('#global_tgl_kurs_usd').val(),
+                    global_kurs_usd: parseRupiah($('#global_kurs_usd_display').val()),
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(r) {
+                    if (r.success) showFloatingAlert('success', 'Header updated successfully!');
+                    else showFloatingAlert('error', r.message || 'Failed to update header');
                 },
                 error: function(xhr) {
-                    const message = xhr.responseJSON?.message || 'Failed to update header';
-                    showFloatingAlert('error', message);
+                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to update header');
                 }
             });
         });
@@ -2027,7 +2038,7 @@
             const formData = {
                 id_md_cont: contractId,
                 id_md_area: areaId,
-                tgl_jo_cont:          $('#tgl_jo_cont').val(),
+                tgl_jo_cont: $('#tgl_jo_cont').val(),
                 title: title,
                 note: note,
                 global_tgl_kurs_usd: kursDate,

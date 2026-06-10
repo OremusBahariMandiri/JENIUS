@@ -824,20 +824,19 @@
                 </form>
 
                 <!-- FINAL SAVE SECTION -->
+                <!-- FINAL SAVE SECTION -->
                 <div class="final-save-section">
                     <div class="d-flex justify-content-between align-items-center">
                         <div></div>
-                        {{-- <div>
-                            <h6 class="mb-1"><i class="fas fa-info-circle me-2"></i>Ready to Save?</h6>
-                            <small class="text-muted">Click the button to save all changes permanently</small>
-                        </div> --}}
                         <div class="d-flex gap-2">
+                            <a href="{{ route('jo-tramper.export-pdf', $joTramper->id_jo_tram) }}" target="_blank"
+                                class="btn"
+                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; border-color:red; background-color:rgb(255, 237, 237); color:red">
+                                <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                            </a>
                             <a href="{{ route('jo-tramper.index') }}" class="btn btn-final-back">
                                 <i class="fas fa-arrow-left me-1"></i> Back
                             </a>
-                            {{-- <button type="button" class="btn btn-final-save" id="btnFinalSave">
-                                <i class="fas fa-save"></i> Save All Changes
-                            </button> --}}
                         </div>
                     </div>
                 </div>
@@ -1049,7 +1048,7 @@
             const ds = $('#date_start').val();
             const de = $('#date_end').val();
             const note = $('#note').val();
-            const tglJo  = $('#tgl_jo_tram').val();
+            const tglJo = $('#tgl_jo_tram').val();
 
             if (!custId || !portId || !title || !ds || !de) {
                 showFloatingAlert('error', 'Please fill all required fields');
@@ -1065,7 +1064,7 @@
                     id_md_cust: custId,
                     id_md_port: portId,
                     id_md_vessel: $('#id_md_vessel').val(), // tambah ini
-                    tgl_jo_tram:  tglJo,
+                    tgl_jo_tram: tglJo,
                     date_start: ds,
                     date_end: de,
                     title: title,

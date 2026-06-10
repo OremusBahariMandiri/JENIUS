@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>JO Tramper - {{ $joTramper->no_jo_tram ?? '-' }}</title>
+    <title>JO Contract - {{ $joContract->no_jo_cont ?? '-' }}</title>
     <style>
         * {
             margin: 0;
@@ -199,76 +199,93 @@
         </div>
 
         {{-- ── Title ── --}}
-        <div class="doc-title">JO Tramper Information</div>
+        <div class="doc-title">JO Contract Information</div>
 
         {{-- ── Info Header ── --}}
+        @php
+            $contract = $joContract->contract;
+            $customer = $contract ? $contract->customer : null;
+        @endphp
         <table class="info-table">
             <tbody>
                 <tr>
+                    <td class="info-label">JO Number</td>
+                    <td class="info-colon">:</td>
+                    <td class="info-value"><strong>{{ $joContract->no_jo_cont ?? '-' }}</strong></td>
+                    <td class="info-spacer"></td>
                     <td class="info-label">JO Date</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->tgl_jo_tram ? $joTramper->tgl_jo_tram->format('d M Y') : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Vessel</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->vessel ? $joTramper->vessel->vessel_name : '-' }}
+                        {{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('d M Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
-                    <td class="info-label">JO Number</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value"><strong>{{ $joTramper->no_jo_tram ?? '-' }}</strong></td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Port</td>
+                    <td class="info-label">Contract No</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->port ? $joTramper->port->name_port : '-' }}
+                        {{ $contract ? $contract->no_contract : '-' }}
+                    </td>
+                    <td class="info-spacer"></td>
+                    <td class="info-label">Start Date</td>
+                    <td class="info-colon">:</td>
+                    <td class="info-value">
+                        {{ $contract && $contract->date_start ? \Carbon\Carbon::parse($contract->date_start)->format('d M Y') : '-' }}
+                    </td>
+                </tr>
+                <tr>
+                    <td class="info-label">Contract Name</td>
+                    <td class="info-colon">:</td>
+                    <td class="info-value">
+                        {{ $contract ? $contract->contract : '-' }}
+                    </td>
+                    <td class="info-spacer"></td>
+                    <td class="info-label">End Date</td>
+                    <td class="info-colon">:</td>
+                    <td class="info-value">
+                        {{ $contract && $contract->date_end ? \Carbon\Carbon::parse($contract->date_end)->format('d M Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td class="info-label">Customer</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->customer : '-' }}
+                        {{ $customer ? $customer->customer : '-' }}
                     </td>
                     <td class="info-spacer"></td>
-                    <td class="info-label">Start Date</td>
+                    <td class="info-label">Expenditure</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->date_start ? $joTramper->date_start->format('d M Y') : '-' }}
+                        {{ $contract && $contract->expenditure ? number_format($contract->expenditure, 2, ',', '.') : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td class="info-label">Address</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->address ?? '-' : '-' }}
+                        {{ $customer ? $customer->address ?? '-' : '-' }}
                     </td>
                     <td class="info-spacer"></td>
-                    <td class="info-label">End Date</td>
+                    <td class="info-label">Area</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}
+                        {{ $joContract->area ? $joContract->area->area : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td class="info-label">NPWP</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->npwp ?? '-' : '-' }}
+                        {{ $customer ? $customer->npwp ?? '-' : '-' }}
                     </td>
                     <td class="info-spacer"></td>
                     <td class="info-label">Title</td>
                     <td class="info-colon">:</td>
-                    <td class="info-value">{{ $joTramper->title ?? '-' }}</td>
+                    <td class="info-value">{{ $joContract->title ?? '-' }}</td>
                 </tr>
                 <tr>
                     <td class="info-label">Note</td>
                     <td class="info-colon">:</td>
-                    <td class="info-value" colspan="5">{{ $joTramper->note ?? '-' }}</td>
+                    <td class="info-value" colspan="5">{{ $joContract->note ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>
@@ -287,7 +304,7 @@
             </thead>
             <tbody>
                 @php
-                    $groupedItems = $joTramper->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
+                    $groupedItems = $joContract->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
                     $globalIndex  = 1;
                     $totalIDR     = 0;
                     $totalUSD     = 0;
