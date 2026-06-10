@@ -859,7 +859,7 @@
                                 <button type="button" class="btn disabled" id="btnGeneratePdf"
                                     style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; opacity:0.55; cursor:not-allowed; border-color:red; background-color:rgb(255, 237, 237); color:red"
                                     title="Save header first to generate PDF">
-                                    <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                                    <i class="fas fa-file-pdf me-2"></i> Generate Invoice
                                 </button>
                                 <small class="text-muted mt-1" id="pdfHintText">
                                     <i class="fas fa-info-circle me-1"></i>Save JO Other Information first

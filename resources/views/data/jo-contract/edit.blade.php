@@ -942,7 +942,7 @@
                             <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}" target="_blank"
                                 class="btn"
                                 style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; border-color:red; background-color:rgb(255, 237, 237); color:red">
-                                <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                                <i class="fas fa-file-pdf me-2"></i> Generate Invoice
                             </a>
                             <a href="{{ route('jo-contract.index') }}" class="btn btn-final-back">
                                 <i class="fas fa-arrow-left me-1"></i> Back

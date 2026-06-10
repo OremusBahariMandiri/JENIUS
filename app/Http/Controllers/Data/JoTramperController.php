@@ -943,8 +943,7 @@ class JoTramperController extends Controller
 
             $noJo = str_replace(['/', '\\'], '-', $joTramper->no_jo_tram ?? $id);
             $filename = 'JO-Tramper-' . $noJo . '.pdf';
-
-            return $pdf->download($filename);
+            return $pdf->stream($filename);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             if (request()->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'JO Tramper not found'], 404);

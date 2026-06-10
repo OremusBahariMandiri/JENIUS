@@ -43,7 +43,7 @@
                                         <th>Other Type</th>
                                         <th>Port</th>
                                         <th>Period</th>
-                                        <th class="text-center" width="15%">Generate Invoice</th>
+                                        <th class="text-center">Invoice</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
