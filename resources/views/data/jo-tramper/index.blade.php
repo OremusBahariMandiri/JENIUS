@@ -43,6 +43,7 @@
                                         <th>Customer</th>
                                         <th>Port</th>
                                         <th>Period</th>
+                                        <th class="text-center" width="15%">Generate Invoice</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
@@ -76,16 +77,21 @@
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center">
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'detail')))
-                                                        <a href="{{ route('jo-tramper.show', $joTramper->id_jo_tram) }}"
-                                                            class="btn btn-sm btn-info" data-bs-toggle="tooltip"
-                                                            title="Detail">
-                                                            <i class="fas fa-eye"></i>
-                                                        </a>
-
                                                         <a href="{{ route('jo-tramper.export-pdf', $joTramper->id_jo_tram) }}"
                                                             class="btn btn-sm btn-danger" target="_blank"
                                                             data-bs-toggle="tooltip" title="Export PDF">
                                                             <i class="fas fa-file-pdf"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1 justify-content-center">
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'detail')))
+                                                        <a href="{{ route('jo-tramper.show', $joTramper->id_jo_tram) }}"
+                                                            class="btn btn-sm btn-info" data-bs-toggle="tooltip"
+                                                            title="Detail">
+                                                            <i class="fas fa-eye"></i>
                                                         </a>
                                                     @endif
 

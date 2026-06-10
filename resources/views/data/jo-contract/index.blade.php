@@ -43,6 +43,7 @@
                                         <th>Customer</th>
                                         <th>Area</th>
                                         <th>Department</th>
+                                        <th class="text-center" width="15%">Generate Invoice</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
@@ -54,7 +55,7 @@
                                             <td>{{ $joContract->title }}</td>
                                             <td>
                                                 @if ($joContract->contract)
-                                                {{ $joContract->contract->no_contract }}
+                                                    {{ $joContract->contract->no_contract }}
                                                 @else
                                                     -
                                                 @endif
@@ -68,6 +69,17 @@
                                             </td>
                                             <td>{{ $joContract->area ? $joContract->area->area : '-' }}</td>
                                             <td>{{ $joContract->department ? $joContract->department->department : '-' }}
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1 justify-content-center">
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
+                                                        <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
+                                                            class="btn btn-sm btn-danger" target="_blank"
+                                                            title="Export PDF">
+                                                            <i class="fas fa-file-pdf"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center">

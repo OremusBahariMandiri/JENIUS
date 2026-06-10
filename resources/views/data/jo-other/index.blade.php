@@ -42,7 +42,8 @@
                                         <th>Customer</th>
                                         <th>Other Type</th>
                                         <th>Port</th>
-                                        <th>Date Range</th>
+                                        <th>Period</th>
+                                        <th class="text-center" width="15%">Generate Invoice</th>
                                         <th class="text-center" width="15%">Action</th>
                                     </tr>
                                 </thead>
@@ -61,7 +62,7 @@
                                             </td>
                                             <td>
                                                 @if ($joOther->other)
-                                                {{ $joOther->other->other }}
+                                                    {{ $joOther->other->other }}
                                                 @else
                                                     -
                                                 @endif
@@ -73,14 +74,24 @@
                                                     -
                                                 @endif
                                             </td>
+
                                             <td>
-                                                <small class="text-muted">
+                                                <small>
                                                     {{ $joOther->date_start ? $joOther->date_start->format('d M Y') : '-' }}
-                                                    <br>
-                                                    to
-                                                    <br>
+                                                    <i class="fas fa-arrow-right mx-1"></i>
                                                     {{ $joOther->date_end ? $joOther->date_end->format('d M Y') : '-' }}
                                                 </small>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex gap-1 justify-content-center">
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'detail')))
+                                                        <a href="{{ route('jo-other.export-pdf', $joOther->id_jo_other) }}"
+                                                            class="btn btn-sm btn-danger" target="_blank"
+                                                            title="Export PDF">
+                                                            <i class="fas fa-file-pdf"></i>
+                                                        </a>
+                                                    @endif
+                                                </div>
                                             </td>
                                             <td>
                                                 <div class="d-flex gap-1 justify-content-center">
@@ -242,7 +253,7 @@
         $(document).ready(function() {
             // Cek apakah tabel memiliki data
             var hasData = $('#joOtherTable tbody tr').length > 0 &&
-                          !$('#joOtherTable tbody tr td[colspan]').length;
+                !$('#joOtherTable tbody tr td[colspan]').length;
 
             if (hasData) {
                 if ($.fn.DataTable.isDataTable('#joOtherTable')) {

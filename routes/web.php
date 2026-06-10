@@ -170,14 +170,20 @@ Route::middleware(['auth'])->group(function () {
             ->name('jo-other.items.get');
         Route::post('jo-other/save-all/{id}', [JoOtherController::class, 'saveAllChanges'])
             ->name('jo-other.save-all');
+        Route::get('jo-other/{id}/export-pdf', [JoOtherController::class, 'exportPdf'])
+            ->name('jo-other.export-pdf');
+
         Route::resource('jo-other', JoOtherController::class);
         Route::get('jo-other-select', [JoOtherController::class, 'getForSelect']);
         Route::post('jo-other-bulk-delete', [JoOtherController::class, 'bulkDelete']);
+
 
         // ── JO Contract ──────────────────────────────────────────
         Route::resource('jo-contract', JoContractController::class);
 
         // JO Contract Items
+        Route::get('jo-contract/{id}/export-pdf', [JoContractController::class, 'exportPdf'])
+            ->name('jo-contract.export-pdf');
         Route::resource('jo-contract-item', JoContractItemController::class);
         Route::post('jo-contract-item/{id}/restore', [JoContractItemController::class, 'restore']);
         Route::delete('jo-contract-item/{id}/force-delete', [JoContractItemController::class, 'forceDelete']);

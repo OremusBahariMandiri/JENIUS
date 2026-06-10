@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <title>JO Tramper - {{ $joTramper->no_jo_tram ?? '-' }}</title>
+    <title>JO Other - {{ $joOther->no_jo_other ?? '-' }}</title>
     <style>
         * {
             margin: 0;
@@ -42,7 +42,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 10px;
-            margin-top: 50px;
+            margin-top: 50px
         }
 
         .info-table td {
@@ -109,9 +109,17 @@
             border: 1px solid #000;
         }
 
-        .text-center { text-align: center; }
-        .text-right  { text-align: right; }
-        .text-left   { text-align: left; }
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left {
+            text-align: left;
+        }
 
         /* Item note sub-text */
         .item-note {
@@ -176,18 +184,34 @@
             margin-bottom: 10px;
         }
 
-        .col-no   { width: 5%;  }
-        .col-desc { width: 35%; }
-        .col-idr  { width: 15%; }
-        .col-usd  { width: 15%; }
-        .col-hpp  { width: 13%; }
-        .col-sell { width: 17%; }
+        .col-no {
+            width: 5%;
+        }
+
+        .col-desc {
+            width: 35%;
+        }
+
+        .col-idr {
+            width: 15%;
+        }
+
+        .col-usd {
+            width: 15%;
+        }
+
+        .col-hpp {
+            width: 13%;
+        }
+
+        .col-sell {
+            width: 17%;
+        }
     </style>
 </head>
 
 <body>
     <div class="page">
-
         {{-- ── Kop Surat ── --}}
         @php
             $kopPath = public_path('images/kop-surat-orindo.png');
@@ -199,7 +223,7 @@
         </div>
 
         {{-- ── Title ── --}}
-        <div class="doc-title">JO Tramper Information</div>
+        <div class="doc-title">JO Other Information</div>
 
         {{-- ── Info Header ── --}}
         <table class="info-table">
@@ -208,67 +232,73 @@
                     <td class="info-label">JO Date</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->tgl_jo_tram ? $joTramper->tgl_jo_tram->format('d M Y') : '-' }}
+                        {{ $joOther->tgl_jo_other ? $joOther->tgl_jo_other->format('d M Y') : '-' }}
                     </td>
                     <td class="info-spacer"></td>
                     <td class="info-label">Vessel</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->vessel ? $joTramper->vessel->vessel_name : '-' }}
+                        {{ $joOther->vessel ? $joOther->vessel->vessel_name : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td class="info-label">JO Number</td>
                     <td class="info-colon">:</td>
-                    <td class="info-value"><strong>{{ $joTramper->no_jo_tram ?? '-' }}</strong></td>
+                    <td class="info-value"><strong>{{ $joOther->no_jo_other ?? '-' }}</strong></td>
                     <td class="info-spacer"></td>
                     <td class="info-label">Port</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->port ? $joTramper->port->name_port : '-' }}
+                        {{ $joOther->port ? $joOther->port->name_port : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td class="info-label">Customer</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->customer : '-' }}
+                        {{ $joOther->customer ? $joOther->customer->customer : '-' }}
                     </td>
                     <td class="info-spacer"></td>
                     <td class="info-label">Start Date</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->date_start ? $joTramper->date_start->format('d M Y') : '-' }}
+                        {{ $joOther->date_start ? $joOther->date_start->format('d M Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td class="info-label">Address</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->address ?? '-' : '-' }}
+                        {{ $joOther->customer ? $joOther->customer->address ?? '-' : '-' }}
                     </td>
                     <td class="info-spacer"></td>
                     <td class="info-label">End Date</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}
+                        {{ $joOther->date_end ? $joOther->date_end->format('d M Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
                     <td class="info-label">NPWP</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->npwp ?? '-' : '-' }}
+                        {{ $joOther->customer ? $joOther->customer->npwp ?? '-' : '-' }}
                     </td>
                     <td class="info-spacer"></td>
-                    <td class="info-label">Title</td>
+                    <td class="info-label">Other Type</td>
                     <td class="info-colon">:</td>
-                    <td class="info-value">{{ $joTramper->title ?? '-' }}</td>
+                    <td class="info-value">
+                        {{ $joOther->other ? $joOther->other->other : '-' }}
+                    </td>
                 </tr>
                 <tr>
+                    <td class="info-label">Title</td>
+                    <td class="info-colon">:</td>
+                    <td class="info-value">{{ $joOther->title ?? '-' }}</td>
+                    <td class="info-spacer"></td>
                     <td class="info-label">Note</td>
                     <td class="info-colon">:</td>
-                    <td class="info-value" colspan="5">{{ $joTramper->note ?? '-' }}</td>
+                    <td class="info-value">{{ $joOther->note ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>
@@ -287,12 +317,12 @@
             </thead>
             <tbody>
                 @php
-                    $groupedItems = $joTramper->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
-                    $globalIndex  = 1;
-                    $totalIDR     = 0;
-                    $totalUSD     = 0;
-                    $totalHPP     = 0;
-                    $totalSell    = 0;
+                    $groupedItems = $joOther->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
+                    $globalIndex = 1;
+                    $totalIDR = 0;
+                    $totalUSD = 0;
+                    $totalHPP = 0;
+                    $totalSell = 0;
                 @endphp
 
                 @foreach ($groupedItems as $category => $items)
@@ -303,9 +333,9 @@
 
                     @foreach ($items as $item)
                         @php
-                            $totalIDR  += $item->pendapatan_idr;
-                            $totalUSD  += $item->pendapatan_usd;
-                            $totalHPP  += $item->hpp_ops;
+                            $totalIDR += $item->pendapatan_idr;
+                            $totalUSD += $item->pendapatan_usd;
+                            $totalHPP += $item->hpp_ops;
                             $totalSell += $item->hargajual_idr;
                         @endphp
                         <tr>
@@ -336,9 +366,9 @@
                 <tr>
                     <td></td>
                     <td class="text-left"><strong>GRAND TOTAL</strong></td>
-                    <td class="text-right">{{ number_format($totalIDR,  2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalUSD,  2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalHPP,  2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($totalIDR, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($totalUSD, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($totalHPP, 2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
                 </tr>
             </tfoot>
@@ -363,9 +393,15 @@
                 <td></td>
             </tr>
             <tr>
-                <td><div class="signature-line"></div></td>
-                <td><div class="signature-line"></div></td>
-                <td><div class="signature-line"></div></td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
             </tr>
         </table>
 

@@ -441,6 +441,8 @@
             box-shadow: 0 8px 25px rgba(49, 49, 49, 0.5);
             color: white;
         }
+
+        
     </style>
 @endpush
 
@@ -809,17 +811,15 @@
                 <div class="final-save-section">
                     <div class="d-flex justify-content-between align-items-center">
                         <div></div>
-                        {{-- <div>
-                            <h6 class="mb-1"><i class="fas fa-info-circle me-2"></i>Ready to Save?</h6>
-                            <small class="text-muted">Click the button to save all changes permanently</small>
-                        </div> --}}
                         <div class="d-flex gap-2">
+                            <a href="{{ route('jo-other.export-pdf', $joOther->id_jo_other) }}" target="_blank"
+                                class="btn"
+                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; border-color:red; background-color:rgb(255, 237, 237); color:red">
+                                <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                            </a>
                             <a href="{{ route('jo-other.index') }}" class="btn btn-final-back">
                                 <i class="fas fa-arrow-left me-1"></i> Back
                             </a>
-                            {{-- <button type="button" class="btn btn-final-save" id="btnFinalSave">
-                                <i class="fas fa-save"></i> Save All Changes
-                            </button> --}}
                         </div>
                     </div>
                 </div>
@@ -1005,7 +1005,7 @@
                     id_md_other: otherId,
                     id_md_port: portId,
                     id_md_vessel: $('#id_md_vessel').val(),
-                    tgl_jo_other:  $('#tgl_jo_other').val(),
+                    tgl_jo_other: $('#tgl_jo_other').val(),
                     date_start: ds,
                     date_end: de,
                     title: title,

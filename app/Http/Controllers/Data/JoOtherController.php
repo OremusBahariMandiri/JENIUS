@@ -1195,4 +1195,101 @@ class JoOtherController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Export JO Other as PDF
+     *
+     * Route: GET /data/jo-other/{id}/export-pdf
+     * Name:  jo-other.export-pdf
+     */
+    public function exportPdf($id)
+    {
+        try {
+            $joOther = JoOther::with([
+                'customer',
+                'other',
+                'port',
+                'vessel',
+                'items.invoice',
+            ])->findOrFail($id);
+
+            $totalSell = $joOther->items->sum('hargajual_idr');
+            $terbilang = $this->toTerbilang((int) round($totalSell)) . ' Rupiah';
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                'data.jo-other.pdf',        // resources/views/data/jo-other/pdf.blade.php
+                compact('joOther', 'terbilang')
+            )
+                ->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => false,
+                    'defaultFont'          => 'Arial',
+                    'dpi'                  => 150,
+                ]);
+
+            $noJo     = str_replace(['/', '\\'], '-', $joOther->no_jo_other ?? $id);
+            $filename = 'JO-Other-' . $noJo . '.pdf';
+
+            return $pdf->download($filename);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'JO Other not found'], 404);
+            }
+            return back()->with('error', 'JO Other not found');
+        } catch (\Exception $e) {
+            Log::error('JO Other Export PDF Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to export PDF: ' . $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Failed to export PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Simple Indonesian number-to-words (terbilang) helper.
+     */
+    private function toTerbilang(int $number): string
+    {
+        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
+
+        $words = [
+            '',
+            'Satu',
+            'Dua',
+            'Tiga',
+            'Empat',
+            'Lima',
+            'Enam',
+            'Tujuh',
+            'Delapan',
+            'Sembilan',
+            'Sepuluh',
+            'Sebelas'
+        ];
+
+        if ($number === 0)  return 'Nol';
+        if ($number < 12)   return $words[$number];
+        if ($number < 20)   return $this->toTerbilang($number - 10) . ' Belas';
+        if ($number < 100)  return $words[(int)($number / 10)] . ' Puluh' .
+            ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
+        if ($number < 200)  return 'Seratus' .
+            ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 1000) return $words[(int)($number / 100)] . ' Ratus' .
+            ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 2000) return 'Seribu' .
+            ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000)
+            return $this->toTerbilang((int)($number / 1000)) . ' Ribu' .
+                ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000_000)
+            return $this->toTerbilang((int)($number / 1_000_000)) . ' Juta' .
+                ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
+        if ($number < 1_000_000_000_000)
+            return $this->toTerbilang((int)($number / 1_000_000_000)) . ' Miliar' .
+                ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
+
+        return $this->toTerbilang((int)($number / 1_000_000_000_000)) . ' Triliun' .
+            ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
+    }
 }

@@ -413,6 +413,35 @@
             height: 1.2rem;
             border-width: 2px;
         }
+
+        .final-save-section {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px 12px 0 0;
+            margin-top: 30px;
+            z-index: 100;
+        }
+
+        .btn-final-back {
+            background: linear-gradient(135deg, #868686 0%, #5e5e5e 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(27, 27, 27, 0.4);
+            transition: all 0.3s;
+        }
+
+        .btn-final-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(49, 49, 49, 0.5);
+            color: white;
+        }
     </style>
 @endpush
 
@@ -463,9 +492,8 @@
                                         <span class="input-group-text bg-success text-white">
                                             <i class="fas fa-file-alt"></i>
                                         </span>
-                                        <input type="text" class="form-control fw-bold"
-                                               value="{{ $previewNoJot }}" readonly
-                                               style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                        <input type="text" class="form-control fw-bold" value="{{ $previewNoJot }}"
+                                            readonly style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
                                     </div>
                                     <small class="text-muted">
                                         <i class="fas fa-info-circle me-1"></i>Document number, generated automatically
@@ -757,14 +785,31 @@
                             </div>
                         </div>
                     </div>
-
-                    <!-- Bottom Action Buttons -->
-                    <div class="d-flex gap-2 mb-5">
-                        <a href="{{ route('jo-tramper.index') }}" class="btn btn-secondary btn-lg">
-                            <i class="fas fa-times me-2"></i>Cancel
-                        </a>
-                    </div>
                 </form>
+
+                <!-- FINAL SAVE SECTION -->
+                <div class="final-save-section">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div></div>
+                        <div class="d-flex gap-2 align-items-center">
+                            <div class="d-flex flex-column align-items-center">
+                                <button type="button" class="btn btn-danger disabled" id="btnGeneratePdf"
+                                    style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; opacity:0.55; cursor:not-allowed; border-color:red; background-color:rgb(255, 237, 237); color:red"
+                                    title="Save header first to generate PDF">
+                                    <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                                </button>
+                                <small class="text-muted mt-1" id="pdfHintText">
+                                    <i class="fas fa-info-circle me-1"></i>Save Jo Tramper Information first
+                                </small>
+                            </div>
+                            <a href="{{ route('jo-tramper.index') }}"
+                               class="btn btn-final-back"
+                               style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; margin-top:-25px">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -944,7 +989,7 @@
                 id_md_cust: custId,
                 id_md_port: portId,
                 id_md_vessel: $('#id_md_vessel').val(), // tambah ini
-                tgl_jo_tram:  $('#tgl_jo_tram').val(),
+                tgl_jo_tram: $('#tgl_jo_tram').val(),
                 date_start: dateStart,
                 date_end: dateEnd,
                 title: title,
