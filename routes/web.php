@@ -147,6 +147,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('jo-tramper.save-all');
         Route::get('jo-tramper-select', [JoTramperController::class, 'getForSelect']);
         Route::post('jo-tramper-bulk-delete', [JoTramperController::class, 'bulkDelete']);
+        Route::get('jo-tramper/{id}/export-pdf', [JoTramperController::class, 'exportPdf'])
+            ->name('jo-tramper.export-pdf');
 
         // Resource AFTER custom routes
         Route::resource('jo-tramper', JoTramperController::class);
