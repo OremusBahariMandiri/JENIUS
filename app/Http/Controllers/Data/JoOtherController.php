@@ -24,7 +24,7 @@ class JoOtherController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = JoOther::with(['customer', 'other', 'port']);
+            $query = JoOther::with(['customer', 'other', 'port', 'vessel', 'items']);
 
             // Search functionality
             if ($request->has('search') && !empty($request->search)) {

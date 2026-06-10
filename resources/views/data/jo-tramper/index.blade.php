@@ -10,7 +10,6 @@
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
                         <span class="fw-bold"><i class="fas fa-ship me-2"></i>JO Tramper Data</span>
-
                         @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'tambah')))
                             <a href="{{ route('jo-tramper.create') }}" class="btn btn-light">
                                 <i class="fas fa-plus-circle me-1"></i> Add
@@ -37,78 +36,71 @@
                             <table id="joTramperTable" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="5%">No</th>
-                                        {{-- <th>JO Number</th> --}}
-                                        <th>Title</th>
+                                        <th width="4%">No</th>
+                                        <th>JO Date</th>
+                                        <th>JO Number</th>
                                         <th>Customer</th>
+                                        <th>Vessel</th>
                                         <th>Port</th>
                                         <th>Period</th>
+                                        <th>Title</th>
+                                        <th class="text-center">Items</th>
+                                        <th class="text-center">Total</th>
                                         <th class="text-center">Invoice</th>
-                                        <th class="text-center" width="15%">Action</th>
+                                        <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($joTrampers as $index => $joTramper)
+                                    @forelse($joTrampers as $joTramper)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            {{-- <td><strong>JOT-{{ $joTramper->id_jo_tram }}</strong></td> --}}
-                                            <td>{{ $joTramper->title }}</td>
                                             <td>
-                                                @if ($joTramper->customer)
-                                                    {{ $joTramper->customer->customer }}
-                                                @else
-                                                    -
-                                                @endif
+                                                {{ $joTramper->tgl_jo_tram->format('d/m/y') }}
                                             </td>
-                                            <td>
-                                                @if ($joTramper->port)
-                                                    {{ $joTramper->port->name_port }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
+                                            <td>{{ $joTramper->no_jo_tram ?? '-' }}</td>
+                                            <td>{{ $joTramper->customer ? $joTramper->customer->customer : '-' }}</td>
+                                            <td>{{ $joTramper->vessel ? $joTramper->vessel->vessel_name : '-' }}</td>
+                                            <td>{{ $joTramper->port ? $joTramper->port->name_port : '-' }}</td>
                                             <td>
                                                 <small>
-                                                    {{ $joTramper->date_start ? $joTramper->date_start->format('d M Y') : '-' }}
-                                                    <i class="fas fa-arrow-right mx-1"></i>
-                                                    {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}
+                                                    {{ $joTramper->date_start->format('d/m/y') }}
+                                                    –
+                                                    {{ $joTramper->date_end->format('d/m/y') }}
                                                 </small>
                                             </td>
-                                            <td>
-                                                <div class="d-flex gap-1 justify-content-center">
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'detail')))
-                                                        <a href="{{ route('jo-tramper.export-pdf', $joTramper->id_jo_tram) }}"
-                                                            class="btn btn-sm btn-danger" target="_blank"
-                                                            data-bs-toggle="tooltip" title="Export PDF">
-                                                            <i class="fas fa-file-pdf"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
+                                            <td>{{ $joTramper->title }}</td>
+                                            <td class="text-center">{{ $joTramper->items->count() }}</td>
+                                            <td class="text-end">
+                                                {{ number_format($joTramper->items->sum('hargajual_idr'), 2, ',', '.') }}
                                             </td>
-                                            <td>
+                                            <td class="text-center">
+                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'detail')))
+                                                    <a href="{{ route('jo-tramper.export-pdf', $joTramper->id_jo_tram) }}"
+                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
                                                 <div class="d-flex gap-1 justify-content-center">
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'detail')))
                                                         <a href="{{ route('jo-tramper.show', $joTramper->id_jo_tram) }}"
-                                                            class="btn btn-sm btn-info" data-bs-toggle="tooltip"
-                                                            title="Detail">
+                                                            class="btn btn-sm btn-info" title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     @endif
-
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'ubah')))
                                                         <a href="{{ route('jo-tramper.edit', $joTramper->id_jo_tram) }}"
-                                                            class="btn btn-sm btn-warning" data-bs-toggle="tooltip"
-                                                            title="Edit">
+                                                            class="btn btn-sm btn-warning" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                     @endif
-
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'hapus')))
                                                         <button type="button" class="btn btn-sm btn-danger btn-delete"
                                                             data-id="{{ $joTramper->id_jo_tram }}"
                                                             data-name="{{ $joTramper->title }}"
                                                             data-url="{{ route('jo-tramper.destroy', $joTramper->id_jo_tram) }}"
-                                                            data-bs-toggle="tooltip" title="Delete">
+                                                            title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     @endif
@@ -117,7 +109,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="7" class="text-center py-5">
+                                            <td colspan="12" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No JO Tramper Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new JO Tramper</p>

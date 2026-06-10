@@ -36,87 +36,73 @@
                             <table id="joOtherTable" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="5%">No</th>
-                                        {{-- <th>JO Number</th> --}}
-                                        <th>Title</th>
+                                        <th width="4%">No</th>
+                                        <th>JO Date</th>
+                                        <th>JO Number</th>
                                         <th>Customer</th>
-                                        <th>Other Type</th>
+                                        <th>Vessel</th>
                                         <th>Port</th>
+                                        <th>Other Type</th>
                                         <th>Period</th>
+                                        <th>Title</th>
+                                        <th class="text-center">Items</th>
+                                        <th class="text-center">Total</th>
                                         <th class="text-center">Invoice</th>
-                                        <th class="text-center" width="15%">Action</th>
+                                        <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($joOthers as $index => $joOther)
+                                    @forelse($joOthers as $joOther)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            {{-- <td><strong>JOO-{{ str_pad($joOther->id_jo_other, 4, '0', STR_PAD_LEFT) }}</strong></td> --}}
-                                            <td>{{ $joOther->title }}</td>
                                             <td>
-                                                @if ($joOther->customer)
-                                                    {{ $joOther->customer->customer }}
-                                                @else
-                                                    -
-                                                @endif
+                                                {{ $joOther->tgl_jo_other->format('d/m/y') }}
                                             </td>
-                                            <td>
-                                                @if ($joOther->other)
-                                                    {{ $joOther->other->other }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-                                            <td>
-                                                @if ($joOther->port)
-                                                    {{ $joOther->port->name_port }}
-                                                @else
-                                                    -
-                                                @endif
-                                            </td>
-
+                                            <td>{{ $joOther->no_jo_other ?? '-' }}</td>
+                                            <td>{{ $joOther->customer ? $joOther->customer->customer : '-' }}</td>
+                                            <td>{{ $joOther->vessel ? $joOther->vessel->vessel_name : '-' }}</td>
+                                            <td>{{ $joOther->port ? $joOther->port->name_port : '-' }}</td>
+                                            <td>{{ $joOther->other ? $joOther->other->other : '-' }}</td>
                                             <td>
                                                 <small>
-                                                    {{ $joOther->date_start ? $joOther->date_start->format('d M Y') : '-' }}
-                                                    <i class="fas fa-arrow-right mx-1"></i>
-                                                    {{ $joOther->date_end ? $joOther->date_end->format('d M Y') : '-' }}
+                                                    {{ $joOther->date_start->format('d/m/y') }}
+                                                    –
+                                                    {{ $joOther->date_end->format('d/m/y') }}
                                                 </small>
                                             </td>
-                                            <td>
-                                                <div class="d-flex gap-1 justify-content-center">
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'detail')))
-                                                        <a href="{{ route('jo-other.export-pdf', $joOther->id_jo_other) }}"
-                                                            class="btn btn-sm btn-danger" target="_blank"
-                                                            title="Export PDF">
-                                                            <i class="fas fa-file-pdf"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
+                                            <td>{{ $joOther->title }}</td>
+                                            <td class="text-center">{{ $joOther->items->count() }}</td>
+                                            <td class="text-end"> {{-- tambah ini --}}
+                                                {{ number_format($joOther->items->sum('hargajual_idr'), 2, ',', '.') }}
                                             </td>
-                                            <td>
+                                            <td class="text-center">
+                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'detail')))
+                                                    <a href="{{ route('jo-other.export-pdf', $joOther->id_jo_other) }}"
+                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
                                                 <div class="d-flex gap-1 justify-content-center">
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'detail')))
                                                         <a href="{{ route('jo-other.show', $joOther->id_jo_other) }}"
-                                                            class="btn btn-sm btn-info" data-bs-toggle="tooltip"
-                                                            title="Detail">
+                                                            class="btn btn-sm btn-info" title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     @endif
-
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'ubah')))
                                                         <a href="{{ route('jo-other.edit', $joOther->id_jo_other) }}"
-                                                            class="btn btn-sm btn-warning" data-bs-toggle="tooltip"
-                                                            title="Edit">
+                                                            class="btn btn-sm btn-warning" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                     @endif
-
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-other', 'hapus')))
                                                         <button type="button" class="btn btn-sm btn-danger btn-delete"
                                                             data-id="{{ $joOther->id_jo_other }}"
                                                             data-name="{{ $joOther->title }}"
                                                             data-url="{{ route('jo-other.destroy', $joOther->id_jo_other) }}"
-                                                            data-bs-toggle="tooltip" title="Delete">
+                                                            title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     @endif
@@ -125,10 +111,10 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-center py-5">
+                                            <td colspan="13" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No JO Other Data</h5>
-                                                <p class="text-muted mb-0">Start by adding a new JO other</p>
+                                                <p class="text-muted mb-0">Start by adding a new JO Other</p>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -273,11 +259,23 @@
                     columnDefs: [{
                             orderable: false,
                             targets: 0
-                        },
+                        }, // No
                         {
                             orderable: false,
-                            targets: -1
-                        }
+                            targets: 9
+                        }, // Items
+                        {
+                            orderable: false,
+                            targets: 10
+                        }, // Total
+                        {
+                            orderable: false,
+                            targets: 11
+                        }, // Invoice
+                        {
+                            orderable: false,
+                            targets: 12
+                        }, // Action
                     ],
                     language: {
                         search: "Search:",

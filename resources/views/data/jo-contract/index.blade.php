@@ -36,75 +36,75 @@
                             <table id="joContractTable" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="5%">No</th>
-                                        {{-- <th>JO Number</th> --}}
-                                        <th>Title</th>
-                                        <th>Contract</th>
+                                        <th width="4%">No</th>
+                                        <th>JO Date</th>
+                                        <th>JO Number</th>
+                                        <th>Contract No</th>
+                                        <th>Contract Name</th>
                                         <th>Customer</th>
+                                        <th>Period</th>
                                         <th>Area</th>
-                                        <th>Department</th>
+                                        <th>Title</th>
+                                        <th class="text-center">Items</th>
+                                        <th class="text-center">Total</th>
                                         <th class="text-center">Invoice</th>
-                                        <th class="text-center" width="15%">Action</th>
+                                        <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($joContracts as $index => $joContract)
+                                    @forelse($joContracts as $joContract)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            {{-- <td><strong>{{ $joContract->no_jo_cont ?? '-' }}</strong></td> --}}
-                                            <td>{{ $joContract->title }}</td>
                                             <td>
-                                                @if ($joContract->contract)
-                                                    {{ $joContract->contract->no_contract }}
-                                                @else
-                                                    -
-                                                @endif
+                                                {{ $joContract->tgl_jo_cont->format('d/m/y') }}
+                                            </td>
+                                            <td>{{ $joContract->no_jo_cont ?? '-' }}</td>
+                                            <td>{{ $joContract->contract ? $joContract->contract->no_contract : '-' }}</td>
+                                            <td>{{ $joContract->contract ? $joContract->contract->contract : '-' }}</td>
+                                            <td>
+                                                {{ $joContract->contract && $joContract->contract->customer ? $joContract->contract->customer->customer : '-' }}
                                             </td>
                                             <td>
-                                                @if ($joContract->contract && $joContract->contract->customer)
-                                                    {{ $joContract->contract->customer->customer }}
-                                                @else
-                                                    -
-                                                @endif
+                                                <small>
+                                                    {{ $joContract->contract && $joContract->contract->date_start ? \Carbon\Carbon::parse($joContract->contract->date_start)->format('d/m/y') : '-' }}
+                                                    –
+                                                    {{ $joContract->contract && $joContract->contract->date_end ? \Carbon\Carbon::parse($joContract->contract->date_end)->format('d/m/y') : '-' }}
+                                                </small>
                                             </td>
                                             <td>{{ $joContract->area ? $joContract->area->area : '-' }}</td>
-                                            <td>{{ $joContract->department ? $joContract->department->department : '-' }}
+                                            <td>{{ $joContract->title }}</td>
+                                            <td class="text-center">{{ $joContract->items->count() }}</td>
+                                            <td class="text-end">
+                                                {{ number_format($joContract->items->sum('hargajual_idr'), 2, ',', '.') }}
                                             </td>
-                                            <td>
-                                                <div class="d-flex gap-1 justify-content-center">
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
-                                                        <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
-                                                            class="btn btn-sm btn-danger" target="_blank"
-                                                            title="Export PDF">
-                                                            <i class="fas fa-file-pdf"></i>
-                                                        </a>
-                                                    @endif
-                                                </div>
+                                            <td class="text-center">
+                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
+                                                    <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
+                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                @endif
                                             </td>
-                                            <td>
+                                            <td class="text-center">
                                                 <div class="d-flex gap-1 justify-content-center">
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
                                                         <a href="{{ route('jo-contract.show', $joContract->id_jo_cont) }}"
-                                                            class="btn btn-sm btn-info" data-bs-toggle="tooltip"
-                                                            title="Detail">
+                                                            class="btn btn-sm btn-info" title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     @endif
-
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'ubah')))
                                                         <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}"
-                                                            class="btn btn-sm btn-warning" data-bs-toggle="tooltip"
-                                                            title="Edit">
+                                                            class="btn btn-sm btn-warning" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                     @endif
-
                                                     @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'hapus')))
                                                         <button type="button" class="btn btn-sm btn-danger btn-delete"
                                                             data-id="{{ $joContract->id_jo_cont }}"
                                                             data-name="{{ $joContract->title }}"
                                                             data-url="{{ route('jo-contract.destroy', $joContract->id_jo_cont) }}"
-                                                            data-bs-toggle="tooltip" title="Delete">
+                                                            title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
                                                     @endif
@@ -113,10 +113,10 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="8" class="text-center py-5">
+                                            <td colspan="13" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No JO Contract Data</h5>
-                                                <p class="text-muted mb-0">Start by adding a new JO contract</p>
+                                                <p class="text-muted mb-0">Start by adding a new JO Contract</p>
                                             </td>
                                         </tr>
                                     @endforelse
