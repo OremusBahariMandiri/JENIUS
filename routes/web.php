@@ -151,6 +151,8 @@ Route::middleware(['auth'])->group(function () {
             ->name('jo-tramper.export-pdf');
 
         // Resource AFTER custom routes
+        Route::get('/jo-tramper/export', [JoTramperController::class, 'export'])
+            ->name('jo-tramper.export');
         Route::resource('jo-tramper', JoTramperController::class);
 
         // ── JO Other ─────────────────────────────────────────────
@@ -172,13 +174,16 @@ Route::middleware(['auth'])->group(function () {
             ->name('jo-other.save-all');
         Route::get('jo-other/{id}/export-pdf', [JoOtherController::class, 'exportPdf'])
             ->name('jo-other.export-pdf');
-
+        Route::get('/jo-other/export', [JoOtherController::class, 'export'])
+            ->name('jo-other.export');
         Route::resource('jo-other', JoOtherController::class);
         Route::get('jo-other-select', [JoOtherController::class, 'getForSelect']);
         Route::post('jo-other-bulk-delete', [JoOtherController::class, 'bulkDelete']);
 
 
         // ── JO Contract ──────────────────────────────────────────
+        Route::get('/jo-contract/export', [JoContractController::class, 'export'])
+            ->name('jo-contract.export');
         Route::resource('jo-contract', JoContractController::class);
 
         // JO Contract Items
