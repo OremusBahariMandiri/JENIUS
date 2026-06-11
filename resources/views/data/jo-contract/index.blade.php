@@ -10,11 +10,19 @@
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
                         <span class="fw-bold"><i class="fas fa-file-contract me-2"></i>JO Contract Data</span>
-                        @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'tambah')))
-                            <a href="{{ route('jo-contract.create') }}" class="btn btn-light">
-                                <i class="fas fa-plus-circle me-1"></i> Add
-                            </a>
-                        @endif
+                        <div>
+                            <button type="button" class="btn btn-light me-2" id="filterButton">
+                                <i class="fas fa-filter me-1"></i> Filter
+                            </button>
+                            <button type="button" class="btn btn-light me-2" id="exportButton">
+                                <i class="fas fa-download me-1"></i> Export
+                            </button>
+                            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'tambah')))
+                                <a href="{{ route('jo-contract.create') }}" class="btn btn-light">
+                                    <i class="fas fa-plus-circle me-1"></i> Add
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
                     <div class="card-body">
@@ -28,6 +36,36 @@
                         @if (session('error'))
                             <div class="alert alert-danger alert-dismissible fade show" role="alert">
                                 <i class="fas fa-exclamation-circle me-1"></i> {{ session('error') }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        @endif
+
+                        {{-- Active Filter Display --}}
+                        @if (!empty($currentFilters) && array_filter($currentFilters))
+                            <div class="alert alert-info alert-dismissible fade show" id="filterActiveAlert">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <strong>Active Filters:</strong>
+                                @if (!empty($currentFilters['no_jo']))
+                                    &nbsp;<span class="badge bg-primary">JO No: {{ $currentFilters['no_jo'] }}</span>
+                                @endif
+                                @if (!empty($currentFilters['no_contract']))
+                                    &nbsp;<span class="badge bg-primary">Contract No: {{ $currentFilters['no_contract'] }}</span>
+                                @endif
+                                @if (!empty($currentFilters['contract_name']))
+                                    &nbsp;<span class="badge bg-primary">Contract: {{ $currentFilters['contract_name'] }}</span>
+                                @endif
+                                @if (!empty($currentFilters['id_md_cust']))
+                                    &nbsp;<span class="badge bg-primary">Customer: {{ $currentFilters['customer_label'] ?? $currentFilters['id_md_cust'] }}</span>
+                                @endif
+                                @if (!empty($currentFilters['id_md_area']))
+                                    &nbsp;<span class="badge bg-primary">Area: {{ $currentFilters['area_label'] ?? $currentFilters['id_md_area'] }}</span>
+                                @endif
+                                @if (!empty($currentFilters['title']))
+                                    &nbsp;<span class="badge bg-primary">Title: {{ $currentFilters['title'] }}</span>
+                                @endif
+                                <a href="{{ route('jo-contract.index') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                    <i class="fas fa-times me-1"></i> Reset Filter
+                                </a>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                         @endif
@@ -80,7 +118,7 @@
                                             <td class="text-center">
                                                 @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
                                                     <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
-                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
+                                                        class="btn btn-sm btn-danger" title="Export PDF">
                                                         <i class="fas fa-file-pdf"></i>
                                                     </a>
                                                 @endif
@@ -129,6 +167,143 @@
         </div>
     </div>
 
+    {{-- ===================== FILTER MODAL ===================== --}}
+    <div class="modal fade" id="filterModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header text-black" style="background-color: #d1fae5">
+                    <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filter JO Contract</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="filterForm" method="GET" action="{{ route('jo-contract.index') }}">
+                        <div class="row g-3">
+                            {{-- JO Number --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">JO Number</label>
+                                <input type="text" class="form-control" name="no_jo"
+                                    value="{{ request('no_jo', '') }}">
+                            </div>
+
+                            {{-- Contract No --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Contract No</label>
+                                <input type="text" class="form-control" name="no_contract"
+                                    value="{{ request('no_contract', '') }}">
+                            </div>
+
+                            {{-- Contract Name --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Contract Name</label>
+                                <input type="text" class="form-control" name="contract_name"
+                                    value="{{ request('contract_name', '') }}">
+                            </div>
+
+                             {{-- Title --}}
+                             <div class="col-md-6">
+                                <label class="form-label fw-semibold">Title</label>
+                                <input type="text" class="form-control" name="title"
+                                    value="{{ request('title', '') }}">
+                            </div>
+
+                            {{-- Customer (select2) --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Customer</label>
+                                <select class="form-select select2-filter" name="id_md_cust"
+                                    id="filterCustomer" data-placeholder="-- Select Customers --">
+                                    <option value=""></option>
+                                    @foreach($customers as $cust)
+                                        <option value="{{ $cust->id_md_cust }}"
+                                            {{ request('id_md_cust') == $cust->id_md_cust ? 'selected' : '' }}>
+                                            {{ $cust->customer }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            {{-- Area (select2) --}}
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold">Area</label>
+                                <select class="form-select select2-filter" name="id_md_area"
+                                    id="filterArea" data-placeholder="-- Select Areas --">
+                                    <option value=""></option>
+                                    @foreach($areas as $area)
+                                        <option value="{{ $area->id_md_area }}"
+                                            {{ request('id_md_area') == $area->id_md_area ? 'selected' : '' }}>
+                                            {{ $area->area }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <hr class="my-3">
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-outline-secondary" id="resetFilter">
+                                <i class="fas fa-redo me-1"></i> Reset
+                            </button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-search me-1"></i> Apply Filter
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===================== EXPORT MODAL ===================== --}}
+    <div class="modal fade" id="exportModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-black" style="background-color: #d1fae5">
+                    <h5 class="modal-title"><i class="fas fa-download me-2"></i>Export JO Contract</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Choose the export format:</p>
+
+                    @php
+                        $exportParams = request()->only([
+                            'no_jo', 'no_contract', 'contract_name',
+                            'id_md_cust', 'id_md_area', 'title'
+                        ]);
+                        $hasActiveFilters = array_filter($exportParams);
+
+                        $excelUrl = route('jo-contract.export') . '?' . http_build_query(array_merge($exportParams, ['format' => 'excel']));
+                        $pdfUrl   = route('jo-contract.export') . '?' . http_build_query(array_merge($exportParams, ['format' => 'pdf']));
+                    @endphp
+
+                    @if ($hasActiveFilters)
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <small>Export will use <strong>active filters</strong> (filtered data only).</small>
+                        </div>
+                    @else
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <small>Export will include <strong>all JO Contract data</strong> (no active filters).</small>
+                        </div>
+                    @endif
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ $excelUrl }}" class="btn btn-outline-success">
+                            <i class="fas fa-file-excel me-2"></i> Export to Excel (.xlsx)
+                        </a>
+                        <a href="{{ $pdfUrl }}" class="btn btn-outline-danger">
+                            <i class="fas fa-file-pdf me-2"></i> Export to PDF
+                        </a>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form id="deleteForm" method="POST" style="display:none;">
         @csrf
         @method('DELETE')
@@ -138,8 +313,24 @@
 @push('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
+    {{-- Select2 --}}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 
     <style>
+        /* Select2 di dalam modal */
+        .modal .select2-container { width: 100% !important; }
+        .modal .select2-container .select2-selection--single {
+            height: calc(1.5em + 0.75rem + 2px) !important;
+            padding: 0.375rem 0.75rem !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+        }
+        .modal .select2-container .select2-selection--single .select2-selection__rendered {
+            line-height: 1.5 !important; padding-left: 0 !important; color: #212529;
+        }
+        .modal .select2-container .select2-selection--single .select2-selection__arrow { height: 100% !important; }
+
         .joContractPage .card {
             border: none;
             border-radius: 10px;
@@ -235,10 +426,12 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    {{-- Select2 --}}
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Cek apakah tabel memiliki data
+            // ===== DATATABLE =====
             var hasData = $('#joContractTable tbody tr').length > 0 &&
                 !$('#joContractTable tbody tr td[colspan]').length;
 
@@ -321,14 +514,43 @@
                 }, 100);
             }
 
-            // Initialize tooltips
+            // ===== TOOLTIPS =====
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            var tooltipList = tooltipTriggerList.map(function(tooltipTriggerEl) {
+            tooltipTriggerList.map(function(tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
 
-            // Delete confirmation with SweetAlert2
-            // Delete confirmation with SweetAlert2
+            // ===== SELECT2 — inisialisasi saat modal ditampilkan =====
+            $('#filterModal').on('shown.bs.modal', function () {
+                $('.select2-filter').each(function () {
+                    if (!$(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2({
+                            theme: 'bootstrap-5',
+                            dropdownParent: $('#filterModal'),
+                            placeholder: $(this).data('placeholder') || '-- Select --',
+                            allowClear: true,
+                            width: '100%',
+                        });
+                    }
+                });
+            });
+
+            // ===== FILTER =====
+            $('#filterButton').on('click', function() {
+                $('#filterModal').modal('show');
+            });
+
+            $('#resetFilter').on('click', function() {
+                $('#filterForm input[type="text"]').val('');
+                $('.select2-filter').val('').trigger('change');
+            });
+
+            // ===== EXPORT =====
+            $('#exportButton').on('click', function() {
+                $('#exportModal').modal('show');
+            });
+
+            // ===== DELETE =====
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
 
@@ -338,14 +560,14 @@
                 Swal.fire({
                     title: 'Delete JO Contract?',
                     html: `
-            <div class="text-start">
-                <p>JO Contract <strong>${name}</strong> will be permanently deleted.</p>
-                <div class="alert alert-warning mt-3 mb-0">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    <strong>Warning:</strong> All items related to this JO Contract will also be deleted.
-                </div>
-            </div>
-        `,
+                        <div class="text-start">
+                            <p>JO Contract <strong>${name}</strong> will be permanently deleted.</p>
+                            <div class="alert alert-warning mt-3 mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Warning:</strong> All items related to this JO Contract will also be deleted.
+                            </div>
+                        </div>
+                    `,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -358,7 +580,6 @@
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Show loading
                         Swal.fire({
                             title: 'Deleting...',
                             html: 'Please wait while we delete the JO Contract and all related items.',
@@ -373,11 +594,10 @@
                     }
                 });
             });
-            // Row click to detail
 
-            // Auto hide alerts
+            // ===== AUTO HIDE ALERTS =====
             setTimeout(function() {
-                $(".alert").fadeOut("slow");
+                $(".alert-success, .alert-danger").fadeOut("slow");
             }, 5000);
         });
     </script>

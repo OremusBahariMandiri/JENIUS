@@ -24,8 +24,33 @@ class JoContractController extends Controller
         try {
             $query = JoContract::with(['contract.customer', 'area', 'items']);
 
-            // Search functionality
-            if ($request->has('search') && !empty($request->search)) {
+            if ($request->filled('no_jo')) {
+                $query->where('no_jo_cont', 'like', '%' . $request->no_jo . '%');
+            }
+            if ($request->filled('no_contract')) {
+                $query->whereHas('contract', function ($q) use ($request) {
+                    $q->where('no_contract', 'like', '%' . $request->no_contract . '%');
+                });
+            }
+            if ($request->filled('contract_name')) {
+                $query->whereHas('contract', function ($q) use ($request) {
+                    $q->where('contract', 'like', '%' . $request->contract_name . '%');
+                });
+            }
+            if ($request->filled('id_md_cust')) {
+                $query->whereHas('contract.customer', function ($q) use ($request) {
+                    $q->where('id_md_cust', $request->id_md_cust);
+                });
+            }
+            if ($request->filled('id_md_area')) {
+                $query->where('id_md_area', $request->id_md_area);
+            }
+            if ($request->filled('title')) {
+                $query->where('title', 'like', '%' . $request->title . '%');
+            }
+
+            // Legacy search
+            if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('id_jo_cont', 'like', "%{$search}%")
@@ -41,46 +66,49 @@ class JoContractController extends Controller
                 });
             }
 
-            // Filter by contract
-            if ($request->has('id_md_cont') && !empty($request->id_md_cont)) {
-                $query->where('id_md_cont', $request->id_md_cont);
-            }
-
-            // Filter by area
-            if ($request->has('id_md_area') && !empty($request->id_md_area)) {
-                $query->where('id_md_area', $request->id_md_area);
-            }
-
-            // Sorting
-            $sortBy = $request->get('sort_by', 'created_at');
+            $sortBy    = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            // Pagination
             $joContracts = $query->get();
 
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $joContracts
-                ]);
+                return response()->json(['success' => true, 'data' => $joContracts]);
             }
 
-            // Get contracts and areas for filter
-            $contracts = Contract::with('customer')
-                ->orderBy('no_contract')
-                ->get();
-            $areas = Area::orderBy('area')->get();
+            $contracts = Contract::with('customer')->orderBy('no_contract')->get();
+            $areas     = Area::orderBy('area')->get();
+            $customers = \App\Models\Master\Customer::orderBy('customer')->get();
 
-            return view('data.jo-contract.index', compact('joContracts', 'contracts', 'areas'));
+            $currentFilters = [
+                'no_jo'         => $request->get('no_jo', ''),
+                'no_contract'   => $request->get('no_contract', ''),
+                'contract_name' => $request->get('contract_name', ''),
+                'id_md_cust'    => $request->get('id_md_cust', ''),
+                'id_md_area'    => $request->get('id_md_area', ''),
+                'title'         => $request->get('title', ''),
+            ];
+
+            if (!empty($currentFilters['id_md_cust'])) {
+                $cust = $customers->firstWhere('id_md_cust', $currentFilters['id_md_cust']);
+                $currentFilters['customer_label'] = $cust ? $cust->customer : $currentFilters['id_md_cust'];
+            }
+            if (!empty($currentFilters['id_md_area'])) {
+                $ar = $areas->firstWhere('id_md_area', $currentFilters['id_md_area']);
+                $currentFilters['area_label'] = $ar ? $ar->area : $currentFilters['id_md_area'];
+            }
+
+            return view('data.jo-contract.index', compact(
+                'joContracts',
+                'contracts',
+                'areas',
+                'customers',
+                'currentFilters'
+            ));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error retrieving JO contracts: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error retrieving JO contracts: ' . $e->getMessage()], 500);
             }
-
             return back()->with('error', 'Error retrieving JO contracts: ' . $e->getMessage());
         }
     }
@@ -1640,5 +1668,112 @@ class JoContractController extends Controller
 
         return $this->toTerbilang((int)($number / 1_000_000_000_000)) . ' Triliun' .
             ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
+    }
+
+    public function export(Request $request)
+    {
+        $format      = $request->get('format', 'excel');
+        $joContracts = $this->buildExportQuery($request)->get();
+
+        if ($format === 'pdf') {
+            $filters = $this->activeFilters($request);
+
+            if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'data.jo-contract.export_pdf',
+                    compact('joContracts', 'filters')
+                )
+                    ->setPaper('a4', 'landscape')
+                    ->setOptions([
+                        'isHtml5ParserEnabled' => true,
+                        'isRemoteEnabled'      => false,
+                        'defaultFont'          => 'Arial',
+                        'dpi'                  => 150,
+                    ]);
+
+                $filename = 'jo_contract_' . date('Ymd_His') . '.pdf';
+                return $pdf->stream($filename);
+            }
+
+            // Fallback: render HTML jika DomPDF tidak tersedia
+            $filename = 'jo_contract_' . date('Ymd_His') . '.pdf';
+            $html     = view('data.jo-contract.export_pdf', compact('joContracts', 'filters'))->render();
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        return (new \App\Exports\Data\JoContractExport($joContracts))->download();
+    }
+
+    /**
+     * Build query untuk export (sama logika dengan index tapi dengan filter baru)
+     */
+    private function buildExportQuery(Request $request)
+    {
+        $query = \App\Models\Data\JoContract::with(['contract.customer', 'area', 'items']);
+
+        // Filter: JO Number
+        if ($request->filled('no_jo')) {
+            $query->where('no_jo_cont', 'like', '%' . $request->no_jo . '%');
+        }
+
+        // Filter: Contract No
+        if ($request->filled('no_contract')) {
+            $query->whereHas('contract', function ($q) use ($request) {
+                $q->where('no_contract', 'like', '%' . $request->no_contract . '%');
+            });
+        }
+
+        // Filter: Contract Name
+        if ($request->filled('contract_name')) {
+            $query->whereHas('contract', function ($q) use ($request) {
+                $q->where('contract', 'like', '%' . $request->contract_name . '%');
+            });
+        }
+
+        // Filter: Customer (id atau nama)
+        if ($request->filled('id_customer')) {
+            $query->whereHas('contract.customer', function ($q) use ($request) {
+                $q->where('id_customer', $request->id_customer);
+            });
+        }
+
+        // Filter: Area
+        if ($request->filled('id_md_area')) {
+            $query->where('id_md_area', $request->id_md_area);
+        }
+
+        // Filter: Title
+        if ($request->filled('title')) {
+            $query->where('title', 'like', '%' . $request->title . '%');
+        }
+
+        return $query->orderBy('tgl_jo_cont', 'desc')->orderBy('id_jo_cont', 'desc');
+    }
+
+    /**
+     * Kumpulkan label filter aktif untuk ditampilkan di PDF / UI
+     */
+    private function activeFilters(Request $request): array
+    {
+        $filters = [];
+
+        if ($request->filled('no_jo'))          $filters['no_jo']          = $request->no_jo;
+        if ($request->filled('no_contract'))     $filters['no_contract']    = $request->no_contract;
+        if ($request->filled('contract_name'))   $filters['contract_name']  = $request->contract_name;
+        if ($request->filled('id_customer')) {
+            // Ambil nama customer jika perlu
+            $customer = \App\Models\Master\Customer::find($request->id_customer);
+            $filters['customer_name'] = $customer ? $customer->customer : $request->id_customer;
+        }
+        if ($request->filled('id_md_area')) {
+            $area = \App\Models\Master\Area::find($request->id_md_area);
+            $filters['area_name'] = $area ? $area->area : $request->id_md_area;
+        }
+        if ($request->filled('title'))           $filters['title']          = $request->title;
+
+        return $filters;
     }
 }

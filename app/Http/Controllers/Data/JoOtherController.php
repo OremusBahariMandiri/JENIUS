@@ -26,8 +26,38 @@ class JoOtherController extends Controller
         try {
             $query = JoOther::with(['customer', 'other', 'port', 'vessel', 'items']);
 
-            // Search functionality
-            if ($request->has('search') && !empty($request->search)) {
+            // ---- Filter: JO Number ----
+            if ($request->filled('no_jo')) {
+                $query->where('no_jo_other', 'like', '%' . $request->no_jo . '%');
+            }
+
+            // ---- Filter: Customer (select) ----
+            if ($request->filled('id_md_cust')) {
+                $query->where('id_md_cust', $request->id_md_cust);
+            }
+
+            // ---- Filter: Vessel (select) ----
+            if ($request->filled('id_md_vessel')) {
+                $query->where('id_md_vessel', $request->id_md_vessel);
+            }
+
+            // ---- Filter: Port (select) ----
+            if ($request->filled('id_md_port')) {
+                $query->where('id_md_port', $request->id_md_port);
+            }
+
+            // ---- Filter: Other Type (select) ----
+            if ($request->filled('id_md_other')) {
+                $query->where('id_md_other', $request->id_md_other);
+            }
+
+            // ---- Filter: Title ----
+            if ($request->filled('title')) {
+                $query->where('title', 'like', '%' . $request->title . '%');
+            }
+
+            // ---- Legacy search (JSON API) ----
+            if ($request->filled('search')) {
                 $search = $request->search;
                 $query->where(function ($q) use ($search) {
                     $q->where('id_jo_other', 'like', "%{$search}%")
@@ -49,64 +79,60 @@ class JoOtherController extends Controller
                 });
             }
 
-            // Filter by customer
-            if ($request->has('id_md_cust') && !empty($request->id_md_cust)) {
-                $query->where('id_md_cust', $request->id_md_cust);
-            }
-
-            // Filter by other type
-            if ($request->has('id_md_other') && !empty($request->id_md_other)) {
-                $query->where('id_md_other', $request->id_md_other);
-            }
-
-            // Filter by port
-            if ($request->has('id_md_port') && !empty($request->id_md_port)) {
-                $query->where('id_md_port', $request->id_md_port);
-            }
-
-            // Filter by status
-            if ($request->has('sts_proses') && !empty($request->sts_proses)) {
-                $query->where('sts_proses', $request->sts_proses);
-            }
-
-            // Filter by date range
-            if ($request->has('date_start') && !empty($request->date_start)) {
-                $query->where('date_start', '>=', $request->date_start);
-            }
-
-            if ($request->has('date_end') && !empty($request->date_end)) {
-                $query->where('date_end', '<=', $request->date_end);
-            }
-
-            // Sorting
-            $sortBy = $request->get('sort_by', 'created_at');
+            $sortBy    = $request->get('sort_by', 'created_at');
             $sortOrder = $request->get('sort_order', 'desc');
             $query->orderBy($sortBy, $sortOrder);
 
-            // Pagination
             $joOthers = $query->get();
 
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'data' => $joOthers
-                ]);
+                return response()->json(['success' => true, 'data' => $joOthers]);
             }
 
-            // Get customers, others, and ports for filter
             $customers = Customer::orderBy('customer')->get();
-            $others = Other::orderBy('other')->get();
-            $ports = Port::orderBy('name_port')->get();
+            $others    = Other::orderBy('other')->get();
+            $ports     = Port::orderBy('name_port')->get();
+            $vessels   = Vessel::orderBy('vessel_name')->get();
 
-            return view('data.jo-other.index', compact('joOthers', 'customers', 'others', 'ports'));
+            // Label filter aktif
+            $currentFilters = [
+                'no_jo'        => $request->get('no_jo', ''),
+                'id_md_cust'   => $request->get('id_md_cust', ''),
+                'id_md_vessel' => $request->get('id_md_vessel', ''),
+                'id_md_port'   => $request->get('id_md_port', ''),
+                'id_md_other'  => $request->get('id_md_other', ''),
+                'title'        => $request->get('title', ''),
+            ];
+
+            if (!empty($currentFilters['id_md_cust'])) {
+                $c = $customers->firstWhere('id_md_cust', $currentFilters['id_md_cust']);
+                $currentFilters['customer_label'] = $c ? $c->customer : $currentFilters['id_md_cust'];
+            }
+            if (!empty($currentFilters['id_md_vessel'])) {
+                $v = $vessels->firstWhere('id_md_vessel', $currentFilters['id_md_vessel']);
+                $currentFilters['vessel_label'] = $v ? $v->vessel_name : $currentFilters['id_md_vessel'];
+            }
+            if (!empty($currentFilters['id_md_port'])) {
+                $p = $ports->firstWhere('id_md_port', $currentFilters['id_md_port']);
+                $currentFilters['port_label'] = $p ? $p->name_port : $currentFilters['id_md_port'];
+            }
+            if (!empty($currentFilters['id_md_other'])) {
+                $o = $others->firstWhere('id_md_other', $currentFilters['id_md_other']);
+                $currentFilters['other_label'] = $o ? $o->other : $currentFilters['id_md_other'];
+            }
+
+            return view('data.jo-other.index', compact(
+                'joOthers',
+                'customers',
+                'others',
+                'ports',
+                'vessels',
+                'currentFilters'
+            ));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Error retrieving JO Others: ' . $e->getMessage()
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Error retrieving JO Others: ' . $e->getMessage()], 500);
             }
-
             return back()->with('error', 'Error retrieving JO Others: ' . $e->getMessage());
         }
     }
@@ -1290,5 +1316,82 @@ class JoOtherController extends Controller
 
         return $this->toTerbilang((int)($number / 1_000_000_000_000)) . ' Triliun' .
             ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
+    }
+
+    public function export(Request $request)
+    {
+        $format   = $request->get('format', 'excel');
+        $joOthers = $this->buildExportQuery($request)->get();
+
+        if ($format === 'pdf') {
+            $filters = $this->activeFilters($request);
+
+            if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'data.jo-other.export_pdf',
+                    compact('joOthers', 'filters')
+                )
+                    ->setPaper('a4', 'landscape')
+                    ->setOptions([
+                        'isHtml5ParserEnabled' => true,
+                        'isRemoteEnabled'      => false,
+                        'defaultFont'          => 'Arial',
+                        'dpi'                  => 150,
+                    ]);
+
+                $filename = 'jo_other_' . date('Ymd_His') . '.pdf';
+                return $pdf->stream($filename);
+            }
+
+            $filename = 'jo_other_' . date('Ymd_His') . '.pdf';
+            $html     = view('data.jo-other.export_pdf', compact('joOthers', 'filters'))->render();
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        return (new \App\Exports\Data\JoOtherExport($joOthers))->download();
+    }
+
+    private function buildExportQuery(Request $request)
+    {
+        $query = JoOther::with(['customer', 'other', 'port', 'vessel', 'items']);
+
+        if ($request->filled('no_jo'))        $query->where('no_jo_other', 'like', '%' . $request->no_jo . '%');
+        if ($request->filled('id_md_cust'))   $query->where('id_md_cust', $request->id_md_cust);
+        if ($request->filled('id_md_vessel')) $query->where('id_md_vessel', $request->id_md_vessel);
+        if ($request->filled('id_md_port'))   $query->where('id_md_port', $request->id_md_port);
+        if ($request->filled('id_md_other'))  $query->where('id_md_other', $request->id_md_other);
+        if ($request->filled('title'))        $query->where('title', 'like', '%' . $request->title . '%');
+
+        return $query->orderBy('tgl_jo_other', 'desc')->orderBy('id_jo_other', 'desc');
+    }
+
+    private function activeFilters(Request $request): array
+    {
+        $filters = [];
+
+        if ($request->filled('no_jo'))  $filters['no_jo']  = $request->no_jo;
+        if ($request->filled('title'))  $filters['title']  = $request->title;
+
+        if ($request->filled('id_md_cust')) {
+            $c = Customer::find($request->id_md_cust);
+            $filters['customer_name'] = $c ? $c->customer : $request->id_md_cust;
+        }
+        if ($request->filled('id_md_vessel')) {
+            $v = Vessel::find($request->id_md_vessel);
+            $filters['vessel_name'] = $v ? $v->vessel_name : $request->id_md_vessel;
+        }
+        if ($request->filled('id_md_port')) {
+            $p = Port::find($request->id_md_port);
+            $filters['port_name'] = $p ? $p->name_port : $request->id_md_port;
+        }
+        if ($request->filled('id_md_other')) {
+            $o = Other::find($request->id_md_other);
+            $filters['other_name'] = $o ? $o->other : $request->id_md_other;
+        }
+
+        return $filters;
     }
 }
