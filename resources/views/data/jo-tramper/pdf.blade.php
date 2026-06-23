@@ -267,7 +267,7 @@
                         </table>
                     </td>
                     {{-- KANAN --}}
-                    <td style="width:50%; vertical-align:top; padding-left:200px;">
+                    <td style="width:50%; vertical-align:top; padding-left:100px;">
                         <table style="width:100%; border-collapse:collapse;">
                             <tr>
                                 <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Vessel</td>
