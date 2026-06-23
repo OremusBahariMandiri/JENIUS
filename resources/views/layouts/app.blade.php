@@ -681,7 +681,7 @@
             </div>
 
             {{-- User Management --}}
-            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
+            {{-- @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
                 <div class="nav-item has-submenu" data-tooltip="Manajemen Pengguna">
                     <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenUser">
                         <i class="fas fa-users"></i>
@@ -700,7 +700,7 @@
                         @endif
                     </div>
                 </div>
-            @endif
+            @endif --}}
 
             {{-- Data Master --}}
             @if (auth()->check() &&
