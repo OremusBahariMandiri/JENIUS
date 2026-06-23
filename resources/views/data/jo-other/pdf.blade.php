@@ -309,10 +309,10 @@
                 <tr>
                     <th class="col-no">NO</th>
                     <th class="col-desc">DESCRIPTION</th>
-                    <th class="col-idr">Pendapatan IDR</th>
-                    <th class="col-usd">Pendapatan USD</th>
-                    <th class="col-hpp">HPP (Biaya Ops)</th>
-                    <th class="col-sell">Harga Jual (IDR)</th>
+                    <th class="col-idr">Income (IDR)</th>
+                    <th class="col-usd">Income (USD)</th>
+                    <th class="col-sell">Selling Price (IDR)</th>
+                    <th class="col-hpp">HPP (Ops Costs)</th>
                 </tr>
             </thead>
             <tbody>
@@ -353,10 +353,10 @@
                                 {{ number_format($item->pendapatan_usd, 2, ',', '.') }}
                             </td>
                             <td class="text-right">
-                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
+                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
                             </td>
                             <td class="text-right">
-                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
+                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
                             </td>
                         </tr>
                     @endforeach
@@ -368,8 +368,8 @@
                     <td class="text-left"><strong>GRAND TOTAL</strong></td>
                     <td class="text-right">{{ number_format($totalIDR, 2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($totalUSD, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalHPP, 2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($totalHPP, 2, ',', '.') }}</td>
                 </tr>
             </tfoot>
         </table>
