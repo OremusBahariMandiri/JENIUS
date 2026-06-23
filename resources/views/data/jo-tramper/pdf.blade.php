@@ -109,9 +109,17 @@
             border: 1px solid #000;
         }
 
-        .text-center { text-align: center; }
-        .text-right  { text-align: right; }
-        .text-left   { text-align: left; }
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left {
+            text-align: left;
+        }
 
         /* Item note sub-text */
         .item-note {
@@ -176,12 +184,29 @@
             margin-bottom: 10px;
         }
 
-        .col-no   { width: 5%;  }
-        .col-desc { width: 35%; }
-        .col-idr  { width: 15%; }
-        .col-usd  { width: 15%; }
-        .col-hpp  { width: 13%; }
-        .col-sell { width: 17%; }
+        .col-no {
+            width: 5%;
+        }
+
+        .col-desc {
+            width: 35%;
+        }
+
+        .col-idr {
+            width: 15%;
+        }
+
+        .col-usd {
+            width: 15%;
+        }
+
+        .col-hpp {
+            width: 13%;
+        }
+
+        .col-sell {
+            width: 17%;
+        }
     </style>
 </head>
 
@@ -202,73 +227,79 @@
         <div class="doc-title">JO Tramper Information</div>
 
         {{-- ── Info Header ── --}}
-        <table class="info-table">
+        {{-- ── Info Header ── --}}
+        <table style="width:100%; border-collapse:collapse; margin-bottom:10px; margin-top:50px;">
             <tbody>
                 <tr>
-                    <td class="info-label">JO Date</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->tgl_jo_tram ? $joTramper->tgl_jo_tram->format('d M Y') : '-' }}
+                    {{-- KIRI --}}
+                    <td style="width:50%; vertical-align:top; padding-right:10px;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">JO Date</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joTramper->tgl_jo_tram ? $joTramper->tgl_jo_tram->format('d M Y') : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">JO Number</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    <strong>{{ $joTramper->no_jo_tram ?? '-' }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Customer</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joTramper->customer ? $joTramper->customer->customer : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Address</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joTramper->customer ? $joTramper->customer->address ?? '-' : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">NPWP</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joTramper->customer ? $joTramper->customer->npwp ?? '-' : '-' }}</td>
+                            </tr>
+                        </table>
                     </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Vessel</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->vessel ? $joTramper->vessel->vessel_name : '-' }}
+                    {{-- KANAN --}}
+                    <td style="width:50%; vertical-align:top; padding-left:200px;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Vessel</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joTramper->vessel ? $joTramper->vessel->vessel_name : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Port</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joTramper->port ? $joTramper->port->name_port : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">TA - TD</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joTramper->date_start ? $joTramper->date_start->format('d M Y') : '-' }} -
+                                    {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Title</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">{{ $joTramper->title ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Note</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">{{ $joTramper->note ?? '-' }}</td>
+                            </tr>
+                        </table>
                     </td>
-                </tr>
-                <tr>
-                    <td class="info-label">JO Number</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value"><strong>{{ $joTramper->no_jo_tram ?? '-' }}</strong></td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Port</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->port ? $joTramper->port->name_port : '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="info-label">Customer</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->customer : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Start Date</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->date_start ? $joTramper->date_start->format('d M Y') : '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="info-label">Address</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->address ?? '-' : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">End Date</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->date_end ? $joTramper->date_end->format('d M Y') : '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="info-label">NPWP</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joTramper->customer ? $joTramper->customer->npwp ?? '-' : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Title</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">{{ $joTramper->title ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="info-label">Note</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value" colspan="5">{{ $joTramper->note ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>
@@ -279,20 +310,20 @@
                 <tr>
                     <th class="col-no">NO</th>
                     <th class="col-desc">DESCRIPTION</th>
-                    <th class="col-idr">Pendapatan IDR</th>
-                    <th class="col-usd">Pendapatan USD</th>
-                    <th class="col-hpp">HPP (Biaya Ops)</th>
-                    <th class="col-sell">Harga Jual (IDR)</th>
+                    <th class="col-idr">Income (IDR)</th>
+                    <th class="col-usd">Income (USD)</th>
+                    <th class="col-sell">Selling Price (IDR)</th>
+                    <th class="col-hpp">HPP (Ops Costs)</th>
                 </tr>
             </thead>
             <tbody>
                 @php
                     $groupedItems = $joTramper->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
-                    $globalIndex  = 1;
-                    $totalIDR     = 0;
-                    $totalUSD     = 0;
-                    $totalHPP     = 0;
-                    $totalSell    = 0;
+                    $globalIndex = 1;
+                    $totalIDR = 0;
+                    $totalUSD = 0;
+                    $totalHPP = 0;
+                    $totalSell = 0;
                 @endphp
 
                 @foreach ($groupedItems as $category => $items)
@@ -303,9 +334,9 @@
 
                     @foreach ($items as $item)
                         @php
-                            $totalIDR  += $item->pendapatan_idr;
-                            $totalUSD  += $item->pendapatan_usd;
-                            $totalHPP  += $item->hpp_ops;
+                            $totalIDR += $item->pendapatan_idr;
+                            $totalUSD += $item->pendapatan_usd;
+                            $totalHPP += $item->hpp_ops;
                             $totalSell += $item->hargajual_idr;
                         @endphp
                         <tr>
@@ -323,10 +354,10 @@
                                 {{ number_format($item->pendapatan_usd, 2, ',', '.') }}
                             </td>
                             <td class="text-right">
-                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
+                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
                             </td>
                             <td class="text-right">
-                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
+                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
                             </td>
                         </tr>
                     @endforeach
@@ -336,10 +367,10 @@
                 <tr>
                     <td></td>
                     <td class="text-left"><strong>GRAND TOTAL</strong></td>
-                    <td class="text-right">{{ number_format($totalIDR,  2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalUSD,  2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalHPP,  2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($totalIDR, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($totalUSD, 2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($totalHPP, 2, ',', '.') }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -363,9 +394,15 @@
                 <td></td>
             </tr>
             <tr>
-                <td><div class="signature-line"></div></td>
-                <td><div class="signature-line"></div></td>
-                <td><div class="signature-line"></div></td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
             </tr>
         </table>
 

@@ -226,10 +226,10 @@
                         {{ $contract ? $contract->no_contract : '-' }}
                     </td>
                     <td class="info-spacer"></td>
-                    <td class="info-label">Start Date</td>
+                    <td class="info-label">TA - TD</td>
                     <td class="info-colon">:</td>
                     <td class="info-value">
-                        {{ $contract && $contract->date_start ? \Carbon\Carbon::parse($contract->date_start)->format('d M Y') : '-' }}
+                        {{ $contract && $contract->date_start ? \Carbon\Carbon::parse($contract->date_start)->format('d M Y') : '-' }} -  {{ $contract && $contract->date_end ? \Carbon\Carbon::parse($contract->date_end)->format('d M Y') : '-' }}
                     </td>
                 </tr>
                 <tr>
@@ -239,11 +239,6 @@
                         {{ $contract ? $contract->contract : '-' }}
                     </td>
                     <td class="info-spacer"></td>
-                    <td class="info-label">End Date</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $contract && $contract->date_end ? \Carbon\Carbon::parse($contract->date_end)->format('d M Y') : '-' }}
-                    </td>
                 </tr>
                 <tr>
                     <td class="info-label">Customer</td>
@@ -296,10 +291,10 @@
                 <tr>
                     <th class="col-no">NO</th>
                     <th class="col-desc">DESCRIPTION</th>
-                    <th class="col-idr">Pendapatan IDR</th>
-                    <th class="col-usd">Pendapatan USD</th>
-                    <th class="col-hpp">HPP (Biaya Ops)</th>
-                    <th class="col-sell">Harga Jual (IDR)</th>
+                    <th class="col-idr">Income (IDR)</th>
+                    <th class="col-usd">Income (USD)</th>
+                    <th class="col-sell">Selling Price (IDR)</th>
+                    <th class="col-sell">HPP (Ops Costs)</th>
                 </tr>
             </thead>
             <tbody>
@@ -340,10 +335,10 @@
                                 {{ number_format($item->pendapatan_usd, 2, ',', '.') }}
                             </td>
                             <td class="text-right">
-                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
+                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
                             </td>
                             <td class="text-right">
-                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
+                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
                             </td>
                         </tr>
                     @endforeach
@@ -355,8 +350,8 @@
                     <td class="text-left"><strong>GRAND TOTAL</strong></td>
                     <td class="text-right">{{ number_format($totalIDR,  2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($totalUSD,  2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalHPP,  2, ',', '.') }}</td>
                     <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
+                <td class="text-right">{{ number_format($totalHPP,  2, ',', '.') }}</td>
                 </tr>
             </tfoot>
         </table>

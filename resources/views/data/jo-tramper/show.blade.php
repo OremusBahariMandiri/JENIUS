@@ -426,10 +426,10 @@
                                         <th style="width: 5%;">No</th>
                                         <th style="width: 12%;">Category</th>
                                         <th style="width: 18%;">Item / Invoice Type</th>
-                                        <th style="width: 13%;">Pendapatan IDR</th>
-                                        <th style="width: 13%;">Pendapatan USD</th>
-                                        <th style="width: 13%;">HPP (Biaya Ops)</th>
-                                        <th style="width: 13%;">Harga Jual (IDR)</th>
+                                        <th style="width: 13%;">Income (IDR)</th>
+                                        <th style="width: 13%;">Income (USD)</th>
+                                        <th style="width: 13%;">Selling Price (IDR)</th>
+                                        <th style="width: 13%;">HPP (Ops Costs)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -486,14 +486,14 @@
                                                     <div class="currency-group">
                                                         <span class="currency-label">IDR</span>
                                                         <span
-                                                            class="currency-value">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
+                                                            class="currency-value">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
                                                     <div class="currency-group">
                                                         <span class="currency-label">IDR</span>
                                                         <span
-                                                            class="currency-value">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
+                                                            class="currency-value">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                             </tr>
@@ -523,7 +523,7 @@
                                             <div class="currency-group">
                                                 <span class="currency-label text-black">IDR</span>
                                                 <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}
+                                                    {{ number_format($summary['total_selling_price'], 2, ',', '.') }}
                                                 </span>
                                             </div>
                                         </td>
@@ -531,7 +531,7 @@
                                             <div class="currency-group">
                                                 <span class="currency-label text-black">IDR</span>
                                                 <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_selling_price'], 2, ',', '.') }}
+                                                    {{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}
                                                 </span>
                                             </div>
                                         </td>

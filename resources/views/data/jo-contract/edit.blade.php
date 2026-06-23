@@ -785,14 +785,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- HPP -->
-                                    <div class="col-md-3 mb-3">
-                                        <label class="form-label">HPP (Ops Costs)</label>
-                                        <div class="currency-group">
-                                            <span class="currency-label">IDR</span>
-                                            <input type="text" id="input_hpp" class="form-control currency-input">
-                                        </div>
-                                    </div>
 
                                     <!-- Selling Price (Auto Calculate) -->
                                     <div class="col-md-3 mb-3">
@@ -801,6 +793,14 @@
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_harga_jual"
                                                 class="form-control currency-input" readonly>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-3 mb-3">
+                                        <label class="form-label">HPP (Ops Costs)</label>
+                                        <div class="currency-group">
+                                            <span class="currency-label">IDR</span>
+                                            <input type="text" id="input_hpp" class="form-control currency-input">
                                         </div>
                                     </div>
 
@@ -830,8 +830,8 @@
                                             <th style="width: 13%;">Item</th>
                                             <th style="width: 12%;">Income (IDR)</th>
                                             <th style="width: 12%;">Income (USD)</th>
-                                            <th style="width: 12%;">HPP (Ops Costs)</th>
                                             <th style="width: 12%;">Selling Price (IDR)</th>
+                                            <th style="width: 12%;">HPP (Ops Costs)</th>
                                             <th style="width: 11%;">Action</th>
                                         </tr>
                                     </thead>
@@ -864,8 +864,8 @@
                                                         <td class="item-text-cell">{{ $item->invoice->invoice_typ }}</td>
                                                         <td>{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
                                                         <td>{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
-                                                        <td>{{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
                                                         <td>{{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
+                                                        <td>{{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
                                                         <td class="text-center">
                                                             <button type="button"
                                                                 class="btn btn-primary btn-sm btn-edit-row"
@@ -911,13 +911,13 @@
                                             <td>
                                                 <div class="currency-group-footer">
                                                     <span class="currency-label-footer">IDR</span>
-                                                    <span class="value-footer" id="footerTotalHPP">0,00</span>
+                                                    <span class="value-footer" id="footerTotalSelling">0,00</span>
                                                 </div>
                                             </td>
                                             <td>
                                                 <div class="currency-group-footer">
                                                     <span class="currency-label-footer">IDR</span>
-                                                    <span class="value-footer" id="footerTotalSelling">0,00</span>
+                                                    <span class="value-footer" id="footerTotalHPP">0,00</span>
                                                 </div>
                                             </td>
                                             <td></td>
@@ -1580,8 +1580,8 @@
                 <td class="item-text-cell">${itemText}</td>
                 <td>${formatNumber(data.pendapatan_idr)}</td>
                 <td>${formatNumber(data.pendapatan_usd)}</td>
-                <td>${formatNumber(data.hpp_ops)}</td>
                 <td>${formatNumber(data.hargajual_idr)}</td>
+                <td>${formatNumber(data.hpp_ops)}</td>
                 <td class="text-center">
                     <button type="button" class="btn btn-primary btn-sm btn-edit-row"
                         onclick="editItem('${itemId}')">
@@ -1606,8 +1606,8 @@
                 <td class="item-text-cell">${itemText}</td>
                 <td>${formatNumber(data.pendapatan_idr)}</td>
                 <td>${formatNumber(data.pendapatan_usd)}</td>
-                <td>${formatNumber(data.hpp_ops)}</td>
                 <td>${formatNumber(data.hargajual_idr)}</td>
+                <td>${formatNumber(data.hpp_ops)}</td>
                 <td class="text-center">
                     <button type="button" class="btn btn-primary btn-sm btn-edit-row"
                         onclick="editItem('${itemId}')">
@@ -1807,8 +1807,8 @@
 
                             row.find('td').eq(3 + offset).text(formatNumber(response.data.pendapatan_idr));
                             row.find('td').eq(4 + offset).text(formatNumber(response.data.pendapatan_usd));
-                            row.find('td').eq(5 + offset).text(formatNumber(response.data.hpp_ops));
-                            row.find('td').eq(6 + offset).text(formatNumber(response.data.hargajual_idr));
+                            row.find('td').eq(5 + offset).text(formatNumber(response.data.hargajual_idr));
+                            row.find('td').eq(6 + offset).text(formatNumber(response.data.hpp_ops));
                         }
 
                         updateGrandTotal();
@@ -2086,27 +2086,25 @@
         }
 
         function updateGrandTotal() {
-            let totalIDR = 0;
-            let totalUSD = 0;
-            let totalHPP = 0;
-            let totalSelling = 0;
+            let totalIDR = 0,
+                totalUSD = 0,
+                totalHPP = 0,
+                totalSelling = 0;
 
             $('.item-row').each(function() {
-                const idr = parseRupiah($(this).find('td:eq(3)').text());
-                const usd = parseRupiah($(this).find('td:eq(4)').text());
-                const hpp = parseRupiah($(this).find('td:eq(5)').text());
-                const selling = parseRupiah($(this).find('td:eq(6)').text());
+                const hasCategoryCell = $(this).find('.category-cell').length > 0;
+                const off = hasCategoryCell ? 0 : -1;
 
-                totalIDR += idr;
-                totalUSD += usd;
-                totalHPP += hpp;
-                totalSelling += selling;
+                totalIDR += parseRupiah($(this).find('td').eq(3 + off).text());
+                totalUSD += parseRupiah($(this).find('td').eq(4 + off).text());
+                totalSelling += parseRupiah($(this).find('td').eq(5 + off).text());
+                totalHPP += parseRupiah($(this).find('td').eq(6 + off).text());
             });
 
             $('#footerTotalIDR').text(formatNumber(totalIDR));
             $('#footerTotalUSD').text(formatNumber(totalUSD));
-            $('#footerTotalHPP').text(formatNumber(totalHPP));
             $('#footerTotalSelling').text(formatNumber(totalSelling));
+            $('#footerTotalHPP').text(formatNumber(totalHPP));
         }
 
         // Initialize grand total on page load
