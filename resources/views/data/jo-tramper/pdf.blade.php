@@ -77,6 +77,7 @@
             border-collapse: collapse;
             margin-bottom: 6px;
             font-size: 8.5pt;
+            border: 1px solid #000;
         }
 
         .items-table thead tr th {
@@ -106,7 +107,7 @@
         .row-category td {
             background-color: #f2f2f2 !important;
             font-weight: bold;
-            border: 1px solid #000;
+            /* border: 1px solid #000; */
         }
 
         .text-center {
@@ -184,12 +185,8 @@
             margin-bottom: 10px;
         }
 
-        .col-no {
-            width: 5%;
-        }
-
         .col-desc {
-            width: 35%;
+            width: 40%;
         }
 
         .col-idr {
@@ -244,7 +241,8 @@
                                 <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">JO Number</td>
                                 <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
                                 <td style="font-size:9pt; padding:1.5px 0;">
-                                    <strong>{{ $joTramper->no_jo_tram ?? '-' }}</strong></td>
+                                    <strong>{{ $joTramper->no_jo_tram ?? '-' }}</strong>
+                                </td>
                             </tr>
                             <tr>
                                 <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Customer</td>
@@ -305,75 +303,73 @@
         </table>
 
         {{-- ── Items Table ── --}}
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th class="col-no">NO</th>
-                    <th class="col-desc">DESCRIPTION</th>
-                    <th class="col-idr">Income (IDR)</th>
-                    <th class="col-usd">Income (USD)</th>
-                    <th class="col-sell">Selling Price (IDR)</th>
-                    <th class="col-hpp">HPP (Ops Costs)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $groupedItems = $joTramper->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
-                    $globalIndex = 1;
-                    $totalIDR = 0;
-                    $totalUSD = 0;
-                    $totalHPP = 0;
-                    $totalSell = 0;
-                @endphp
-
-                @foreach ($groupedItems as $category => $items)
-                    <tr class="row-category">
-                        <td></td>
-                        <td colspan="5"><strong>{{ strtoupper($category) }}</strong></td>
+        <div style="border-right: 1px solid #000;">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th class="col-desc">DESCRIPTION</th>
+                        <th class="col-idr">Income (IDR)</th>
+                        <th class="col-usd">Income (USD)</th>
+                        <th class="col-sell">Selling Price (IDR)</th>
+                        <th class="col-hpp">HPP (Ops Costs)</th>
                     </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $groupedItems = $joTramper->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
+                        $globalIndex = 1;
+                        $totalIDR = 0;
+                        $totalUSD = 0;
+                        $totalHPP = 0;
+                        $totalSell = 0;
+                    @endphp
 
-                    @foreach ($items as $item)
-                        @php
-                            $totalIDR += $item->pendapatan_idr;
-                            $totalUSD += $item->pendapatan_usd;
-                            $totalHPP += $item->hpp_ops;
-                            $totalSell += $item->hargajual_idr;
-                        @endphp
-                        <tr>
-                            <td class="text-center">{{ $globalIndex++ }}</td>
-                            <td class="text-left">
-                                {{ $item->invoice->invoice_typ }}
-                                @if (!empty($item->note))
-                                    <div class="item-note">{!! nl2br(e($item->note)) !!}</div>
-                                @endif
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->pendapatan_idr, 2, ',', '.') }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->pendapatan_usd, 2, ',', '.') }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
-                            </td>
+                    @foreach ($groupedItems as $category => $items)
+                        <tr class="row-category">
+                            <td colspan="5"><strong>{{ strtoupper($category) }}</strong></td>
                         </tr>
+
+                        @foreach ($items as $item)
+                            @php
+                                $totalIDR += $item->pendapatan_idr;
+                                $totalUSD += $item->pendapatan_usd;
+                                $totalHPP += $item->hpp_ops;
+                                $totalSell += $item->hargajual_idr;
+                            @endphp
+                            <tr>
+                                <td class="text-left">
+                                    {{ $item->invoice->invoice_typ }}
+                                    @if (!empty($item->note))
+                                        <div class="item-note">{!! nl2br(e($item->note)) !!}</div>
+                                    @endif
+                                </td>
+                                <td class="text-right">
+                                    {{ number_format($item->pendapatan_idr, 2, ',', '.') }}
+                                </td>
+                                <td class="text-right">
+                                    {{ number_format($item->pendapatan_usd, 2, ',', '.') }}
+                                </td>
+                                <td class="text-right">
+                                    {{ number_format($item->hargajual_idr, 2, ',', '.') }}
+                                </td>
+                                <td class="text-right">
+                                    {{ number_format($item->hpp_ops, 2, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
                     @endforeach
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td></td>
-                    <td class="text-left"><strong>GRAND TOTAL</strong></td>
-                    <td class="text-right">{{ number_format($totalIDR, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalUSD, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalHPP, 2, ',', '.') }}</td>
-                </tr>
-            </tfoot>
-        </table>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="text-left"><strong>GRAND TOTAL</strong></td>
+                        <td class="text-right">{{ number_format($totalIDR, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($totalUSD, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($totalHPP, 2, ',', '.') }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
 
         {{-- ── Terbilang ── --}}
         <div class="terbilang">
