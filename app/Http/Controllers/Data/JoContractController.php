@@ -1776,4 +1776,47 @@ class JoContractController extends Controller
 
         return $filters;
     }
+
+    /**
+     * Update kurs only (dipanggil saat global kurs berubah)
+     */
+    public function updateItemKurs(Request $request, $id)
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'kurs_usd'      => 'required|numeric|min:0',
+                'tgl_kurs_usd'  => 'nullable',
+                'hargajual_idr' => 'required|numeric|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'errors'  => $validator->errors()
+                ], 422);
+            }
+
+            $item = JoContractItem::findOrFail($id);
+            $item->update([
+                'kurs_usd'      => $request->kurs_usd,
+                'tgl_kurs_usd'  => $request->tgl_kurs_usd ?? null,
+                'hargajual_idr' => $request->hargajual_idr,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'id_jo_cont_item' => $item->id_jo_cont_item,
+                    'kurs_usd'        => (float) $item->kurs_usd,
+                    'hargajual_idr'   => (float) $item->hargajual_idr,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            Log::error('updateItemKurs failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

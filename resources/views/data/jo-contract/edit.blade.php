@@ -850,7 +850,9 @@
                                                         data-invoice-id="{{ $item->id_md_invoice }}"
                                                         data-category="{{ $item->invoice->invoice_ctg }}"
                                                         data-item-text="{{ $item->invoice->invoice_typ }}"
-                                                        data-item-number="{{ $globalIndex }}">
+                                                        data-item-number="{{ $globalIndex }}"
+                                                        data-pendapatan-usd="{{ $item->pendapatan_usd }}"
+                                                        data-kurs-usd="{{ $item->kurs_usd ?? 0 }}">
 
                                                         <td class="item-number-cell">{{ $globalIndex }}</td>
 
@@ -994,17 +996,13 @@
             let integerPart = parts[0];
             let decimalPart = parts.length > 1 ? parts[1] : '';
 
-            if (decimalPart.length > 2) {
-                decimalPart = decimalPart.substring(0, 2);
-            }
+            if (decimalPart.length > 2) decimalPart = decimalPart.substring(0, 2);
 
             integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
-            if (parts.length > 1) {
-                return integerPart + ',' + decimalPart;
-            } else {
-                return integerPart + ',00';
-            }
+            return parts.length > 1 ?
+                integerPart + ',' + decimalPart :
+                integerPart + ',00';
         }
 
         function parseRupiah(value) {
@@ -1017,14 +1015,13 @@
             input.addEventListener('input', function(e) {
                 let cursorPosition = this.selectionStart;
                 let beforeCursor = this.value.substring(0, cursorPosition);
-
                 let formatted = formatRupiah(this.value);
                 this.value = formatted;
 
                 if (!beforeCursor.includes(',')) {
                     let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
-                    let newPos = 0;
-                    let digitCount = 0;
+                    let newPos = 0,
+                        digitCount = 0;
                     for (let i = 0; i < this.value.length; i++) {
                         if (/\d/.test(this.value[i])) {
                             digitCount++;
@@ -1037,29 +1034,23 @@
                     this.setSelectionRange(newPos, newPos);
                 } else {
                     let commaPos = this.value.indexOf(',');
-                    let decimalDigitsInput = beforeCursor.split(',')[1] || '';
-                    let decimalDigits = decimalDigitsInput.length;
+                    let decimalDigits = (beforeCursor.split(',')[1] || '').length;
                     let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
                     this.setSelectionRange(newPos, newPos);
                 }
             });
 
-            input.addEventListener('blur', function(e) {
-                if (e.target.value) {
-                    if (!e.target.value.includes(',')) {
-                        e.target.value = e.target.value + ',00';
+            input.addEventListener('blur', function() {
+                if (this.value) {
+                    if (!this.value.includes(',')) {
+                        this.value = this.value + ',00';
                     } else {
-                        let parts = e.target.value.split(',');
+                        let parts = this.value.split(',');
                         if (parts[1] !== undefined) {
-                            if (parts[1].length === 0) {
-                                e.target.value = parts[0] + ',00';
-                            } else if (parts[1].length < 2) {
-                                e.target.value = parts[0] + ',' + parts[1].padEnd(2, '0');
-                            }
+                            if (parts[1].length === 0) this.value = parts[0] + ',00';
+                            else if (parts[1].length < 2) this.value = parts[0] + ',' + parts[1].padEnd(2, '0');
                         }
                     }
-                } else {
-                    e.target.value = '';
                 }
             });
         }
@@ -1078,43 +1069,74 @@
         setupRupiahInput(document.getElementById('input_hpp'));
 
         // ========================================
+        // LOAD KURS EXISTING DARI ITEMS
+        // ========================================
+        function loadExistingKurs() {
+            // Ambil dari item pertama yang punya kurs_usd via blade
+            @php
+                $firstUsdItem = $joContract->items->first(fn($i) => $i->kurs_usd > 0);
+            @endphp
+
+            @if ($firstUsdItem)
+                const existingKurs = {{ (float) $firstUsdItem->kurs_usd }};
+                const existingDate = '{{ $firstUsdItem->tgl_kurs_usd?->format('Y-m-d\TH:i') ?? '' }}';
+
+                if (existingKurs > 0) {
+                    $('#global_kurs_usd_display').val(
+                        formatRupiah(existingKurs.toFixed(2).replace('.', ','))
+                    );
+                    $('#global_kurs_usd').val(existingKurs);
+                }
+                if (existingDate) {
+                    $('#global_tgl_kurs_usd').val(existingDate);
+                }
+            @endif
+        }
+
+        // ========================================
+        // GLOBAL KURS CHANGE → UPDATE ALL USD ITEMS
+        // ========================================
+        $('#global_kurs_usd_display').on('input', function() {
+            $('#global_kurs_usd').val(parseRupiah($(this).val()));
+            calculateHargaJual();
+        });
+
+        function updateRowSellingPrice(row, newHargaJual) {
+            const hasCategoryCell = row.find('.category-cell').length > 0;
+            const offset = hasCategoryCell ? 0 : -1;
+            // Kolom Selling Price ada di index ke-5 (dengan category cell) atau 4 (tanpa)
+            row.find('td').eq(5 + offset).text(formatNumber(newHargaJual));
+        }
+
+        // ========================================
         // CONTRACT SEARCH
         // ========================================
-
-        // Tampilkan saat fokus saja
         document.getElementById('contract_search').addEventListener('focus', function() {
             const searchType = document.querySelector('input[name="search_type"]:checked').value;
             displaySearchResults(contracts, '', searchType);
         });
 
-        // Sembunyikan saat blur (delay agar klik item sempat terproses)
         document.getElementById('contract_search').addEventListener('blur', function() {
-            setTimeout(() => {
-                hideSearchResults();
-            }, 200);
+            setTimeout(() => hideSearchResults(), 200);
         });
 
-        // Filter saat mengetik
         document.getElementById('contract_search').addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
             const searchType = document.querySelector('input[name="search_type"]:checked').value;
 
             if (searchTerm.length === 0) {
-                const searchType2 = document.querySelector('input[name="search_type"]:checked').value;
-                displaySearchResults(contracts, '', searchType2);
+                displaySearchResults(contracts, '', searchType);
                 return;
             }
 
             const filteredContracts = contracts.filter(contract => {
                 switch (searchType) {
                     case 'nomor':
-                        return contract.no_contract && contract.no_contract.toLowerCase().includes(
-                            searchTerm);
+                        return contract.no_contract?.toLowerCase().includes(searchTerm);
                     case 'name':
-                        return contract.contract && contract.contract.toLowerCase().includes(searchTerm);
+                        return contract.contract?.toLowerCase().includes(searchTerm);
                     case 'customer':
-                        return contract.customer && contract.customer.customer &&
-                            contract.customer.customer.toLowerCase().includes(searchTerm);
+                        return contract.customer?.customer?.toLowerCase().includes(searchTerm);
                     default:
                         return false;
                 }
@@ -1123,17 +1145,15 @@
             displaySearchResults(filteredContracts, searchTerm, searchType);
         });
 
-        // Ganti filter saat radio berubah
         document.querySelectorAll('input[name="search_type"]').forEach(radio => {
             radio.addEventListener('change', function() {
-                const searchInput = document.getElementById('contract_search');
                 const placeholders = {
                     'nomor': 'Search contract by number...',
                     'name': 'Search contract by name...',
                     'customer': 'Search contract by customer name...'
                 };
-                searchInput.placeholder = placeholders[this.value];
-                searchInput.value = '';
+                document.getElementById('contract_search').placeholder = placeholders[this.value];
+                document.getElementById('contract_search').value = '';
                 hideSearchResults();
                 clearContractPreview();
             });
@@ -1164,8 +1184,7 @@
 
         function formatDate(dateString) {
             if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
+            return new Date(dateString).toLocaleDateString('en-US', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'
@@ -1179,7 +1198,6 @@
             const selectElement = document.getElementById('id_md_cont');
             selectElement.innerHTML =
                 `<option value="${selectedContract.id_md_cont}" selected>${selectedContract.no_contract}</option>`;
-
             document.getElementById('contract_search').value = selectedContract.no_contract + ' - ' + selectedContract
                 .contract;
 
@@ -1190,7 +1208,7 @@
         function displayContractPreview(contract) {
             document.getElementById('preview_no_contract').textContent = contract.no_contract || '-';
             document.getElementById('preview_contract_name').textContent = contract.contract || '-';
-            document.getElementById('preview_customer').textContent = contract.customer ? contract.customer.customer : '-';
+            document.getElementById('preview_customer').textContent = contract.customer?.customer ?? '-';
 
             const expenditure = contract.expenditure ?
                 new Intl.NumberFormat('id-ID', {
@@ -1217,37 +1235,35 @@
 
         function displaySearchResults(contractsList, searchTerm, searchType) {
             const resultsContainer = document.getElementById('search_results');
-
             const filterLabels = {
-                'nomor': 'Nomor',
-                'name': 'Contract',
-                'customer': 'Customer'
+                nomor: 'Nomor',
+                name: 'Contract',
+                customer: 'Customer'
             };
             const activeLabel = filterLabels[searchType] || 'Contract';
 
             if (contractsList.length === 0) {
                 resultsContainer.innerHTML = `
-            <div class="list-group-item text-center text-muted py-4">
-                <i class="fas fa-search-minus mb-2 d-block" style="font-size:1.8rem;opacity:0.4;"></i>
-                <p class="mb-0 small">No contracts found</p>
-            </div>`;
+                <div class="list-group-item text-center text-muted py-4">
+                    <i class="fas fa-search-minus mb-2 d-block" style="font-size:1.8rem;opacity:0.4;"></i>
+                    <p class="mb-0 small">No contracts found</p>
+                </div>`;
                 resultsContainer.style.display = 'block';
                 return;
             }
 
             const headerHtml = `
-        <div class="d-flex justify-content-between px-3 py-1"
-             style="font-size:11px; color:#6c757d; background:#f8f9fa; border:1px solid #dee2e6; border-bottom:none; border-radius:6px 6px 0 0;">
-            <small><i class="fas fa-filter me-1"></i>By ${activeLabel}</small>
-            <small>${contractsList.length} result${contractsList.length > 1 ? 's' : ''}</small>
-        </div>`;
+            <div class="d-flex justify-content-between px-3 py-1"
+                 style="font-size:11px; color:#6c757d; background:#f8f9fa; border:1px solid #dee2e6; border-bottom:none; border-radius:6px 6px 0 0;">
+                <small><i class="fas fa-filter me-1"></i>By ${activeLabel}</small>
+                <small>${contractsList.length} result${contractsList.length > 1 ? 's' : ''}</small>
+            </div>`;
 
             const itemsHtml = contractsList.map((contract, index) => {
                 const isLast = index === contractsList.length - 1;
-                const customerName = contract.customer ? contract.customer.customer : '-';
+                const customerName = contract.customer?.customer ?? '-';
                 const contractName = contract.contract || '-';
                 const noContract = contract.no_contract || '-';
-
                 const expenditure = contract.expenditure ?
                     new Intl.NumberFormat('id-ID', {
                         style: 'currency',
@@ -1256,32 +1272,28 @@
                         maximumFractionDigits: 2
                     }).format(contract.expenditure) :
                     '-';
-
                 const periode = (contract.date_start && contract.date_end) ?
-                    `${formatDate(contract.date_start)} – ${formatDate(contract.date_end)}` :
-                    '-';
+                    `${formatDate(contract.date_start)} – ${formatDate(contract.date_end)}` : '-';
 
                 const noContractHtml = searchType === 'nomor' ? highlightText(noContract, searchTerm) : noContract;
-                const namaContractHtml = searchType === 'name' ? highlightText(contractName, searchTerm) :
-                    contractName;
+                const namaHtml = searchType === 'name' ? highlightText(contractName, searchTerm) : contractName;
                 const customerHtml = searchType === 'customer' ? highlightText(customerName, searchTerm) :
                     customerName;
-
                 const borderRadius = isLast ? 'border-radius:0 0 6px 6px;' : '';
 
                 return `
-            <a href="#" class="list-group-item list-group-item-action contract-search-item px-3 py-2"
-               data-contract-id="${contract.id_md_cont}"
-               style="display:flex; align-items:center; gap:0; ${borderRadius}">
-                <span style="font-size:13px; white-space:nowrap; width:130px;">${noContractHtml}</span>
-                <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
-                <span style="font-size:13px; white-space:nowrap; width:200px; overflow:hidden; text-overflow:ellipsis;">${namaContractHtml}</span>
-                <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
-                <span style="font-size:13px; color:#6c757d; white-space:nowrap; width:160px; overflow:hidden; text-overflow:ellipsis;">${customerHtml}</span>
-                <span style="color:#adb5bd; padding:0 8px; user-select:none;">|</span>
-                <span style="font-size:12px; color:#6c757d; white-space:nowrap; width:160px;">${periode}</span>
-                <span style="font-size:13px; white-space:nowrap; text-align:right; margin-left:auto; padding-left:16px; color:#2c3e50;">${expenditure}</span>
-            </a>`;
+                <a href="#" class="list-group-item list-group-item-action contract-search-item px-3 py-2"
+                   data-contract-id="${contract.id_md_cont}"
+                   style="display:flex; align-items:center; gap:0; ${borderRadius}">
+                    <span style="font-size:13px;white-space:nowrap;width:130px;">${noContractHtml}</span>
+                    <span style="color:#adb5bd;padding:0 8px;">|</span>
+                    <span style="font-size:13px;white-space:nowrap;width:200px;overflow:hidden;text-overflow:ellipsis;">${namaHtml}</span>
+                    <span style="color:#adb5bd;padding:0 8px;">|</span>
+                    <span style="font-size:13px;color:#6c757d;white-space:nowrap;width:160px;overflow:hidden;text-overflow:ellipsis;">${customerHtml}</span>
+                    <span style="color:#adb5bd;padding:0 8px;">|</span>
+                    <span style="font-size:12px;color:#6c757d;white-space:nowrap;width:160px;">${periode}</span>
+                    <span style="font-size:13px;white-space:nowrap;text-align:right;margin-left:auto;padding-left:16px;color:#2c3e50;">${expenditure}</span>
+                </a>`;
             }).join('');
 
             resultsContainer.innerHTML = headerHtml + itemsHtml;
@@ -1296,7 +1308,7 @@
         }
 
         // ========================================
-        // FLOATING BADGE ALERT FUNCTIONS
+        // FLOATING BADGE ALERT
         // ========================================
         function showFloatingAlert(type, message) {
             const alert = $('#floatingBadgeAlert');
@@ -1324,22 +1336,18 @@
             alert.addClass('show');
 
             if (type === 'success' || type === 'error') {
-                setTimeout(() => {
-                    hideFloatingAlert();
-                }, 3000);
+                setTimeout(() => hideFloatingAlert(), 3000);
             }
         }
 
         function hideFloatingAlert() {
             const alert = $('#floatingBadgeAlert');
             alert.addClass('hiding');
-            setTimeout(() => {
-                alert.removeClass('show hiding');
-            }, 400);
+            setTimeout(() => alert.removeClass('show hiding'), 400);
         }
 
         // ========================================
-        // AUTO-CALCULATE Selling Price (FIXED FORMULA)
+        // AUTO-CALCULATE SELLING PRICE
         // ========================================
         function calculateHargaJual() {
             const kursRate = parseRupiah($('#global_kurs_usd_display').val());
@@ -1354,33 +1362,62 @@
             }
 
             $('#input_harga_jual').val(formatRupiah(hargaJual.toFixed(2).replace('.', ',')));
+            validateHPP();
         }
 
         $('#input_pendapatan_idr').on('input', function() {
-            if (parseRupiah($(this).val()) > 0) {
-                $('#input_pendapatan_usd').val('');
-            }
+            if (parseRupiah($(this).val()) > 0) $('#input_pendapatan_usd').val('');
             calculateHargaJual();
         });
 
         $('#input_pendapatan_usd').on('input', function() {
-            if (parseRupiah($(this).val()) > 0) {
-                $('#input_pendapatan_idr').val('');
-            }
+            if (parseRupiah($(this).val()) > 0) $('#input_pendapatan_idr').val('');
             calculateHargaJual();
         });
 
         $('#input_hpp').on('input', function() {
-            calculateHargaJual();
+            validateHPP();
+        });
+        $('#input_hpp').on('blur', function() {
+            validateHPP(true);
         });
 
-        $('#global_kurs_usd_display').on('input', function() {
-            $('#global_kurs_usd').val(parseRupiah($(this).val()));
-            calculateHargaJual();
-        });
+        function validateHPP(clamp = false) {
+            const hargaJual = parseRupiah($('#input_harga_jual').val());
+            const hpp = parseRupiah($('#input_hpp').val());
+            const hppInput = document.getElementById('input_hpp');
+
+            if (hargaJual <= 0) return;
+
+            if (hpp > hargaJual) {
+                hppInput.style.borderColor = '#dc3545';
+                hppInput.style.boxShadow = '0 0 0 0.2rem rgba(220,53,69,0.25)';
+
+                if (!document.getElementById('hpp-warning')) {
+                    const warning = document.createElement('small');
+                    warning.id = 'hpp-warning';
+                    warning.style.color = '#dc3545';
+                    warning.style.fontWeight = '600';
+                    warning.innerHTML =
+                        `<i class="fas fa-exclamation-triangle me-1"></i>HPP tidak boleh melebihi Selling Price (${$('#input_harga_jual').val()})`;
+                    hppInput.closest('.currency-group').after(warning);
+                }
+
+                if (clamp) {
+                    $('#input_hpp').val($('#input_harga_jual').val());
+                    hppInput.style.borderColor = '';
+                    hppInput.style.boxShadow = '';
+                    document.getElementById('hpp-warning')?.remove();
+                }
+            } else {
+                hppInput.style.borderColor = '';
+                hppInput.style.boxShadow = '';
+                document.getElementById('hpp-warning')?.remove();
+            }
+        }
 
         // ========================================
-        // CATEGORY DROPDOWN CHANGE
+        // CATEGORY DROPDOWN
         // ========================================
         $('#input_category').on('change', function() {
             const category = $(this).val();
@@ -1393,7 +1430,6 @@
 
             const invoices = invoicesByCategory[category] || [];
             let options = '<option value="">Select Item</option>';
-
             invoices.forEach(invoice => {
                 options +=
                     `<option value="${invoice.id}" data-note="${invoice.note}">${invoice.type}</option>`;
@@ -1402,11 +1438,8 @@
             itemSelect.prop('disabled', false).html(options);
         });
 
-        // Tambahkan event baru ini SETELAH event #input_category di atas
         $('#input_item').on('change', function() {
-            const editingItemId = $('#editing_item_id').val();
-            if (editingItemId) return; // Saat mode edit, jangan overwrite note dari DB
-
+            if ($('#editing_item_id').val()) return;
             const masterNote = $(this).find('option:selected').data('note') || '';
             $('#input_note').val(masterNote);
         });
@@ -1414,7 +1447,6 @@
         // ========================================
         // UPDATE HEADER
         // ========================================
-        // Ganti dari save-all menjadi update header saja
         $('#btnSaveHeader').on('click', function() {
             const contractId = $('#id_md_cont').val();
             const areaId = $('#id_md_area').val();
@@ -1437,8 +1469,6 @@
                     tgl_jo_cont: tglJo,
                     title: title,
                     note: $('#note').val(),
-                    global_tgl_kurs_usd: $('#global_tgl_kurs_usd').val(),
-                    global_kurs_usd: parseRupiah($('#global_kurs_usd_display').val()),
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(r) {
@@ -1452,7 +1482,10 @@
         });
 
         // ========================================
-        // ADD/UPDATE ITEM TO TABLE (REALTIME SAVE)
+        // ADD / UPDATE ITEM TO TABLE
+        // ========================================
+        // ========================================
+        // ADD / UPDATE ITEM TO TABLE
         // ========================================
         $('#btnAddToTable').on('click', function() {
             const editingItemId = $('#editing_item_id').val();
@@ -1463,10 +1496,8 @@
             const pendapatanUSD = parseRupiah($('#input_pendapatan_usd').val());
             const hpp = parseRupiah($('#input_hpp').val());
             const hargaJual = parseRupiah($('#input_harga_jual').val());
-            const kursRate = parseRupiah($('#global_kurs_usd_display').val()) || 0;
-
-            // FIX: Ambil datetime dengan benar
-            const kursDate = $('#global_tgl_kurs_usd').val() || null; // Format: 2026-05-26T14:30
+            const inputKursRate = parseRupiah($('#global_kurs_usd_display').val()) || 0;
+            const inputKursDate = $('#global_tgl_kurs_usd').val() || null;
             const note = $('#input_note').val();
 
             if (!category || !itemId) {
@@ -1474,22 +1505,158 @@
                 return;
             }
 
-            // Validate kurs if USD is filled
-            if (pendapatanUSD > 0) {
-                if (!kursDate || kursRate <= 0) {
-                    showFloatingAlert('error', 'Kurs rate and date are required when USD is filled');
+            if (pendapatanUSD > 0 && (!inputKursDate || inputKursRate <= 0)) {
+                showFloatingAlert('error', 'Kurs rate dan date wajib diisi untuk item USD');
+                $('#global_kurs_usd_display').focus();
+                return;
+            }
+
+            if (hargaJual > 0 && hpp > hargaJual) {
+                showFloatingAlert('error', 'HPP tidak boleh melebihi Selling Price');
+                $('#input_hpp').focus();
+                return;
+            }
+
+            // Cek apakah kurs berbeda dengan item USD lain yang sudah ada di tabel
+            if (pendapatanUSD > 0 && inputKursRate > 0) {
+                const existingKurs = getExistingKursFromTable();
+
+                if (existingKurs !== null && existingKurs !== inputKursRate) {
+                    // Tampilkan konfirmasi — kurs berbeda
+                    showKursConflictConfirm(
+                        existingKurs,
+                        inputKursRate,
+                        inputKursDate,
+                        // Callback: user setuju → simpan + update semua
+                        function() {
+                            proceedSaveItem(editingItemId, category, itemId, itemText,
+                                pendapatanIDR, pendapatanUSD, hpp, hargaJual,
+                                inputKursRate, inputKursDate, note, true);
+                        },
+                        // Callback: user tolak → simpan dengan kurs lama (paksa pakai existingKurs)
+                        function() {
+                            const hargaJualWithOldKurs = pendapatanUSD * existingKurs;
+                            proceedSaveItem(editingItemId, category, itemId, itemText,
+                                pendapatanIDR, pendapatanUSD, hpp, hargaJualWithOldKurs,
+                                existingKurs, inputKursDate, note, false);
+                        }
+                    );
                     return;
                 }
             }
 
-            // If editing, call update function
+            // Kurs sama atau item IDR — langsung simpan
+            proceedSaveItem(editingItemId, category, itemId, itemText,
+                pendapatanIDR, pendapatanUSD, hpp, hargaJual,
+                inputKursRate, inputKursDate, note, false);
+        });
+
+        // ========================================
+        // AMBIL KURS EXISTING DARI TABEL
+        // Kembalikan nilai kurs item USD pertama di tabel, atau null jika tidak ada
+        // ========================================
+        function getExistingKursFromTable() {
+            let existingKurs = null;
+            $('#itemsTableBody tr.item-row').each(function() {
+                const usdVal = parseFloat($(this).data('pendapatan-usd')) || 0;
+                const kurs = parseFloat($(this).data('kurs-usd')) || 0;
+                if (usdVal > 0 && kurs > 0) {
+                    existingKurs = kurs;
+                    return false; // break
+                }
+            });
+            return existingKurs;
+        }
+
+        // ========================================
+        // KONFIRMASI KURS BERBEDA
+        // ========================================
+        function showKursConflictConfirm(oldKurs, newKurs, newDate, onConfirm, onReject) {
+            // Hapus modal lama jika ada
+            $('#kursConflictModal').remove();
+
+            const oldFormatted = formatNumber(oldKurs);
+            const newFormatted = formatNumber(newKurs);
+
+            const modalHtml = `
+    <div class="modal fade" id="kursConflictModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px; border:none; box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="background:linear-gradient(135deg,#fbbf24,#f59e0b); border-radius:12px 12px 0 0; border:none;">
+                    <h5 class="modal-title text-white fw-bold">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Perbedaan Kurs Terdeteksi
+                    </h5>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-3">Item ini memiliki kurs yang <strong>berbeda</strong> dengan item USD lain di tabel:</p>
+                    <div class="d-flex gap-3 mb-3">
+                        <div class="flex-fill text-center p-3 rounded" style="background:#fee2e2; border:1px solid #fca5a5;">
+                            <div style="font-size:0.75rem; color:#991b1b; font-weight:600; margin-bottom:4px;">KURS ITEM LAIN</div>
+                            <div style="font-size:1.1rem; font-weight:700; color:#dc2626;">IDR ${oldFormatted}</div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-arrow-right text-muted"></i>
+                        </div>
+                        <div class="flex-fill text-center p-3 rounded" style="background:#d1fae5; border:1px solid #6ee7b7;">
+                            <div style="font-size:0.75rem; color:#065f46; font-weight:600; margin-bottom:4px;">KURS ITEM INI</div>
+                            <div style="font-size:1.1rem; font-weight:700; color:#059669;">IDR ${newFormatted}</div>
+                        </div>
+                    </div>
+                    <div class="alert alert-warning py-2 mb-0" style="font-size:0.875rem;">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Jika <strong>Ya, update semua</strong> — kurs seluruh item USD akan diubah ke <strong>IDR ${newFormatted}</strong> dan harga jual dihitung ulang.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+                    <button type="button" class="btn btn-outline-secondary flex-fill" id="btnKursReject">
+                        <i class="fas fa-times me-1"></i>Tidak, pakai kurs lama
+                    </button>
+                    <button type="button" class="btn btn-warning flex-fill fw-bold" id="btnKursConfirm">
+                        <i class="fas fa-check me-1"></i>Ya, update semua
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+            $('body').append(modalHtml);
+
+            const modal = new bootstrap.Modal(document.getElementById('kursConflictModal'));
+            modal.show();
+
+            $('#btnKursConfirm').on('click', function() {
+                modal.hide();
+                $('#kursConflictModal').on('hidden.bs.modal', function() {
+                    $(this).remove();
+                    onConfirm();
+                });
+            });
+
+            $('#btnKursReject').on('click', function() {
+                modal.hide();
+                $('#kursConflictModal').on('hidden.bs.modal', function() {
+                    $(this).remove();
+                    onReject();
+                });
+            });
+        }
+
+        // ========================================
+        // PROCEED SAVE ITEM
+        // syncAllKurs: true → setelah simpan, update kurs semua item USD lain
+        // ========================================
+        function proceedSaveItem(editingItemId, category, itemId, itemText,
+            pendapatanIDR, pendapatanUSD, hpp, hargaJual,
+            kursRate, kursDate, note, syncAllKurs) {
+
             if (editingItemId) {
-                updateItemToDatabase(editingItemId, category, itemId, itemText, pendapatanIDR, pendapatanUSD, hpp,
-                    hargaJual, kursRate, kursDate, note);
+                updateItemToDatabase(editingItemId, category, itemId, itemText,
+                    pendapatanIDR, pendapatanUSD, hpp, hargaJual,
+                    kursRate, kursDate, note, syncAllKurs);
                 return;
             }
 
-            // Otherwise, add new item
+            // ADD NEW
             showFloatingAlert('saving', 'Adding item...');
 
             $.ajax({
@@ -1508,173 +1675,208 @@
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(response) {
-                    console.log('=== ADD ITEM RESPONSE ===', response);
-
                     if (response.success) {
                         showFloatingAlert('success', 'Item added successfully!');
-
                         $('.no-items-row').remove();
 
                         const newItemId = response.data.id_jo_cont_item || response.data.id;
-
-                        if (!newItemId || newItemId === 0 || newItemId === '0') {
-                            console.error('CRITICAL ERROR: Invalid Item ID from server!');
-                            showFloatingAlert('error',
-                                'Item created but ID is invalid. Please refresh the page.');
+                        if (!newItemId || newItemId === 0) {
+                            showFloatingAlert('error', 'Item created but ID is invalid. Please refresh.');
                             return;
                         }
 
-                        // Insert row dengan category grouping
-                        insertRowWithCategoryGrouping(newItemId, category, itemText, response.data);
-
+                        insertRowWithCategoryGrouping(newItemId, category, itemText, response.data, kursRate);
                         updateGrandTotal();
                         clearItemForm();
 
-                        console.log('=== ITEM ADDED TO TABLE SUCCESSFULLY ===');
+                        // Update kurs global field agar sinkron
+                        syncKursDisplayField(kursRate, kursDate);
+
+                        if (syncAllKurs) {
+                            syncAllOtherUsdItems(newItemId, kursRate, kursDate);
+                        }
                     } else {
                         showFloatingAlert('error', 'Failed to add item');
                     }
                 },
                 error: function(xhr) {
-                    console.error('=== ADD ITEM ERROR ===', xhr);
-                    const message = xhr.responseJSON?.message || 'Failed to add item';
-                    showFloatingAlert('error', message);
+                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to add item');
                 }
             });
-        });
+        }
+
+        // ========================================
+        // UPDATE SEMUA ITEM USD LAIN (SELAIN ITEM YANG BARU DISIMPAN)
+        // ========================================
+        function syncAllOtherUsdItems(excludeItemId, kursRate, kursDate) {
+            const usdItems = [];
+
+            $('#itemsTableBody tr.item-row').each(function() {
+                const id = $(this).data('item-id');
+                const usdVal = parseFloat($(this).data('pendapatan-usd')) || 0;
+
+                if (usdVal > 0 && id != excludeItemId) {
+                    usdItems.push({
+                        id,
+                        row: $(this),
+                        usdVal
+                    });
+                }
+            });
+
+            if (usdItems.length === 0) return;
+
+            showFloatingAlert('saving', `Menyamakan kurs ${usdItems.length} item lain...`);
+
+            const promises = usdItems.map(item => {
+                const newHargaJual = item.usdVal * kursRate;
+
+                return $.ajax({
+                    url: `/jo-contract/item/update-kurs/${item.id}`,
+                    method: 'PATCH',
+                    data: {
+                        kurs_usd: kursRate,
+                        tgl_kurs_usd: kursDate || null,
+                        hargajual_idr: newHargaJual,
+                        _token: $('meta[name="csrf-token"]').attr('content')
+                    }
+                }).then(response => {
+                    if (response.success) {
+                        // Update data-kurs-usd di row
+                        item.row.attr('data-kurs-usd', kursRate);
+                        // Update selling price di tabel
+                        updateRowSellingPrice(item.row, newHargaJual);
+                    }
+                });
+            });
+
+            Promise.all(promises)
+                .then(() => {
+                    showFloatingAlert('success', 'Kurs semua item berhasil disamakan!');
+                    updateGrandTotal();
+                })
+                .catch(() => {
+                    showFloatingAlert('error', 'Gagal update kurs beberapa item');
+                });
+        }
+
+        // Sync tampilan field kurs global
+        function syncKursDisplayField(kursRate, kursDate) {
+            if (kursRate > 0) {
+                $('#global_kurs_usd_display').val(formatRupiah(kursRate.toFixed(2).replace('.', ',')));
+                $('#global_kurs_usd').val(kursRate);
+            }
+            if (kursDate) {
+                $('#global_tgl_kurs_usd').val(kursDate);
+            }
+        }
+
+        function updateRowSellingPrice(row, newHargaJual) {
+            const hasCategoryCell = row.find('.category-cell').length > 0;
+            const offset = hasCategoryCell ? 0 : -1;
+            row.find('td').eq(5 + offset).text(formatNumber(newHargaJual));
+        }
 
         // ========================================
         // INSERT ROW WITH CATEGORY GROUPING
         // ========================================
-        function insertRowWithCategoryGrouping(itemId, category, itemText, data) {
+        function insertRowWithCategoryGrouping(itemId, category, itemText, data, kursRate = 0) {
             globalItemNumber++;
 
-            // Cari apakah category sudah ada
             let categoryExists = false;
             let insertAfterRow = null;
-            let categoryRowspan = 0;
 
             $('#itemsTableBody tr.item-row').each(function() {
-                const rowCategory = $(this).data('category');
-
-                if (rowCategory === category) {
+                if ($(this).data('category') === category) {
                     categoryExists = true;
                     insertAfterRow = $(this);
 
-                    // Update rowspan jika ini first row dari category
                     const categoryCell = $(this).find('.category-cell');
                     if (categoryCell.length > 0) {
-                        categoryRowspan = parseInt(categoryCell.attr('rowspan') || 1);
-                        categoryCell.attr('rowspan', categoryRowspan + 1);
+                        categoryCell.attr('rowspan', parseInt(categoryCell.attr('rowspan') || 1) + 1);
                     }
                 }
             });
 
+            const pendapatanUsd = data.pendapatan_usd || 0;
+            const actionBtns = `
+            <button type="button" class="btn btn-primary btn-sm btn-edit-row" onclick="editItem('${itemId}')">
+                <i class="fas fa-edit"></i>
+            </button>
+            <button type="button" class="btn btn-danger btn-sm btn-remove-row" onclick="removeItem(this, '${itemId}')">
+                <i class="fas fa-trash"></i>
+            </button>`;
+
             let newRow;
 
             if (categoryExists) {
-                // Category sudah ada - insert tanpa category cell
                 newRow = `
-            <tr class="item-row" data-item-id="${itemId}" data-category="${category}">
-                <td class="item-number-cell">${globalItemNumber}</td>
-                <td class="item-text-cell">${itemText}</td>
-                <td>${formatNumber(data.pendapatan_idr)}</td>
-                <td>${formatNumber(data.pendapatan_usd)}</td>
-                <td>${formatNumber(data.hargajual_idr)}</td>
-                <td>${formatNumber(data.hpp_ops)}</td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-primary btn-sm btn-edit-row"
-                        onclick="editItem('${itemId}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                        onclick="removeItem(this, '${itemId}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-
-                // Insert setelah row terakhir dari category yang sama
+                <tr class="item-row"
+                    data-item-id="${itemId}"
+                    data-category="${category}"
+                    data-pendapatan-usd="${pendapatanUsd}"
+                    data-kurs-usd="${kursRate}">
+                    <td class="item-number-cell">${globalItemNumber}</td>
+                    <td class="item-text-cell">${itemText}</td>
+                    <td>${formatNumber(data.pendapatan_idr)}</td>
+                    <td>${formatNumber(data.pendapatan_usd)}</td>
+                    <td>${formatNumber(data.hargajual_idr)}</td>
+                    <td>${formatNumber(data.hpp_ops)}</td>
+                    <td class="text-center">${actionBtns}</td>
+                </tr>`;
                 insertAfterRow.after(newRow);
             } else {
-                // Category baru - insert dengan category cell
                 newRow = `
-            <tr class="item-row" data-item-id="${itemId}" data-category="${category}">
-                <td class="item-number-cell">${globalItemNumber}</td>
-                <td class="category-cell" rowspan="1">${category}</td>
-                <td class="item-text-cell">${itemText}</td>
-                <td>${formatNumber(data.pendapatan_idr)}</td>
-                <td>${formatNumber(data.pendapatan_usd)}</td>
-                <td>${formatNumber(data.hargajual_idr)}</td>
-                <td>${formatNumber(data.hpp_ops)}</td>
-                <td class="text-center">
-                    <button type="button" class="btn btn-primary btn-sm btn-edit-row"
-                        onclick="editItem('${itemId}')">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                        onclick="removeItem(this, '${itemId}')">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
-
+                <tr class="item-row"
+                    data-item-id="${itemId}"
+                    data-category="${category}"
+                    data-pendapatan-usd="${pendapatanUsd}"
+                    data-kurs-usd="${kursRate}">
+                    <td class="item-number-cell">${globalItemNumber}</td>
+                    <td class="category-cell" rowspan="1">${category}</td>
+                    <td class="item-text-cell">${itemText}</td>
+                    <td>${formatNumber(data.pendapatan_idr)}</td>
+                    <td>${formatNumber(data.pendapatan_usd)}</td>
+                    <td>${formatNumber(data.hargajual_idr)}</td>
+                    <td>${formatNumber(data.hpp_ops)}</td>
+                    <td class="text-center">${actionBtns}</td>
+                </tr>`;
                 $('#itemsTableBody').append(newRow);
             }
 
             renumberAllItems();
         }
 
-
         // ========================================
-        // EDIT ITEM - LOAD TO FORM (FIXED)
+        // EDIT ITEM
         // ========================================
         function editItem(itemId) {
-            console.log('=== EDIT ITEM START ===');
-            console.log('Item ID:', itemId);
-            console.log('Item ID type:', typeof itemId);
-            console.log('Item ID is valid:', itemId && itemId != 0);
-
             if (!itemId || itemId == 0) {
-                console.error('INVALID ITEM ID:', itemId);
                 showFloatingAlert('error', 'Invalid item ID');
                 return;
             }
 
             showFloatingAlert('saving', 'Loading item data...');
 
-            const url = `/jo-contract/item/show/${itemId}`;
-            console.log('Fetching URL:', url);
-
-            // Fetch fresh data from server
             $.ajax({
-                url: url,
+                url: `/jo-contract/item/show/${itemId}`,
                 method: 'GET',
                 success: function(response) {
-                    console.log('SUCCESS Response:', response);
-
                     if (response.success) {
                         hideFloatingAlert();
                         const item = response.data;
-                        console.log('Item data from server:', item);
 
-                        // Set form to edit mode
                         $('#editing_item_id').val(itemId);
                         $('#formSectionTitle').html('<i class="fas fa-edit"></i> Edit Item');
                         $('#addItemFormSection').addClass('edit-mode');
                         $('#btnAddToTable').html('<i class="fas fa-save"></i> Update Item');
                         $('#btnCancelEdit').show();
 
-                        // Set category
                         $('#input_category').val(item.invoice_ctg).trigger('change');
 
-                        // Wait for items dropdown to populate
                         setTimeout(() => {
                             $('#input_item').val(item.id_md_invoice);
 
-                            // Set monetary values
                             const pendapatanIDR = parseFloat(item.pendapatan_idr) || 0;
                             const pendapatanUSD = parseFloat(item.pendapatan_usd) || 0;
                             const hpp = parseFloat(item.hpp_ops) || 0;
@@ -1685,64 +1887,39 @@
                             $('#input_pendapatan_usd').val(pendapatanUSD > 0 ? formatRupiah(
                                 pendapatanUSD.toFixed(2).replace('.', ',')) : '');
                             $('#input_hpp').val(formatRupiah(hpp.toFixed(2).replace('.', ',')));
-
-                            // Set note
                             $('#input_note').val(item.note || '');
 
-                            // Set kurs if USD is filled
+                            // Kurs sudah ada di global field — tidak perlu di-set ulang
+                            // tapi jika item ini punya kurs berbeda (edge case), tampilkan di global
                             if (pendapatanUSD > 0 && kursUSD > 0) {
-                                $('#global_kurs_usd_display').val(formatRupiah(kursUSD.toFixed(2)
-                                    .replace('.', ',')));
-                                $('#global_kurs_usd').val(kursUSD);
-                            }
-
-                            // FIX: Set datetime dengan benar
-                            if (item.tgl_kurs_usd) {
-                                // Format dari server: "2026-05-26T14:30:00.000000Z" atau "2026-05-26T14:30"
-                                // Format input datetime-local: "2026-05-26T14:30"
-                                let datetimeValue = item.tgl_kurs_usd;
-
-                                // Jika ada detik atau milidetik, buang
-                                if (datetimeValue.includes(':')) {
-                                    datetimeValue = datetimeValue.substring(0,
-                                        16); // Ambil YYYY-MM-DDTHH:mm saja
+                                const currentGlobalKurs = parseRupiah($('#global_kurs_usd_display')
+                                    .val());
+                                if (currentGlobalKurs <= 0) {
+                                    $('#global_kurs_usd_display').val(formatRupiah(kursUSD.toFixed(2)
+                                        .replace('.', ',')));
+                                    $('#global_kurs_usd').val(kursUSD);
                                 }
-
-                                $('#global_tgl_kurs_usd').val(datetimeValue);
-
-                                console.log('Set datetime value:', datetimeValue);
+                                if (!$('#global_tgl_kurs_usd').val() && item.tgl_kurs_usd) {
+                                    $('#global_tgl_kurs_usd').val(item.tgl_kurs_usd.substring(0, 16));
+                                }
                             }
 
-                            // Recalculate Selling Price
                             calculateHargaJual();
-
-                            console.log('=== FORM POPULATED ===');
                         }, 300);
 
-                        // Scroll to form
                         $('html, body').animate({
                             scrollTop: $('#addItemFormSection').offset().top - 100
                         }, 500);
                     } else {
-                        console.error('Response success is false');
                         showFloatingAlert('error', 'Failed to load item data');
                     }
                 },
-                error: function(xhr, status, error) {
-                    console.error('AJAX ERROR:', {
-                        status: status,
-                        error: error,
-                        xhr: xhr,
-                        responseText: xhr.responseText
-                    });
-
-                    const message = xhr.responseJSON?.message || 'Failed to load item data';
-                    showFloatingAlert('error', message);
+                error: function(xhr) {
+                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to load item data');
                 }
             });
         }
 
-        // Cancel edit mode
         $('#btnCancelEdit').on('click', function() {
             clearItemForm();
             $('html, body').animate({
@@ -1750,18 +1927,8 @@
             }, 500);
         });
 
-        // Update item to database (FIXED - USING PUT)
-        // Update item to database (FIXED - USING PUT)
-        function updateItemToDatabase(itemId, category, invoiceId, itemText, pendapatanIDR, pendapatanUSD, hpp, hargaJual,
-            kursRate, kursDate, note) {
-
-            console.log('=== UPDATE ITEM TO DATABASE ===');
-            console.log('Item ID:', itemId);
-            console.log('Category:', category);
-            console.log('Invoice ID:', invoiceId);
-            console.log('Kurs Date:', kursDate);
-            console.log('Kurs Rate:', kursRate);
-            console.log('Note:', note);
+        function updateItemToDatabase(itemId, category, invoiceId, itemText,
+            pendapatanIDR, pendapatanUSD, hpp, hargaJual, kursRate, kursDate, note, syncAllKurs = false) {
 
             showFloatingAlert('saving', 'Updating item...');
 
@@ -1769,7 +1936,7 @@
                 url: `/jo-contract/item/update/${itemId}`,
                 method: 'PUT',
                 data: {
-                    id_jo_cont: currentJoContractId, // ← TAMBAHKAN INI (REQUIRED)
+                    id_jo_cont: currentJoContractId,
                     id_md_invoice: invoiceId,
                     invoice_ctg: category,
                     pendapatan_idr: pendapatanIDR,
@@ -1787,23 +1954,35 @@
                         const row = $(`.item-row[data-item-id="${itemId}"]`);
                         const oldCategory = row.data('category');
 
-                        // Jika category berubah, perlu reorganisasi
-                        if (oldCategory !== category) {
-                            // Hapus row lama (tanpa AJAX delete)
-                            removeRowWithoutDelete(row, oldCategory);
+                        // Update data attribute kurs
 
-                            // Insert row baru dengan category baru
+                        row.attr('data-kurs-usd', kursRate);
+                        row.attr('data-pendapatan-usd', pendapatanUSD);
+
+                        syncKursDisplayField(kursRate, kursDate);
+
+                        if (syncAllKurs) {
+                            syncAllOtherUsdItems(itemId, kursRate, kursDate);
+                        }
+
+                        // Sync kurs global field
+                        syncKursDisplayField(kursRate, kursDate);
+
+                        if (syncAllKurs) {
+                            syncAllOtherUsdItems(editingItemId, kursRate, kursDate);
+                        }
+
+
+                        if (oldCategory !== category) {
+                            removeRowWithoutDelete(row, oldCategory);
                             insertRowWithCategoryGrouping(itemId, category, itemText, response.data);
                         } else {
-                            // Category sama, update in-place
                             row.attr('data-invoice-id', invoiceId);
                             row.attr('data-item-text', itemText);
-
                             row.find('.item-text-cell').text(itemText);
 
-                            // Cek apakah row punya category cell atau tidak
                             const hasCategoryCell = row.find('.category-cell').length > 0;
-                            const offset = hasCategoryCell ? 0 : -1; // Offset jika tidak ada category cell
+                            const offset = hasCategoryCell ? 0 : -1;
 
                             row.find('td').eq(3 + offset).text(formatNumber(response.data.pendapatan_idr));
                             row.find('td').eq(4 + offset).text(formatNumber(response.data.pendapatan_usd));
@@ -1820,30 +1999,17 @@
                     }
                 },
                 error: function(xhr) {
-                    console.error('=== UPDATE ITEM ERROR ===', xhr);
-                    console.error('Response Text:', xhr.responseText);
-                    console.error('Status:', xhr.status);
-
-                    // Parse error message
                     let errorMessage = 'Failed to update item';
-                    if (xhr.responseJSON) {
-                        if (xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-                        if (xhr.responseJSON.errors) {
-                            console.error('Validation Errors:', xhr.responseJSON.errors);
-                            // Tampilkan validation errors
-                            const errors = Object.values(xhr.responseJSON.errors).flat();
-                            errorMessage = errors.join(', ');
-                        }
+                    if (xhr.responseJSON?.errors) {
+                        errorMessage = Object.values(xhr.responseJSON.errors).flat().join(', ');
+                    } else if (xhr.responseJSON?.message) {
+                        errorMessage = xhr.responseJSON.message;
                     }
-
                     showFloatingAlert('error', errorMessage);
                 }
             });
         }
 
-        // Clear item form
         function clearItemForm() {
             $('#editing_item_id').val('');
             $('#formSectionTitle').html('<i class="fas fa-plus-square"></i> Add New Item');
@@ -1861,20 +2027,15 @@
         }
 
         // ========================================
-        // REMOVE ITEM (REALTIME DELETE) - FIXED
+        // REMOVE ITEM
         // ========================================
         function removeItem(button, itemId) {
-            console.log('=== DELETE ITEM START ===', itemId);
-
             if (!itemId || itemId == 0) {
-                console.error('Invalid item ID:', itemId);
                 showFloatingAlert('error', 'Invalid item ID');
                 return;
             }
 
-            if (!confirm('Are you sure you want to delete this item?')) {
-                return;
-            }
+            if (!confirm('Are you sure you want to delete this item?')) return;
 
             showFloatingAlert('saving', 'Deleting item...');
 
@@ -1890,63 +2051,71 @@
 
                         const row = $(button).closest('tr');
                         const category = row.data('category');
-
-                        // Cek apakah row ini punya category cell
                         const categoryCell = row.find('.category-cell');
 
                         if (categoryCell.length > 0) {
-                            // Row ini punya category cell
                             const rowspan = parseInt(categoryCell.attr('rowspan') || 1);
-
                             if (rowspan > 1) {
-                                // Ada row lain dengan category yang sama
-                                // Pindahkan category cell ke row berikutnya
-                                const nextRow = row.next('.item-row[data-category="' + category + '"]');
+                                const nextRow = row.next(`.item-row[data-category="${category}"]`);
                                 if (nextRow.length > 0) {
-                                    const newCategoryCell =
-                                        `<td class="category-cell" rowspan="${rowspan - 1}">${category}</td>`;
-                                    nextRow.find('.item-text-cell').before(newCategoryCell);
+                                    nextRow.find('.item-text-cell').before(
+                                        `<td class="category-cell" rowspan="${rowspan - 1}">${category}</td>`
+                                    );
                                 }
                             }
                         } else {
-                            // Row ini tidak punya category cell, kurangi rowspan dari category cell sebelumnya
-                            const prevRow = row.prevAll('.item-row[data-category="' + category + '"]').first();
-                            if (prevRow.length > 0) {
-                                const prevCategoryCell = prevRow.find('.category-cell');
-                                if (prevCategoryCell.length > 0) {
-                                    const currentRowspan = parseInt(prevCategoryCell.attr('rowspan') || 1);
-                                    if (currentRowspan > 1) {
-                                        prevCategoryCell.attr('rowspan', currentRowspan - 1);
-                                    }
-                                }
+                            const prevRow = row.prevAll(`.item-row[data-category="${category}"]`).first();
+                            const prevCatCell = prevRow.find('.category-cell');
+                            if (prevCatCell.length > 0) {
+                                const cur = parseInt(prevCatCell.attr('rowspan') || 1);
+                                if (cur > 1) prevCatCell.attr('rowspan', cur - 1);
                             }
                         }
 
-                        // Hapus row
                         row.remove();
-
                         renumberAllItems();
                         updateGrandTotal();
 
                         if ($('#itemsTableBody tr.item-row').length === 0) {
                             $('#itemsTableBody').html(`
-                        <tr class="no-items-row">
-                            <td colspan="8">
-                                <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-                                <p class="mb-0 fw-bold">No data available</p>
-                                <small class="text-muted">Fill the form above and click "Add to Table"</small>
-                            </td>
-                        </tr>
-                    `);
+                            <tr class="no-items-row">
+                                <td colspan="8">
+                                    <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                    <p class="mb-0 fw-bold">No data available</p>
+                                    <small class="text-muted">Fill the form above and click "Add to Table"</small>
+                                </td>
+                            </tr>`);
                         }
                     }
                 },
                 error: function(xhr) {
-                    console.error('Delete failed:', xhr);
-                    const message = xhr.responseJSON?.message || 'Failed to delete item';
-                    showFloatingAlert('error', message);
+                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to delete item');
                 }
             });
+        }
+
+        // Helper: hapus row dari DOM tanpa AJAX delete (dipakai saat edit category berubah)
+        function removeRowWithoutDelete(row, category) {
+            const categoryCell = row.find('.category-cell');
+            if (categoryCell.length > 0) {
+                const rowspan = parseInt(categoryCell.attr('rowspan') || 1);
+                if (rowspan > 1) {
+                    const nextRow = row.next(`.item-row[data-category="${category}"]`);
+                    if (nextRow.length > 0) {
+                        nextRow.find('.item-text-cell').before(
+                            `<td class="category-cell" rowspan="${rowspan - 1}">${category}</td>`
+                        );
+                    }
+                }
+            } else {
+                const prevRow = row.prevAll(`.item-row[data-category="${category}"]`).first();
+                const prevCatCell = prevRow.find('.category-cell');
+                if (prevCatCell.length > 0) {
+                    const cur = parseInt(prevCatCell.attr('rowspan') || 1);
+                    if (cur > 1) prevCatCell.attr('rowspan', cur - 1);
+                }
+            }
+            row.remove();
         }
 
         // ========================================
@@ -1954,16 +2123,13 @@
         // ========================================
         $('#resetAllBtn').on('click', function() {
             if (!confirm(
-                    'Are you sure you want to remove all items? This will delete all items from the database.')) {
+                    'Are you sure you want to remove all items? This will delete all items from the database.'))
                 return;
-            }
 
             const itemIds = [];
             $('.item-row').each(function() {
                 const itemId = $(this).data('item-id');
-                if (itemId && itemId != 0) {
-                    itemIds.push(itemId);
-                }
+                if (itemId && itemId != 0) itemIds.push(itemId);
             });
 
             if (itemIds.length === 0) {
@@ -1973,109 +2139,33 @@
 
             showFloatingAlert('saving', 'Deleting all items...');
 
-            let deletePromises = itemIds.map(itemId => {
-                return $.ajax({
+            Promise.all(itemIds.map(itemId =>
+                $.ajax({
                     url: `/jo-contract/item/destroy/${itemId}`,
                     method: 'DELETE',
                     data: {
                         _token: $('meta[name="csrf-token"]').attr('content')
                     }
-                });
-            });
-
-            Promise.all(deletePromises).then(() => {
+                })
+            )).then(() => {
                 showFloatingAlert('success', 'All items deleted successfully!');
-
                 $('#itemsTableBody').html(`
-                    <tr class="no-items-row">
-                        <td colspan="8">
-                            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-                            <p class="mb-0 fw-bold">No data available</p>
-                            <small class="text-muted">Fill the form above and click "Add to Table"</small>
-                        </td>
-                    </tr>
-                `);
-
+                <tr class="no-items-row">
+                    <td colspan="8">
+                        <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                        <p class="mb-0 fw-bold">No data available</p>
+                        <small class="text-muted">Fill the form above and click "Add to Table"</small>
+                    </td>
+                </tr>`);
                 globalItemNumber = 0;
                 updateGrandTotal();
-            }).catch(error => {
+            }).catch(() => {
                 showFloatingAlert('error', 'Some items could not be deleted');
-                console.error('Bulk delete error:', error);
             });
         });
 
         // ========================================
-        // FINAL SAVE
-        // ========================================
-        // ========================================
-        // FINAL SAVE ALL CHANGES
-        // ========================================
-        $('#btnFinalSave').on('click', function() {
-            const contractId = $('#id_md_cont').val();
-            const areaId = $('#id_md_area').val();
-            const title = $('#title').val();
-            const note = $('#note').val();
-            const kursDate = $('#global_tgl_kurs_usd').val();
-            const kursRate = parseRupiah($('#global_kurs_usd_display').val());
-
-            // Validation
-            if (!contractId || !areaId || !title) {
-                showFloatingAlert('error', 'Please fill all required fields (Contract, Area, Title)');
-                return;
-            }
-
-            // if (!kursDate || !kursRate || kursRate <= 0) {
-            //     showFloatingAlert('error', 'Please fill Kurs Rate and Date');
-            //     return;
-            // }
-
-            if (!confirm('Save all changes and return to JO Contract list?')) {
-                return;
-            }
-
-            showFloatingAlert('saving', 'Saving all changes...');
-
-            const formData = {
-                id_md_cont: contractId,
-                id_md_area: areaId,
-                tgl_jo_cont: $('#tgl_jo_cont').val(),
-                title: title,
-                note: note,
-                global_tgl_kurs_usd: kursDate,
-                global_kurs_usd: kursRate,
-                _token: $('meta[name="csrf-token"]').attr('content')
-            };
-
-            console.log('=== SAVE ALL CHANGES ===', formData);
-
-            $.ajax({
-                url: `/jo-contract/save-all/${currentJoContractId}`,
-                method: 'POST',
-                data: formData,
-                success: function(response) {
-                    console.log('Save All Response:', response);
-
-                    if (response.success) {
-                        showFloatingAlert('success', 'All changes saved successfully!');
-
-                        // Redirect after 1.5 seconds
-                        setTimeout(() => {
-                            window.location.href = '{{ route('jo-contract.index') }}';
-                        }, 1500);
-                    } else {
-                        showFloatingAlert('error', response.message || 'Failed to save changes');
-                    }
-                },
-                error: function(xhr) {
-                    console.error('Save All Error:', xhr);
-                    const message = xhr.responseJSON?.message || 'Failed to save all changes';
-                    showFloatingAlert('error', message);
-                }
-            });
-        });
-
-        // ========================================
-        // UTILITY FUNCTIONS
+        // UTILITY
         // ========================================
         function renumberAllItems() {
             $('.item-row').each(function(index) {
@@ -2107,22 +2197,32 @@
             $('#footerTotalHPP').text(formatNumber(totalHPP));
         }
 
-        // Initialize grand total on page load
+        // ========================================
+        // INIT
+        // ========================================
         $(document).ready(function() {
             updateGrandTotal();
-
-            // Set existing kurs values if available
-            @if ($joContract->items->first() && $joContract->items->first()->kurs_usd)
-                $('#global_kurs_usd_display').val(formatRupiah(
-                    '{{ number_format($joContract->items->first()->kurs_usd, 2, ',', '.') }}'));
-                $('#global_kurs_usd').val('{{ $joContract->items->first()->kurs_usd }}');
-            @endif
-
-            @if ($joContract->items->first() && $joContract->items->first()->tgl_kurs_usd)
-                // FIX: Set datetime dengan format yang benar
-                $('#global_tgl_kurs_usd').val(
-                    '{{ $joContract->items->first()->tgl_kurs_usd->format('Y-m-d\TH:i') }}');
-            @endif
+            loadExistingKurs();
         });
+
+        function loadExistingKurs() {
+            @php
+                $firstUsdItem = $joContract->items->first(fn($i) => $i->kurs_usd > 0);
+            @endphp
+            @if ($firstUsdItem)
+                const kursVal = {{ (float) $firstUsdItem->kurs_usd }};
+                const kursDate = '{{ $firstUsdItem->tgl_kurs_usd?->format('Y-m-d\TH:i') ?? '' }}';
+
+                if (kursVal > 0) {
+                    $('#global_kurs_usd_display').val(
+                        formatRupiah(kursVal.toFixed(2).replace('.', ','))
+                    );
+                    $('#global_kurs_usd').val(kursVal);
+                }
+                if (kursDate) {
+                    $('#global_tgl_kurs_usd').val(kursDate);
+                }
+            @endif
+        }
     </script>
 @endpush

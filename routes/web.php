@@ -187,6 +187,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('jo-contract', JoContractController::class);
 
         // JO Contract Items
+
         Route::get('jo-contract/{id}/export-pdf', [JoContractController::class, 'exportPdf'])
             ->name('jo-contract.export-pdf');
         Route::resource('jo-contract-item', JoContractItemController::class);
@@ -194,6 +195,9 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('jo-contract-item/{id}/force-delete', [JoContractItemController::class, 'forceDelete']);
         Route::post('jo-contract-item-bulk-delete', [JoContractItemController::class, 'bulkDelete']);
         Route::post('jo-contract-item-bulk-restore', [JoContractItemController::class, 'bulkRestore']);
+        // Sync kurs semua item USD
+        Route::post('jo-contract/items/sync-kurs/{id}', [JoContractController::class, 'syncItemsKurs'])
+            ->name('jo-contract.sync-kurs');
     });
 
     // ── JO Contract realtime routes ───────────────────────────
@@ -204,6 +208,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/item/store', [JoContractController::class, 'storeItem'])->name('item.store');
         Route::put('/item/update/{id}', [JoContractController::class, 'updateItem'])->name('item.update');
         Route::delete('/item/destroy/{id}', [JoContractController::class, 'destroyItem'])->name('item.destroy');
+        Route::patch('/item/update-kurs/{id}', [JoContractController::class, 'updateItemKurs'])->name('item.update-kurs');
         Route::get('/{id}/items', [JoContractController::class, 'getItems'])->name('items.get');
         Route::post('/save-all/{id}', [JoContractController::class, 'saveAllChanges'])->name('save-all');
         Route::get('/for-select', [JoContractController::class, 'getForSelect'])->name('for-select');

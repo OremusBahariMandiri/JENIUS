@@ -311,7 +311,7 @@
                         <th class="col-idr">Income (IDR)</th>
                         <th class="col-usd">Income (USD)</th>
                         <th class="col-sell">Selling Price (IDR)</th>
-                        <th class="col-hpp">HPP (Ops Costs)</th>
+                        <th class="col-hpp">HPP (Ops Cost)</th>
                     </tr>
                 </thead>
                 <tbody>
