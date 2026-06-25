@@ -990,6 +990,46 @@
             }
 
             $('#input_harga_jual').val(formatRupiah(hargaJual.toFixed(2).replace('.', ',')));
+
+            // Re-validasi HPP setiap kali selling price berubah
+            validateHPP();
+        }
+
+        function validateHPP(clamp = false) {
+            const hargaJual = parseRupiah($('#input_harga_jual').val());
+            const hpp = parseRupiah($('#input_hpp').val());
+            const hppInput = document.getElementById('input_hpp');
+
+            if (hargaJual <= 0) return;
+
+            if (hpp > hargaJual) {
+                hppInput.style.borderColor = '#dc3545';
+                hppInput.style.boxShadow = '0 0 0 0.2rem rgba(220,53,69,0.25)';
+
+                if (!document.getElementById('hpp-warning')) {
+                    const warning = document.createElement('small');
+                    warning.id = 'hpp-warning';
+                    warning.style.color = '#dc3545';
+                    warning.style.fontWeight = '600';
+                    warning.innerHTML =
+                        '<i class="fas fa-exclamation-triangle me-1"></i>HPP tidak boleh melebihi Selling Price (' + $(
+                            '#input_harga_jual').val() + ')';
+                    hppInput.closest('.currency-group').after(warning);
+                }
+
+                if (clamp) {
+                    $('#input_hpp').val($('#input_harga_jual').val());
+                    hppInput.style.borderColor = '';
+                    hppInput.style.boxShadow = '';
+                    const warn = document.getElementById('hpp-warning');
+                    if (warn) warn.remove();
+                }
+            } else {
+                hppInput.style.borderColor = '';
+                hppInput.style.boxShadow = '';
+                const warn = document.getElementById('hpp-warning');
+                if (warn) warn.remove();
+            }
         }
 
         $('#input_pendapatan_idr').on('input', function() {
@@ -1002,7 +1042,13 @@
             calculateHargaJual();
         });
 
-        $('#input_hpp').on('input', calculateHargaJual);
+        $('#input_hpp').on('input', function() {
+            validateHPP();
+        });
+
+        $('#input_hpp').on('blur', function() {
+            validateHPP(true);
+        });
 
         $('#global_kurs_usd_display').on('input', function() {
             $('#global_kurs_usd').val(parseRupiah($(this).val()));
@@ -1108,6 +1154,13 @@
 
             if (pendapatanUSD > 0 && (!kursDate || kursRate <= 0)) {
                 showFloatingAlert('error', 'Kurs rate and date are required when USD is filled');
+                return;
+            }
+
+            // Validate HPP tidak melebihi selling price
+            if (hargaJual > 0 && hpp > hargaJual) {
+                showFloatingAlert('error', 'HPP tidak boleh melebihi Selling Price');
+                $('#input_hpp').focus();
                 return;
             }
 

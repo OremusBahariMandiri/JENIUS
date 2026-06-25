@@ -77,6 +77,7 @@
             border-collapse: collapse;
             margin-bottom: 6px;
             font-size: 8.5pt;
+            border: 1px solid #000;
         }
 
         .items-table thead tr th {
@@ -109,9 +110,17 @@
             border: 1px solid #000;
         }
 
-        .text-center { text-align: center; }
-        .text-right  { text-align: right; }
-        .text-left   { text-align: left; }
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-left {
+            text-align: left;
+        }
 
         /* Item note sub-text */
         .item-note {
@@ -176,12 +185,25 @@
             margin-bottom: 10px;
         }
 
-        .col-no   { width: 5%;  }
-        .col-desc { width: 35%; }
-        .col-idr  { width: 15%; }
-        .col-usd  { width: 15%; }
-        .col-hpp  { width: 13%; }
-        .col-sell { width: 17%; }
+        .col-desc {
+            width: 40%;
+        }
+
+        .col-idr {
+            width: 15%;
+        }
+
+        .col-usd {
+            width: 15%;
+        }
+
+        .col-hpp {
+            width: 13%;
+        }
+
+        .col-sell {
+            width: 17%;
+        }
     </style>
 </head>
 
@@ -202,159 +224,165 @@
         <div class="doc-title">JO Contract Information</div>
 
         {{-- ── Info Header ── --}}
+        {{-- ── Info Header ── --}}
         @php
             $contract = $joContract->contract;
             $customer = $contract ? $contract->customer : null;
         @endphp
-        <table class="info-table">
+        <table style="width:100%; border-collapse:collapse; margin-bottom:10px; margin-top:50px;">
             <tbody>
                 <tr>
-                    <td class="info-label">JO Number</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value"><strong>{{ $joContract->no_jo_cont ?? '-' }}</strong></td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">JO Date</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('d M Y') : '-' }}
+                    {{-- KIRI --}}
+                    <td style="width:50%; vertical-align:top; padding-right:10px;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">JO Number</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    <strong>{{ $joContract->no_jo_cont ?? '-' }}</strong></td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">JO Date</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('d M Y') : '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Contract No
+                                </td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $contract ? $contract->no_contract : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Contract Name
+                                </td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">{{ $contract ? $contract->contract : '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Customer</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">{{ $customer ? $customer->customer : '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Address</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $customer ? $customer->address ?? '-' : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">NPWP</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $customer ? $customer->npwp ?? '-' : '-' }}</td>
+                            </tr>
+                        </table>
                     </td>
-                </tr>
-                <tr>
-                    <td class="info-label">Contract No</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $contract ? $contract->no_contract : '-' }}
+                    {{-- KANAN --}}
+                    <td style="width:50%; vertical-align:top; padding-left:100px;">
+                        <table style="width:100%; border-collapse:collapse;">
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">TA - TD</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $contract && $contract->date_start ? \Carbon\Carbon::parse($contract->date_start)->format('d M Y') : '-' }}
+                                    -
+                                    {{ $contract && $contract->date_end ? \Carbon\Carbon::parse($contract->date_end)->format('d M Y') : '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Expenditure
+                                </td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $contract && $contract->expenditure ? number_format($contract->expenditure, 2, ',', '.') : '-' }}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Area</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">
+                                    {{ $joContract->area ? $joContract->area->area : '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Title</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">{{ $joContract->title ?? '-' }}</td>
+                            </tr>
+                            <tr>
+                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Note</td>
+                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
+                                <td style="font-size:9pt; padding:1.5px 0;">{{ $joContract->note ?? '-' }}</td>
+                            </tr>
+                        </table>
                     </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">TA - TD</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $contract && $contract->date_start ? \Carbon\Carbon::parse($contract->date_start)->format('d M Y') : '-' }} -  {{ $contract && $contract->date_end ? \Carbon\Carbon::parse($contract->date_end)->format('d M Y') : '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="info-label">Contract Name</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $contract ? $contract->contract : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                </tr>
-                <tr>
-                    <td class="info-label">Customer</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $customer ? $customer->customer : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Expenditure</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $contract && $contract->expenditure ? number_format($contract->expenditure, 2, ',', '.') : '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="info-label">Address</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $customer ? $customer->address ?? '-' : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Area</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $joContract->area ? $joContract->area->area : '-' }}
-                    </td>
-                </tr>
-                <tr>
-                    <td class="info-label">NPWP</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">
-                        {{ $customer ? $customer->npwp ?? '-' : '-' }}
-                    </td>
-                    <td class="info-spacer"></td>
-                    <td class="info-label">Title</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value">{{ $joContract->title ?? '-' }}</td>
-                </tr>
-                <tr>
-                    <td class="info-label">Note</td>
-                    <td class="info-colon">:</td>
-                    <td class="info-value" colspan="5">{{ $joContract->note ?? '-' }}</td>
                 </tr>
             </tbody>
         </table>
 
         {{-- ── Items Table ── --}}
-        <table class="items-table">
-            <thead>
-                <tr>
-                    <th class="col-no">NO</th>
-                    <th class="col-desc">DESCRIPTION</th>
-                    <th class="col-idr">Income (IDR)</th>
-                    <th class="col-usd">Income (USD)</th>
-                    <th class="col-sell">Selling Price (IDR)</th>
-                    <th class="col-sell">HPP (Ops Costs)</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $groupedItems = $joContract->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
-                    $globalIndex  = 1;
-                    $totalIDR     = 0;
-                    $totalUSD     = 0;
-                    $totalHPP     = 0;
-                    $totalSell    = 0;
-                @endphp
-
-                @foreach ($groupedItems as $category => $items)
-                    <tr class="row-category">
-                        <td></td>
-                        <td colspan="5"><strong>{{ strtoupper($category) }}</strong></td>
+        <div style="border-right: 1px solid #000;">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th class="col-desc">DESCRIPTION</th>
+                        <th class="col-idr">Income (IDR)</th>
+                        <th class="col-usd">Income (USD)</th>
+                        <th class="col-sell">Selling Price (IDR)</th>
+                        <th class="col-sell">HPP (Ops Cost)</th>
                     </tr>
+                </thead>
+                <tbody>
+                    @php
+                        $groupedItems = $joContract->items->groupBy(fn($i) => $i->invoice->invoice_ctg);
+                        $totalIDR = 0;
+                        $totalUSD = 0;
+                        $totalHPP = 0;
+                        $totalSell = 0;
+                    @endphp
 
-                    @foreach ($items as $item)
-                        @php
-                            $totalIDR  += $item->pendapatan_idr;
-                            $totalUSD  += $item->pendapatan_usd;
-                            $totalHPP  += $item->hpp_ops;
-                            $totalSell += $item->hargajual_idr;
-                        @endphp
-                        <tr>
-                            <td class="text-center">{{ $globalIndex++ }}</td>
-                            <td class="text-left">
-                                {{ $item->invoice->invoice_typ }}
-                                @if (!empty($item->note))
-                                    <div class="item-note">{!! nl2br(e($item->note)) !!}</div>
-                                @endif
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->pendapatan_idr, 2, ',', '.') }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->pendapatan_usd, 2, ',', '.') }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->hargajual_idr, 2, ',', '.') }}
-                            </td>
-                            <td class="text-right">
-                                {{ number_format($item->hpp_ops, 2, ',', '.') }}
-                            </td>
+                    @foreach ($groupedItems as $category => $items)
+                        <tr class="row-category">
+                            <td colspan="5"><strong>{{ strtoupper($category) }}</strong></td>
                         </tr>
+
+                        @foreach ($items as $item)
+                            @php
+                                $totalIDR += $item->pendapatan_idr;
+                                $totalUSD += $item->pendapatan_usd;
+                                $totalHPP += $item->hpp_ops;
+                                $totalSell += $item->hargajual_idr;
+                            @endphp
+                            <tr>
+                                <td class="text-left">
+                                    {{ $item->invoice->invoice_typ }}
+                                    @if (!empty($item->note))
+                                        <div class="item-note">{!! nl2br(e($item->note)) !!}</div>
+                                    @endif
+                                </td>
+                                <td class="text-right">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
+                                <td class="text-right">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
+                                <td class="text-right">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
+                                <td class="text-right">{{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
+                            </tr>
+                        @endforeach
                     @endforeach
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr>
-                    <td></td>
-                    <td class="text-left"><strong>GRAND TOTAL</strong></td>
-                    <td class="text-right">{{ number_format($totalIDR,  2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalUSD,  2, ',', '.') }}</td>
-                    <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
-                <td class="text-right">{{ number_format($totalHPP,  2, ',', '.') }}</td>
-                </tr>
-            </tfoot>
-        </table>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td class="text-left"><strong>GRAND TOTAL</strong></td>
+                        <td class="text-right">{{ number_format($totalIDR, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($totalUSD, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($totalSell, 2, ',', '.') }}</td>
+                        <td class="text-right">{{ number_format($totalHPP, 2, ',', '.') }}</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
 
         {{-- ── Terbilang ── --}}
         <div class="terbilang">
@@ -375,9 +403,15 @@
                 <td></td>
             </tr>
             <tr>
-                <td><div class="signature-line"></div></td>
-                <td><div class="signature-line"></div></td>
-                <td><div class="signature-line"></div></td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
+                <td>
+                    <div class="signature-line"></div>
+                </td>
             </tr>
         </table>
 
