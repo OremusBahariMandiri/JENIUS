@@ -117,10 +117,13 @@
                                             </td>
                                             <td class="text-center">
                                                 @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
-                                                    <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
-                                                        class="btn btn-sm btn-danger" title="Export PDF">
-                                                        <i class="fas fa-file-pdf"></i>
-                                                    </a>
+                                                <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
+                                                    class="btn btn-sm btn-danger"
+                                                    title="Export PDF"
+                                                    target="_blank">
+                                                    <i class="fas fa-file-pdf"></i>
+                                                </a>
+
                                                 @endif
                                             </td>
                                             <td class="text-center">

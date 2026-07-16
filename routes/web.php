@@ -267,6 +267,10 @@ Route::middleware(['auth'])->group(function () {
 
 
     //================= KASBON CONTRACT ROUTE GROUP ====================//
+    Route::get('/data/kasbon-contract/{id}/export-pdf', [KasbonContractController::class, 'exportPdf'])
+        ->name('kasbon-contract.export-pdf');
+    Route::get('/data/kasbon-contract/export', [KasbonContractController::class, 'export'])
+        ->name('kasbon-contract.export');
     Route::post('kasbon-contract/header/store', [KasbonContractController::class, 'storeHeader'])
         ->name('kasbon-contract.header.store');
 
@@ -304,6 +308,10 @@ Route::middleware(['auth'])->group(function () {
     // ================= END KASBON CONTRACT ROUTE GROUP ====================//
 
     //================= KASBON TRAMPER ROUTE GROUP ====================//
+    Route::get('/data/kasbon-tramper/{id}/export-pdf', [KasbonTramperController::class, 'exportPdf'])
+        ->name('kasbon-tramper.export-pdf');
+    Route::get('/data/kasbon-tramper/export', [KasbonTramperController::class, 'export'])
+        ->name('kasbon-tramper.export');
     Route::post('kasbon-tramper/header/store', [KasbonTramperController::class, 'storeHeader'])
         ->name('kasbon-tramper.header.store');
 
@@ -341,6 +349,10 @@ Route::middleware(['auth'])->group(function () {
     //================= END KASBON TRAMPER ROUTE GROUP ====================//
 
     //================= KASBON OTHER ROUTE GROUP ====================//
+    Route::get('/data/kasbon-other/{id}/export-pdf', [KasbonOtherController::class, 'exportPdf'])
+        ->name('kasbon-other.export-pdf');
+    Route::get('/data/kasbon-other/export', [KasbonOtherController::class, 'export'])
+        ->name('kasbon-other.export');
     Route::post('kasbon-other/header/store', [KasbonOtherController::class, 'storeHeader'])
         ->name('kasbon-other.header.store');
     Route::post('kasbon-other/header/update/{id}', [KasbonOtherController::class, 'updateHeader'])
@@ -367,6 +379,10 @@ Route::middleware(['auth'])->group(function () {
     //================= END KASBON OTHER ROUTE GROUP ====================//
 
     //================= KASBON GENERAL ROUTE GROUP ====================//
+    Route::get('/data/kasbon-gen/{id}/export-pdf', [KasbonGenController::class, 'exportPdf'])
+        ->name('kasbon-gen.export-pdf');
+    Route::get('/data/kasbon-gen/export', [KasbonGenController::class, 'export'])
+        ->name('kasbon-gen.export');
     Route::post('kasbon-gen/header/store', [KasbonGenController::class, 'storeHeader'])
         ->name('kasbon-gen.header.store');
     Route::post('kasbon-gen/header/update/{id}', [KasbonGenController::class, 'updateHeader'])

@@ -468,7 +468,10 @@ class KasbonGenController extends Controller
     {
         try {
             $kasbonGen = KasbonGen::with([
-                'departemen', 'cabang', 'release', 'items.invoice',
+                'departemen',
+                'cabang',
+                'release',
+                'items.invoice',
             ])->findOrFail($id);
 
             $summary = [
@@ -624,7 +627,9 @@ class KasbonGenController extends Controller
                 'note'          => $request->note,
             ]);
 
-            foreach ($kasbonGen->items as $oldItem) { $oldItem->delete(); }
+            foreach ($kasbonGen->items as $oldItem) {
+                $oldItem->delete();
+            }
 
             foreach ($request->items ?? [] as $itemData) {
                 KasbonGenItem::create([
@@ -661,7 +666,9 @@ class KasbonGenController extends Controller
             $kasbonGen  = KasbonGen::findOrFail($id);
             $itemsCount = $kasbonGen->items()->count();
 
-            foreach ($kasbonGen->items as $item) { $item->delete(); }
+            foreach ($kasbonGen->items as $item) {
+                $item->delete();
+            }
             $kasbonGen->delete();
 
             DB::commit();
@@ -734,7 +741,9 @@ class KasbonGenController extends Controller
         try {
             $kasbonGens = KasbonGen::whereIn('id', $request->ids)->get();
             foreach ($kasbonGens as $kasbon) {
-                foreach ($kasbon->items as $item) { $item->delete(); }
+                foreach ($kasbon->items as $item) {
+                    $item->delete();
+                }
                 $kasbon->delete();
             }
             DB::commit();
@@ -743,5 +752,158 @@ class KasbonGenController extends Controller
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
+    }
+
+    public function exportPdf($id)
+    {
+        try {
+            $kasbonGen = KasbonGen::with([
+                'departemen',
+                'cabang',
+                'release',
+                'items.invoice',   // langsung dari items, tanpa JO
+            ])->findOrFail($id);
+
+            // Total CA = sum nilai_kasbon dari items (sama dengan footerTotalKasbon di edit view)
+            $totalCA   = $kasbonGen->items->sum('nilai_kasbon');
+            $terbilang = $this->toTerbilang((int) round($totalCA)) . ' Rupiah';
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                'data.kasbon-gen.pdf',   // resources/views/data/kasbon-gen/pdf.blade.php
+                compact('kasbonGen', 'terbilang')
+            )
+                ->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => false,
+                    'defaultFont'          => 'Arial',
+                    'dpi'                  => 150,
+                ]);
+
+            $filename = 'Kasbon-General-'
+                . str_replace(['/', '\\'], '-', $kasbonGen->id_kasbon_gen ?? $id)
+                . '.pdf';
+
+            return $pdf->stream($filename);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Kasbon General not found'], 404);
+            }
+            return back()->with('error', 'Kasbon General not found');
+        } catch (\Exception $e) {
+            Log::error('Kasbon General Export PDF Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to export PDF: ' . $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Failed to export PDF: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Simple Indonesian number-to-words (terbilang) helper.
+     */
+    private function toTerbilang(int $number): string
+    {
+        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
+
+        $words = [
+            '',
+            'Satu',
+            'Dua',
+            'Tiga',
+            'Empat',
+            'Lima',
+            'Enam',
+            'Tujuh',
+            'Delapan',
+            'Sembilan',
+            'Sepuluh',
+            'Sebelas',
+        ];
+
+        if ($number === 0)  return 'Nol';
+        if ($number < 12)   return $words[$number];
+        if ($number < 20)   return $this->toTerbilang($number - 10) . ' Belas';
+        if ($number < 100)  return $words[(int) ($number / 10)] . ' Puluh'
+            . ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
+        if ($number < 200)  return 'Seratus'
+            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 1000) return $words[(int) ($number / 100)] . ' Ratus'
+            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 2000) return 'Seribu'
+            . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000)
+            return $this->toTerbilang((int) ($number / 1000)) . ' Ribu'
+                . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000_000)
+            return $this->toTerbilang((int) ($number / 1_000_000)) . ' Juta'
+                . ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
+        if ($number < 1_000_000_000_000)
+            return $this->toTerbilang((int) ($number / 1_000_000_000)) . ' Miliar'
+                . ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
+
+        return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun'
+            . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
+    }
+
+    public function export(Request $request)
+    {
+        $format     = $request->get('format', 'excel');
+        $kasbonGens = $this->buildExportQuery($request)->get();
+
+        if ($format === 'pdf') {
+            $filters = $this->activeFilters($request);
+
+            if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'data.kasbon-gen.export_pdf',
+                    compact('kasbonGens', 'filters')
+                )->setPaper('a4', 'landscape')->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => false,
+                    'defaultFont'          => 'Arial',
+                    'dpi'                  => 150,
+                ]);
+                return $pdf->stream('kasbon_general_' . date('Ymd_His') . '.pdf');
+            }
+
+            $html = view('data.kasbon-gen.export_pdf', compact('kasbonGens', 'filters'))->render();
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="kasbon_general_' . date('Ymd_His') . '.pdf"',
+            ]);
+        }
+
+        return (new \App\Exports\Data\KasbonGenExport($kasbonGens))->download();
+    }
+
+    private function buildExportQuery(Request $request)
+    {
+        $query = KasbonGen::with(['departemen', 'cabang', 'release', 'items']);
+
+        if ($request->filled('id_md_dep'))       $query->where('id_md_dep', $request->id_md_dep);
+        if ($request->filled('id_md_cabang'))    $query->where('id_md_cabang', $request->id_md_cabang);
+        if ($request->filled('tgl_kasbon_from')) $query->where('tgl_kasbon', '>=', $request->tgl_kasbon_from);
+        if ($request->filled('tgl_kasbon_to'))   $query->where('tgl_kasbon', '<=', $request->tgl_kasbon_to);
+
+        return $query->orderBy('tgl_kasbon', 'desc')->orderBy('id', 'desc');
+    }
+
+    private function activeFilters(Request $request): array
+    {
+        $filters = [];
+
+        if ($request->filled('id_md_dep')) {
+            $dep = \App\Models\Master\Departemen::find($request->id_md_dep);
+            $filters['dep_label'] = $dep ? $dep->nama_dep : $request->id_md_dep;
+        }
+        if ($request->filled('id_md_cabang')) {
+            $cabang = \App\Models\Master\Branch::find($request->id_md_cabang);
+            $filters['cabang_label'] = $cabang ? $cabang->nama_branch : $request->id_md_cabang;
+        }
+        if ($request->filled('tgl_kasbon_from')) $filters['tgl_kasbon_from'] = $request->tgl_kasbon_from;
+        if ($request->filled('tgl_kasbon_to'))   $filters['tgl_kasbon_to']   = $request->tgl_kasbon_to;
+
+        return $filters;
     }
 }
