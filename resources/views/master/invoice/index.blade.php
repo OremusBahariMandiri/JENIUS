@@ -93,6 +93,8 @@
                                                     Tramper
                                                 @elseif($invoice->jo_ctg === 'other')
                                                     Other
+                                                @elseif($invoice->jo_ctg === 'general')
+                                                    General
                                                 @else
                                                     -
                                                 @endif

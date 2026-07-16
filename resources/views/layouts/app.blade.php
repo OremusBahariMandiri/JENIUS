@@ -1,5 +1,6 @@
 <!doctype html>
-<html lang="en">
+@php $theme = auth()->check() ? auth()->user()->theme : 'light'; @endphp
+<html lang="en" data-bs-theme="{{ $theme }}" data-theme="{{ $theme }}">
 
 <head>
     <meta charset="utf-8">
@@ -653,6 +654,295 @@
         .select2-container {
             width: 100% !important;
         }
+
+        /* ========== DARK MODE VARIABLES ========== */
+        [data-theme="dark"] {
+            --primary-green: #10b981;
+            --light-green: #064e3b;
+            --dark-green: #059669;
+            --hover-green: #022c22;
+            --text-dark: #f1f5f9;
+            --text-gray: #94a3b8;
+            --border-color: #334155;
+        }
+
+        /* Layout */
+        [data-theme="dark"] body {
+            background-color: #0f172a;
+        }
+
+        [data-theme="dark"] .sidebar {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border-right-color: #334155;
+        }
+
+        [data-theme="dark"] .sidebar-header {
+            background: #1e293b;
+            border-bottom-color: #334155;
+        }
+
+        [data-theme="dark"] .sidebar-footer {
+            background: #1e293b;
+            border-top-color: #334155;
+        }
+
+        [data-theme="dark"] .sidebar-logo {
+            color: var(--primary-green);
+        }
+
+        [data-theme="dark"] .sidebar-toggle {
+            background: #022c22;
+            border-color: #064e3b;
+            color: var(--primary-green);
+        }
+
+        [data-theme="dark"] .sidebar-toggle:hover {
+            background: #064e3b;
+        }
+
+        /* Sidebar Nav */
+        [data-theme="dark"] .nav-link {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .nav-link:hover {
+            background: #022c22;
+            color: var(--primary-green);
+        }
+
+        [data-theme="dark"] .sidebar-submenu {
+            background-color: #0f172a;
+        }
+
+        [data-theme="dark"] .sidebar-nested-submenu {
+            background-color: #0c1423;
+        }
+
+        [data-theme="dark"] .submenu-item {
+            border-bottom-color: #334155;
+        }
+
+        [data-theme="dark"] .nested-submenu-item {
+            border-bottom-color: #334155;
+        }
+
+        [data-theme="dark"] .submenu-item .nav-link.active {
+            background: #064e3b;
+            color: #10b981;
+        }
+
+        [data-theme="dark"] .sidebar-nav::-webkit-scrollbar-track {
+            background: #1e293b;
+        }
+
+        [data-theme="dark"] .sidebar-nav::-webkit-scrollbar-thumb {
+            background: #475569;
+        }
+
+        /* Topbar */
+        [data-theme="dark"] .topbar {
+            background: #1e293b;
+            border-bottom-color: #334155;
+        }
+
+        [data-theme="dark"] .topbar-left h1 {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .topbar-icon {
+            background: #0f172a;
+            border-color: #334155;
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .topbar-icon:hover {
+            background: #022c22;
+            color: var(--primary-green);
+            border-color: #064e3b;
+        }
+
+        /* Dropdown */
+        [data-theme="dark"] .dropdown-menu {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .dropdown-item {
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .dropdown-item:hover {
+            background: #022c22;
+            color: var(--primary-green);
+        }
+
+        [data-theme="dark"] .dropdown-divider {
+            border-color: #334155;
+        }
+
+        /* Cards */
+        [data-theme="dark"] .card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .card-header {
+            background: #1e293b;
+            border-bottom-color: #334155;
+            color: #f1f5f9;
+        }
+
+        /* User profile */
+        [data-theme="dark"] .user-profile:hover {
+            background: #022c22;
+        }
+
+        [data-theme="dark"] .user-name {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .user-role {
+            color: #94a3b8;
+        }
+
+        /* Tables */
+        [data-theme="dark"] .table {
+            color: #cbd5e1;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .table-bordered td,
+        [data-theme="dark"] .table-bordered th {
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .table-striped>tbody>tr:nth-of-type(odd)>* {
+            background-color: #162032;
+        }
+
+        [data-theme="dark"] .table-light {
+            background-color: #162032;
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .table-light th {
+            color: #94a3b8;
+        }
+
+        /* Sticky action column dark mode */
+        [data-theme="dark"] #kasbonContractTable tbody tr td:last-child {
+            background-color: #1e293b;
+        }
+
+        [data-theme="dark"] #kasbonContractTable.table-striped tbody tr:nth-of-type(odd) td:last-child {
+            background-color: #162032;
+        }
+
+        /* Alerts */
+        [data-theme="dark"] .alert-info {
+            background: #0c2240;
+            border-color: #1e4976;
+            color: #93c5fd;
+        }
+
+        [data-theme="dark"] .alert-success {
+            background: #052e16;
+            border-color: #166534;
+            color: #86efac;
+        }
+
+        [data-theme="dark"] .alert-danger {
+            background: #2d0a0a;
+            border-color: #7f1d1d;
+            color: #fca5a5;
+        }
+
+        [data-theme="dark"] .alert-warning {
+            background: #2d1a00;
+            border-color: #78350f;
+            color: #fcd34d;
+        }
+
+        /* Forms */
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background-color: #0f172a;
+            border-color: #334155;
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .form-control:focus,
+        [data-theme="dark"] .form-select:focus {
+            background-color: #0f172a;
+            border-color: var(--primary-green);
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .modal-content {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .modal-header {
+            border-bottom-color: #334155;
+        }
+
+        [data-theme="dark"] .modal-footer {
+            border-top-color: #334155;
+        }
+
+        /* Breadcrumb */
+        [data-theme="dark"] .breadcrumb-custom .breadcrumb-item {
+            color: #94a3b8;
+        }
+
+        [data-theme="dark"] .breadcrumb-custom a {
+            color: #94a3b8;
+        }
+
+        /* Select2 dark */
+        [data-theme="dark"] .select2-container--bootstrap-5 .select2-selection {
+            background-color: #0f172a;
+            border-color: #334155;
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .select2-container--bootstrap-5 .select2-selection__rendered {
+            color: #f1f5f9;
+        }
+
+        [data-theme="dark"] .select2-dropdown {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+
+        [data-theme="dark"] .select2-results__option {
+            color: #cbd5e1;
+        }
+
+        [data-theme="dark"] .select2-search__field {
+            background-color: #0f172a !important;
+            color: #f1f5f9;
+            border-color: #334155 !important;
+        }
+
+        /* Card header hijau kustom */
+        [data-theme="dark"] .card-header[style*="d1fae5"] {
+            background-color: #064e3b !important;
+            color: #d1fae5 !important;
+        }
+
+        /* Transisi mulus */
+        html,
+        body,
+        .sidebar,
+        .topbar,
+        .card,
+        .modal-content,
+        .nav-link,
+        .dropdown-menu {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
     </style>
     @stack('styles')
 </head>
@@ -711,7 +1001,10 @@
                         auth()->user()->hasAccessToMenu('invoice') ||
                         auth()->user()->hasAccessToMenu('vessel') ||
                         auth()->user()->hasAccessToMenu('port') ||
-                        auth()->user()->hasAccessToMenu('other')))
+                        auth()->user()->hasAccessToMenu('other') ||
+                        auth()->user()->hasAccessToMenu('departemen') ||
+                        auth()->user()->hasAccessToMenu('branch') ||
+                        auth()->user()->hasAccessToMenu('release_to')))
                 <div class="nav-item has-submenu" data-tooltip="Data Master">
                     <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataMaster">
                         <i class="fas fa-cogs"></i>
@@ -788,6 +1081,37 @@
                                 </a>
                             </div>
                         @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('departemen'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('departemen.*') ? 'active' : '' }}"
+                                    href="{{ route('departemen.index') }}">
+                                    <i class="fas fa-sitemap"></i>
+                                    <span>Departemen</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('branch'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('branch.*') ? 'active' : '' }}"
+                                    href="{{ route('branch.index') }}">
+                                    <i class="fas fa-code-branch"></i>
+                                    <span>Branch</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('release_to'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('release_to.*') ? 'active' : '' }}"
+                                    href="{{ route('release_to.index') }}">
+                                    <i class="fas fa-share-square"></i>
+                                    <span>Release To</span>
+                                </a>
+                            </div>
+                        @endif
+
                     </div>
                 </div>
             @endif
@@ -804,7 +1128,8 @@
                         <span>Job Order</span>
                         <i class="fas fa-chevron-down submenu-indicator"></i>
                     </a>
-                    <div class="sidebar-submenu {{ request()->is('jo-contract*') ? 'show' : '' }}" id="manajemenData">
+                    <div class="sidebar-submenu {{ request()->is('jo-contract*') ? 'show' : '' }}"
+                        id="manajemenData">
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}"
@@ -839,6 +1164,66 @@
                     </div>
                 </div>
             @endif
+
+            {{-- Cash Advance --}}
+            @if (auth()->check() &&
+                    (auth()->user()->is_admin ||
+                        auth()->user()->hasAccessToMenu('ca_contract') ||
+                        auth()->user()->hasAccessToMenu('ca_tramper') ||
+                        auth()->user()->hasAccessToMenu('ca_other') ||
+                        auth()->user()->hasAccessToMenu('ca_general')))
+                <div class="nav-item has-submenu" data-tooltip="Cash Advance">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenKasbon">
+                        <i class="fas fa-cash-register"></i>
+                        <span>Cash Advance</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
+                    </a>
+                    <div class="sidebar-submenu {{ request()->is('ca-contract*') ? 'show' : '' }}"
+                        id="manajemenKasbon">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_contract'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-contract.*') ? 'active' : '' }}"
+                                    href="{{ route('kasbon-contract.index') }}">
+                                    <i class="fas fa-file-contract"></i>
+                                    <span>CA Contract</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_tramper'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-tramper.*') ? 'active' : '' }}"
+                                    href="{{ route('kasbon-tramper.index') }}">
+                                    <i class="fas fa-truck-moving"></i>
+                                    <span>CA Tramper</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_other'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-other.*') ? 'active' : '' }}"
+                                    href="{{ route('kasbon-other.index') }}">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                    <span>CA Other</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_general'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-gen.*') ? 'active' : '' }}"
+                                    href="{{ route('kasbon-gen.index') }}">
+                                    <i class="fas fa-building"></i>
+                                    <span>CA General</span>
+                                </a>
+                            </div>
+                        @endif
+
+
+                    </div>
+                </div>
+            @endif
         </nav>
 
         <div class="sidebar-footer">
@@ -860,6 +1245,12 @@
                 </button>
             </div>
             <div class="topbar-right">
+                @auth
+                    <button id="themeToggle" class="topbar-icon" title="Toggle Dark/Light Mode">
+                        <i id="themeIcon"
+                            class="{{ $theme === 'dark' ? 'bi bi-sun-fill text-warning' : 'bi bi-moon-fill' }}"></i>
+                    </button>
+                @endauth
                 <div class="dropdown">
                     <button class="topbar-icon dropdown-toggle" type="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person-circle"></i>
@@ -1161,6 +1552,41 @@
                 });
             });
         }
+        // ========== THEME TOGGLE ==========
+        (function() {
+            const btn = document.getElementById('themeToggle');
+            const icon = document.getElementById('themeIcon');
+            if (!btn) return;
+
+            btn.addEventListener('click', function() {
+                const html = document.documentElement;
+                const current = html.getAttribute('data-theme');
+                const next = current === 'dark' ? 'light' : 'dark';
+
+                // Terapkan langsung ke DOM
+                html.setAttribute('data-theme', next);
+                html.setAttribute('data-bs-theme', next);
+
+                // Ganti icon
+                if (next === 'dark') {
+                    icon.className = 'bi bi-sun-fill text-warning';
+                } else {
+                    icon.className = 'bi bi-moon-fill';
+                }
+
+                // Simpan ke database
+                fetch('{{ route('user.theme.update') }}', {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    },
+                    body: JSON.stringify({
+                        theme: next
+                    }),
+                }).catch(err => console.error('Gagal simpan theme:', err));
+            });
+        })();
     </script>
     @stack('scripts')
 </body>

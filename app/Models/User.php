@@ -28,6 +28,7 @@ class User extends Authenticatable
         'is_admin',
         'created_by',
         'updated_by',
+        'theme',
     ];
 
     /**
