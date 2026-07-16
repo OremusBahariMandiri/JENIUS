@@ -16,6 +16,7 @@ class Invoice extends Model
         'contract' => 'Contract',
         'tramper'  => 'Tramper',
         'other'    => 'Other',
+        'general'  => 'General',
     ];
 
     protected $fillable = [

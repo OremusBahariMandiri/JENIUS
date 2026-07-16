@@ -10,14 +10,25 @@ use App\Http\Controllers\Master\InvoiceController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Data\JoOtherController;
 use App\Http\Controllers\Data\JoTramperController;
+use App\Http\Controllers\Data\KasbonContractController;
+use App\Http\Controllers\Data\KasbonGenController;
+use App\Http\Controllers\Data\KasbonOtherController;
+use App\Http\Controllers\Data\KasbonTramperController;
+use App\Http\Controllers\Master\BranchController;
+use App\Http\Controllers\Master\DepartemenController;
 use App\Http\Controllers\Master\OtherController;
 use App\Http\Controllers\Master\PortController;
+use App\Http\Controllers\Master\ReleaseToController;
 use App\Http\Controllers\Master\VesselController;
+use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('login'));
 
 Auth::routes();
+
+Route::middleware('auth')->patch('/user/theme', [ThemeController::class, 'update'])
+    ->name('user.theme.update');
 
 Route::middleware(['auth'])->group(function () {
 
@@ -125,10 +136,46 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/api/bulk-delete', [OtherController::class, 'bulkDelete'])->name('api.bulk-delete');
     });
 
+    Route::prefix('master/departemen')->name('departemen.')->group(function () {
+        Route::get('/export', [DepartemenController::class, 'export'])->name('export');
+        Route::get('/', [DepartemenController::class, 'index'])->name('index');
+        Route::get('/create', [DepartemenController::class, 'create'])->name('create');
+        Route::post('/', [DepartemenController::class, 'store'])->name('store');
+        Route::get('/{id}', [DepartemenController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [DepartemenController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [DepartemenController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DepartemenController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [DepartemenController::class, 'restore'])->name('restore');
+    });
+
+    Route::prefix('master/branch')->name('branch.')->group(function () {
+        Route::get('/export', [BranchController::class, 'export'])->name('export');
+        Route::get('/', [BranchController::class, 'index'])->name('index');
+        Route::get('/create', [BranchController::class, 'create'])->name('create');
+        Route::post('/', [BranchController::class, 'store'])->name('store');
+        Route::get('/{id}', [BranchController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [BranchController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [BranchController::class, 'update'])->name('update');
+        Route::delete('/{id}', [BranchController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [BranchController::class, 'restore'])->name('restore');
+    });
+
+    Route::prefix('master/release_to')->name('release_to.')->group(function () {
+        Route::get('/export', [ReleaseToController::class, 'export'])->name('export');
+        Route::get('/', [ReleaseToController::class, 'index'])->name('index');
+        Route::get('/create', [ReleaseToController::class, 'create'])->name('create');
+        Route::post('/', [ReleaseToController::class, 'store'])->name('store');
+        Route::get('/{id}', [ReleaseToController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [ReleaseToController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [ReleaseToController::class, 'update'])->name('update');
+        Route::delete('/{id}', [ReleaseToController::class, 'destroy'])->name('destroy');
+        Route::post('/{id}/restore', [ReleaseToController::class, 'restore'])->name('restore');
+    });
+
     // ── Data routes ───────────────────────────────────────────
     Route::prefix('data')->group(function () {
 
-        // ── JO Tramper — custom routes BEFORE resource ──────────
+        //================= JO TRAMPER ROUTE GROUP //=================
         Route::post('jo-tramper/header/store', [JoTramperController::class, 'storeHeader'])
             ->name('jo-tramper.header.store');
         Route::post('jo-tramper/header/update/{id}', [JoTramperController::class, 'updateHeader'])
@@ -154,8 +201,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/jo-tramper/export', [JoTramperController::class, 'export'])
             ->name('jo-tramper.export');
         Route::resource('jo-tramper', JoTramperController::class);
+        //================= JO TRAMPER ROUTE GROUP ====================//
 
-        // ── JO Other ─────────────────────────────────────────────
+        //================= JO OTHER ROUTE GROUP ====================//
         Route::post('jo-other/header/store', [JoOtherController::class, 'storeHeader'])
             ->name('jo-other.header.store');
         Route::post('jo-other/header/update/{id}', [JoOtherController::class, 'updateHeader'])
@@ -179,9 +227,10 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('jo-other', JoOtherController::class);
         Route::get('jo-other-select', [JoOtherController::class, 'getForSelect']);
         Route::post('jo-other-bulk-delete', [JoOtherController::class, 'bulkDelete']);
+        //================= JO TRAMPER ROUTE GROUP ====================//
 
 
-        // ── JO Contract ──────────────────────────────────────────
+        //================= JO CONTRACT ROUTE GROUP ====================//
         Route::get('/jo-contract/export', [JoContractController::class, 'export'])
             ->name('jo-contract.export');
         Route::resource('jo-contract', JoContractController::class);
@@ -214,4 +263,129 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/for-select', [JoContractController::class, 'getForSelect'])->name('for-select');
         Route::post('/bulk-delete', [JoContractController::class, 'bulkDelete'])->name('bulk-delete');
     });
+    //================= JO CONTRACT ROUTE GROUP ====================//
+
+
+    //================= KASBON CONTRACT ROUTE GROUP ====================//
+    Route::post('kasbon-contract/header/store', [KasbonContractController::class, 'storeHeader'])
+        ->name('kasbon-contract.header.store');
+
+    Route::post('kasbon-contract/header/update/{id}', [KasbonContractController::class, 'updateHeader'])
+        ->name('kasbon-contract.header.update');
+
+    Route::get('kasbon-contract/item/show/{id}', [KasbonContractController::class, 'showItem'])
+        ->name('kasbon-contract.item.show');
+
+    Route::post('kasbon-contract/item/store', [KasbonContractController::class, 'storeItem'])
+        ->name('kasbon-contract.item.store');
+
+    Route::post('/kasbon-contract/items/bulk-save/{id}', [KasbonContractController::class, 'bulkSaveItems'])
+        ->name('kasbon-contract.items.bulk-save');
+
+    Route::put('kasbon-contract/item/update/{id}', [KasbonContractController::class, 'updateItem'])
+        ->name('kasbon-contract.item.update');
+
+    Route::delete('kasbon-contract/item/destroy/{id}', [KasbonContractController::class, 'destroyItem'])
+        ->name('kasbon-contract.item.destroy');
+
+    Route::get('kasbon-contract/{id}/items', [KasbonContractController::class, 'getItems'])
+        ->name('kasbon-contract.items.get');
+
+    Route::get('kasbon-contract/jo-items', [KasbonContractController::class, 'getJoContractItems'])
+        ->name('kasbon-contract.jo-items.get');
+
+    Route::resource('kasbon-contract', KasbonContractController::class);
+
+    Route::get('kasbon-contract-select', [KasbonContractController::class, 'getForSelect'])
+        ->name('kasbon-contract.select');
+
+    Route::post('kasbon-contract-bulk-delete', [KasbonContractController::class, 'bulkDelete'])
+        ->name('kasbon-contract.bulk-delete');
+    // ================= END KASBON CONTRACT ROUTE GROUP ====================//
+
+    //================= KASBON TRAMPER ROUTE GROUP ====================//
+    Route::post('kasbon-tramper/header/store', [KasbonTramperController::class, 'storeHeader'])
+        ->name('kasbon-tramper.header.store');
+
+    Route::post('kasbon-tramper/header/update/{id}', [KasbonTramperController::class, 'updateHeader'])
+        ->name('kasbon-tramper.header.update');
+
+    Route::get('kasbon-tramper/item/show/{id}', [KasbonTramperController::class, 'showItem'])
+        ->name('kasbon-tramper.item.show');
+
+    Route::post('kasbon-tramper/item/store', [KasbonTramperController::class, 'storeItem'])
+        ->name('kasbon-tramper.item.store');
+
+    Route::post('/kasbon-tramper/items/bulk-save/{id}', [KasbonTramperController::class, 'bulkSaveItems'])
+        ->name('kasbon-tramper.items.bulk-save');
+
+    Route::put('kasbon-tramper/item/update/{id}', [KasbonTramperController::class, 'updateItem'])
+        ->name('kasbon-tramper.item.update');
+
+    Route::delete('kasbon-tramper/item/destroy/{id}', [KasbonTramperController::class, 'destroyItem'])
+        ->name('kasbon-tramper.item.destroy');
+
+    Route::get('kasbon-tramper/{id}/items', [KasbonTramperController::class, 'getItems'])
+        ->name('kasbon-tramper.items.get');
+
+    Route::get('kasbon-tramper/jo-items', [KasbonTramperController::class, 'getJoTramperItems'])
+        ->name('kasbon-tramper.jo-items.get');
+
+    Route::resource('kasbon-tramper', KasbonTramperController::class);
+
+    Route::get('kasbon-tramper-select', [KasbonTramperController::class, 'getForSelect'])
+        ->name('kasbon-tramper.select');
+
+    Route::post('kasbon-tramper-bulk-delete', [KasbonTramperController::class, 'bulkDelete'])
+        ->name('kasbon-tramper.bulk-delete');
+    //================= END KASBON TRAMPER ROUTE GROUP ====================//
+
+    //================= KASBON OTHER ROUTE GROUP ====================//
+    Route::post('kasbon-other/header/store', [KasbonOtherController::class, 'storeHeader'])
+        ->name('kasbon-other.header.store');
+    Route::post('kasbon-other/header/update/{id}', [KasbonOtherController::class, 'updateHeader'])
+        ->name('kasbon-other.header.update');
+    Route::get('kasbon-other/item/show/{id}', [KasbonOtherController::class, 'showItem'])
+        ->name('kasbon-other.item.show');
+    Route::post('kasbon-other/item/store', [KasbonOtherController::class, 'storeItem'])
+        ->name('kasbon-other.item.store');
+    Route::post('/kasbon-other/items/bulk-save/{id}', [KasbonOtherController::class, 'bulkSaveItems'])
+        ->name('kasbon-other.items.bulk-save');
+    Route::put('kasbon-other/item/update/{id}', [KasbonOtherController::class, 'updateItem'])
+        ->name('kasbon-other.item.update');
+    Route::delete('kasbon-other/item/destroy/{id}', [KasbonOtherController::class, 'destroyItem'])
+        ->name('kasbon-other.item.destroy');
+    Route::get('kasbon-other/{id}/items', [KasbonOtherController::class, 'getItems'])
+        ->name('kasbon-other.items.get');
+    Route::get('kasbon-other/jo-items', [KasbonOtherController::class, 'getJoOtherItems'])
+        ->name('kasbon-other.jo-items.get');
+    Route::resource('kasbon-other', KasbonOtherController::class);
+    Route::get('kasbon-other-select', [KasbonOtherController::class, 'getForSelect'])
+        ->name('kasbon-other.select');
+    Route::post('kasbon-other-bulk-delete', [KasbonOtherController::class, 'bulkDelete'])
+        ->name('kasbon-other.bulk-delete');
+    //================= END KASBON OTHER ROUTE GROUP ====================//
+
+    //================= KASBON GENERAL ROUTE GROUP ====================//
+    Route::post('kasbon-gen/header/store', [KasbonGenController::class, 'storeHeader'])
+        ->name('kasbon-gen.header.store');
+    Route::post('kasbon-gen/header/update/{id}', [KasbonGenController::class, 'updateHeader'])
+        ->name('kasbon-gen.header.update');
+    Route::get('kasbon-gen/item/show/{id}', [KasbonGenController::class, 'showItem'])
+        ->name('kasbon-gen.item.show');
+    Route::post('kasbon-gen/item/store', [KasbonGenController::class, 'storeItem'])
+        ->name('kasbon-gen.item.store');
+    Route::put('kasbon-gen/item/update/{id}', [KasbonGenController::class, 'updateItem'])
+        ->name('kasbon-gen.item.update');
+    Route::delete('kasbon-gen/item/destroy/{id}', [KasbonGenController::class, 'destroyItem'])
+        ->name('kasbon-gen.item.destroy');
+    Route::get('kasbon-gen/{id}/items', [KasbonGenController::class, 'getItems'])
+        ->name('kasbon-gen.items.get');
+    Route::resource('kasbon-gen', KasbonGenController::class);
+    Route::get('kasbon-gen-select', [KasbonGenController::class, 'getForSelect'])
+        ->name('kasbon-gen.select');
+    Route::post('kasbon-gen-bulk-delete', [KasbonGenController::class, 'bulkDelete'])
+        ->name('kasbon-gen.bulk-delete');
+    //================= END KASBON GENERAL ROUTE GROUP ====================//
+
 });

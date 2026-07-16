@@ -41,8 +41,11 @@
                                                             <i class="fas fa-file-contract me-1 text-primary"></i>
                                                         @elseif($value === 'tramper')
                                                             <i class="fas fa-ship me-1 text-warning"></i>
-                                                        @else
+                                                        @elseif($value === 'other')
                                                             <i class="fas fa-ellipsis-h me-1 text-secondary"></i>
+                                                        @elseif($value === 'general')
+                                                            <i class="fas fa-globe me-1 text-success"></i>
+                                                            {{-- ✅ icon general --}}
                                                         @endif
                                                         {{ $label }}
                                                     </label>

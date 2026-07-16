@@ -100,7 +100,7 @@ class InvoiceController extends Controller
         $validator = Validator::make($request->all(), [
             'invoice_ctg' => 'required|string|max:100',
             'invoice_typ' => 'required|string|max:100',
-            'jo_ctg'      => 'required|in:contract,tramper,other',
+            'jo_ctg'      => 'required|in:contract,tramper,other,general',
             'note'        => 'nullable|string',
         ], [
             'invoice_ctg.required' => 'Kategori invoice wajib diisi',
@@ -163,6 +163,8 @@ class InvoiceController extends Controller
                 'joContractItems.joContract.department'
             ])->findOrFail($id);
 
+            $joCtgOptions = Invoice::JO_CTG_OPTIONS;
+
             $summary = [
                 'total_items'     => $invoice->joContractItems->count(),
                 'total_contracts' => $invoice->joContractItems->pluck('joContract')->unique('id_jo_cont')->count(),
@@ -172,7 +174,7 @@ class InvoiceController extends Controller
                 return response()->json(['success' => true, 'data' => $invoice, 'summary' => $summary]);
             }
 
-            return view('master.invoice.show', compact('invoice', 'summary'));
+            return view('master.invoice.show', compact('invoice', 'summary', 'joCtgOptions'));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Invoice not found'], 404);
@@ -207,7 +209,7 @@ class InvoiceController extends Controller
         $validator = Validator::make($request->all(), [
             'invoice_ctg' => 'required|string|max:100',
             'invoice_typ' => 'required|string|max:100',
-            'jo_ctg'      => 'required|in:contract,tramper,other',
+            'jo_ctg'      => 'required|in:contract,tramper,other,general',
             'note'        => 'nullable|string',
         ], [
             'invoice_ctg.required' => 'Kategori invoice wajib diisi',
