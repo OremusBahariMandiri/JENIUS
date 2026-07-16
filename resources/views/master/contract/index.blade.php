@@ -84,7 +84,7 @@
                                         <th>Contract No.</th>
                                         <th>Contract Name</th>
                                         <th>Customer</th>
-                                        <th>Value</th>
+                                        <th>Expenditure</th>
                                         <th>Period</th>
                                         <th>Status</th>
                                         <th class="text-center" width="15%">Action</th>
