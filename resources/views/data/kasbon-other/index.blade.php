@@ -83,6 +83,7 @@
                                         <th class="text-center">Items</th>
                                         <th class="text-end">Total HPP</th>
                                         <th class="text-end">Total CA</th>
+                                        <th class="text-center">Invoice</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
@@ -102,6 +103,14 @@
                                             </td>
                                             <td class="text-end">
                                                 {{ number_format($kasbon->items->sum('nilai_kasbon'), 2, ',', '.') }}
+                                            </td>
+                                            <td class="text-center">
+                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('kasbon-other', 'detail')))
+                                                    <a href="{{ route('kasbon-other.export-pdf', $kasbon->id) }}"
+                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                @endif
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex gap-1 justify-content-center">
@@ -243,12 +252,12 @@
                         ]);
                         $hasActiveFilters = array_filter($exportParams);
                         $excelUrl =
-                            route('kasbon-other.index') .
-                            '/export?' .
+                            route('kasbon-other.export') .
+                            '?' .
                             http_build_query(array_merge($exportParams, ['format' => 'excel']));
                         $pdfUrl =
-                            route('kasbon-other.index') .
-                            '/export?' .
+                            route('kasbon-other.export') .
+                            '?' .
                             http_build_query(array_merge($exportParams, ['format' => 'pdf']));
                     @endphp
                     <div class="alert alert-info py-2">
