@@ -278,7 +278,7 @@
                         <a href="{{ $excelUrl }}" class="btn btn-outline-success">
                             <i class="fas fa-file-excel me-2"></i> Export ke Excel (.xlsx)
                         </a>
-                        <a href="{{ $pdfUrl }}" class="btn btn-outline-danger">
+                        <a href="{{ $pdfUrl }}" class="btn btn-outline-danger" target="_blank">
                             <i class="fas fa-file-pdf me-2"></i> Export ke PDF
                         </a>
                     </div>

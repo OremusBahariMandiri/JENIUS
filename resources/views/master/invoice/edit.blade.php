@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Edit Invoice')
+@section('title', 'Edit Item')
 
 @section('content')
     <div class="container-fluid invoicePage">
@@ -9,7 +9,7 @@
                 <div class="card shadow">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-edit me-2"></i>Edit Invoice</span>
+                        <span class="fw-bold"><i class="fas fa-edit me-2"></i>Edit Item</span>
                         <a href="{{ route('invoice.index') }}" class="btn btn-light btn-sm">
                             <i class="fas fa-arrow-left me-1"></i> Back
                         </a>
@@ -62,7 +62,7 @@
                                     {{-- Invoice Category --}}
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold">
-                                            Invoice Category <span class="text-danger">*</span>
+                                            Item Category <span class="text-danger">*</span>
                                         </label>
                                         <input type="text" name="invoice_ctg"
                                             class="form-control @error('invoice_ctg') is-invalid @enderror"
@@ -85,7 +85,7 @@
                                     {{-- Invoice Item --}}
                                     <div class="mb-3">
                                         <label class="form-label fw-semibold">
-                                            Invoice Item <span class="text-danger">*</span>
+                                            Item <span class="text-danger">*</span>
                                         </label>
                                         <input type="text" name="invoice_typ"
                                             class="form-control @error('invoice_typ') is-invalid @enderror"

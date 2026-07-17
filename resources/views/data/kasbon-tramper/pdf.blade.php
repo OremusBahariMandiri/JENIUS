@@ -1,411 +1,257 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Kasbon Tramper - {{ $kasbonTramper->id_kasbon_tram ?? '-' }}</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family: Arial, sans-serif;
             font-size: 9pt;
             color: #000;
             background: #fff;
         }
+        .page { padding: 8mm 8mm 8mm 8mm; }
 
-        .page {
-            padding: 15mm 15mm 15mm 15mm;
-        }
+        /* MASTER TABLE */
+        .master { width: 100%; border-collapse: collapse; }
 
-        /* ── Title ── */
-        .doc-title {
-            text-align: center;
-            font-size: 13pt;
-            font-weight: bold;
-            margin-bottom: 6px;
-        }
-
-        hr.title-line {
-            border: none;
-            border-top: 1.5px solid #000;
-            margin-bottom: 8px;
-        }
-
-        /* ── Info Header ── */
-        .info-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 10px;
-            margin-top: 50px;
-        }
-
-        .info-table td {
-            padding: 1.5px 0;
-            font-size: 9pt;
-            vertical-align: top;
-        }
-
-        .info-label {
-            width: 18%;
-            font-weight: normal;
-            white-space: nowrap;
-        }
-
-        .info-colon {
-            width: 2%;
-            text-align: center;
-        }
-
-        .info-value {
-            width: 30%;
-            font-weight: normal;
-        }
-
-        .info-spacer {
-            width: 5%;
-        }
-
-        /* ── Items Table ── */
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 6px;
+        /* Semua td default padding 5px 10px */
+        .master td, .master th {
+            border: 1px solid #000;
+            padding: 5px 10px;
+            vertical-align: middle;
             font-size: 8.5pt;
-            border: 1px solid #000;
         }
 
-        .items-table thead tr th {
-            background-color: #f2f2f2;
-            border: 1px solid #000;
-            padding: 5px 6px;
+        /* KOP */
+        .logo-cell {
+            width: 22%;
+            text-align: center;
+            vertical-align: middle;
+            padding: 6px 10px;
+        }
+        .logo-cell img { max-width: 90px; max-height: 50px; }
+
+        .company-cell {
+            width: 22%;
             text-align: center;
             font-weight: bold;
+            font-size: 8pt;
             vertical-align: middle;
         }
 
-        .items-table tbody tr td {
-            border: 0.5px solid #aaa;
-            padding: 4px 6px;
-            vertical-align: top;
-        }
-
-        .items-table tfoot tr td {
-            border: 1px solid #000;
-            padding: 5px 6px;
+        /* TOTAL */
+        .total-label {
             font-weight: bold;
-            background-color: #f2f2f2;
-            vertical-align: top;
-        }
-
-        /* Category row — identik 100% dengan JO Tramper */
-        .row-category td {
-            background-color: #f2f2f2 !important;
-            font-weight: bold;
-            /* border: 1px solid #000; */
-        }
-
-        .text-center {
-            text-align: center;
-        }
-
-        .text-right {
-            text-align: right;
-        }
-
-        .text-left {
             text-align: left;
+            background-color: #ffff00;
         }
-
-        /* Item note sub-text */
-        .item-note {
-            font-size: 7.5pt;
-            color: #555;
-            font-style: italic;
-            margin-top: 1px;
-        }
-
-        /* ── Terbilang ── */
-        .terbilang {
-            font-size: 8.5pt;
-            color: #000;
-            font-style: italic;
-            margin: 6px 0 14px 0;
-        }
-
-        .terbilang span.label {
-            font-style: normal;
+        .total-value {
             font-weight: bold;
+            background-color: #ffff00;
+            white-space: nowrap;
         }
 
-        /* ── Signature ── */
-        .signature-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
+        /* TTD */
+        .ttd-header { text-align: center; vertical-align: top; font-size: 8pt; }
+        .ttd-space  { height: 65px; }
+        .ttd-bottom { font-size: 8pt; }
 
-        .signature-table td {
-            width: 33.33%;
-            text-align: center;
-            padding: 4px;
-            vertical-align: top;
-            font-size: 9pt;
-        }
+        /* FOOTER NOTE */
+        .footer-note { font-size: 7.5pt; font-weight: bold; }
 
-        .signature-line {
-            margin-top: 40px;
-            border-top: 1px solid #000;
-            width: 60%;
-            margin-left: auto;
-            margin-right: auto;
-        }
+        /* BLANK ROW */
+        .blank-row td { height: 16px; padding: 0 10px; }
 
-        /* ── Kop Surat ── */
-        .kop-surat {
-            width: 100%;
-            margin-bottom: 15px;
-            margin-top: -50px;
-        }
-
-        .kop-surat img {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-
-        hr.kop-line {
-            border: none;
-            border-top: 2px solid #000;
-            margin-bottom: 10px;
-        }
-
-        .col-desc {
-            width: 40%;
-        }
-
-        .col-sell {
-            width: 20%;
-        }
-
-        .col-hpp {
-            width: 20%;
-        }
-
-        .col-ca {
-            width: 20%;
-        }
+        /* Rp split inner table */
+        .rp-table { width: 100%; border-collapse: collapse; }
+        .rp-table td { border: none; padding: 0; font-size: 8.5pt; vertical-align: middle; }
+        .rp-left  { text-align: left;  white-space: nowrap; width: 25px; }
+        .rp-right { text-align: right; white-space: nowrap; }
+        .rp-bold  { font-weight: bold; }
     </style>
 </head>
-
 <body>
-    <div class="page">
+<div class="page">
+@php
+    $logoPath   = public_path('images/logo.png');
+    $logoBase64 = base64_encode(file_get_contents($logoPath));
+    $logoSrc    = 'data:image/png;base64,' . $logoBase64;
 
-        {{-- ── Kop Surat ── --}}
-        @php
-            $kopPath   = public_path('images/kop-surat-orindo.png');
-            $kopBase64 = base64_encode(file_get_contents($kopPath));
-            $kopSrc    = 'data:image/png;base64,' . $kopBase64;
-        @endphp
-        <div class="kop-surat">
-            <img src="{{ $kopSrc }}" alt="Kop Surat">
-        </div>
+    // Lookup kasbon items by jo_tram_item id
+    $kasbonLookup = $kasbonTramper->items->keyBy('id_jo_tram_item');
 
-        {{-- ── Title ── --}}
-        <div class="doc-title">Cash Advance Tramper</div>
+    // Sumber baris = seluruh JO Tramper items
+    $joItems = $kasbonTramper->joTramper
+        ? $kasbonTramper->joTramper->items
+        : collect();
 
-        {{-- ── Info Header ── --}}
-        <table style="width:100%; border-collapse:collapse; margin-bottom:10px; margin-top:50px;">
-            <tbody>
+    $groupedItems = $joItems->groupBy(
+        fn($ji) => optional($ji->invoice)->invoice_ctg ?? 'Uncategorized'
+    );
+
+    $totalCA = 0;
+
+    $flatItems = collect();
+    foreach ($groupedItems as $cat => $items) {
+        foreach ($items as $joItem) {
+            $kasbonItem  = $kasbonLookup->get($joItem->id_jo_tram_item);
+            $invoiceTyp  = optional($joItem->invoice)->invoice_typ ?? $joItem->id_jo_tram_item;
+            $nilaiKasbon = $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0;
+            $totalCA += $nilaiKasbon;
+            $flatItems->push([
+                'category' => $cat,
+                'typ'      => $invoiceTyp,
+                'amount'   => $nilaiKasbon,
+            ]);
+        }
+    }
+
+    $blankNeeded = max(0, 8 - $flatItems->count());
+@endphp
+
+<table class="master">
+<tbody>
+
+    {{-- ── KOP ROW 1 : Logo + Document Title ── --}}
+    <tr>
+        <td class="logo-cell" rowspan="2" style="width:22%;">
+            <img src="{{ $logoSrc }}" alt="Logo">
+        </td>
+        <td style="width:18%;">Document Title :</td>
+        <td colspan="3">KASBON</td>
+    </tr>
+
+    {{-- ── KOP ROW 2 : Document No. ── --}}
+    <tr>
+        <td>Document No. :</td>
+        <td colspan="3"><strong>OBM-FOR-01-002</strong></td>
+    </tr>
+
+    {{-- ── KOP ROW 3 : Perusahaan + 0(1) ── --}}
+    <tr>
+        <td class="company-cell">PT. ORINDO BANGUN SAMUDERA</td>
+        <td></td>
+        <td colspan="3">0 ( 1 )</td>
+    </tr>
+
+    {{-- ── SPACER ── --}}
+    <tr>
+        <td colspan="5" style="height:20px; border:none; padding:0;"></td>
+    </tr>
+
+    {{-- ── AREA | TGL | NAMA | BAGIAN ── --}}
+    <tr>
+        <td style="width:22%;">AREA : <strong>{{ $kasbonTramper->joTramper && $kasbonTramper->joTramper->vessel ? $kasbonTramper->joTramper->vessel->vessel_name : '-' }}</strong></td>
+        <td style="width:18%;">TGL : <strong>{{ $kasbonTramper->tgl_release ? $kasbonTramper->tgl_release->format('d/m/Y') : '-' }}</strong></td>
+        <td colspan="2" style="width:28%;">NAMA : <strong>{{ $kasbonTramper->release->nama_release ?? '-' }}</strong></td>
+        <td style="width:32%;">BAGIAN : <strong>{{ $kasbonTramper->departemen->nama_dep ?? '-' }}</strong></td>
+    </tr>
+
+    {{-- ── PERIHAL ── --}}
+    <tr>
+        <td colspan="5">Perihal: {{ $kasbonTramper->note ?? '-' }}</td>
+    </tr>
+
+    {{-- ── SPACER ── --}}
+    <tr>
+        <td colspan="5" style="height:20px; border:none; padding:0;"></td>
+    </tr>
+
+    {{-- ── RINCIAN HEADER ── --}}
+    <tr>
+        <td colspan="4" style="font-weight:bold;">Rincian:</td>
+        <td style="text-align:center; font-weight:bold;">Jumlah</td>
+    </tr>
+
+    {{-- ── ITEM ROWS ── --}}
+    @foreach ($flatItems as $fi)
+    <tr>
+        <td colspan="4">{{ $fi['category'] }} - {{ $fi['typ'] }}</td>
+        <td>
+            <table class="rp-table">
                 <tr>
-                    {{-- KIRI --}}
-                    <td style="width:50%; vertical-align:top; padding-right:10px;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">CA Number</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    <strong>{{ $kasbonTramper->id_kasbon_tram ?? '-' }}</strong>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">CA Date</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->tgl_kasbon ? $kasbonTramper->tgl_kasbon->format('d M Y') : '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">JO Number</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->joTramper ? $kasbonTramper->joTramper->no_jo_tram : '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">JO Title</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->joTramper ? $kasbonTramper->joTramper->title : '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Note</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->note ?? '-' }}
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                    {{-- KANAN --}}
-                    <td style="width:50%; vertical-align:top; padding-left:100px;">
-                        <table style="width:100%; border-collapse:collapse;">
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Departemen</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->departemen ? $kasbonTramper->departemen->nama_dep : '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Branch</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->cabang ? $kasbonTramper->cabang->nama_branch : '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Release To</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->release ? $kasbonTramper->release->nama_release : '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Release Date</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->tgl_release ? $kasbonTramper->tgl_release->format('d M Y') : '-' }}
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Vessel</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">
-                                    {{ $kasbonTramper->joTramper && $kasbonTramper->joTramper->vessel
-                                        ? $kasbonTramper->joTramper->vessel->vessel_name
-                                        : '-' }}
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
+                    <td class="rp-left">Rp</td>
+                    <td class="rp-right">{{ number_format($fi['amount'], 0, ',', '.') }}</td>
                 </tr>
-            </tbody>
-        </table>
-
-        {{-- ── Items Table ── --}}
-        @php
-            $kasbonLookup = $kasbonTramper->items->keyBy('id_jo_tram_item');
-
-            $joItems = $kasbonTramper->joTramper
-                ? $kasbonTramper->joTramper->items
-                : collect();
-
-            $groupedItems = $joItems->groupBy(
-                fn($ji) => optional($ji->invoice)->invoice_ctg ?? 'Uncategorized'
-            );
-
-            $totalHargaJual = 0;
-            $totalHpp       = 0;
-            $totalCA        = 0;
-        @endphp
-
-        <div style="border-right: 1px solid #000;">
-            <table class="items-table">
-                <thead>
-                    <tr>
-                        <th class="col-desc">DESCRIPTION</th>
-                        <th class="col-sell">Selling Price (IDR)</th>
-                        <th class="col-hpp">Total CA / HPP (IDR)</th>
-                        <th class="col-ca">CA Amount (IDR)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($groupedItems as $category => $items)
-                        <tr class="row-category">
-                            <td colspan="4"><strong>{{ strtoupper($category) }}</strong></td>
-                        </tr>
-
-                        @foreach ($items as $joItem)
-                            @php
-                                $kasbonItem  = $kasbonLookup->get($joItem->id_jo_tram_item);
-                                $invoiceTyp  = optional($joItem->invoice)->invoice_typ ?? $joItem->id_jo_tram_item;
-                                $hargaJual   = (float) $joItem->hargajual_idr;
-                                $hppOps      = (float) $joItem->hpp_ops;
-                                $nilaiKasbon = $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0;
-
-                                $totalHargaJual += $hargaJual;
-                                $totalHpp       += $hppOps;
-                                $totalCA        += $nilaiKasbon;
-                            @endphp
-                            <tr>
-                                <td class="text-left">{{ $invoiceTyp }}</td>
-                                <td class="text-right">{{ number_format($hargaJual, 2, ',', '.') }}</td>
-                                <td class="text-right">{{ number_format($hppOps, 2, ',', '.') }}</td>
-                                <td class="text-right">{{ number_format($nilaiKasbon, 2, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
-                    @endforeach
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <td class="text-left"><strong>GRAND TOTAL</strong></td>
-                        <td class="text-right">{{ number_format($totalHargaJual, 2, ',', '.') }}</td>
-                        <td class="text-right">{{ number_format($totalHpp, 2, ',', '.') }}</td>
-                        <td class="text-right">{{ number_format($totalCA, 2, ',', '.') }}</td>
-                    </tr>
-                </tfoot>
             </table>
-        </div>
+        </td>
+    </tr>
+    @endforeach
 
-        {{-- ── Terbilang ── --}}
-        <div class="terbilang">
-            <span class="label">Terbilang :</span>
-            <em>{{ $terbilang }}</em>
-        </div>
+    {{-- ── BLANK ROWS ── --}}
+    @for ($b = 0; $b < $blankNeeded; $b++)
+    <tr class="blank-row">
+        <td colspan="4">&nbsp;</td>
+        <td>&nbsp;</td>
+    </tr>
+    @endfor
 
-        {{-- ── Signature Area ── --}}
-        <table class="signature-table">
-            <tr>
-                <td>Prepared By,</td>
-                <td>Reviewed By,</td>
-                <td>Approved By,</td>
-            </tr>
-            <tr>
-                <td style="height: 70px;"></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>
-                    <div class="signature-line"></div>
-                </td>
-                <td>
-                    <div class="signature-line"></div>
-                </td>
-                <td>
-                    <div class="signature-line"></div>
-                </td>
-            </tr>
-        </table>
+    {{-- ── TOTAL ── --}}
+    <tr>
+        <td class="total-label" colspan="4">TOTAL</td>
+        <td class="total-value">
+            <table class="rp-table">
+                <tr>
+                    <td class="rp-left rp-bold" style="background:#ffff00;">Rp</td>
+                    <td class="rp-right rp-bold" style="background:#ffff00;">{{ number_format($totalCA, 0, ',', '.') }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
 
-    </div>
+    <tr>
+        <td colspan="5" style="height:20px; border:none; padding:0;"></td>
+    </tr>
+
+    {{-- ── TTD HEADER ── --}}
+    <tr>
+        <td class="ttd-header">TANDA TANGAN<br>PEMOHON :</td>
+        <td class="ttd-header">MENYETUJUI :</td>
+        <td class="ttd-header">MENYETUJUI</td>
+        <td class="ttd-header">DIBAYARKAN OLEH :</td>
+        <td class="ttd-header">DITERIMA OLEH:</td>
+    </tr>
+
+    {{-- ── TTD SPACE ── --}}
+    <tr>
+        <td class="ttd-space">&nbsp;</td>
+        <td class="ttd-space">&nbsp;</td>
+        <td class="ttd-space">&nbsp;</td>
+        <td class="ttd-space">&nbsp;</td>
+        <td class="ttd-space">&nbsp;</td>
+    </tr>
+
+    {{-- ── NAMA TTD (kosong) ── --}}
+    <tr>
+        <td class="ttd-bottom">&nbsp;</td>
+        <td class="ttd-bottom">&nbsp;</td>
+        <td class="ttd-bottom">&nbsp;</td>
+        <td class="ttd-bottom">&nbsp;</td>
+        <td class="ttd-bottom">&nbsp;</td>
+    </tr>
+
+    {{-- ── TGL ROW ── --}}
+    <tr>
+        <td class="ttd-bottom">TGL :</td>
+        <td class="ttd-bottom">TGL :</td>
+        <td class="ttd-bottom">TGL :</td>
+        <td class="ttd-bottom">TGL :</td>
+        <td class="ttd-bottom">TGL :</td>
+    </tr>
+
+    {{-- ── FOOTER NOTE ── --}}
+    <tr>
+        <td class="footer-note" colspan="5">
+            <strong>PERHATIAN UNTUK PEMOHON</strong> : HARAP DISELESAIKAN DENGAN BAIK SELAMBATNYA 3 HARI<br>
+            KERJA SETELAH UANG DITERIMA ATAU 3 HARI SETELAH KEMBALI DARI DINAS LUAR KOTA
+        </td>
+    </tr>
+
+</tbody>
+</table>
+</div>
 </body>
-
 </html>

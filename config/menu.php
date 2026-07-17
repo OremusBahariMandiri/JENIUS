@@ -33,10 +33,10 @@ return [
             'description' => 'Manage area data',
         ],
         [
-            'key' => 'invoice',
-            'name' => 'Invoice',
+            'key' => 'item',
+            'name' => 'Item',
             'icon' => 'fas fa-project-diagram',
-            'description' => 'Manage invoice data',
+            'description' => 'Manage Item master data',
         ],
         [
             'key' => 'vessel',

@@ -81,7 +81,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{id}', [AreaController::class, 'destroy'])->name('destroy');
     });
 
-    Route::prefix('master/invoice')->name('invoice.')->group(function () {
+    Route::prefix('master/item')->name('invoice.')->group(function () {
         Route::get('/export', [InvoiceController::class, 'export'])->name('export');
         Route::get('/', [InvoiceController::class, 'index'])->name('index');
         Route::get('/create', [InvoiceController::class, 'create'])->name('create');

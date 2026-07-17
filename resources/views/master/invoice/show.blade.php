@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Invoice Detail')
+@section('title', 'Item Detail')
 
 @section('content')
     <div class="container-fluid invoicePage">
@@ -9,7 +9,7 @@
                 <div class="card shadow">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-info-circle me-2"></i>Invoice Detail</span>
+                        <span class="fw-bold"><i class="fas fa-info-circle me-2"></i>Item Detail</span>
                         <div class="d-flex gap-2">
                             @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('invoice', 'ubah')))
                                 <a href="{{ route('invoice.edit', $invoice->id_md_invoice) }}" class="btn btn-warning btn-sm">
@@ -52,13 +52,13 @@
 
                         {{-- Invoice Category --}}
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Invoice Category</label>
+                            <label class="form-label fw-semibold">Item Category</label>
                             <input type="text" class="form-control" value="{{ $invoice->invoice_ctg }}" readonly>
                         </div>
 
                         {{-- Invoice Item --}}
                         <div class="mb-3">
-                            <label class="form-label fw-semibold">Invoice Item</label>
+                            <label class="form-label fw-semibold">Item</label>
                             <input type="text" class="form-control" value="{{ $invoice->invoice_typ }}" readonly>
                         </div>
 

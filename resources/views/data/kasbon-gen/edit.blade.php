@@ -532,6 +532,26 @@
                                         value="{{ $kasbonGen->tgl_release ? $kasbonGen->tgl_release->format('Y-m-d') : '' }}">
                                 </div>
 
+                                {{-- Priority --}}
+                                <div class="col-md-6">
+                                    <label class="form-label required-field">Priority</label>
+                                    <select name="priority" id="priority" class="form-select" required>
+                                        <option value="normal" {{ $kasbonGen->priority == 'normal' ? 'selected' : '' }}>
+                                            Normal (Low)</option>
+                                        <option value="high" {{ $kasbonGen->priority == 'high' ? 'selected' : '' }}>
+                                            High</option>
+                                        <option value="urgent" {{ $kasbonGen->priority == 'urgent' ? 'selected' : '' }}>
+                                            Urgent</option>
+                                    </select>
+                                </div>
+
+                                {{-- Due Date --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Due Date & Time</label>
+                                    <input type="datetime-local" name="due_date" id="due_date" class="form-control"
+                                        value="{{ $kasbonGen->due_date ? $kasbonGen->due_date->format('Y-m-d\TH:i') : '' }}">
+                                </div>
+
                                 <div class="col-md-12">
                                     <label class="form-label">Note</label>
                                     <textarea name="note" id="note" class="form-control" rows="3">{{ $kasbonGen->note }}</textarea>
@@ -589,8 +609,7 @@
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="input_nilai_kasbon"
-                                                class="form-control currency-input"
-                                                autocomplete="off">
+                                                class="form-control currency-input" autocomplete="off">
                                         </div>
                                     </div>
 
@@ -864,16 +883,21 @@
 
         // UPDATE HEADER
         $('#btnSaveHeader').on('click', function() {
-            const idDep = $('#id_md_dep').val(),
-                idCabang = $('#id_md_cabang').val(),
-                idRelease = $('#id_md_release').val(),
-                tglKasbon = $('#tgl_kasbon').val();
+            const idDep = $('#id_md_dep').val();
+            const idCabang = $('#id_md_cabang').val();
+            const idRelease = $('#id_md_release').val();
+            const tglKasbon = $('#tgl_kasbon').val();
+            const priority = $('#priority').val();
+            const dueDate = $('#due_date').val();
+
             if (!idDep || !idCabang || !idRelease || !tglKasbon) {
                 showFloatingAlert('error', 'Please fill in all required fields');
                 return;
             }
+
             showFloatingAlert('saving', 'Updating header...');
             $('#btnSaveHeader').prop('disabled', true);
+
             $.ajax({
                 url: updateHeaderUrl,
                 method: 'POST',
@@ -884,7 +908,9 @@
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),
                     note: $('#note').val(),
-                    _token: csrfToken
+                    priority: priority,
+                    due_date: dueDate,
+                    _token: csrfToken,
                 },
                 success: function(r) {
                     $('#btnSaveHeader').prop('disabled', false);

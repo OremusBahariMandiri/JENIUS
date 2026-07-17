@@ -136,6 +136,8 @@ class KasbonOtherController extends Controller
                 'tgl_kasbon'    => 'required|date',
                 'tgl_release'   => 'nullable|date',
                 'note'          => 'nullable|string',
+                'priority'      => 'required|in:urgent,high,normal',
+                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
             ], [
                 'id_jo_other.required'   => 'Job Order Other is required',
                 'id_jo_other.exists'     => 'Selected Job Order Other does not exist',
@@ -143,6 +145,7 @@ class KasbonOtherController extends Controller
                 'id_md_cabang.required'  => 'Branch is required',
                 'id_md_release.required' => 'Release To is required',
                 'tgl_kasbon.required'    => 'Cash Advance Date is required',
+                'priority.required'      => 'Priority is required',
             ]);
 
             if ($validator->fails()) {
@@ -156,9 +159,8 @@ class KasbonOtherController extends Controller
             DB::beginTransaction();
 
             $idKasbonOther = IdGenerator::generateCaNo('c05_kasbon_other', 'id_kasbon_other');
-
-            $lastKasbon = KasbonOther::orderBy('id', 'desc')->first();
-            $newNomor   = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
+            $lastKasbon    = KasbonOther::orderBy('id', 'desc')->first();
+            $newNomor      = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
 
             $kasbonOther = KasbonOther::create([
                 'id_kasbon_other' => $idKasbonOther,
@@ -170,6 +172,8 @@ class KasbonOtherController extends Controller
                 'tgl_kasbon'      => $request->tgl_kasbon,
                 'tgl_release'     => $request->tgl_release,
                 'note'            => $request->note,
+                'priority'        => $request->priority ?? 'normal',
+                'due_date'        => $request->due_date ?: null,
             ]);
 
             DB::commit();
@@ -193,6 +197,8 @@ class KasbonOtherController extends Controller
                     'tgl_kasbon'      => $kasbonOther->tgl_kasbon,
                     'tgl_release'     => $kasbonOther->tgl_release,
                     'note'            => $kasbonOther->note,
+                    'priority'        => $kasbonOther->priority,
+                    'due_date'        => $kasbonOther->due_date,
                     'joOther'         => $kasbonOther->joOther,
                     'departemen'      => $kasbonOther->departemen,
                     'cabang'          => $kasbonOther->cabang,
@@ -227,6 +233,15 @@ class KasbonOtherController extends Controller
                 'tgl_kasbon'    => 'required|date',
                 'tgl_release'   => 'nullable|date',
                 'note'          => 'nullable|string',
+                'priority'      => 'required|in:urgent,high,normal',
+                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
+            ], [
+                'id_jo_other.required'   => 'Job Order Other is required',
+                'id_md_dep.required'     => 'Departemen is required',
+                'id_md_cabang.required'  => 'Branch is required',
+                'id_md_release.required' => 'Release To is required',
+                'tgl_kasbon.required'    => 'Cash Advance Date is required',
+                'priority.required'      => 'Priority is required',
             ]);
 
             if ($validator->fails()) {
@@ -248,6 +263,8 @@ class KasbonOtherController extends Controller
                 'tgl_kasbon'    => $request->tgl_kasbon,
                 'tgl_release'   => $request->tgl_release,
                 'note'          => $request->note,
+                'priority'      => $request->priority,           // ← dari $request
+                'due_date'      => $request->due_date ?: null,   // ← dari $request
             ]);
 
             DB::commit();
@@ -520,11 +537,14 @@ class KasbonOtherController extends Controller
             'items'                          => 'required|array|min:1',
             'items.*.id_jo_other_item'       => 'required|exists:b06_jo_other_item,id_jo_other_item',
             'items.*.nilai_kasbon'           => 'required|numeric|min:0',
+            'priority'                       => 'required|in:urgent,high,normal',
+            'due_date'                       => 'nullable|date_format:Y-m-d\TH:i',
         ], [
             'id_jo_other.required'   => 'Job Order Other is required',
             'id_md_dep.required'     => 'Departemen is required',
             'id_md_cabang.required'  => 'Branch is required',
             'id_md_release.required' => 'Release To is required',
+            'priority.required'      => 'Priority is required',
             'tgl_kasbon.required'    => 'Cash Advance Date is required',
             'items.required'         => 'At least one item is required',
         ]);
@@ -552,6 +572,8 @@ class KasbonOtherController extends Controller
                 'tgl_kasbon'      => $request->tgl_kasbon,
                 'tgl_release'     => $request->tgl_release,
                 'note'            => $request->note,
+                'priority'        => $request->priority ?? 'normal',
+                'due_date'        => $request->due_date ?: null,
             ]);
 
             foreach ($request->items as $itemData) {
@@ -688,6 +710,8 @@ class KasbonOtherController extends Controller
             'items'                    => 'required|array|min:1',
             'items.*.id_jo_other_item' => 'required|exists:b06_jo_other_item,id_jo_other_item',
             'items.*.nilai_kasbon'     => 'required|numeric|min:0',
+            'priority'                 => 'required|in:urgent,high,normal',
+            'due_date'                 => 'nullable|date_format:Y-m-d\TH:i',
         ]);
 
         if ($validator->fails()) {
@@ -708,6 +732,8 @@ class KasbonOtherController extends Controller
                 'tgl_kasbon'    => $request->tgl_kasbon,
                 'tgl_release'   => $request->tgl_release,
                 'note'          => $request->note,
+                'priority'      => $request->priority,
+                'due_date'      => $request->due_date ?: null,
             ]);
 
             foreach ($kasbonOther->items as $oldItem) {
