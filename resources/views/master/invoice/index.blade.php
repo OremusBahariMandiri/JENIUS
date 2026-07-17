@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Data Invoice')
+@section('title', 'Data Item')
 
 @section('content')
     <div class="container-fluid invoicePage">
@@ -9,7 +9,7 @@
                 <div class="card shadow">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-file-invoice me-2"></i>Data Invoice</span>
+                        <span class="fw-bold"><i class="fas fa-file-invoice me-2"></i>Data Item</span>
                         <div>
                             <button type="button" class="btn btn-light me-2" id="filterButton">
                                 <i class="fas fa-filter me-1"></i> Filter
@@ -162,7 +162,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header text-black" style="background-color: #d1fae5">
-                    <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filter Data Invoice</h5>
+                    <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filter Data Item</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -231,7 +231,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header text-black" style="background-color: #d1fae5">
-                    <h5 class="modal-title"><i class="fas fa-download me-2"></i>Export Data Invoice</h5>
+                    <h5 class="modal-title"><i class="fas fa-download me-2"></i>Export Data Item</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -244,7 +244,7 @@
                     @else
                         <div class="alert alert-info">
                             <i class="fas fa-info-circle me-1"></i>
-                            <small>Export akan mengekspor <strong>semua data invoice</strong> (tidak ada filter
+                            <small>Export akan mengekspor <strong>semua data item</strong> (tidak ada filter
                                 aktif).</small>
                         </div>
                     @endif
@@ -263,7 +263,7 @@
                         <a href="{{ $excelUrl }}" class="btn btn-outline-success">
                             <i class="fas fa-file-excel me-2"></i> Export ke Excel (.xlsx)
                         </a>
-                        <a href="{{ $pdfUrl }}" class="btn btn-outline-danger">
+                        <a href="{{ $pdfUrl }}" class="btn btn-outline-danger" target="_blank">
                             <i class="fas fa-file-pdf me-2"></i> Export ke PDF
                         </a>
                     </div>

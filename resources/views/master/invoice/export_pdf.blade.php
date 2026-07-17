@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Invoice List</title>
+    <title>Item List</title>
     <style>
         @page { size: A4 portrait; margin: 15mm 12mm; }
         body {
@@ -55,7 +55,7 @@
 </head>
 <body>
 
-    <h2>Invoice List</h2>
+    <h2>Item List</h2>
     <p class="subtitle">
         Printed: {{ now()->format('d/m/Y H:i') }} &nbsp;&mdash;&nbsp; Total: {{ $invoices->count() }} records
     </p>
@@ -64,25 +64,27 @@
         <thead>
             <tr>
                 <th width="5%">No</th>
-                <th width="30%">Category</th>
-                <th width="35%">Item</th>
-                <th width="30%">Note</th>
+                <th width="25%">Category</th>
+                <th width="25%">Item</th>
+                <th width="20%">Jo Category</th>
+                <th width="25%">Note</th>
             </tr>
         </thead>
         <tbody>
             @foreach($invoices as $i => $invoice)
             <tr>
                 <td class="center">{{ $i + 1 }}</td>
-                <td>{{ $invoice->invoice_ctg ?? '-' }}</td>
-                <td>{{ $invoice->invoice_typ ?? '-' }}</td>
-                <td>{{ $invoice->note        ?? '-' }}</td>
+                <td>{{ $invoice->invoice_ctg  ?? '-' }}</td>
+                <td>{{ $invoice->invoice_typ  ?? '-' }}</td>
+                <td>{{ $invoice->jo_ctg_label ?? $invoice->jo_ctg ?? '-' }}</td>
+                <td>{{ $invoice->note         ?? '-' }}</td>
             </tr>
             @endforeach
         </tbody>
     </table>
 
     <div class="footer">
-        {{ $invoices->count() }} invoice(s) &mdash; {{ now()->format('d/m/Y H:i') }}
+        {{ $invoices->count() }} item(s) &mdash; {{ now()->format('d/m/Y H:i') }}
     </div>
 
 </body>

@@ -449,7 +449,7 @@ class InvoiceController extends Controller
                 $pdf      = \Barryvdh\DomPDF\Facade\Pdf::loadView('master.invoice.export_pdf', compact('invoices'))
                     ->setPaper('a4', 'portrait');
                 $filename = 'invoices_' . date('Ymd_His') . '.pdf';
-                return $pdf->download($filename);
+                return $pdf->stream($filename);
             }
 
             $filename = 'invoices_' . date('Ymd_His') . '.pdf';

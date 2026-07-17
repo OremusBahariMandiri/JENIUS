@@ -29,6 +29,8 @@ class KasbonContract extends Model
         'tgl_kasbon',
         'tgl_release',
         'note',
+        'priority',
+        'due_date',
     ];
 
     protected $casts = [
@@ -37,6 +39,7 @@ class KasbonContract extends Model
         'created_at'  => 'datetime',
         'updated_at'  => 'datetime',
         'deleted_at'  => 'datetime',
+        'due_date'    => 'datetime',
     ];
 
     // Relationships

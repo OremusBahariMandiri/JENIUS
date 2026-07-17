@@ -17,9 +17,9 @@ class InvoiceExport
     {
         $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
         $sheet       = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Data Invoice');
+        $sheet->setTitle('Data Item');
 
-        $headers   = ['No', 'Category', 'Item', 'Note'];
+        $headers   = ['No', 'Category', 'Item', 'Jo Category', 'Note'];
         $borderAll = [
             'borders' => [
                 'allBorders' => [
@@ -39,14 +39,15 @@ class InvoiceExport
         foreach ($this->invoices as $i => $invoice) {
             $row = $i + 2;
             $sheet->setCellValue("A{$row}", $i + 1);
-            $sheet->setCellValue("B{$row}", $invoice->invoice_ctg ?? '');
-            $sheet->setCellValue("C{$row}", $invoice->invoice_typ ?? '');
-            $sheet->setCellValue("D{$row}", $invoice->note       ?? '');
+            $sheet->setCellValue("B{$row}", $invoice->invoice_ctg  ?? '');
+            $sheet->setCellValue("C{$row}", $invoice->invoice_typ  ?? '');
+            $sheet->setCellValue("D{$row}", $invoice->jo_ctg_label ?? $invoice->jo_ctg ?? '');
+            $sheet->setCellValue("E{$row}", $invoice->note         ?? '');
 
-            $sheet->getStyle("A{$row}:D{$row}")->applyFromArray($borderAll);
+            $sheet->getStyle("A{$row}:E{$row}")->applyFromArray($borderAll);
         }
 
-        foreach (range('A', 'D') as $col) {
+        foreach (range('A', 'E') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -59,14 +60,15 @@ class InvoiceExport
 
         return response()->stream(function () {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['No', 'Category', 'Item', 'Note']);
+            fputcsv($handle, ['No', 'Category', 'Item', 'Jo Category', 'Note']);
 
             foreach ($this->invoices as $i => $invoice) {
                 fputcsv($handle, [
                     $i + 1,
-                    $invoice->invoice_ctg ?? '',
-                    $invoice->invoice_typ ?? '',
-                    $invoice->note        ?? '',
+                    $invoice->invoice_ctg  ?? '',
+                    $invoice->invoice_typ  ?? '',
+                    $invoice->jo_ctg_label ?? $invoice->jo_ctg ?? '',
+                    $invoice->note         ?? '',
                 ]);
             }
 

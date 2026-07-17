@@ -130,11 +130,14 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'    => 'required|date',
                 'tgl_release'   => 'nullable|date',
                 'note'          => 'nullable|string',
+                'priority'      => 'required|in:urgent,high,normal',
+                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
             ], [
                 'id_md_dep.required'     => 'Departemen is required',
                 'id_md_cabang.required'  => 'Branch is required',
                 'id_md_release.required' => 'Release To is required',
                 'tgl_kasbon.required'    => 'Cash Advance Date is required',
+                'priority.required'      => 'Priority is required',
             ]);
 
             if ($validator->fails()) {
@@ -160,6 +163,8 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'     => $request->tgl_kasbon,
                 'tgl_release'    => $request->tgl_release,
                 'note'           => $request->note,
+                'priority'       => $request->priority ?? 'normal',
+                'due_date'       => $request->due_date ?: null,
             ]);
 
             DB::commit();
@@ -173,18 +178,20 @@ class KasbonGenController extends Controller
                 'message'      => 'Kasbon General header saved successfully',
                 'redirect_url' => route('kasbon-gen.edit', $kasbonGen->id),
                 'data'         => [
-                    'id'             => $kasbonGen->id,
-                    'id_kasbon_gen'  => $kasbonGen->id_kasbon_gen,
-                    'id_md_dep'      => $kasbonGen->id_md_dep,
-                    'id_md_cabang'   => $kasbonGen->id_md_cabang,
-                    'id_md_release'  => $kasbonGen->id_md_release,
-                    'nomor'          => $kasbonGen->nomor,
-                    'tgl_kasbon'     => $kasbonGen->tgl_kasbon,
-                    'tgl_release'    => $kasbonGen->tgl_release,
-                    'note'           => $kasbonGen->note,
-                    'departemen'     => $kasbonGen->departemen,
-                    'cabang'         => $kasbonGen->cabang,
-                    'release'        => $kasbonGen->release,
+                    'id'            => $kasbonGen->id,
+                    'id_kasbon_gen' => $kasbonGen->id_kasbon_gen,
+                    'id_md_dep'     => $kasbonGen->id_md_dep,
+                    'id_md_cabang'  => $kasbonGen->id_md_cabang,
+                    'id_md_release' => $kasbonGen->id_md_release,
+                    'nomor'         => $kasbonGen->nomor,
+                    'tgl_kasbon'    => $kasbonGen->tgl_kasbon,
+                    'tgl_release'   => $kasbonGen->tgl_release,
+                    'note'          => $kasbonGen->note,
+                    'priority'      => $kasbonGen->priority,
+                    'due_date'      => $kasbonGen->due_date,
+                    'departemen'    => $kasbonGen->departemen,
+                    'cabang'        => $kasbonGen->cabang,
+                    'release'       => $kasbonGen->release,
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -214,6 +221,14 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'    => 'required|date',
                 'tgl_release'   => 'nullable|date',
                 'note'          => 'nullable|string',
+                'priority'      => 'required|in:urgent,high,normal',
+                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
+            ], [
+                'id_md_dep.required'     => 'Departemen is required',
+                'id_md_cabang.required'  => 'Branch is required',
+                'id_md_release.required' => 'Release To is required',
+                'tgl_kasbon.required'    => 'Cash Advance Date is required',
+                'priority.required'      => 'Priority is required',
             ]);
 
             if ($validator->fails()) {
@@ -234,6 +249,8 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'    => $request->tgl_kasbon,
                 'tgl_release'   => $request->tgl_release,
                 'note'          => $request->note,
+                'priority'      => $request->priority,           // ← dari $request
+                'due_date'      => $request->due_date ?: null,   // ← dari $request
             ]);
 
             DB::commit();
@@ -255,7 +272,6 @@ class KasbonGenController extends Controller
             ], 500);
         }
     }
-
     // ========================================
     // STORE ITEM (konsep seperti JO)
     // ========================================
@@ -527,7 +543,6 @@ class KasbonGenController extends Controller
     // ========================================
     // STORE (Traditional fallback)
     // ========================================
-
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -540,6 +555,8 @@ class KasbonGenController extends Controller
             'items'                     => 'nullable|array',
             'items.*.id_md_invoice'     => 'required|exists:a04_md_invoice,id_md_invoice',
             'items.*.nilai_kasbon'      => 'required|numeric|min:0',
+            'priority'                  => 'required|in:urgent,high,normal',
+            'due_date'                  => 'nullable|date_format:Y-m-d\TH:i',
         ]);
 
         if ($validator->fails()) {
@@ -564,6 +581,8 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'     => $request->tgl_kasbon,
                 'tgl_release'    => $request->tgl_release,
                 'note'           => $request->note,
+                'priority'       => $request->priority ?? 'normal',
+                'due_date'       => $request->due_date ?: null,
             ]);
 
             foreach ($request->items ?? [] as $itemData) {
@@ -606,6 +625,8 @@ class KasbonGenController extends Controller
             'items'                 => 'nullable|array',
             'items.*.id_md_invoice' => 'required|exists:a04_md_invoice,id_md_invoice',
             'items.*.nilai_kasbon'  => 'required|numeric|min:0',
+            'priority'              => 'required|in:urgent,high,normal',
+            'due_date'              => 'nullable|date_format:Y-m-d\TH:i',
         ]);
 
         if ($validator->fails()) {
@@ -625,6 +646,8 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'    => $request->tgl_kasbon,
                 'tgl_release'   => $request->tgl_release,
                 'note'          => $request->note,
+                'priority'      => $request->priority,
+                'due_date'      => $request->due_date ?: null,
             ]);
 
             foreach ($kasbonGen->items as $oldItem) {

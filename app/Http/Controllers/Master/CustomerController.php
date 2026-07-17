@@ -95,6 +95,9 @@ class CustomerController extends Controller
      * Export customers — supports format=excel|pdf, respects active filter.
      */
 
+    /**
+     * Export customers — supports format=excel|pdf, respects active filter.
+     */
     public function export(Request $request)
     {
         $format    = $request->get('format', 'excel');
@@ -103,18 +106,20 @@ class CustomerController extends Controller
             ->get();
 
         if ($format === 'pdf') {
-            // Jika DomPDF tersedia — download langsung
+            // DomPDF — stream inline (buka di tab, bukan download)
             if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                $pdf      = \Barryvdh\DomPDF\Facade\Pdf::loadView(
                     'master.customer.export_pdf',
                     compact('customers')
                 )->setPaper('a4', 'portrait');
 
                 $filename = 'customers_' . date('Ymd_His') . '.pdf';
-                return $pdf->download($filename);
+
+                // stream() = tampil di browser | download() = langsung unduh
+                return $pdf->stream($filename);
             }
 
-            // Fallback — buka di browser untuk Print / Save as PDF
+            // Fallback HTML — langsung render di browser, ada tombol Print/Save PDF
             $filename = 'customers_' . date('Ymd_His') . '.pdf';
             $html     = view('master.customer.export_pdf', compact('customers'))->render();
 

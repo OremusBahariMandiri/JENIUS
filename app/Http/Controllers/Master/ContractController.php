@@ -518,7 +518,7 @@ class ContractController extends Controller
                 )->setPaper('a4', 'portrait');
 
                 $filename = 'contracts_' . date('Ymd_His') . '.pdf';
-                return $pdf->download($filename);
+                return $pdf->stream($filename);
             }
 
             // Fallback — tampil di browser untuk Ctrl+P / Save as PDF

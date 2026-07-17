@@ -998,7 +998,7 @@
                         auth()->user()->hasAccessToMenu('customer') ||
                         auth()->user()->hasAccessToMenu('contract') ||
                         auth()->user()->hasAccessToMenu('area') ||
-                        auth()->user()->hasAccessToMenu('invoice') ||
+                        auth()->user()->hasAccessToMenu('item') ||
                         auth()->user()->hasAccessToMenu('vessel') ||
                         auth()->user()->hasAccessToMenu('port') ||
                         auth()->user()->hasAccessToMenu('other') ||
@@ -1042,12 +1042,13 @@
                             </div>
                         @endif
 
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('invoice'))
+                        {{-- Ini merupakan menu Data Master ITEM, --}}
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('item'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('invoice.*') ? 'active' : '' }}"
                                     href="{{ route('invoice.index') }}">
                                     <i class="fas fa-project-diagram"></i>
-                                    <span>Invoice</span>
+                                    <span>Item List</span>
                                 </a>
                             </div>
                         @endif
@@ -1175,7 +1176,7 @@
                 <div class="nav-item has-submenu" data-tooltip="Cash Advance">
                     <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenKasbon">
                         <i class="fas fa-cash-register"></i>
-                        <span>Cash Advance</span>
+                        <span>Cash Advance Ops.</span>
                         <i class="fas fa-chevron-down submenu-indicator"></i>
                     </a>
                     <div class="sidebar-submenu {{ request()->is('ca-contract*') ? 'show' : '' }}"

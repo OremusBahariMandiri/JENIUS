@@ -392,7 +392,7 @@ class AreaController extends Controller
                 $pdf      = \Barryvdh\DomPDF\Facade\Pdf::loadView('master.area.export_pdf', compact('areas'))
                     ->setPaper('a4', 'portrait');
                 $filename = 'areas_' . date('Ymd_His') . '.pdf';
-                return $pdf->download($filename);
+                return $pdf->stream($filename);
             }
 
             $filename = 'areas_' . date('Ymd_His') . '.pdf';
