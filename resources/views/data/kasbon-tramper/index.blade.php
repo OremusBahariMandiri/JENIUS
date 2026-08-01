@@ -69,98 +69,50 @@
                             </div>
                         @endif
 
-                        {{-- ── PRIORITY & DUE DATE SUMMARY CARDS ── --}}
+                        {{-- ── PRIORITY SUMMARY CARDS ── --}}
                         @php
-                            $now = \Carbon\Carbon::now();
-                            $today = \Carbon\Carbon::today();
-                            $countUrgent = $kasbonTrampers->where('priority', 'urgent')->count();
-                            $countHigh = $kasbonTrampers->where('priority', 'high')->count();
-                            $countDueToday = $kasbonTrampers
-                                ->filter(
-                                    fn($k) => $k->due_date &&
-                                        $k->due_date->isSameDay($today) &&
-                                        !$k->due_date->lt($now),
-                                )
-                                ->count();
-                            $countOverdue = $kasbonTrampers
-                                ->filter(fn($k) => $k->due_date && $k->due_date->lt($now))
-                                ->count();
+                            $countHigh   = $kasbonTrampers->where('priority', 'high')->count();
+                            $countNormal = $kasbonTrampers->where('priority', 'normal')->count();
                         @endphp
 
                         <div class="row g-3 mb-4">
-                            <div class="col-6 col-md-3">
-                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
-                                    style="background:#fff7ed; border-color:#fb923c !important;">
-                                    <div
-                                        style="width:42px;height:42px;background:#ffedd5;border-radius:10px;
-                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                        <i class="fas fa-bolt" style="color:#ea580c;font-size:1.1rem;"></i>
-                                    </div>
-                                    <div>
-                                        <div
-                                            style="font-size:.75rem;color:#9a3412;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            Urgent</div>
-                                        <div style="font-size:1.6rem;font-weight:700;color:#c2410c;line-height:1.1;">
-                                            {{ $countUrgent }}</div>
-                                        <div style="font-size:.72rem;color:#ea580c;">
-                                            document{{ $countUrgent !== 1 ? 's' : '' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
-                                    style="background:#f0fdf4; border-color:#4ade80 !important;">
-                                    <div
-                                        style="width:42px;height:42px;background:#dcfce7;border-radius:10px;
-                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                        <i class="fas fa-arrow-up" style="color:#16a34a;font-size:1.1rem;"></i>
-                                    </div>
-                                    <div>
-                                        <div
-                                            style="font-size:.75rem;color:#14532d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            High</div>
-                                        <div style="font-size:1.6rem;font-weight:700;color:#15803d;line-height:1.1;">
-                                            {{ $countHigh }}</div>
-                                        <div style="font-size:.72rem;color:#16a34a;">
-                                            document{{ $countHigh !== 1 ? 's' : '' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
-                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
-                                    style="background:#fffbeb; border-color:#fbbf24 !important;">
-                                    <div
-                                        style="width:42px;height:42px;background:#fef3c7;border-radius:10px;
-                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                        <i class="fas fa-calendar-day" style="color:#d97706;font-size:1.1rem;"></i>
-                                    </div>
-                                    <div>
-                                        <div
-                                            style="font-size:.75rem;color:#78350f;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            Due Today</div>
-                                        <div style="font-size:1.6rem;font-weight:700;color:#b45309;line-height:1.1;">
-                                            {{ $countDueToday }}</div>
-                                        <div style="font-size:.72rem;color:#d97706;">
-                                            document{{ $countDueToday !== 1 ? 's' : '' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-6 col-md-3">
+                            <div class="col-6">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#fff1f2; border-color:#f87171 !important;">
-                                    <div
-                                        style="width:42px;height:42px;background:#fee2e2;border-radius:10px;
+                                    <div style="width:42px;height:42px;background:#fee2e2;border-radius:10px;
                                         display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                        <i class="fas fa-clock" style="color:#dc2626;font-size:1.1rem;"></i>
+                                        <i class="fas fa-arrow-up" style="color:#dc2626;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div
-                                            style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            Overdue</div>
+                                        <div style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                            High
+                                        </div>
                                         <div style="font-size:1.6rem;font-weight:700;color:#b91c1c;line-height:1.1;">
-                                            {{ $countOverdue }}</div>
+                                            {{ $countHigh }}
+                                        </div>
                                         <div style="font-size:.72rem;color:#dc2626;">
-                                            document{{ $countOverdue !== 1 ? 's' : '' }}</div>
+                                            document{{ $countHigh !== 1 ? 's' : '' }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
+                                    style="background:#f9fafb; border-color:#d1d5db !important;">
+                                    <div style="width:42px;height:42px;background:#f3f4f6;border-radius:10px;
+                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fas fa-minus" style="color:#6b7280;font-size:1.1rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:.75rem;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                            Normal
+                                        </div>
+                                        <div style="font-size:1.6rem;font-weight:700;color:#374151;line-height:1.1;">
+                                            {{ $countNormal }}
+                                        </div>
+                                        <div style="font-size:.72rem;color:#6b7280;">
+                                            document{{ $countNormal !== 1 ? 's' : '' }}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -182,32 +134,13 @@
                                         <th class="text-end">Total CA</th>
                                         <th class="text-center">Invoice</th>
                                         <th class="text-center">Priority</th>
-                                        <th class="text-center">Due Date</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($kasbonTrampers as $kasbon)
                                         @php
-                                            $now = \Carbon\Carbon::now();
-                                            $today = \Carbon\Carbon::today();
-                                            $rowClass = '';
-
-                                            if ($kasbon->due_date) {
-                                                if ($kasbon->due_date->lt($now)) {
-                                                    $rowClass = 'table-danger';
-                                                } elseif ($kasbon->due_date->isSameDay($today)) {
-                                                    $rowClass = 'table-danger';
-                                                }
-                                            }
-
-                                            if (empty($rowClass)) {
-                                                if ($kasbon->priority === 'urgent') {
-                                                    $rowClass = 'table-warning';
-                                                } elseif ($kasbon->priority === 'high') {
-                                                    $rowClass = 'table-success';
-                                                }
-                                            }
+                                            $rowClass = $kasbon->priority === 'high' ? 'row-high' : '';
                                         @endphp
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $loop->iteration }}</td>
@@ -237,46 +170,15 @@
 
                                             {{-- Priority --}}
                                             <td class="text-center">
-                                                @if ($kasbon->priority === 'urgent')
+                                                @if ($kasbon->priority === 'high')
                                                     <span class="badge"
-                                                        style="background:#ea580c; color:#fff; font-size:.75rem;">
-                                                        <i class="fas fa-bolt me-1"></i>Urgent
-                                                    </span>
-                                                @elseif ($kasbon->priority === 'high')
-                                                    <span class="badge"
-                                                        style="background:#16a34a; color:#fff; font-size:.75rem;">
+                                                        style="background:#dc2626; color:#fff; font-size:.75rem;">
                                                         <i class="fas fa-arrow-up me-1"></i>High
                                                     </span>
                                                 @else
-                                                    <span class="badge bg-secondary"
-                                                        style="font-size:.75rem;">Normal</span>
-                                                @endif
-                                            </td>
-
-                                            {{-- Due Date --}}
-                                            <td class="text-center">
-                                                @if ($kasbon->due_date)
-                                                    @php
-                                                        $isOverdue = $kasbon->due_date->lt($now);
-                                                        $isDueToday =
-                                                            $kasbon->due_date->isSameDay($today) && !$isOverdue;
-                                                    @endphp
-                                                    <div
-                                                        style="font-size:.82rem; font-weight:600; line-height:1.35;
-                                                        color:{{ $isOverdue || $isDueToday ? '#b91c1c' : 'inherit' }};">
-                                                        {{ $kasbon->due_date->format('d/m/Y') }}<br>
-                                                        <span style="font-size:.75rem; font-weight:400;">
-                                                            {{ $kasbon->due_date->format('H:i') }}
-                                                            @if ($isOverdue)
-                                                                <i class="fas fa-exclamation-circle ms-1"
-                                                                    title="Overdue"></i>
-                                                            @elseif ($isDueToday)
-                                                                <i class="fas fa-clock ms-1" title="Due today"></i>
-                                                            @endif
-                                                        </span>
-                                                    </div>
-                                                @else
-                                                    <span class="text-muted">—</span>
+                                                    <span class="badge bg-secondary" style="font-size:.75rem;">
+                                                        Normal
+                                                    </span>
                                                 @endif
                                             </td>
 
@@ -309,7 +211,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="14" class="text-center py-5">
+                                            <td colspan="13" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No Kasbon Tramper Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new Kasbon Tramper</p>
@@ -318,39 +220,21 @@
                                     @endforelse
                                 </tbody>
                             </table>
-                            {{-- ── TABLE LEGEND ── --}}
+
+                            {{-- TABLE LEGEND --}}
                             <div class="d-flex flex-wrap gap-3 mt-3 px-1" style="font-size:.8rem;">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span
-                                        style="display:inline-block; width:16px; height:16px; border-radius:4px;
-            background:#fee2e2; border:1px solid #fca5a5; flex-shrink:0;"></span>
+                                    <span style="display:inline-block;width:16px;height:16px;border-radius:4px;
+                                        background:#fee2e2;border:1px solid #fca5a5;flex-shrink:0;"></span>
                                     <span style="color:#6b7280;">
-                                        <span style="font-weight:600; color:#b91c1c;">Red</span>
-                                        — Document due today or overdue
+                                        <span style="font-weight:600;color:#b91c1c;">Red</span> — High priority document
                                     </span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span
-                                        style="display:inline-block; width:16px; height:16px; border-radius:4px;
-            background:#fff3cd; border:1px solid #fde68a; flex-shrink:0;"></span>
+                                    <span style="display:inline-block;width:16px;height:16px;border-radius:4px;
+                                        background:#ffffff;border:1px solid #d1d5db;flex-shrink:0;"></span>
                                     <span style="color:#6b7280;">
-                                        <span style="font-weight:600; color:#b45309;">Orange</span>
-                                        — Urgent priority document
-                                    </span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <span
-                                        style="display:inline-block; width:16px; height:16px; border-radius:4px;
-            background:#d1fae5; border:1px solid #a7f3d0; flex-shrink:0;"></span>
-                                    <span style="color:#6b7280;">
-                                        <span style="font-weight:600; color:#15803d;">Green</span>
-                                        — High priority document
-                                    </span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2" style="margin-left:auto;">
-                                    <i class="fas fa-info-circle" style="color:#9ca3af; font-size:.85rem;"></i>
-                                    <span style="color:#9ca3af;">
-                                        Due date / overdue color takes precedence over priority color
+                                        <span style="font-weight:600;color:#374151;">White</span> — Normal priority document
                                     </span>
                                 </div>
                             </div>
@@ -505,69 +389,32 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <style>
-        .modal .select2-container {
-            width: 100% !important;
-        }
-
+        .modal .select2-container { width: 100% !important; }
         .modal .select2-container .select2-selection--single {
             height: calc(1.5em + 0.75rem + 2px) !important;
             padding: 0.375rem 0.75rem !important;
             border: 1px solid #ced4da !important;
             border-radius: 0.375rem !important;
         }
-
         .modal .select2-container .select2-selection--single .select2-selection__rendered {
             line-height: 1.5 !important;
             padding-left: 0 !important;
             color: #212529;
         }
-
         .modal .select2-container .select2-selection--single .select2-selection__arrow {
             height: 100% !important;
         }
+        .kasbonTramperPage .card { border: none; border-radius: 10px; }
+        .kasbonTramperPage .card-header { border-radius: 10px 10px 0 0 !important; padding: 1rem 1.5rem; }
+        .kasbonTramperPage .btn-sm { transition: transform 0.2s; }
+        .kasbonTramperPage .btn-sm:hover { transform: scale(1.1); }
 
-        .kasbonTramperPage .card {
-            border: none;
-            border-radius: 10px;
+        /* High priority row = red */
+        .kasbonTramperPage table tbody tr.row-high td {
+            background-color: #fc4d4d !important;
         }
-
-        .kasbonTramperPage .card-header {
-            border-radius: 10px 10px 0 0 !important;
-            padding: 1rem 1.5rem;
-        }
-
-        .kasbonTramperPage .btn-sm {
-            transition: transform 0.2s;
-        }
-
-        .kasbonTramperPage .btn-sm:hover {
-            transform: scale(1.1);
-        }
-
-        /* Priority row colors */
-        .kasbonTramperPage table tbody tr.table-warning td {
-            background-color: #fff3cd !important;
-        }
-
-        .kasbonTramperPage table tbody tr.table-success td {
-            background-color: #d1fae5 !important;
-        }
-
-        .kasbonTramperPage table tbody tr.table-danger td {
-            background-color: #fee2e2 !important;
-        }
-
-        /* Override DataTables striped on colored rows */
-        .kasbonTramperPage table.dataTable tbody tr.table-warning:hover td {
-            background-color: #fde68a !important;
-        }
-
-        .kasbonTramperPage table.dataTable tbody tr.table-success:hover td {
-            background-color: #a7f3d0 !important;
-        }
-
-        .kasbonTramperPage table.dataTable tbody tr.table-danger:hover td {
-            background-color: #fca5a5 !important;
+        .kasbonTramperPage table.dataTable tbody tr.row-high:hover td {
+            background-color: #ff1919 !important;
         }
     </style>
 @endpush
@@ -588,41 +435,16 @@
                 $('#kasbonTramperTable').DataTable({
                     responsive: true,
                     pageLength: 10,
-                    lengthMenu: [
-                        [10, 25, 50, -1],
-                        [10, 25, 50, 'All']
-                    ],
-                    order: [
-                        [2, 'desc']
-                    ],
-                    columnDefs: [{
-                            orderable: false,
-                            targets: 0
-                        },
-                        {
-                            orderable: false,
-                            targets: -1
-                        },
-                        {
-                            responsivePriority: 1,
-                            targets: -1
-                        },
-                        {
-                            responsivePriority: 2,
-                            targets: 1
-                        },
-                        {
-                            responsivePriority: 10001,
-                            targets: 4
-                        },
-                        {
-                            responsivePriority: 10002,
-                            targets: 5
-                        },
-                        {
-                            responsivePriority: 10003,
-                            targets: 6
-                        },
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
+                    order: [[2, 'desc']],
+                    columnDefs: [
+                        { orderable: false, targets: 0 },
+                        { orderable: false, targets: -1 },
+                        { responsivePriority: 1, targets: -1 },
+                        { responsivePriority: 2, targets: 1 },
+                        { responsivePriority: 10001, targets: 4 },
+                        { responsivePriority: 10002, targets: 5 },
+                        { responsivePriority: 10003, targets: 6 },
                     ],
                     language: {
                         search: 'Search:',
@@ -631,9 +453,7 @@
                     drawCallback: function(settings) {
                         var api = this.api();
                         var startIndex = api.page.info().start;
-                        api.column(0, {
-                            page: 'current'
-                        }).nodes().each(function(cell, i) {
+                        api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
                             cell.innerHTML = startIndex + i + 1;
                         });
                     },
@@ -654,12 +474,8 @@
                 });
             });
 
-            $('#filterButton').on('click', function() {
-                $('#filterModal').modal('show');
-            });
-            $('#exportButton').on('click', function() {
-                $('#exportModal').modal('show');
-            });
+            $('#filterButton').on('click', function() { $('#filterModal').modal('show'); });
+            $('#exportButton').on('click', function() { $('#exportModal').modal('show'); });
 
             $('#resetFilter').on('click', function() {
                 $('#filterForm input[type="date"]').val('');
@@ -669,7 +485,7 @@
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
                 const name = $(this).data('name');
-                const url = $(this).data('url');
+                const url  = $(this).data('url');
                 Swal.fire({
                     title: 'Delete Kasbon Tramper?',
                     html: `<div class="text-start">
@@ -693,9 +509,7 @@
                             html: 'Please wait...',
                             allowOutsideClick: false,
                             allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            },
+                            didOpen: () => { Swal.showLoading(); },
                         });
                         $('#deleteForm').attr('action', url).submit();
                     }

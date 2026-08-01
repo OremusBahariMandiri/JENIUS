@@ -30,22 +30,16 @@ class IdGenerator
      * Generate Nomor Dokumen JO Global dengan format: JO/[YYYY]/[NNNNN]
      * Sequence increment lintas semua tabel JO (tramper, other, dst)
      * Contoh: JO/2026/00001, JO/2026/00002, dst
-     *
-     * @param string $tableName  Nama tabel untuk menyimpan nomor
-     * @param string $columnName Nama kolom nomor dokumen
-     * @return string
      */
     public static function generateDocNo($tableName, $columnName)
     {
         $year   = date('Y');
         $prefix = "JO/{$year}/";
 
-        // Cari nomor terakhir dari SEMUA tabel JO
         $tables = [
             'b01_jo_cont'  => 'no_jo_cont',
             'b03_jo_tram'  => 'no_jo_tram',
             'b05_jo_other' => 'no_jo_other',
-            // tambah tabel JO lainnya di sini
         ];
 
         $lastNumber = 0;
@@ -77,22 +71,57 @@ class IdGenerator
      * Generate Nomor Dokumen Cash Advance (Kasbon) dengan format: CA/[YYYY]/[NNNNN]
      * Sequence increment lintas semua tabel Kasbon
      * Contoh: CA/2026/00001, CA/2026/00002, dst
-     *
-     * @param string $tableName  Nama tabel untuk menyimpan nomor
-     * @param string $columnName Nama kolom nomor dokumen
-     * @return string
      */
     public static function generateCaNo($tableName, $columnName)
     {
         $year   = date('Y');
         $prefix = "CA/{$year}/";
 
-        // Semua tabel Kasbon — tambah di sini jika ada tabel kasbon lain
         $tables = [
             'c01_kasbon_cont'  => 'id_kasbon_cont',
             'c03_kasbon_tram'  => 'id_kasbon_tram',
             'c05_kasbon_other' => 'id_kasbon_other',
-            'c07_kasbon_gen' => 'id_kasbon_gen',
+            'c07_kasbon_gen'   => 'id_kasbon_gen',
+        ];
+
+        $lastNumber = 0;
+
+        foreach ($tables as $tbl => $col) {
+            try {
+                $last = DB::table($tbl)
+                    ->where($col, 'LIKE', $prefix . '%')
+                    ->orderByRaw("CAST(RIGHT({$col}, 5) AS UNSIGNED) DESC")
+                    ->value($col);
+
+                if ($last) {
+                    $num = (int) substr($last, -5);
+                    if ($num > $lastNumber) {
+                        $lastNumber = $num;
+                    }
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        $newNumber = $lastNumber + 1;
+
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate Nomor Dokumen LPJ dengan format: LPJ/[YYYY]/[NNNNN]
+     * Sequence increment lintas semua tabel LPJ
+     * Contoh: LPJ/2026/00001, LPJ/2026/00002, dst
+     */
+    public static function generateLpjNo($tableName, $columnName)
+    {
+        $year   = date('Y');
+        $prefix = "LPJ/{$year}/";
+
+        $tables = [
+            'd01_lpj_cont' => 'no_lpj_cont',
+            // tambah tabel LPJ lainnya di sini (tramper, other, dst)
         ];
 
         $lastNumber = 0;

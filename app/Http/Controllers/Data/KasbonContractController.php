@@ -131,15 +131,17 @@ class KasbonContractController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_cont'    => 'required|exists:b01_jo_cont,id_jo_cont',
-                'id_md_dep'     => 'required|exists:a08_md_dep,id_md_dep',
-                'id_md_cabang'  => 'required|exists:a09_md_branch,id_md_branch',
-                'id_md_release' => 'required|exists:a10_md_release_to,id_md_release',
-                'tgl_kasbon'    => 'required|date',
-                'tgl_release'   => 'nullable|date',
-                'note'          => 'nullable|string',
-                'priority' => 'required|in:urgent,high,normal',
-                'due_date' => 'nullable|date_format:Y-m-d\TH:i',
+                'id_jo_cont'       => 'required|exists:b01_jo_cont,id_jo_cont',
+                'id_md_dep'        => 'required|exists:a08_md_dep,id_md_dep',
+                'id_md_cabang'     => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_release'    => 'required|exists:a10_md_release_to,id_md_release',
+                'tgl_kasbon'       => 'required|date',
+                'tgl_release'      => 'nullable|date',
+                'note'             => 'nullable|string',
+                'priority'         => 'required|in:high,normal',
+                'due_date'         => 'nullable|date_format:Y-m-d\TH:i',
+                'ca_release_status' => 'nullable|in:pending,release',
+                'ca_release_date'  => 'nullable|date',
             ], [
                 'id_jo_cont.required'    => 'Job Order is required',
                 'id_jo_cont.exists'      => 'Selected Job Order does not exist',
@@ -147,7 +149,7 @@ class KasbonContractController extends Controller
                 'id_md_cabang.required'  => 'Branch is required',
                 'id_md_release.required' => 'Release To is required',
                 'tgl_kasbon.required'    => 'Cash Advance Date is required',
-                'priority.required'    => 'Priority is required',
+                'priority.required'      => 'Priority is required',
             ]);
 
             if ($validator->fails()) {
@@ -167,18 +169,22 @@ class KasbonContractController extends Controller
             $lastKasbon = KasbonContract::orderBy('id', 'desc')->first();
             $newNomor   = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
 
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonContract = KasbonContract::create([
-                'id_kasbon_cont' => $idKasbonCont,
-                'id_jo_cont'     => $request->id_jo_cont,
-                'id_md_dep'      => $request->id_md_dep,
-                'id_md_cabang'   => $request->id_md_cabang,
-                'id_md_release'  => $request->id_md_release,
-                'nomor'          => $newNomor,
-                'tgl_kasbon'     => $request->tgl_kasbon,
-                'tgl_release'    => $request->tgl_release,
-                'note'           => $request->note,
-                'priority' => $request->priority ?? 'normal',
-                'due_date' => $request->due_date,
+                'id_kasbon_cont'    => $idKasbonCont,
+                'id_jo_cont'        => $request->id_jo_cont,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'nomor'             => $newNomor,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority ?? 'normal',
+                'due_date'          => $request->due_date,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             DB::commit();
@@ -192,20 +198,22 @@ class KasbonContractController extends Controller
                 'message'      => 'Kasbon Contract header saved successfully',
                 'redirect_url' => route('kasbon-contract.edit', $kasbonContract->id),
                 'data'         => [
-                    'id'             => $kasbonContract->id,
-                    'id_kasbon_cont' => $kasbonContract->id_kasbon_cont,
-                    'id_jo_cont'     => $kasbonContract->id_jo_cont,
-                    'id_md_dep'      => $kasbonContract->id_md_dep,
-                    'id_md_cabang'   => $kasbonContract->id_md_cabang,
-                    'id_md_release'  => $kasbonContract->id_md_release,
-                    'nomor'          => $kasbonContract->nomor,
-                    'tgl_kasbon'     => $kasbonContract->tgl_kasbon,
-                    'tgl_release'    => $kasbonContract->tgl_release,
-                    'note'           => $kasbonContract->note,
-                    'joContract'     => $kasbonContract->joContract,
-                    'departemen'     => $kasbonContract->departemen,
-                    'cabang'         => $kasbonContract->cabang,
-                    'release'        => $kasbonContract->release,
+                    'id'                => $kasbonContract->id,
+                    'id_kasbon_cont'    => $kasbonContract->id_kasbon_cont,
+                    'id_jo_cont'        => $kasbonContract->id_jo_cont,
+                    'id_md_dep'         => $kasbonContract->id_md_dep,
+                    'id_md_cabang'      => $kasbonContract->id_md_cabang,
+                    'id_md_release'     => $kasbonContract->id_md_release,
+                    'nomor'             => $kasbonContract->nomor,
+                    'tgl_kasbon'        => $kasbonContract->tgl_kasbon,
+                    'tgl_release'       => $kasbonContract->tgl_release,
+                    'note'              => $kasbonContract->note,
+                    'ca_release_status' => $kasbonContract->ca_release_status,
+                    'ca_release_date'   => $kasbonContract->ca_release_date,
+                    'joContract'        => $kasbonContract->joContract,
+                    'departemen'        => $kasbonContract->departemen,
+                    'cabang'            => $kasbonContract->cabang,
+                    'release'           => $kasbonContract->release,
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -229,15 +237,17 @@ class KasbonContractController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_cont'    => 'required|exists:b01_jo_cont,id_jo_cont',
-                'id_md_dep'     => 'required|exists:a08_md_dep,id_md_dep',
-                'id_md_cabang'  => 'required|exists:a09_md_branch,id_md_branch',
-                'id_md_release' => 'required|exists:a10_md_release_to,id_md_release',
-                'tgl_kasbon'    => 'required|date',
-                'tgl_release'   => 'nullable|date',
-                'note'          => 'nullable|string',
-                'priority'      => 'required|in:urgent,high,normal',
-                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
+                'id_jo_cont'        => 'required|exists:b01_jo_cont,id_jo_cont',
+                'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
+                'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
+                'tgl_kasbon'        => 'required|date',
+                'tgl_release'       => 'nullable|date',
+                'note'              => 'nullable|string',
+                'priority'          => 'required|in:urgent,high,normal',
+                'due_date'          => 'nullable|date_format:Y-m-d\TH:i',
+                'ca_release_status' => 'nullable|in:pending,release',
+                'ca_release_date'   => 'nullable|date',
             ], [
                 'id_jo_cont.required'    => 'Job Order is required',
                 'id_md_dep.required'     => 'Departemen is required',
@@ -258,16 +268,21 @@ class KasbonContractController extends Controller
             DB::beginTransaction();
 
             $kasbonContract = KasbonContract::findOrFail($id);
+
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonContract->update([
-                'id_jo_cont'    => $request->id_jo_cont,
-                'id_md_dep'     => $request->id_md_dep,
-                'id_md_cabang'  => $request->id_md_cabang,
-                'id_md_release' => $request->id_md_release,
-                'tgl_kasbon'    => $request->tgl_kasbon,
-                'tgl_release'   => $request->tgl_release,
-                'note'          => $request->note,
-                'priority'      => $request->priority,           // ← dari $request, bukan $kasbonContract
-                'due_date'      => $request->due_date ?: null,   // ← dari $request, bukan $kasbonContract
+                'id_jo_cont'        => $request->id_jo_cont,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority,
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? ($request->ca_release_date ?: null) : null,
             ]);
 
             DB::commit();
@@ -326,11 +341,9 @@ class KasbonContractController extends Controller
                 // Generate ID dengan locking untuk mencegah race condition
                 $maxId = DB::table('c02_kasbon_cont_item')
                     ->lockForUpdate()
-                    ->max('id_kasbon_cont_item');
-
-                $newIdKasbonContItem = $maxId
-                    ? (string)((int)$maxId + 1)
-                    : '1';
+                    ->selectRaw('MAX(CAST(id_kasbon_cont_item AS UNSIGNED)) as max_id')
+                    ->value('max_id');
+                $newIdKasbonContItem = (string)(((int) $maxId) + 1);
 
                 // Ambil nilai HPP dari JO Contract Item
                 $joContItem = JoContractItem::find($request->id_jo_cont_item);
@@ -591,24 +604,26 @@ class KasbonContractController extends Controller
         Log::info('KasbonContract Store Request', ['all_data' => $request->all()]);
 
         $validator = Validator::make($request->all(), [
-            'id_jo_cont'      => 'required|exists:b01_jo_cont,id_jo_cont',
-            'id_md_dep'       => 'required|exists:a08_md_dep,id_md_dep',
-            'id_md_cabang'    => 'required|exists:a09_md_branch,id_md_branch',
-            'id_md_release'   => 'required|exists:a10_md_release_to,id_md_release',
-            'tgl_kasbon'      => 'required|date',
-            'tgl_release'     => 'nullable|date',
-            'note'            => 'nullable|string',
-            'items'           => 'required|array|min:1',
+            'id_jo_cont'              => 'required|exists:b01_jo_cont,id_jo_cont',
+            'id_md_dep'               => 'required|exists:a08_md_dep,id_md_dep',
+            'id_md_cabang'            => 'required|exists:a09_md_branch,id_md_branch',
+            'id_md_release'           => 'required|exists:a10_md_release_to,id_md_release',
+            'tgl_kasbon'              => 'required|date',
+            'tgl_release'             => 'nullable|date',
+            'note'                    => 'nullable|string',
+            'items'                   => 'required|array|min:1',
             'items.*.id_jo_cont_item' => 'required|exists:b02_jo_cont_item,id_jo_cont_item',
             'items.*.nilai_kasbon'    => 'required|numeric|min:0',
-            'priority' => 'required|in:urgent,high,normal',
-            'due_date' => 'nullable|date_format:Y-m-d\TH:i',
+            'priority'                => 'required|in:high,normal',
+            'due_date'                => 'nullable|date_format:Y-m-d\TH:i',
+            'ca_release_status'       => 'nullable|in:pending,release',
+            'ca_release_date'         => 'nullable|date',
         ], [
             'id_jo_cont.required'    => 'Job Order is required',
             'id_md_dep.required'     => 'Departemen is required',
             'id_md_cabang.required'  => 'Branch is required',
             'id_md_release.required' => 'Release To is required',
-            'priority.required'    => 'Priority is required',
+            'priority.required'      => 'Priority is required',
             'tgl_kasbon.required'    => 'Cash Advance Date is required',
             'items.required'         => 'At least one item is required',
             'items.min'              => 'At least one item is required',
@@ -624,20 +639,23 @@ class KasbonContractController extends Controller
 
         DB::beginTransaction();
         try {
-            $lastKasbon   = KasbonContract::orderBy('id', 'desc')->first();
-            $newNomor     = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
-            $idKasbonCont = IdGenerator::generateDocNo('c01_kasbon_cont', 'id_kasbon_cont');
+            $lastKasbon      = KasbonContract::orderBy('id', 'desc')->first();
+            $newNomor        = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
+            $idKasbonCont    = IdGenerator::generateDocNo('c01_kasbon_cont', 'id_kasbon_cont');
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
 
             $kasbonContract = KasbonContract::create([
-                'id_kasbon_cont' => $idKasbonCont,
-                'id_jo_cont'     => $request->id_jo_cont,
-                'id_md_dep'      => $request->id_md_dep,
-                'id_md_cabang'   => $request->id_md_cabang,
-                'id_md_release'  => $request->id_md_release,
-                'nomor'          => $newNomor,
-                'tgl_kasbon'     => $request->tgl_kasbon,
-                'tgl_release'    => $request->tgl_release,
-                'note'           => $request->note,
+                'id_kasbon_cont'    => $idKasbonCont,
+                'id_jo_cont'        => $request->id_jo_cont,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'nomor'             => $newNomor,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             foreach ($request->items as $index => $itemData) {
@@ -708,10 +726,10 @@ class KasbonContractController extends Controller
             ])->findOrFail($id);
 
             $summary = [
-                'total_items'       => $kasbonContract->items->count(),
-                'total_hpp'         => $kasbonContract->items->sum('nilai_hpp_cont_item'),
+                'total_items'        => $kasbonContract->items->count(),
+                'total_hpp'          => $kasbonContract->items->sum('nilai_hpp_cont_item'),
                 'total_nilai_kasbon' => $kasbonContract->items->sum('nilai_kasbon'),
-                'total_kasbon'      => $kasbonContract->items->sum('total_kasbon'),
+                'total_kasbon'       => $kasbonContract->items->sum('total_kasbon'),
             ];
 
             if ($request->expectsJson()) {
@@ -770,6 +788,7 @@ class KasbonContractController extends Controller
                 'nilai_kasbon'        => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
                 'total_kasbon'        => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
                 'has_kasbon'          => $kasbonItem !== null,
+                'origin_lpj_cont'     => $joItem->origin_lpj_cont ?? null,
             ];
         });
 
@@ -797,18 +816,20 @@ class KasbonContractController extends Controller
         Log::info('KasbonContract Update Request', ['id' => $id, 'all_data' => $request->all()]);
 
         $validator = Validator::make($request->all(), [
-            'id_jo_cont'      => 'required|exists:b01_jo_cont,id_jo_cont',
-            'id_md_dep'       => 'required|exists:a08_md_dep,id_md_dep',
-            'id_md_cabang'    => 'required|exists:a09_md_branch,id_md_branch',
-            'id_md_release'   => 'required|exists:a10_md_release_to,id_md_release',
-            'tgl_kasbon'      => 'required|date',
-            'tgl_release'     => 'nullable|date',
-            'note'            => 'nullable|string',
-            'items'           => 'required|array|min:1',
+            'id_jo_cont'              => 'required|exists:b01_jo_cont,id_jo_cont',
+            'id_md_dep'               => 'required|exists:a08_md_dep,id_md_dep',
+            'id_md_cabang'            => 'required|exists:a09_md_branch,id_md_branch',
+            'id_md_release'           => 'required|exists:a10_md_release_to,id_md_release',
+            'tgl_kasbon'              => 'required|date',
+            'tgl_release'             => 'nullable|date',
+            'note'                    => 'nullable|string',
+            'items'                   => 'required|array|min:1',
             'items.*.id_jo_cont_item' => 'required|exists:b02_jo_cont_item,id_jo_cont_item',
             'items.*.nilai_kasbon'    => 'required|numeric|min:0',
-            'priority' => 'required|in:urgent,high,normal',
-            'due_date' => 'nullable|date_format:Y-m-d\TH:i',
+            'priority'                => 'required|in:high,normal',
+            'due_date'                => 'nullable|date_format:Y-m-d\TH:i',
+            'ca_release_status'       => 'nullable|in:pending,release',
+            'ca_release_date'         => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -820,16 +841,19 @@ class KasbonContractController extends Controller
 
         DB::beginTransaction();
         try {
-            $kasbonContract = KasbonContract::findOrFail($id);
+            $kasbonContract  = KasbonContract::findOrFail($id);
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
 
             $kasbonContract->update([
-                'id_jo_cont'    => $request->id_jo_cont,
-                'id_md_dep'     => $request->id_md_dep,
-                'id_md_cabang'  => $request->id_md_cabang,
-                'id_md_release' => $request->id_md_release,
-                'tgl_kasbon'    => $request->tgl_kasbon,
-                'tgl_release'   => $request->tgl_release,
-                'note'          => $request->note,
+                'id_jo_cont'        => $request->id_jo_cont,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             // Hapus item lama (soft delete)
@@ -986,12 +1010,12 @@ class KasbonContractController extends Controller
                 ->get()
                 ->map(function ($item) {
                     return [
-                        'id_jo_cont_item'  => $item->id_jo_cont_item,
-                        'text'             => $item->invoice ? $item->invoice->invoice_typ : $item->id_jo_cont_item,
-                        'invoice_typ'      => $item->invoice ? $item->invoice->invoice_typ : null,
-                        'invoice_ctg'      => $item->invoice ? $item->invoice->invoice_ctg : null,
-                        'hpp_ops'          => (float)$item->hpp_ops,
-                        'hargajual_idr'    => (float)$item->hargajual_idr,
+                        'id_jo_cont_item' => $item->id_jo_cont_item,
+                        'text'            => $item->invoice ? $item->invoice->invoice_typ : $item->id_jo_cont_item,
+                        'invoice_typ'     => $item->invoice ? $item->invoice->invoice_typ : null,
+                        'invoice_ctg'     => $item->invoice ? $item->invoice->invoice_ctg : null,
+                        'hpp_ops'         => (float)$item->hpp_ops,
+                        'hargajual_idr'   => (float)$item->hargajual_idr,
                     ];
                 });
 
@@ -1039,9 +1063,9 @@ class KasbonContractController extends Controller
     public function bulkSaveItems(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'items'                        => 'required|array',
-            'items.*.id_jo_cont_item'      => 'required|exists:b02_jo_cont_item,id_jo_cont_item',
-            'items.*.nilai_kasbon'         => 'required|numeric|min:0',
+            'items'                   => 'required|array',
+            'items.*.id_jo_cont_item' => 'required|exists:b02_jo_cont_item,id_jo_cont_item',
+            'items.*.nilai_kasbon'    => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -1077,9 +1101,12 @@ class KasbonContractController extends Controller
                 } else {
                     // Hanya buat record baru jika nilai_kasbon > 0
                     if ($nilaiKasbon > 0) {
-                        $maxId = DB::table('c02_kasbon_cont_item')->max('id_kasbon_cont_item');
+                        $maxId = DB::table('c02_kasbon_cont_item')
+                            ->lockForUpdate()
+                            ->selectRaw('MAX(CAST(id_kasbon_cont_item AS UNSIGNED)) as max_id')
+                            ->value('max_id');
                         KasbonContractItem::create([
-                            'id_kasbon_cont_item' => $maxId ? (string)((int)$maxId + 1) : '1',
+                            'id_kasbon_cont_item' => (string)(((int) $maxId) + 1),
                             'id_kasbon_cont'      => $kasbonContract->id_kasbon_cont,
                             'id_jo_cont_item'     => $itemData['id_jo_cont_item'],
                             'nilai_hpp_cont_item' => $nilaiHpp,
@@ -1280,5 +1307,84 @@ class KasbonContractController extends Controller
         if ($request->filled('tgl_kasbon_to'))   $filters['tgl_kasbon_to']   = $request->tgl_kasbon_to;
 
         return $filters;
+    }
+
+    // ========================================
+    // CHECK ITEM CONFLICT (dipakai sebelum bulk save)
+    // ========================================
+    public function checkItemConflict(Request $request)
+    {
+        try {
+            $idJoContItem = $request->get('id_jo_cont_item');
+            $idKasbonCont = $request->get('id_kasbon_cont'); // kasbon yang sedang diedit (exclude ini)
+
+            if (!$idJoContItem) {
+                return response()->json(['success' => false, 'message' => 'id_jo_cont_item is required'], 422);
+            }
+
+            // Cari kasbon item lain yang punya jo_cont_item ini,
+            // bukan dari kasbon yang sedang diedit, dan nilai_kasbon > 0
+            $conflict = KasbonContractItem::where('id_jo_cont_item', $idJoContItem)
+                ->where('id_kasbon_cont', '!=', $idKasbonCont)
+                ->where('nilai_kasbon', '>', 0)
+                ->whereNull('deleted_at')
+                ->with('kasbonContract')
+                ->first();
+
+            if ($conflict) {
+                return response()->json([
+                    'success'      => true,
+                    'has_conflict' => true,
+                    'conflict'     => [
+                        'id_kasbon_cont'      => $conflict->id_kasbon_cont,
+                        'nilai_kasbon'        => (float) $conflict->nilai_kasbon,
+                        'id_kasbon_cont_item' => $conflict->id_kasbon_cont_item,
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'success'      => true,
+                'has_conflict' => false,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
+    // CLEAR CONFLICT ITEM (hapus nilai kasbon di kasbon lain)
+    // ========================================
+    public function clearConflictItem(Request $request)
+    {
+        try {
+            $idJoContItem = $request->get('id_jo_cont_item');
+            $idKasbonCont = $request->get('id_kasbon_cont'); // kasbon yang sedang diedit (exclude)
+
+            if (!$idJoContItem) {
+                return response()->json(['success' => false, 'message' => 'id_jo_cont_item is required'], 422);
+            }
+
+            DB::beginTransaction();
+
+            // Nol-kan nilai kasbon di semua kasbon LAIN yang punya item ini
+            KasbonContractItem::where('id_jo_cont_item', $idJoContItem)
+                ->where('id_kasbon_cont', '!=', $idKasbonCont)
+                ->where('nilai_kasbon', '>', 0)
+                ->each(function ($item) {
+                    $item->update([
+                        'nilai_kasbon' => 0,
+                        'total_kasbon' => $item->nilai_hpp_cont_item, // total = hpp - 0 = hpp
+                    ]);
+                });
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Conflict cleared successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('clearConflictItem failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

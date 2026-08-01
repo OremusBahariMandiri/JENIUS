@@ -31,11 +31,14 @@ class KasbonContract extends Model
         'note',
         'priority',
         'due_date',
+        'ca_release_status',
+        'ca_release_date',
     ];
 
     protected $casts = [
         'tgl_kasbon'  => 'date',
         'tgl_release' => 'date',
+        'ca_release_date'    => 'date',
         'created_at'  => 'datetime',
         'updated_at'  => 'datetime',
         'deleted_at'  => 'datetime',

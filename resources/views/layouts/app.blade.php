@@ -932,6 +932,12 @@
             color: #d1fae5 !important;
         }
 
+        /* Card header kuning kustom (LPJ) */
+        [data-theme="dark"] .card-header[style*="fef3c7"] {
+            background-color: #78350f !important;
+            color: #fef3c7 !important;
+        }
+
         /* Transisi mulus */
         html,
         body,
@@ -962,35 +968,14 @@
         </div>
 
         <nav class="sidebar-nav">
-            {{-- Dashboard - Semua user bisa akses --}}
+
+            {{-- Dashboard --}}
             <div class="nav-item" data-tooltip="Dashboard">
                 <a href="{{ route('home') }}" class="nav-link {{ request()->routeIs('home') ? 'active' : '' }}">
                     <i class="fas fa-chart-line"></i>
                     <span>Dashboard</span>
                 </a>
             </div>
-
-            {{-- User Management --}}
-            {{-- @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
-                <div class="nav-item has-submenu" data-tooltip="Manajemen Pengguna">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenUser">
-                        <i class="fas fa-users"></i>
-                        <span>User Management</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->is('admin/user*') ? 'show' : '' }}" id="manajemenUser">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('user.*') && !request()->routeIs('user-access.*') ? 'active' : '' }}"
-                                    href="{{ route('user.index') }}">
-                                    <i class="fas fa-user"></i>
-                                    <span>Users</span>
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif --}}
 
             {{-- Data Master --}}
             @if (auth()->check() &&
@@ -1004,7 +989,10 @@
                         auth()->user()->hasAccessToMenu('other') ||
                         auth()->user()->hasAccessToMenu('departemen') ||
                         auth()->user()->hasAccessToMenu('branch') ||
-                        auth()->user()->hasAccessToMenu('release_to')))
+                        auth()->user()->hasAccessToMenu('release_to') ||
+                        auth()->user()->hasAccessToMenu('cost_type') ||
+                        auth()->user()->hasAccessToMenu('parent_coa') ||
+                        auth()->user()->hasAccessToMenu('chart_of_account')))
                 <div class="nav-item has-submenu" data-tooltip="Data Master">
                     <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataMaster">
                         <i class="fas fa-cogs"></i>
@@ -1021,7 +1009,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('contract'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('contract.*') ? 'active' : '' }}"
@@ -1031,7 +1018,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('area'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('area.*') ? 'active' : '' }}"
@@ -1041,8 +1027,6 @@
                                 </a>
                             </div>
                         @endif
-
-                        {{-- Ini merupakan menu Data Master ITEM, --}}
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('item'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('invoice.*') ? 'active' : '' }}"
@@ -1052,7 +1036,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('vessel'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('vessel.*') ? 'active' : '' }}"
@@ -1062,7 +1045,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('port'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('port.*') ? 'active' : '' }}"
@@ -1072,7 +1054,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('other'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('other.*') ? 'active' : '' }}"
@@ -1082,7 +1063,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('departemen'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('departemen.*') ? 'active' : '' }}"
@@ -1092,7 +1072,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('branch'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('branch.*') ? 'active' : '' }}"
@@ -1102,7 +1081,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('release_to'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('release_to.*') ? 'active' : '' }}"
@@ -1112,7 +1090,33 @@
                                 </a>
                             </div>
                         @endif
-
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('cost_type'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('cost-type.*') ? 'active' : '' }}"
+                                    href="{{ route('cost-type.index') }}">
+                                    <i class="fas fa-share-square"></i>
+                                    <span>Cost Type</span>
+                                </a>
+                            </div>
+                        @endif
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('parent_coa'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('parent-coa.*') ? 'active' : '' }}"
+                                    href="{{ route('parent-coa.index') }}">
+                                    <i class="fas fa-share-square"></i>
+                                    <span>Parent COA</span>
+                                </a>
+                            </div>
+                        @endif
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('chart_of_account'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('chart-of-account.*') ? 'active' : '' }}"
+                                    href="{{ route('chart-of-account.index') }}">
+                                    <i class="fas fa-share-square"></i>
+                                    <span>Chart Of Account</span>
+                                </a>
+                            </div>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -1129,7 +1133,7 @@
                         <span>Job Order</span>
                         <i class="fas fa-chevron-down submenu-indicator"></i>
                     </a>
-                    <div class="sidebar-submenu {{ request()->is('jo-contract*') ? 'show' : '' }}"
+                    <div class="sidebar-submenu {{ request()->routeIs('jo-contract.*') || request()->routeIs('jo-tramper.*') || request()->routeIs('jo-other.*') ? 'show' : '' }}"
                         id="manajemenData">
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract'))
                             <div class="submenu-item">
@@ -1140,7 +1144,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_tramper'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('jo-tramper.*') ? 'active' : '' }}"
@@ -1150,7 +1153,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_other'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('jo-other.*') ? 'active' : '' }}"
@@ -1160,8 +1162,6 @@
                                 </a>
                             </div>
                         @endif
-
-
                     </div>
                 </div>
             @endif
@@ -1179,7 +1179,7 @@
                         <span>Cash Advance Ops.</span>
                         <i class="fas fa-chevron-down submenu-indicator"></i>
                     </a>
-                    <div class="sidebar-submenu {{ request()->is('ca-contract*') ? 'show' : '' }}"
+                    <div class="sidebar-submenu {{ request()->routeIs('kasbon-contract.*') || request()->routeIs('kasbon-tramper.*') || request()->routeIs('kasbon-other.*') || request()->routeIs('kasbon-gen.*') ? 'show' : '' }}"
                         id="manajemenKasbon">
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_contract'))
                             <div class="submenu-item">
@@ -1190,7 +1190,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_tramper'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('kasbon-tramper.*') ? 'active' : '' }}"
@@ -1200,7 +1199,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_other'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('kasbon-other.*') ? 'active' : '' }}"
@@ -1210,7 +1208,6 @@
                                 </a>
                             </div>
                         @endif
-
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_general'))
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('kasbon-gen.*') ? 'active' : '' }}"
@@ -1220,19 +1217,83 @@
                                 </a>
                             </div>
                         @endif
-
-
                     </div>
                 </div>
             @endif
+
+            {{-- LPJ --}}
+            @if (auth()->check() &&
+                    (auth()->user()->is_admin ||
+                        auth()->user()->hasAccessToMenu('lpj_contract') ||
+                        auth()->user()->hasAccessToMenu('lpj_tramper') ||
+                        auth()->user()->hasAccessToMenu('lpj_other') ||
+                        auth()->user()->hasAccessToMenu('lpj_general')))
+                <div class="nav-item has-submenu" data-tooltip="Cash Advance">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenLpj">
+                        <i class="fas fa-cash-register"></i>
+                        <span>LPJ</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
+                    </a>
+                    <div class="sidebar-submenu {{ request()->routeIs('lpj-contract.*') || request()->routeIs('lpj-tramper.*') || request()->routeIs('lpj-other.*') || request()->routeIs('lpj-gen.*') ? 'show' : '' }}"
+                        id="manajemenLpj">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_contract'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('lpj-contract.*') ? 'active' : '' }}"
+                                    href="{{ route('lpj-contract.index') }}">
+                                    <i class="fas fa-file-contract"></i>
+                                    <span>LPJ Contract</span>
+                                </a>
+                            </div>
+                        @endif
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_tramper'))
+                            <div class="submenu-item">
+                                <a class="nav-link" href="">
+                                    <i class="fas fa-truck-moving"></i>
+                                    <span>LPJ Tramper</span>
+                                </a>
+                            </div>
+                        @endif
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_other'))
+                            <div class="submenu-item">
+                                <a class="nav-link" href="">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                    <span>LPJ Other</span>
+                                </a>
+                            </div>
+                        @endif
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_general'))
+                            <div class="submenu-item">
+                                <a class="nav-link" href="">
+                                    <i class="fas fa-building"></i>
+                                    <span>LPJ General</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+            {{-- LPJ --}}
+            {{-- @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_contract')))
+                <div class="nav-item" data-tooltip="LPJ Contract">
+                    <a href="{{ route('lpj-contract.index') }}"
+                        class="nav-link {{ request()->routeIs('lpj-contract.*') ? 'active' : '' }}">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>LPJ Contract</span>
+                    </a>
+                </div>
+            @endif --}}
+
         </nav>
 
         <div class="sidebar-footer">
             <div class="user-profile">
-                <div class="user-avatar">A</div>
+                <div class="user-avatar">
+                    {{ strtoupper(substr(auth()->user()->name ?? 'A', 0, 1)) }}
+                </div>
                 <div class="user-info">
-                    <div class="user-name">Admin User</div>
-                    <div class="user-role">Administrator</div>
+                    <div class="user-name">{{ auth()->user()->name ?? 'Admin User' }}</div>
+                    <div class="user-role">{{ auth()->user()->is_admin ? 'Administrator' : 'Staff' }}</div>
                 </div>
             </div>
         </div>
@@ -1267,7 +1328,7 @@
                             <form action="{{ route('logout') }}" method="POST" style="margin: 0;">
                                 @csrf
                                 <button type="submit" class="dropdown-item"
-                                    style="border: none; background: none; width: 100%; text-align: left; cursor: pointer;">
+                                    style="border:none;background:none;width:100%;text-align:left;cursor:pointer;">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
                                 </button>
                             </form>
@@ -1282,9 +1343,7 @@
         </main>
     </div>
 
-    <!-- jQuery from CDN - MUST BE FIRST -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
@@ -1311,25 +1370,20 @@
             }
 
             initDropdowns() {
-                // Handle all dropdown menus
                 document.querySelectorAll('.menu-dropdown').forEach(toggle => {
                     toggle.addEventListener('click', (e) => {
                         e.preventDefault();
                         e.stopPropagation();
 
-                        // Don't open dropdowns in collapsed mode (desktop only)
                         if (this.isCollapsed && !this.isMobile) return;
 
                         const menuId = toggle.getAttribute('data-menu');
                         const submenu = document.getElementById(menuId);
 
                         if (submenu) {
-                            // Check if this submenu is currently open
                             const isOpen = submenu.classList.contains('show');
 
-                            // If it's a nested submenu, only close siblings at the same level
                             if (submenu.classList.contains('sidebar-nested-submenu')) {
-                                // Close sibling nested submenus only
                                 const parent = submenu.closest('.sidebar-submenu');
                                 if (parent) {
                                     parent.querySelectorAll('.sidebar-nested-submenu.show').forEach(
@@ -1344,11 +1398,9 @@
                                         });
                                 }
                             } else {
-                                // Close other main level submenus
                                 document.querySelectorAll('.sidebar-submenu.show').forEach(menu => {
                                     if (menu !== submenu) {
                                         menu.classList.remove('show');
-                                        // Also close nested submenus inside
                                         menu.querySelectorAll('.sidebar-nested-submenu.show')
                                             .forEach(nested => {
                                                 nested.classList.remove('show');
@@ -1365,11 +1417,9 @@
                                 });
                             }
 
-                            // Toggle the clicked submenu
                             if (isOpen) {
                                 submenu.classList.remove('show');
                                 toggle.classList.remove('menu-open');
-                                // Close nested submenus if closing parent
                                 submenu.querySelectorAll('.sidebar-nested-submenu.show').forEach(
                                     nested => {
                                         nested.classList.remove('show');
@@ -1388,7 +1438,6 @@
             }
 
             initActiveStates() {
-                // Auto-open submenus containing active links
                 document.querySelectorAll('.nav-link.active').forEach(activeLink => {
                     let parentSubmenu = activeLink.closest('.sidebar-submenu');
                     while (parentSubmenu) {
@@ -1397,8 +1446,6 @@
                         if (toggle) toggle.classList.add('menu-open');
                         parentSubmenu = parentSubmenu.parentElement.closest('.sidebar-submenu');
                     }
-
-                    // Also check for nested submenus
                     let nestedSubmenu = activeLink.closest('.sidebar-nested-submenu');
                     while (nestedSubmenu) {
                         nestedSubmenu.classList.add('show');
@@ -1412,7 +1459,6 @@
             checkScreenSize() {
                 const wasMobile = this.isMobile;
                 this.isMobile = window.innerWidth <= 768;
-
                 if (wasMobile !== this.isMobile) {
                     if (this.isMobile) {
                         this.sidebar.classList.remove('collapsed');
@@ -1427,20 +1473,13 @@
             }
 
             toggle() {
-                if (this.isMobile) {
-                    this.toggleMobile();
-                } else {
-                    this.toggleDesktop();
-                }
+                if (this.isMobile) this.toggleMobile();
+                else this.toggleDesktop();
             }
 
             toggleMobile() {
-                const isOpen = this.sidebar.classList.contains('mobile-open');
-                if (isOpen) {
-                    this.closeMobileSidebar();
-                } else {
-                    this.openMobileSidebar();
-                }
+                if (this.sidebar.classList.contains('mobile-open')) this.closeMobileSidebar();
+                else this.openMobileSidebar();
             }
 
             openMobileSidebar() {
@@ -1457,11 +1496,9 @@
 
             toggleDesktop() {
                 this.isCollapsed = !this.isCollapsed;
-
                 if (this.isCollapsed) {
                     this.sidebar.classList.add('collapsed');
                     this.mainWrapper.classList.add('expanded');
-                    // Close all submenus when collapsing
                     document.querySelectorAll('.sidebar-submenu.show, .sidebar-nested-submenu.show').forEach(menu => {
                         menu.classList.remove('show');
                         const toggle = document.querySelector(`[data-menu="${menu.id}"]`);
@@ -1470,18 +1507,13 @@
                 } else {
                     this.sidebar.classList.remove('collapsed');
                     this.mainWrapper.classList.remove('expanded');
-                    // Restore active menu states
                     this.initActiveStates();
                 }
-
                 this.saveState();
-
-                // Trigger DataTable column adjustment jika ada
                 this.adjustDataTable();
             }
 
             adjustDataTable() {
-                // Tunggu transisi selesai baru adjust DataTable
                 setTimeout(() => {
                     if (typeof $.fn.DataTable !== 'undefined') {
                         $.fn.DataTable.tables({
@@ -1489,13 +1521,11 @@
                             api: true
                         }).columns.adjust();
                     }
-                }, 350); // Sesuai dengan durasi transisi CSS (0.3s + buffer)
+                }, 350);
             }
 
             saveState() {
-                if (!this.isMobile) {
-                    localStorage.setItem('sidebarCollapsed', this.isCollapsed);
-                }
+                if (!this.isMobile) localStorage.setItem('sidebarCollapsed', this.isCollapsed);
             }
 
             loadState() {
@@ -1516,7 +1546,6 @@
         }
 
         let sidebarManager;
-
         document.addEventListener('DOMContentLoaded', () => {
             sidebarManager = new SidebarManager();
         });
@@ -1534,7 +1563,6 @@
         }
 
         // ===== SELECT2 GLOBAL INIT =====
-        // Semua <select> dengan class "select2" akan otomatis diinisiasi
         $(document).ready(function() {
             initSelect2();
         });
@@ -1543,16 +1571,16 @@
             const scope = context || document;
             $(scope).find('select.select2').each(function() {
                 const placeholder = $(this).data('placeholder') || 'Select an option';
-                const allowClear = $(this).data('allow-clear') !== false; // default true
-
+                const allowClear = $(this).data('allow-clear') !== false;
                 $(this).select2({
                     theme: 'bootstrap-5',
-                    placeholder: placeholder,
-                    allowClear: allowClear,
-                    width: '100%',
+                    placeholder,
+                    allowClear,
+                    width: '100%'
                 });
             });
         }
+
         // ========== THEME TOGGLE ==========
         (function() {
             const btn = document.getElementById('themeToggle');
@@ -1564,18 +1592,11 @@
                 const current = html.getAttribute('data-theme');
                 const next = current === 'dark' ? 'light' : 'dark';
 
-                // Terapkan langsung ke DOM
                 html.setAttribute('data-theme', next);
                 html.setAttribute('data-bs-theme', next);
 
-                // Ganti icon
-                if (next === 'dark') {
-                    icon.className = 'bi bi-sun-fill text-warning';
-                } else {
-                    icon.className = 'bi bi-moon-fill';
-                }
+                icon.className = next === 'dark' ? 'bi bi-sun-fill text-warning' : 'bi bi-moon-fill';
 
-                // Simpan ke database
                 fetch('{{ route('user.theme.update') }}', {
                     method: 'PATCH',
                     headers: {

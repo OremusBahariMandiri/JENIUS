@@ -136,7 +136,7 @@ class KasbonOtherController extends Controller
                 'tgl_kasbon'    => 'required|date',
                 'tgl_release'   => 'nullable|date',
                 'note'          => 'nullable|string',
-                'priority'      => 'required|in:urgent,high,normal',
+                'priority' => 'required|in:high,normal',
                 'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
             ], [
                 'id_jo_other.required'   => 'Job Order Other is required',

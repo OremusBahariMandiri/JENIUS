@@ -397,9 +397,8 @@
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
-                                        <option value="normal" selected>Normal (Low)</option>
+                                        <option value="normal" selected>Normal</option>
                                         <option value="high">High</option>
-                                        <option value="urgent">Urgent</option>
                                     </select>
                                 </div>
 

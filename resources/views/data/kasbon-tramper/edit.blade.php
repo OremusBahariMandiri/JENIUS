@@ -633,11 +633,15 @@
                                     </div>
                                 </div>
 
+                                {{-- Priority --}}
                                 <div class="col-md-6">
-                                    <label class="form-label required-field">Cash Advance Date</label>
-                                    <input type="date" name="tgl_kasbon" id="tgl_kasbon" class="form-control"
-                                        value="{{ $kasbonTramper->tgl_kasbon ? $kasbonTramper->tgl_kasbon->format('Y-m-d') : '' }}"
-                                        required>
+                                    <label class="form-label required-field">Priority</label>
+                                    <select name="priority" id="priority" class="form-select" required>
+                                        <option value="normal" {{ $kasbonTramper->priority == 'normal' ? 'selected' : '' }}>
+                                            Normal</option>
+                                        <option value="high" {{ $kasbonTramper->priority == 'high' ? 'selected' : '' }}>
+                                            High</option>
+                                    </select>
                                 </div>
 
                                 <div class="col-md-12">
@@ -791,8 +795,8 @@
                                         <option value="normal"
                                             {{ $kasbonTramper->priority == 'normal' ? 'selected' : '' }}>Normal (Low)
                                         </option>
-                                        <option value="high"
-                                            {{ $kasbonTramper->priority == 'high' ? 'selected' : '' }}>High</option>
+                                        <option value="high" {{ $kasbonTramper->priority == 'high' ? 'selected' : '' }}>
+                                            High</option>
                                         <option value="urgent"
                                             {{ $kasbonTramper->priority == 'urgent' ? 'selected' : '' }}>Urgent</option>
                                     </select>

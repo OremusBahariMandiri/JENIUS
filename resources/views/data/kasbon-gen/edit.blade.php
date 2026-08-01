@@ -537,11 +537,9 @@
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
                                         <option value="normal" {{ $kasbonGen->priority == 'normal' ? 'selected' : '' }}>
-                                            Normal (Low)</option>
-                                        <option value="high" {{ $kasbonGen->priority == 'high' ? 'selected' : '' }}>
-                                            High</option>
-                                        <option value="urgent" {{ $kasbonGen->priority == 'urgent' ? 'selected' : '' }}>
-                                            Urgent</option>
+                                            Normal</option>
+                                        <option value="high" {{ $kasbonGen->priority == 'high' ? 'selected' : '' }}>High
+                                        </option>
                                     </select>
                                 </div>
 
