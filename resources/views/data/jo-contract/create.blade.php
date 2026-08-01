@@ -3,6 +3,10 @@
 @section('title', 'Add JO Contract')
 
 @push('styles')
+    {{-- Di atas semua style yang ada, tambahkan: --}}
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
     <style>
         .joContractCreatePage .card {
             border: none;
@@ -479,6 +483,36 @@
 
         .btn-check:focus+.btn-outline-primary {
             box-shadow: 0 0 0 0.2rem rgba(5, 150, 105, 0.25) !important;
+        }
+
+        /* SELECT2 THEME OVERRIDE */
+        .select2-container--bootstrap-5 .select2-selection--single {
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            height: calc(1.5em + 0.75rem + 2px);
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+        }
+
+        .select2-container--bootstrap-5.select2-container--focus .select2-selection,
+        .select2-container--bootstrap-5.select2-container--open .select2-selection {
+            border-color: var(--primary-green) !important;
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
+        }
+
+        .select2-container--bootstrap-5 .select2-results__option--highlighted {
+            background-color: var(--primary-green) !important;
+            color: #fff !important;
+        }
+
+        .select2-container--bootstrap-5 .select2-results__option--selected {
+            background-color: #d1fae5 !important;
+            color: #065f46 !important;
+        }
+
+        .select2-container--bootstrap-5 .select2-search__field:focus {
+            border-color: var(--primary-green) !important;
+            box-shadow: 0 0 0 0.15rem rgba(16, 185, 129, 0.2) !important;
         }
     </style>
 @endpush
@@ -964,6 +998,7 @@
 
 {{-- Script Jo Contract Create --}}
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // ========================================
         // GLOBAL VARIABLES
@@ -1150,6 +1185,43 @@
             if (!isHeaderSaved) {
                 $('#itemsCard').addClass('items-card-disabled').css('position', 'relative');
             }
+
+            // ── SELECT2 INIT ──
+            $('#id_md_area').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Area',
+                allowClear: true,
+                width: '100%',
+            });
+
+            $('#input_category').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Category',
+                allowClear: true,
+                width: '100%',
+            });
+
+            $('#input_item').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select category first',
+                allowClear: true,
+                width: '100%',
+            });
+
+            // Edit modal selects
+            $('#edit_category').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Category',
+                width: '100%',
+                dropdownParent: $('#editItemModal'),
+            });
+
+            $('#edit_item').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Item',
+                width: '100%',
+                dropdownParent: $('#editItemModal'),
+            });
         });
 
         // Tampilkan semua contract saat input fokus

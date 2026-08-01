@@ -23,6 +23,7 @@ class JoContractItem extends Model
         'hpp_ops',
         'hargajual_idr',
         'note',
+        'origin_lpj_cont',
     ];
 
     protected $casts = [

@@ -21,6 +21,7 @@ class KasbonContractItem extends Model
         'nilai_hpp_cont_item',
         'nilai_kasbon',
         'total_kasbon',
+        'origin_lpj_cont',
     ];
 
     protected $casts = [

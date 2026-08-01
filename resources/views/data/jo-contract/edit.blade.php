@@ -3,6 +3,9 @@
 @section('title', 'Edit JO Contract')
 
 @push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css"
+        rel="stylesheet" />
     <style>
         .joContractEditPage .card {
             border: none;
@@ -308,7 +311,7 @@
             text-align: center;
         }
 
-        .table-items tbody tr:hover {
+        .table-items tbody tr:hover td {
             background-color: #f8f9fa;
         }
 
@@ -322,6 +325,37 @@
             background: #e8f5e9 !important;
             color: #2c3e50;
             font-weight: 600;
+        }
+
+        /* ── Rows added from LPJ — blue tint ── */
+        .joContractEditPage .table-items tbody tr.row-from-lpj td {
+            background: #eff6ff !important;
+        }
+
+        .joContractEditPage .table-items tbody tr.row-from-lpj:hover td {
+            background: #dbeafe !important;
+        }
+
+        .joContractEditPage .table-items tbody tr.row-from-lpj .category-cell {
+            background: #dbeafe !important;
+        }
+
+        .joContractEditPage .table-items tbody tr.row-from-lpj .item-number-cell {
+            background: #dbeafe !important;
+        }
+
+        /* LPJ origin note */
+        .lpj-origin-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+            font-size: .8rem;
+            color: #1e40af;
         }
 
         .btn-remove-row,
@@ -547,6 +581,7 @@
                                             value="{{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('Y-m-d') : '' }}">
                                     </div>
                                 </div>
+
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label required-field">Contract</label>
 
@@ -585,10 +620,12 @@
                                     </div>
 
                                     <!-- Search Results Dropdown -->
-                                    <!-- Search Results Dropdown -->
                                     <div style="position: relative;">
                                         <div id="search_results" class="list-group"
-                                            style="display: none; max-height: 250px; overflow-y: auto; position: absolute; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 0 0 6px 6px;">
+                                            style="display: none; max-height: 250px; overflow-y: auto; position: absolute;
+                                                   top: 0; left: 0; right: 0; z-index: 1000;
+                                                   box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                                                   border-radius: 0 0 6px 6px;">
                                         </div>
                                     </div>
 
@@ -600,8 +637,9 @@
                                     </select>
 
                                     @error('id_md_cont')
-                                        <div class="invalid-feedback d-block"><i
-                                                class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                        <div class="invalid-feedback d-block">
+                                            <i class="fas fa-exclamation-circle me-1"></i>{{ $message }}
+                                        </div>
                                     @enderror
 
                                     <!-- Contract Preview Card -->
@@ -665,7 +703,8 @@
                                                         <hr>
                                                         <strong>Note:</strong>
                                                         <p class="mb-0 text-muted" id="preview_note">
-                                                            {{ $joContract->contract->note }}</p>
+                                                            {{ $joContract->contract->note }}
+                                                        </p>
                                                     </div>
                                                 </div>
                                             @endif
@@ -731,17 +770,16 @@
                             </div>
                         </div>
                         <div class="card-body p-4">
+
                             <!-- ADD ITEM FORM SECTION -->
                             <div class="add-item-form-section" id="addItemFormSection">
                                 <h6 id="formSectionTitle">
                                     <i class="fas fa-plus-square"></i> Add New Item
                                 </h6>
 
-                                <!-- Hidden field for edit mode -->
                                 <input type="hidden" id="editing_item_id" value="">
 
                                 <div class="row">
-                                    <!-- Category Selection -->
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label required-field">Category</label>
                                         <select id="input_category" class="form-select">
@@ -752,7 +790,6 @@
                                         </select>
                                     </div>
 
-                                    <!-- Item Selection -->
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label required-field">Item</label>
                                         <select id="input_item" class="form-select" disabled>
@@ -765,7 +802,6 @@
                                         <textarea id="input_note" class="form-control" rows="5" placeholder="Add notes for this item..."></textarea>
                                     </div>
 
-                                    <!-- Income (IDR) -->
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Income (IDR)</label>
                                         <div class="currency-group">
@@ -775,7 +811,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Income (USD) -->
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Income (USD)</label>
                                         <div class="currency-group">
@@ -785,8 +820,6 @@
                                         </div>
                                     </div>
 
-
-                                    <!-- Selling Price (Auto Calculate) -->
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Selling Price (IDR)</label>
                                         <div class="currency-group">
@@ -804,7 +837,6 @@
                                         </div>
                                     </div>
 
-                                    <!-- Add Button -->
                                     <div class="col-md-3 mb-3 d-flex align-items-end gap-2 ms-auto">
                                         <button type="button" class="btn btn-add-to-table flex-grow-1"
                                             id="btnAddToTable">
@@ -817,8 +849,6 @@
                                     </div>
                                 </div>
                             </div>
-
-                            <!-- ACTION BUTTONS FOR TABLE -->
 
                             <!-- TABLE DISPLAY -->
                             <div class="table-responsive">
@@ -842,28 +872,46 @@
                                                     return $item->invoice->invoice_ctg;
                                                 });
                                                 $globalIndex = 1;
+                                                $hasLpjItems = false;
                                             @endphp
 
                                             @foreach ($groupedItems as $category => $items)
                                                 @foreach ($items as $index => $item)
-                                                    <tr class="item-row" data-item-id="{{ $item->id_jo_cont_item }}"
+                                                    @php
+                                                        $isFromLpj = !empty($item->origin_lpj_cont);
+                                                        if ($isFromLpj) {
+                                                            $hasLpjItems = true;
+                                                        }
+                                                    @endphp
+                                                    <tr class="item-row {{ $isFromLpj ? 'row-from-lpj' : '' }}"
+                                                        data-item-id="{{ $item->id_jo_cont_item }}"
                                                         data-invoice-id="{{ $item->id_md_invoice }}"
                                                         data-category="{{ $item->invoice->invoice_ctg }}"
                                                         data-item-text="{{ $item->invoice->invoice_typ }}"
                                                         data-item-number="{{ $globalIndex }}"
                                                         data-pendapatan-usd="{{ $item->pendapatan_usd }}"
-                                                        data-kurs-usd="{{ $item->kurs_usd ?? 0 }}">
+                                                        data-kurs-usd="{{ $item->kurs_usd ?? 0 }}"
+                                                        data-origin-lpj="{{ $item->origin_lpj_cont ?? '' }}">
 
                                                         <td class="item-number-cell">{{ $globalIndex }}</td>
 
                                                         @if ($index === 0)
-                                                            <!-- Category cell with rowspan -->
                                                             <td class="category-cell" rowspan="{{ $items->count() }}">
                                                                 {{ $category }}
                                                             </td>
                                                         @endif
 
-                                                        <td class="item-text-cell">{{ $item->invoice->invoice_typ }}</td>
+                                                        <td class="item-text-cell text-start">
+                                                            <span class="fw-semibold" style="color:#2c3e50;">
+                                                                {{ $item->invoice->invoice_typ }}
+                                                            </span>
+                                                            @if ($isFromLpj)
+                                                                <span class="badge ms-1"
+                                                                    style="background:#3b82f6; font-size:.65rem;">
+                                                                    From LPJ
+                                                                </span>
+                                                            @endif
+                                                        </td>
                                                         <td>{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
                                                         <td>{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
                                                         <td>{{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
@@ -926,12 +974,22 @@
                                         </tr>
                                     </tfoot>
                                 </table>
+
+                                {{-- LPJ origin note — ditampilkan via Blade jika ada, JS akan toggle saat add/remove --}}
+                                <div class="lpj-origin-note mt-2" id="lpjOriginNote"
+                                    style="{{ isset($hasLpjItems) && $hasLpjItems ? '' : 'display:none;' }}">
+                                    <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
+                                    <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ
+                                        page.</span>
+                                </div>
                             </div>
-                            <div class="action-buttons d-flex justify-content-end">
+
+                            <div class="action-buttons d-flex justify-content-end mt-3">
                                 <button type="button" class="btn btn-danger" id="resetAllBtn">
                                     <i class="fas fa-trash-alt me-1"></i>Reset All Items
                                 </button>
                             </div>
+
                         </div>
                     </div>
                 </form>
@@ -943,7 +1001,8 @@
                         <div class="d-flex gap-2">
                             <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}" target="_blank"
                                 class="btn"
-                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; border-color:red; background-color:rgb(255, 237, 237); color:red">
+                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
+                                       border-color:red; background-color:rgb(255, 237, 237); color:red">
                                 <i class="fas fa-file-pdf me-2"></i> Generate Invoice
                             </a>
                             <a href="{{ route('jo-contract.index') }}" class="btn btn-final-back">
@@ -955,11 +1014,10 @@
             </div>
         </div>
     </div>
-
-
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // ========================================
         // GLOBAL VARIABLES
@@ -969,7 +1027,6 @@
         let currentJoContractId = {{ $joContract->id_jo_cont }};
         let globalItemNumber = {{ $joContract->items->count() }};
 
-        // Invoice data by category
         const invoicesByCategory = {
             @foreach ($invoices->groupBy('invoice_ctg') as $category => $invoiceGroup)
                 '{{ $category }}': [
@@ -997,7 +1054,6 @@
             let decimalPart = parts.length > 1 ? parts[1] : '';
 
             if (decimalPart.length > 2) decimalPart = decimalPart.substring(0, 2);
-
             integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
 
             return parts.length > 1 ?
@@ -1012,7 +1068,7 @@
         }
 
         function setupRupiahInput(input) {
-            input.addEventListener('input', function(e) {
+            input.addEventListener('input', function() {
                 let cursorPosition = this.selectionStart;
                 let beforeCursor = this.value.substring(0, cursorPosition);
                 let formatted = formatRupiah(this.value);
@@ -1062,7 +1118,6 @@
             });
         }
 
-        // Setup form inputs
         setupRupiahInput(document.getElementById('global_kurs_usd_display'));
         setupRupiahInput(document.getElementById('input_pendapatan_idr'));
         setupRupiahInput(document.getElementById('input_pendapatan_usd'));
@@ -1072,11 +1127,9 @@
         // LOAD KURS EXISTING DARI ITEMS
         // ========================================
         function loadExistingKurs() {
-            // Ambil dari item pertama yang punya kurs_usd via blade
             @php
                 $firstUsdItem = $joContract->items->first(fn($i) => $i->kurs_usd > 0);
             @endphp
-
             @if ($firstUsdItem)
                 const existingKurs = {{ (float) $firstUsdItem->kurs_usd }};
                 const existingDate = '{{ $firstUsdItem->tgl_kurs_usd?->format('Y-m-d\TH:i') ?? '' }}';
@@ -1094,7 +1147,7 @@
         }
 
         // ========================================
-        // GLOBAL KURS CHANGE → UPDATE ALL USD ITEMS
+        // GLOBAL KURS CHANGE
         // ========================================
         $('#global_kurs_usd_display').on('input', function() {
             $('#global_kurs_usd').val(parseRupiah($(this).val()));
@@ -1104,7 +1157,6 @@
         function updateRowSellingPrice(row, newHargaJual) {
             const hasCategoryCell = row.find('.category-cell').length > 0;
             const offset = hasCategoryCell ? 0 : -1;
-            // Kolom Selling Price ada di index ke-5 (dengan category cell) atau 4 (tanpa)
             row.find('td').eq(5 + offset).text(formatNumber(newHargaJual));
         }
 
@@ -1198,8 +1250,8 @@
             const selectElement = document.getElementById('id_md_cont');
             selectElement.innerHTML =
                 `<option value="${selectedContract.id_md_cont}" selected>${selectedContract.no_contract}</option>`;
-            document.getElementById('contract_search').value = selectedContract.no_contract + ' - ' + selectedContract
-                .contract;
+            document.getElementById('contract_search').value =
+                selectedContract.no_contract + ' - ' + selectedContract.contract;
 
             hideSearchResults();
             displayContractPreview(selectedContract);
@@ -1244,20 +1296,22 @@
 
             if (contractsList.length === 0) {
                 resultsContainer.innerHTML = `
-                <div class="list-group-item text-center text-muted py-4">
-                    <i class="fas fa-search-minus mb-2 d-block" style="font-size:1.8rem;opacity:0.4;"></i>
-                    <p class="mb-0 small">No contracts found</p>
-                </div>`;
+                    <div class="list-group-item text-center text-muted py-4">
+                        <i class="fas fa-search-minus mb-2 d-block" style="font-size:1.8rem;opacity:0.4;"></i>
+                        <p class="mb-0 small">No contracts found</p>
+                    </div>`;
                 resultsContainer.style.display = 'block';
                 return;
             }
 
             const headerHtml = `
-            <div class="d-flex justify-content-between px-3 py-1"
-                 style="font-size:11px; color:#6c757d; background:#f8f9fa; border:1px solid #dee2e6; border-bottom:none; border-radius:6px 6px 0 0;">
-                <small><i class="fas fa-filter me-1"></i>By ${activeLabel}</small>
-                <small>${contractsList.length} result${contractsList.length > 1 ? 's' : ''}</small>
-            </div>`;
+                <div class="d-flex justify-content-between px-3 py-1"
+                     style="font-size:11px; color:#6c757d; background:#f8f9fa;
+                            border:1px solid #dee2e6; border-bottom:none;
+                            border-radius:6px 6px 0 0;">
+                    <small><i class="fas fa-filter me-1"></i>By ${activeLabel}</small>
+                    <small>${contractsList.length} result${contractsList.length > 1 ? 's' : ''}</small>
+                </div>`;
 
             const itemsHtml = contractsList.map((contract, index) => {
                 const isLast = index === contractsList.length - 1;
@@ -1282,18 +1336,18 @@
                 const borderRadius = isLast ? 'border-radius:0 0 6px 6px;' : '';
 
                 return `
-                <a href="#" class="list-group-item list-group-item-action contract-search-item px-3 py-2"
-                   data-contract-id="${contract.id_md_cont}"
-                   style="display:flex; align-items:center; gap:0; ${borderRadius}">
-                    <span style="font-size:13px;white-space:nowrap;width:130px;">${noContractHtml}</span>
-                    <span style="color:#adb5bd;padding:0 8px;">|</span>
-                    <span style="font-size:13px;white-space:nowrap;width:200px;overflow:hidden;text-overflow:ellipsis;">${namaHtml}</span>
-                    <span style="color:#adb5bd;padding:0 8px;">|</span>
-                    <span style="font-size:13px;color:#6c757d;white-space:nowrap;width:160px;overflow:hidden;text-overflow:ellipsis;">${customerHtml}</span>
-                    <span style="color:#adb5bd;padding:0 8px;">|</span>
-                    <span style="font-size:12px;color:#6c757d;white-space:nowrap;width:160px;">${periode}</span>
-                    <span style="font-size:13px;white-space:nowrap;text-align:right;margin-left:auto;padding-left:16px;color:#2c3e50;">${expenditure}</span>
-                </a>`;
+                    <a href="#" class="list-group-item list-group-item-action contract-search-item px-3 py-2"
+                       data-contract-id="${contract.id_md_cont}"
+                       style="display:flex; align-items:center; gap:0; ${borderRadius}">
+                        <span style="font-size:13px;white-space:nowrap;width:130px;">${noContractHtml}</span>
+                        <span style="color:#adb5bd;padding:0 8px;">|</span>
+                        <span style="font-size:13px;white-space:nowrap;width:200px;overflow:hidden;text-overflow:ellipsis;">${namaHtml}</span>
+                        <span style="color:#adb5bd;padding:0 8px;">|</span>
+                        <span style="font-size:13px;color:#6c757d;white-space:nowrap;width:160px;overflow:hidden;text-overflow:ellipsis;">${customerHtml}</span>
+                        <span style="color:#adb5bd;padding:0 8px;">|</span>
+                        <span style="font-size:12px;color:#6c757d;white-space:nowrap;width:160px;">${periode}</span>
+                        <span style="font-size:13px;white-space:nowrap;text-align:right;margin-left:auto;padding-left:16px;color:#2c3e50;">${expenditure}</span>
+                    </a>`;
             }).join('');
 
             resultsContainer.innerHTML = headerHtml + itemsHtml;
@@ -1326,7 +1380,7 @@
                     alert.addClass('alert-success');
                     icon.attr('class', 'fas fa-check-circle');
                     break;
-                case 'error':
+                default:
                     alert.addClass('alert-error');
                     icon.attr('class', 'fas fa-exclamation-circle');
                     break;
@@ -1424,7 +1478,9 @@
             const itemSelect = $('#input_item');
 
             if (!category) {
-                itemSelect.prop('disabled', true).html('<option value="">Select category first</option>');
+                itemSelect.prop('disabled', true)
+                    .html('<option value="">Select category first</option>')
+                    .trigger('change.select2'); // ← tambahkan ini
                 return;
             }
 
@@ -1435,7 +1491,9 @@
                     `<option value="${invoice.id}" data-note="${invoice.note}">${invoice.type}</option>`;
             });
 
-            itemSelect.prop('disabled', false).html(options);
+            itemSelect.prop('disabled', false)
+                .html(options)
+                .trigger('change.select2'); // ← tambahkan ini
         });
 
         $('#input_item').on('change', function() {
@@ -1482,8 +1540,16 @@
         });
 
         // ========================================
-        // ADD / UPDATE ITEM TO TABLE
+        // LPJ ORIGIN NOTE — toggle helper
         // ========================================
+        function syncLpjNote() {
+            if ($('.item-row.row-from-lpj').length > 0) {
+                $('#lpjOriginNote').show();
+            } else {
+                $('#lpjOriginNote').hide();
+            }
+        }
+
         // ========================================
         // ADD / UPDATE ITEM TO TABLE
         // ========================================
@@ -1517,23 +1583,17 @@
                 return;
             }
 
-            // Cek apakah kurs berbeda dengan item USD lain yang sudah ada di tabel
             if (pendapatanUSD > 0 && inputKursRate > 0) {
                 const existingKurs = getExistingKursFromTable();
 
                 if (existingKurs !== null && existingKurs !== inputKursRate) {
-                    // Tampilkan konfirmasi — kurs berbeda
                     showKursConflictConfirm(
-                        existingKurs,
-                        inputKursRate,
-                        inputKursDate,
-                        // Callback: user setuju → simpan + update semua
+                        existingKurs, inputKursRate, inputKursDate,
                         function() {
                             proceedSaveItem(editingItemId, category, itemId, itemText,
                                 pendapatanIDR, pendapatanUSD, hpp, hargaJual,
                                 inputKursRate, inputKursDate, note, true);
                         },
-                        // Callback: user tolak → simpan dengan kurs lama (paksa pakai existingKurs)
                         function() {
                             const hargaJualWithOldKurs = pendapatanUSD * existingKurs;
                             proceedSaveItem(editingItemId, category, itemId, itemText,
@@ -1545,16 +1605,11 @@
                 }
             }
 
-            // Kurs sama atau item IDR — langsung simpan
             proceedSaveItem(editingItemId, category, itemId, itemText,
                 pendapatanIDR, pendapatanUSD, hpp, hargaJual,
                 inputKursRate, inputKursDate, note, false);
         });
 
-        // ========================================
-        // AMBIL KURS EXISTING DARI TABEL
-        // Kembalikan nilai kurs item USD pertama di tabel, atau null jika tidak ada
-        // ========================================
         function getExistingKursFromTable() {
             let existingKurs = null;
             $('#itemsTableBody tr.item-row').each(function() {
@@ -1562,65 +1617,64 @@
                 const kurs = parseFloat($(this).data('kurs-usd')) || 0;
                 if (usdVal > 0 && kurs > 0) {
                     existingKurs = kurs;
-                    return false; // break
+                    return false;
                 }
             });
             return existingKurs;
         }
 
-        // ========================================
-        // KONFIRMASI KURS BERBEDA
-        // ========================================
         function showKursConflictConfirm(oldKurs, newKurs, newDate, onConfirm, onReject) {
-            // Hapus modal lama jika ada
             $('#kursConflictModal').remove();
 
             const oldFormatted = formatNumber(oldKurs);
             const newFormatted = formatNumber(newKurs);
 
             const modalHtml = `
-    <div class="modal fade" id="kursConflictModal" tabindex="-1" data-bs-backdrop="static">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content" style="border-radius:12px; border:none; box-shadow:0 10px 40px rgba(0,0,0,0.15);">
-                <div class="modal-header" style="background:linear-gradient(135deg,#fbbf24,#f59e0b); border-radius:12px 12px 0 0; border:none;">
-                    <h5 class="modal-title text-white fw-bold">
-                        <i class="fas fa-exclamation-triangle me-2"></i>Perbedaan Kurs Terdeteksi
-                    </h5>
-                </div>
-                <div class="modal-body p-4">
-                    <p class="mb-3">Item ini memiliki kurs yang <strong>berbeda</strong> dengan item USD lain di tabel:</p>
-                    <div class="d-flex gap-3 mb-3">
-                        <div class="flex-fill text-center p-3 rounded" style="background:#fee2e2; border:1px solid #fca5a5;">
-                            <div style="font-size:0.75rem; color:#991b1b; font-weight:600; margin-bottom:4px;">KURS ITEM LAIN</div>
-                            <div style="font-size:1.1rem; font-weight:700; color:#dc2626;">IDR ${oldFormatted}</div>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-arrow-right text-muted"></i>
-                        </div>
-                        <div class="flex-fill text-center p-3 rounded" style="background:#d1fae5; border:1px solid #6ee7b7;">
-                            <div style="font-size:0.75rem; color:#065f46; font-weight:600; margin-bottom:4px;">KURS ITEM INI</div>
-                            <div style="font-size:1.1rem; font-weight:700; color:#059669;">IDR ${newFormatted}</div>
+                <div class="modal fade" id="kursConflictModal" tabindex="-1" data-bs-backdrop="static">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="border-radius:12px; border:none; box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                            <div class="modal-header"
+                                 style="background:linear-gradient(135deg,#fbbf24,#f59e0b); border-radius:12px 12px 0 0; border:none;">
+                                <h5 class="modal-title text-white fw-bold">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>Perbedaan Kurs Terdeteksi
+                                </h5>
+                            </div>
+                            <div class="modal-body p-4">
+                                <p class="mb-3">Item ini memiliki kurs yang <strong>berbeda</strong> dengan item USD lain di tabel:</p>
+                                <div class="d-flex gap-3 mb-3">
+                                    <div class="flex-fill text-center p-3 rounded"
+                                         style="background:#fee2e2; border:1px solid #fca5a5;">
+                                        <div style="font-size:0.75rem; color:#991b1b; font-weight:600; margin-bottom:4px;">KURS ITEM LAIN</div>
+                                        <div style="font-size:1.1rem; font-weight:700; color:#dc2626;">IDR ${oldFormatted}</div>
+                                    </div>
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-arrow-right text-muted"></i>
+                                    </div>
+                                    <div class="flex-fill text-center p-3 rounded"
+                                         style="background:#d1fae5; border:1px solid #6ee7b7;">
+                                        <div style="font-size:0.75rem; color:#065f46; font-weight:600; margin-bottom:4px;">KURS ITEM INI</div>
+                                        <div style="font-size:1.1rem; font-weight:700; color:#059669;">IDR ${newFormatted}</div>
+                                    </div>
+                                </div>
+                                <div class="alert alert-warning py-2 mb-0" style="font-size:0.875rem;">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    Jika <strong>Ya, update semua</strong> — kurs seluruh item USD akan diubah ke
+                                    <strong>IDR ${newFormatted}</strong> dan harga jual dihitung ulang.
+                                </div>
+                            </div>
+                            <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
+                                <button type="button" class="btn btn-outline-secondary flex-fill" id="btnKursReject">
+                                    <i class="fas fa-times me-1"></i>Tidak, pakai kurs lama
+                                </button>
+                                <button type="button" class="btn btn-warning flex-fill fw-bold" id="btnKursConfirm">
+                                    <i class="fas fa-check me-1"></i>Ya, update semua
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div class="alert alert-warning py-2 mb-0" style="font-size:0.875rem;">
-                        <i class="fas fa-info-circle me-1"></i>
-                        Jika <strong>Ya, update semua</strong> — kurs seluruh item USD akan diubah ke <strong>IDR ${newFormatted}</strong> dan harga jual dihitung ulang.
-                    </div>
-                </div>
-                <div class="modal-footer border-0 pt-0 px-4 pb-4 gap-2">
-                    <button type="button" class="btn btn-outline-secondary flex-fill" id="btnKursReject">
-                        <i class="fas fa-times me-1"></i>Tidak, pakai kurs lama
-                    </button>
-                    <button type="button" class="btn btn-warning flex-fill fw-bold" id="btnKursConfirm">
-                        <i class="fas fa-check me-1"></i>Ya, update semua
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>`;
+                </div>`;
 
             $('body').append(modalHtml);
-
             const modal = new bootstrap.Modal(document.getElementById('kursConflictModal'));
             modal.show();
 
@@ -1641,10 +1695,6 @@
             });
         }
 
-        // ========================================
-        // PROCEED SAVE ITEM
-        // syncAllKurs: true → setelah simpan, update kurs semua item USD lain
-        // ========================================
         function proceedSaveItem(editingItemId, category, itemId, itemText,
             pendapatanIDR, pendapatanUSD, hpp, hargaJual,
             kursRate, kursDate, note, syncAllKurs) {
@@ -1656,7 +1706,6 @@
                 return;
             }
 
-            // ADD NEW
             showFloatingAlert('saving', 'Adding item...');
 
             $.ajax({
@@ -1685,12 +1734,13 @@
                             return;
                         }
 
-                        insertRowWithCategoryGrouping(newItemId, category, itemText, response.data, kursRate);
+                        // Item baru dari form tidak memiliki origin_lpj_cont
+                        insertRowWithCategoryGrouping(newItemId, category, itemText, response.data, kursRate,
+                            false);
                         updateGrandTotal();
                         clearItemForm();
-
-                        // Update kurs global field agar sinkron
                         syncKursDisplayField(kursRate, kursDate);
+                        syncLpjNote();
 
                         if (syncAllKurs) {
                             syncAllOtherUsdItems(newItemId, kursRate, kursDate);
@@ -1705,16 +1755,12 @@
             });
         }
 
-        // ========================================
-        // UPDATE SEMUA ITEM USD LAIN (SELAIN ITEM YANG BARU DISIMPAN)
-        // ========================================
         function syncAllOtherUsdItems(excludeItemId, kursRate, kursDate) {
             const usdItems = [];
 
             $('#itemsTableBody tr.item-row').each(function() {
                 const id = $(this).data('item-id');
                 const usdVal = parseFloat($(this).data('pendapatan-usd')) || 0;
-
                 if (usdVal > 0 && id != excludeItemId) {
                     usdItems.push({
                         id,
@@ -1730,7 +1776,6 @@
 
             const promises = usdItems.map(item => {
                 const newHargaJual = item.usdVal * kursRate;
-
                 return $.ajax({
                     url: `/jo-contract/item/update-kurs/${item.id}`,
                     method: 'PATCH',
@@ -1742,9 +1787,7 @@
                     }
                 }).then(response => {
                     if (response.success) {
-                        // Update data-kurs-usd di row
                         item.row.attr('data-kurs-usd', kursRate);
-                        // Update selling price di tabel
                         updateRowSellingPrice(item.row, newHargaJual);
                     }
                 });
@@ -1755,12 +1798,9 @@
                     showFloatingAlert('success', 'Kurs semua item berhasil disamakan!');
                     updateGrandTotal();
                 })
-                .catch(() => {
-                    showFloatingAlert('error', 'Gagal update kurs beberapa item');
-                });
+                .catch(() => showFloatingAlert('error', 'Gagal update kurs beberapa item'));
         }
 
-        // Sync tampilan field kurs global
         function syncKursDisplayField(kursRate, kursDate) {
             if (kursRate > 0) {
                 $('#global_kurs_usd_display').val(formatRupiah(kursRate.toFixed(2).replace('.', ',')));
@@ -1771,16 +1811,11 @@
             }
         }
 
-        function updateRowSellingPrice(row, newHargaJual) {
-            const hasCategoryCell = row.find('.category-cell').length > 0;
-            const offset = hasCategoryCell ? 0 : -1;
-            row.find('td').eq(5 + offset).text(formatNumber(newHargaJual));
-        }
-
         // ========================================
         // INSERT ROW WITH CATEGORY GROUPING
+        // isFromLpj: selalu false untuk item baru dari form
         // ========================================
-        function insertRowWithCategoryGrouping(itemId, category, itemText, data, kursRate = 0) {
+        function insertRowWithCategoryGrouping(itemId, category, itemText, data, kursRate = 0, isFromLpj = false) {
             globalItemNumber++;
 
             let categoryExists = false;
@@ -1799,48 +1834,61 @@
             });
 
             const pendapatanUsd = data.pendapatan_usd || 0;
+            const lpjBadge = isFromLpj ?
+                `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` :
+                '';
+            const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
+
             const actionBtns = `
-            <button type="button" class="btn btn-primary btn-sm btn-edit-row" onclick="editItem('${itemId}')">
-                <i class="fas fa-edit"></i>
-            </button>
-            <button type="button" class="btn btn-danger btn-sm btn-remove-row" onclick="removeItem(this, '${itemId}')">
-                <i class="fas fa-trash"></i>
-            </button>`;
+                <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                    onclick="editItem('${itemId}')">
+                    <i class="fas fa-edit"></i>
+                </button>
+                <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                    onclick="removeItem(this, '${itemId}')">
+                    <i class="fas fa-trash"></i>
+                </button>`;
 
             let newRow;
 
             if (categoryExists) {
                 newRow = `
-                <tr class="item-row"
-                    data-item-id="${itemId}"
-                    data-category="${category}"
-                    data-pendapatan-usd="${pendapatanUsd}"
-                    data-kurs-usd="${kursRate}">
-                    <td class="item-number-cell">${globalItemNumber}</td>
-                    <td class="item-text-cell">${itemText}</td>
-                    <td>${formatNumber(data.pendapatan_idr)}</td>
-                    <td>${formatNumber(data.pendapatan_usd)}</td>
-                    <td>${formatNumber(data.hargajual_idr)}</td>
-                    <td>${formatNumber(data.hpp_ops)}</td>
-                    <td class="text-center">${actionBtns}</td>
-                </tr>`;
+                    <tr class="${rowClass}"
+                        data-item-id="${itemId}"
+                        data-category="${category}"
+                        data-pendapatan-usd="${pendapatanUsd}"
+                        data-kurs-usd="${kursRate}"
+                        data-origin-lpj="${isFromLpj ? '1' : ''}">
+                        <td class="item-number-cell">${globalItemNumber}</td>
+                        <td class="item-text-cell text-start">
+                            <span class="fw-semibold" style="color:#2c3e50;">${itemText}</span>${lpjBadge}
+                        </td>
+                        <td>${formatNumber(data.pendapatan_idr)}</td>
+                        <td>${formatNumber(data.pendapatan_usd)}</td>
+                        <td>${formatNumber(data.hargajual_idr)}</td>
+                        <td>${formatNumber(data.hpp_ops)}</td>
+                        <td class="text-center">${actionBtns}</td>
+                    </tr>`;
                 insertAfterRow.after(newRow);
             } else {
                 newRow = `
-                <tr class="item-row"
-                    data-item-id="${itemId}"
-                    data-category="${category}"
-                    data-pendapatan-usd="${pendapatanUsd}"
-                    data-kurs-usd="${kursRate}">
-                    <td class="item-number-cell">${globalItemNumber}</td>
-                    <td class="category-cell" rowspan="1">${category}</td>
-                    <td class="item-text-cell">${itemText}</td>
-                    <td>${formatNumber(data.pendapatan_idr)}</td>
-                    <td>${formatNumber(data.pendapatan_usd)}</td>
-                    <td>${formatNumber(data.hargajual_idr)}</td>
-                    <td>${formatNumber(data.hpp_ops)}</td>
-                    <td class="text-center">${actionBtns}</td>
-                </tr>`;
+                    <tr class="${rowClass}"
+                        data-item-id="${itemId}"
+                        data-category="${category}"
+                        data-pendapatan-usd="${pendapatanUsd}"
+                        data-kurs-usd="${kursRate}"
+                        data-origin-lpj="${isFromLpj ? '1' : ''}">
+                        <td class="item-number-cell">${globalItemNumber}</td>
+                        <td class="category-cell" rowspan="1">${category}</td>
+                        <td class="item-text-cell text-start">
+                            <span class="fw-semibold" style="color:#2c3e50;">${itemText}</span>${lpjBadge}
+                        </td>
+                        <td>${formatNumber(data.pendapatan_idr)}</td>
+                        <td>${formatNumber(data.pendapatan_usd)}</td>
+                        <td>${formatNumber(data.hargajual_idr)}</td>
+                        <td>${formatNumber(data.hpp_ops)}</td>
+                        <td class="text-center">${actionBtns}</td>
+                    </tr>`;
                 $('#itemsTableBody').append(newRow);
             }
 
@@ -1875,28 +1923,27 @@
                         $('#input_category').val(item.invoice_ctg).trigger('change');
 
                         setTimeout(() => {
-                            $('#input_item').val(item.id_md_invoice);
+                            $('#input_item').val(item.id_md_invoice).trigger('change.select2');
 
                             const pendapatanIDR = parseFloat(item.pendapatan_idr) || 0;
                             const pendapatanUSD = parseFloat(item.pendapatan_usd) || 0;
                             const hpp = parseFloat(item.hpp_ops) || 0;
                             const kursUSD = parseFloat(item.kurs_usd) || 0;
 
-                            $('#input_pendapatan_idr').val(pendapatanIDR > 0 ? formatRupiah(
-                                pendapatanIDR.toFixed(2).replace('.', ',')) : '');
-                            $('#input_pendapatan_usd').val(pendapatanUSD > 0 ? formatRupiah(
-                                pendapatanUSD.toFixed(2).replace('.', ',')) : '');
+                            $('#input_pendapatan_idr').val(pendapatanIDR > 0 ?
+                                formatRupiah(pendapatanIDR.toFixed(2).replace('.', ',')) : '');
+                            $('#input_pendapatan_usd').val(pendapatanUSD > 0 ?
+                                formatRupiah(pendapatanUSD.toFixed(2).replace('.', ',')) : '');
                             $('#input_hpp').val(formatRupiah(hpp.toFixed(2).replace('.', ',')));
                             $('#input_note').val(item.note || '');
 
-                            // Kurs sudah ada di global field — tidak perlu di-set ulang
-                            // tapi jika item ini punya kurs berbeda (edge case), tampilkan di global
                             if (pendapatanUSD > 0 && kursUSD > 0) {
                                 const currentGlobalKurs = parseRupiah($('#global_kurs_usd_display')
                                     .val());
                                 if (currentGlobalKurs <= 0) {
-                                    $('#global_kurs_usd_display').val(formatRupiah(kursUSD.toFixed(2)
-                                        .replace('.', ',')));
+                                    $('#global_kurs_usd_display').val(
+                                        formatRupiah(kursUSD.toFixed(2).replace('.', ','))
+                                    );
                                     $('#global_kurs_usd').val(kursUSD);
                                 }
                                 if (!$('#global_tgl_kurs_usd').val() && item.tgl_kurs_usd) {
@@ -1928,7 +1975,8 @@
         });
 
         function updateItemToDatabase(itemId, category, invoiceId, itemText,
-            pendapatanIDR, pendapatanUSD, hpp, hargaJual, kursRate, kursDate, note, syncAllKurs = false) {
+            pendapatanIDR, pendapatanUSD, hpp, hargaJual,
+            kursRate, kursDate, note, syncAllKurs = false) {
 
             showFloatingAlert('saving', 'Updating item...');
 
@@ -1954,8 +2002,6 @@
                         const row = $(`.item-row[data-item-id="${itemId}"]`);
                         const oldCategory = row.data('category');
 
-                        // Update data attribute kurs
-
                         row.attr('data-kurs-usd', kursRate);
                         row.attr('data-pendapatan-usd', pendapatanUSD);
 
@@ -1965,21 +2011,17 @@
                             syncAllOtherUsdItems(itemId, kursRate, kursDate);
                         }
 
-                        // Sync kurs global field
-                        syncKursDisplayField(kursRate, kursDate);
-
-                        if (syncAllKurs) {
-                            syncAllOtherUsdItems(editingItemId, kursRate, kursDate);
-                        }
-
-
                         if (oldCategory !== category) {
+                            // Pertahankan status LPJ saat pindah kategori
+                            const isFromLpj = row.data('origin-lpj') ? true : false;
                             removeRowWithoutDelete(row, oldCategory);
-                            insertRowWithCategoryGrouping(itemId, category, itemText, response.data);
+                            insertRowWithCategoryGrouping(itemId, category, itemText, response.data, kursRate,
+                                isFromLpj);
+                            syncLpjNote();
                         } else {
                             row.attr('data-invoice-id', invoiceId);
                             row.attr('data-item-text', itemText);
-                            row.find('.item-text-cell').text(itemText);
+                            row.find('.item-text-cell').find('span.fw-semibold').text(itemText);
 
                             const hasCategoryCell = row.find('.category-cell').length > 0;
                             const offset = hasCategoryCell ? 0 : -1;
@@ -2075,16 +2117,17 @@
                         row.remove();
                         renumberAllItems();
                         updateGrandTotal();
+                        syncLpjNote();
 
                         if ($('#itemsTableBody tr.item-row').length === 0) {
                             $('#itemsTableBody').html(`
-                            <tr class="no-items-row">
-                                <td colspan="8">
-                                    <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-                                    <p class="mb-0 fw-bold">No data available</p>
-                                    <small class="text-muted">Fill the form above and click "Add to Table"</small>
-                                </td>
-                            </tr>`);
+                                <tr class="no-items-row">
+                                    <td colspan="8">
+                                        <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                        <p class="mb-0 fw-bold">No data available</p>
+                                        <small class="text-muted">Fill the form above and click "Add to Table"</small>
+                                    </td>
+                                </tr>`);
                         }
                     }
                 },
@@ -2094,7 +2137,6 @@
             });
         }
 
-        // Helper: hapus row dari DOM tanpa AJAX delete (dipakai saat edit category berubah)
         function removeRowWithoutDelete(row, category) {
             const categoryCell = row.find('.category-cell');
             if (categoryCell.length > 0) {
@@ -2150,15 +2192,16 @@
             )).then(() => {
                 showFloatingAlert('success', 'All items deleted successfully!');
                 $('#itemsTableBody').html(`
-                <tr class="no-items-row">
-                    <td colspan="8">
-                        <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-                        <p class="mb-0 fw-bold">No data available</p>
-                        <small class="text-muted">Fill the form above and click "Add to Table"</small>
-                    </td>
-                </tr>`);
+                    <tr class="no-items-row">
+                        <td colspan="8">
+                            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                            <p class="mb-0 fw-bold">No data available</p>
+                            <small class="text-muted">Fill the form above and click "Add to Table"</small>
+                        </td>
+                    </tr>`);
                 globalItemNumber = 0;
                 updateGrandTotal();
+                syncLpjNote();
             }).catch(() => {
                 showFloatingAlert('error', 'Some items could not be deleted');
             });
@@ -2203,26 +2246,29 @@
         $(document).ready(function() {
             updateGrandTotal();
             loadExistingKurs();
+            syncLpjNote();
+
+            // ── SELECT2 INIT ──
+            $('#id_md_area').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Area',
+                allowClear: true,
+                width: '100%',
+            });
+
+            $('#input_category').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Category',
+                allowClear: true,
+                width: '100%',
+            });
+
+            $('#input_item').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select category first',
+                allowClear: true,
+                width: '100%',
+            });
         });
-
-        function loadExistingKurs() {
-            @php
-                $firstUsdItem = $joContract->items->first(fn($i) => $i->kurs_usd > 0);
-            @endphp
-            @if ($firstUsdItem)
-                const kursVal = {{ (float) $firstUsdItem->kurs_usd }};
-                const kursDate = '{{ $firstUsdItem->tgl_kurs_usd?->format('Y-m-d\TH:i') ?? '' }}';
-
-                if (kursVal > 0) {
-                    $('#global_kurs_usd_display').val(
-                        formatRupiah(kursVal.toFixed(2).replace('.', ','))
-                    );
-                    $('#global_kurs_usd').val(kursVal);
-                }
-                if (kursDate) {
-                    $('#global_tgl_kurs_usd').val(kursDate);
-                }
-            @endif
-        }
     </script>
 @endpush

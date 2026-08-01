@@ -130,7 +130,7 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'    => 'required|date',
                 'tgl_release'   => 'nullable|date',
                 'note'          => 'nullable|string',
-                'priority'      => 'required|in:urgent,high,normal',
+                'priority'      => 'required|in:high,normal',
                 'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
             ], [
                 'id_md_dep.required'     => 'Departemen is required',
@@ -221,7 +221,7 @@ class KasbonGenController extends Controller
                 'tgl_kasbon'    => 'required|date',
                 'tgl_release'   => 'nullable|date',
                 'note'          => 'nullable|string',
-                'priority'      => 'required|in:urgent,high,normal',
+                'priority'      => 'required|in:high,normal',
                 'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
             ], [
                 'id_md_dep.required'     => 'Departemen is required',

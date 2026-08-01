@@ -15,6 +15,7 @@
             'nilai_kasbon' => $i['nilai_kasbon'],
             'total_kasbon' => $i['total_kasbon'],
             'has_kasbon' => $i['has_kasbon'],
+            'origin_lpj_cont' => $i['origin_lpj_cont'] ?? null,
         ],
     );
 @endphp
@@ -561,6 +562,45 @@
             font-size: .875rem;
             padding: 10px;
         }
+
+        /* Rows added from LPJ — blue tint */
+        .table-kasbon tbody tr.row-from-lpj td {
+            background: #eff6ff !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj:hover td {
+            background: #dbeafe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj.tr-active td {
+            background: #bfdbfe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj .category-cell {
+            background: #dbeafe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj .cell-readonly {
+            background: #e0eeff !important;
+        }
+
+        /* LPJ origin note */
+        .lpj-origin-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+            font-size: .8rem;
+            color: #1e40af;
+        }
+
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
+        }
     </style>
 @endpush
 
@@ -778,12 +818,10 @@
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
                                         <option value="normal"
-                                            {{ $kasbonContract->priority == 'normal' ? 'selected' : '' }}>Normal (Low)
+                                            {{ $kasbonContract->priority == 'normal' ? 'selected' : '' }}>Normal
                                         </option>
                                         <option value="high"
                                             {{ $kasbonContract->priority == 'high' ? 'selected' : '' }}>High</option>
-                                        <option value="urgent"
-                                            {{ $kasbonContract->priority == 'urgent' ? 'selected' : '' }}>Urgent</option>
                                     </select>
                                 </div>
 
@@ -792,6 +830,30 @@
                                     <label class="form-label">Due Date & Time</label>
                                     <input type="datetime-local" name="due_date" id="due_date" class="form-control"
                                         value="{{ $kasbonContract->due_date ? $kasbonContract->due_date->format('Y-m-d\TH:i') : '' }}">
+                                </div>
+
+                                {{-- CA Release Status --}}
+                                <div class="col-md-12" id="caReleaseStatusWrapper">
+                                    <label class="form-label">CA Release Status</label>
+                                    <select name="ca_release_status" id="ca_release_status" class="form-select">
+                                        <option value=""
+                                            {{ !$kasbonContract->ca_release_status ? 'selected' : '' }}>-- No Status
+                                            (Pending) --</option>
+                                        <option value="pending"
+                                            {{ $kasbonContract->ca_release_status == 'pending' ? 'selected' : '' }}>Pending
+                                        </option>
+                                        <option value="release"
+                                            {{ $kasbonContract->ca_release_status == 'release' ? 'selected' : '' }}>Release
+                                        </option>
+                                    </select>
+                                </div>
+
+                                {{-- CA Release Date --}}
+                                <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
+                                    <label class="form-label">CA Release Date</label>
+                                    <input type="date" name="ca_release_date" id="ca_release_date"
+                                        class="form-control"
+                                        value="{{ $kasbonContract->ca_release_date ? $kasbonContract->ca_release_date->format('Y-m-d') : '' }}">
                                 </div>
 
                                 <div class="col-md-12">
@@ -832,25 +894,25 @@
                                 </div>
 
                                 <div class="row g-3 mb-4">
-                                    <div class="col-md-4">
-                                        <div class="info-field">
-                                            <div class="info-label">Description</div>
-                                            <div class="info-value" id="infoInvoiceTyp">—</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-12">
                                         <div class="info-field">
                                             <div class="info-label">Category</div>
                                             <div class="info-value" id="infoInvoiceCtg">—</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-12">
+                                        <div class="info-field">
+                                            <div class="info-label">Item</div>
+                                            <div class="info-value" id="infoInvoiceTyp">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="info-field">
                                             <div class="info-label">Selling Price (IDR)</div>
                                             <div class="info-value" id="infoHargaJual">—</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <div class="info-field">
                                             <div class="info-label">Total CA / HPP (IDR)</div>
                                             <div class="info-value" id="infoTotalKasbon">—</div>
@@ -869,6 +931,8 @@
                                                 class="form-control currency-input" placeholder="0,00"
                                                 autocomplete="off">
                                         </div>
+                                        {{-- Hint validasi realtime --}}
+                                        <div id="caValidationHint" class="validate-hint hint-info"></div>
                                     </div>
                                     <div class="col-12 d-flex justify-content-end gap-2 mt-1">
                                         <button type="button" class="btn btn-cancel-item-input" id="btnCancelItemInput">
@@ -882,6 +946,7 @@
 
                                 <input type="hidden" id="activeJoContItemId" value="">
                                 <input type="hidden" id="activeRowIndex" value="">
+                                <input type="hidden" id="activeHppValue" value="0">
                             </div>
 
                             {{-- ===== TABLE ===== --}}
@@ -932,6 +997,11 @@
                                         </tr>
                                     </tfoot>
                                 </table>
+                                <div class="lpj-origin-note mt-2" id="lpjOriginNoteKasbon" style="display:none;">
+                                    <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
+                                    <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ
+                                        page.</span>
+                                </div>
                             </div>
 
                         </div>
@@ -1020,19 +1090,261 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <style>
+        .validate-hint {
+            font-size: .76rem;
+            font-weight: 600;
+            margin-top: 5px;
+            min-height: 18px;
+            transition: color .2s;
+        }
+
+        .validate-hint.hint-danger {
+            color: #dc3545;
+        }
+
+        .validate-hint.hint-ok {
+            color: #10b981;
+        }
+
+        .validate-hint.hint-info {
+            color: #6b7280;
+        }
+
+        .currency-input.input-invalid {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 .2rem rgba(220, 53, 69, .2) !important;
+        }
+
+        .currency-input.input-valid {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 .2rem rgba(16, 185, 129, .15) !important;
+        }
+
+        /* ── CONFLICT WARNING MODAL ── */
+        .conflict-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 10500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .conflict-modal-overlay.show {
+            display: flex;
+        }
+
+        .conflict-modal-box {
+            background: white;
+            border-radius: 16px;
+            max-width: 460px;
+            width: 92%;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.25);
+            animation: conflictModalIn 0.28s cubic-bezier(.34, 1.56, .64, 1);
+            overflow: hidden;
+        }
+
+        @keyframes conflictModalIn {
+            from {
+                transform: scale(0.88);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .conflict-modal-header {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            padding: 22px 24px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .conflict-modal-header .icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .conflict-modal-header .title-wrap h5 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin: 0 0 4px;
+        }
+
+        .conflict-modal-header .title-wrap p {
+            color: rgba(255, 255, 255, 0.88);
+            font-size: .82rem;
+            margin: 0;
+            line-height: 1.45;
+        }
+
+        .conflict-modal-body {
+            padding: 22px 24px 0;
+        }
+
+        .conflict-detail-card {
+            background: #fffbeb;
+            border: 1.5px solid #fde68a;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+        }
+
+        .conflict-detail-card .label {
+            font-size: .72rem;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 5px;
+        }
+
+        .conflict-detail-card .kasbon-no {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #b45309;
+            font-family: monospace;
+            letter-spacing: .5px;
+        }
+
+        .conflict-detail-card .amount {
+            font-size: .875rem;
+            color: #78350f;
+            margin-top: 3px;
+        }
+
+        .conflict-warning-text {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: .82rem;
+            color: #991b1b;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .conflict-warning-text i {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .conflict-modal-footer {
+            padding: 0 24px 22px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .conflict-modal-footer .btn {
+            flex: 1;
+            padding: 11px;
+            font-weight: 600;
+            border-radius: 9px;
+        }
+
+        .btn-conflict-cancel {
+            background: white;
+            border: 1.5px solid #d1d5db;
+            color: #374151;
+            transition: all .2s;
+        }
+
+        .btn-conflict-cancel:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-conflict-proceed {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, .35);
+            transition: all .2s;
+        }
+
+        .btn-conflict-proceed:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, .45);
+            color: white;
+        }
+    </style>
+
+    {{-- ===== CONFLICT WARNING MODAL HTML ===== --}}
+    <div class="conflict-modal-overlay" id="conflictModal">
+        <div class="conflict-modal-box">
+            <div class="conflict-modal-header">
+                <div class="icon-wrap">
+                    <i class="fas fa-triangle-exclamation"></i>
+                </div>
+                <div class="title-wrap">
+                    <h5>Item Already Filled in Another Cash Advance</h5>
+                    <p>This item has an existing CA amount in a different Cash Advance record.</p>
+                </div>
+            </div>
+            <div class="conflict-modal-body">
+                <div class="conflict-detail-card">
+                    <div class="label">Existing Cash Advance</div>
+                    <div class="kasbon-no" id="conflictKasbonNo">—</div>
+                    <div class="amount" id="conflictAmount">—</div>
+                </div>
+                <div class="conflict-warning-text">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>
+                        If you proceed, the CA amount in Cash Advance
+                        <strong id="conflictKasbonNoInline">—</strong>
+                        will be <strong>removed and replaced</strong> with the new amount you entered.
+                    </span>
+                </div>
+            </div>
+            <div class="conflict-modal-footer">
+                <button type="button" class="btn btn-conflict-cancel" id="conflictModalCancel">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-conflict-proceed" id="conflictModalProceed">
+                    <i class="fas fa-check me-1"></i> Yes, Replace It
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
+        // ══════════════════════════════════════════════════════════
+        // CONSTANTS
+        // ══════════════════════════════════════════════════════════
         const currentKasbonContractId = {{ $kasbonContract->id }};
         const currentKasbonContStr = '{{ $kasbonContract->id_kasbon_cont }}';
         const originalIdJoCont = '{{ $kasbonContract->id_jo_cont }}';
         const bulkSaveUrl = '{{ route('kasbon-contract.items.bulk-save', $kasbonContract->id) }}';
+        const checkConflictUrl = '{{ route('kasbon-contract.item.check-conflict') }}';
+        const clearConflictUrl = '{{ route('kasbon-contract.item.clear-conflict') }}';
         const updateHeaderUrl = '/kasbon-contract/header/update/{{ $kasbonContract->id }}';
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
         let mergedItems = @json($mergedItemsJs);
         let confirmCallback = null;
+        let conflictProceedCb = null;
         let joItemsCache = [];
 
-        // ── CONFIRM MODAL ──
+        // ══════════════════════════════════════════════════════════
+        // CONFIRM MODAL (generic — untuk reset / clear)
+        // ══════════════════════════════════════════════════════════
         function showConfirm({
             title,
             desc,
@@ -1061,7 +1373,43 @@
             confirmCallback = null;
         });
 
-        // ── FLOATING ALERT ──
+        // ══════════════════════════════════════════════════════════
+        // CONFLICT MODAL
+        // ══════════════════════════════════════════════════════════
+        function showConflictModal(kasbonNo, nilaiKasbon, onProceed) {
+            const formattedAmt = 'IDR ' + formatNumber(nilaiKasbon);
+            $('#conflictKasbonNo').text(kasbonNo);
+            $('#conflictKasbonNoInline').text(kasbonNo);
+            $('#conflictAmount').text('Current CA Amount: ' + formattedAmt);
+            conflictProceedCb = onProceed;
+            $('#conflictModal').addClass('show');
+        }
+
+        // Tutup conflict modal lewat backdrop atau tombol cancel
+        $('#conflictModal').on('click', function(e) {
+            if (e.target === this) closeConflictModal(false);
+        });
+        $('#conflictModalCancel').on('click', function() {
+            closeConflictModal(false);
+        });
+        $('#conflictModalProceed').on('click', function() {
+            closeConflictModal(true);
+        });
+
+        function closeConflictModal(proceed) {
+            $('#conflictModal').removeClass('show');
+            if (proceed && typeof conflictProceedCb === 'function') {
+                conflictProceedCb();
+            } else {
+                // User cancel → re-enable tombol save
+                $('#btnSaveItemInput').prop('disabled', false);
+            }
+            conflictProceedCb = null;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // FLOATING ALERT
+        // ══════════════════════════════════════════════════════════
         function showFloatingAlert(type, message) {
             const $alert = $('#floatingBadgeAlert'),
                 $icon = $('#alertIcon');
@@ -1089,7 +1437,9 @@
             setTimeout(() => $('#floatingBadgeAlert').removeClass('show hiding'), 400);
         }
 
-        // ── NUMBER UTILS ──
+        // ══════════════════════════════════════════════════════════
+        // NUMBER UTILS
+        // ══════════════════════════════════════════════════════════
         function formatRupiah(value) {
             let number = value.toString().replace(/[^\d,]/g, '').replace(/\./g, '');
             if (number === '') return '';
@@ -1141,8 +1491,9 @@
             });
             input.addEventListener('blur', function() {
                 if (this.value) {
-                    if (!this.value.includes(',')) this.value += ',00';
-                    else {
+                    if (!this.value.includes(',')) {
+                        this.value += ',00';
+                    } else {
                         let parts = this.value.split(',');
                         if (parts[1] !== undefined) {
                             if (parts[1].length === 0) this.value = parts[0] + ',00';
@@ -1153,7 +1504,47 @@
             });
         }
 
-        // ── GROUP BY CATEGORY ──
+        // ══════════════════════════════════════════════════════════
+        // REALTIME VALIDATION — CA Amount vs HPP
+        // ══════════════════════════════════════════════════════════
+        function setHint($el, $input, msg, type) {
+            $el.text(msg)
+                .removeClass('hint-danger hint-ok hint-info')
+                .addClass(type ? 'hint-' + type : '');
+            if ($input) {
+                $input.removeClass('input-invalid input-valid');
+                if (type === 'danger') $input.addClass('input-invalid');
+                if (type === 'ok') $input.addClass('input-valid');
+            }
+        }
+
+        function validateCaInput() {
+            const ca = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp = parseFloat($('#activeHppValue').val() || '0');
+            const $input = $('#inputNilaiKasbon');
+            const $hint = $('#caValidationHint');
+
+            if (ca <= 0 || hpp <= 0) {
+                $input.removeClass('input-invalid input-valid');
+                setHint($hint, null, '', '');
+                return;
+            }
+            if (ca > hpp) {
+                setHint($hint, $input,
+                    `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
+            } else {
+                setHint($hint, $input, '', '');
+            }
+        }
+
+        function resetCaValidation() {
+            $('#inputNilaiKasbon').removeClass('input-invalid input-valid');
+            setHint($('#caValidationHint'), null, '', '');
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // GROUP BY CATEGORY
+        // ══════════════════════════════════════════════════════════
         function groupByCategory(items) {
             const groups = {},
                 order = [];
@@ -1171,7 +1562,9 @@
             };
         }
 
-        // ── RENDER TABLE — category merged (rowspan) ──
+        // ══════════════════════════════════════════════════════════
+        // RENDER TABLE
+        // ══════════════════════════════════════════════════════════
         function renderTable() {
             const $tbody = $('#kasbonItemsBody');
             $tbody.empty();
@@ -1186,6 +1579,7 @@
                             <small>Make sure the selected JO Contract has items</small>
                         </td>
                     </tr>`);
+                $('#lpjOriginNoteKasbon').hide();
                 updateFooter();
                 return;
             }
@@ -1194,7 +1588,8 @@
                 groups,
                 order
             } = groupByCategory(mergedItems);
-            let rowNo = 1;
+            let rowNo = 1,
+                hasOriginItems = false;
 
             order.forEach(function(category) {
                 const items = groups[category];
@@ -1203,10 +1598,12 @@
                 items.forEach(function(item, catIndex) {
                     const globalIndex = mergedItems.indexOf(item);
                     const hasFilled = item.has_kasbon && item.nilai_kasbon > 0;
+                    const isFromLpj = !!item.origin_lpj_cont;
+                    if (isFromLpj) hasOriginItems = true;
 
-                    const statusBadge = hasFilled ?
-                        `<span class="badge bg-success ms-1" style="font-size:0.65rem;">Saved</span>` :
-                        `<span class="badge bg-secondary ms-1" style="font-size:0.65rem;">Not filled</span>`;
+                    const lpjBadge = isFromLpj ?
+                        `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` :
+                        '';
 
                     const clearBtn = `
                         <button type="button" class="btn btn-danger btn-sm btn-clear-row"
@@ -1215,13 +1612,14 @@
                             <i class="fas fa-trash"></i>
                         </button>`;
 
-                    // Category cell hanya di baris pertama tiap group
                     const categoryCell = catIndex === 0 ?
                         `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
                         '';
 
-                    const row = `
-                        <tr class="item-row" id="row_${globalIndex}"
+                    const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
+
+                    $tbody.append(`
+                        <tr class="${rowClass}" id="row_${globalIndex}"
                             data-index="${globalIndex}"
                             data-jo-item="${item.id_jo_cont_item}"
                             data-category="${category}">
@@ -1229,7 +1627,7 @@
                             ${categoryCell}
                             <td class="text-start">
                                 <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
-                                ${statusBadge}
+                                ${lpjBadge}
                             </td>
                             <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
                             <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
@@ -1243,41 +1641,50 @@
                                     ${clearBtn}
                                 </div>
                             </td>
-                        </tr>`;
-
-                    $tbody.append(row);
+                        </tr>`);
                 });
             });
 
+            $('#lpjOriginNoteKasbon').toggle(hasOriginItems);
             updateFooter();
         }
 
-        // ── Helper: refresh satu baris setelah save/clear ──
         function refreshRowAfterSave(globalIndex, nilaiKasbon, saved) {
             const $row = $(`#row_${globalIndex}`);
             $row.find('.nilai-kasbon-cell').text(formatNumber(nilaiKasbon));
-            $row.find('.badge')
-                .removeClass(saved ? 'bg-secondary' : 'bg-success')
-                .addClass(saved ? 'bg-success' : 'bg-secondary')
-                .text(saved ? 'Saved' : 'Not filled');
             $row.find('.btn-clear-row')
                 .prop('disabled', !saved)
                 .attr('title', saved ? 'Clear CA amount' : 'No CA amount to clear');
         }
 
-        // ── OPEN EDIT ITEM ──
+        // ══════════════════════════════════════════════════════════
+        // OPEN EDIT ITEM
+        // ══════════════════════════════════════════════════════════
         function openEditItem(index) {
             const item = mergedItems[index];
+
             $('#infoInvoiceTyp').text(item.invoice_typ);
             $('#infoInvoiceCtg').text(item.invoice_ctg);
             $('#infoHargaJual').text(formatNumber(item.hargajual_idr));
             $('#infoTotalKasbon').text(formatNumber(item.hpp_ops));
-            $('#inputNilaiKasbon').val('');
+
+            $('#activeHppValue').val(item.hpp_ops || 0);
             $('#activeJoContItemId').val(item.id_jo_cont_item);
             $('#activeRowIndex').val(index);
+
+            if (item.has_kasbon && item.nilai_kasbon > 0) {
+                $('#inputNilaiKasbon').val(formatRupiah(item.nilai_kasbon.toFixed(2).replace('.', ',')));
+            } else {
+                $('#inputNilaiKasbon').val('');
+            }
+
+            resetCaValidation();
+            validateCaInput();
+
             $('.item-row').removeClass('tr-active');
             $(`#row_${index}`).addClass('tr-active');
             $('#inputItemCard').addClass('active');
+
             $('html, body').animate({
                 scrollTop: $('#inputItemCard').offset().top - 120
             }, 400);
@@ -1291,32 +1698,16 @@
             $('#inputNilaiKasbon').val('');
             $('#activeJoContItemId').val('');
             $('#activeRowIndex').val('');
+            $('#activeHppValue').val('0');
+            resetCaValidation();
             $('.item-row').removeClass('tr-active');
         }
 
-        // ── SAVE ITEM ──
-        $('#btnSaveItemInput').on('click', saveItemInput);
-        $('#inputNilaiKasbon').on('keydown', function(e) {
-            if (e.key === 'Enter') saveItemInput();
-        });
-
-        function saveItemInput() {
-            const joContItemId = $('#activeJoContItemId').val();
-            const rowIndex = parseInt($('#activeRowIndex').val());
-            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-
-            if (!joContItemId) {
-                showFloatingAlert('error', 'No item selected');
-                return;
-            }
-            if (nilaiKasbon <= 0) {
-                showFloatingAlert('error', 'Please enter a CA Amount');
-                return;
-            }
-
-            showFloatingAlert('saving', 'Saving...');
-            $('#btnSaveItemInput').prop('disabled', true);
-
+        // ══════════════════════════════════════════════════════════
+        // SAVE ITEM — CORE (dipanggil setelah conflict check lolos)
+        // ══════════════════════════════════════════════════════════
+        // ── Inti simpan ke DB (dipanggil setelah conflict dibereskan) ──
+        function doSaveItem(joContItemId, rowIndex, nilaiKasbon) {
             $.ajax({
                 url: bulkSaveUrl,
                 method: 'POST',
@@ -1351,7 +1742,108 @@
             });
         }
 
-        // ── CLEAR SINGLE ITEM ──
+        // ── Eksekusi save: jika ada conflict, clear dulu lalu save ──
+        function executeSaveItem(joContItemId, rowIndex, nilaiKasbon, hasConflict) {
+            showFloatingAlert('saving', hasConflict ? 'Removing previous CA amount...' : 'Saving...');
+
+            if (hasConflict) {
+                $.ajax({
+                    url: clearConflictUrl,
+                    method: 'POST',
+                    data: {
+                        id_jo_cont_item: joContItemId,
+                        id_kasbon_cont: currentKasbonContStr,
+                        _token: csrfToken
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            showFloatingAlert('saving', 'Saving new CA amount...');
+                            doSaveItem(joContItemId, rowIndex, nilaiKasbon);
+                        } else {
+                            $('#btnSaveItemInput').prop('disabled', false);
+                            showFloatingAlert('error', 'Failed to clear previous CA amount: ' + (res.message ||
+                                ''));
+                        }
+                    },
+                    error: function(xhr) {
+                        // Tetap lanjut simpan walau clear gagal
+                        showFloatingAlert('saving', 'Saving...');
+                        doSaveItem(joContItemId, rowIndex, nilaiKasbon);
+                    }
+                });
+            } else {
+                doSaveItem(joContItemId, rowIndex, nilaiKasbon);
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // SAVE ITEM — MAIN (dengan conflict check)
+        // ══════════════════════════════════════════════════════════
+        function saveItemInput() {
+            const joContItemId = $('#activeJoContItemId').val();
+            const rowIndex = parseInt($('#activeRowIndex').val());
+            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp = parseFloat($('#activeHppValue').val() || '0');
+
+            // ── Validasi lokal ──
+            if (!joContItemId) {
+                showFloatingAlert('error', 'No item selected');
+                return;
+            }
+            if (nilaiKasbon <= 0) {
+                showFloatingAlert('error', 'Please enter a CA Amount');
+                return;
+            }
+            if (hpp > 0 && nilaiKasbon > hpp) {
+                showFloatingAlert('error',
+                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
+                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
+                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                return;
+            }
+
+            $('#btnSaveItemInput').prop('disabled', true);
+
+            // ── Cek konflik di kasbon lain ──
+            $.ajax({
+                url: checkConflictUrl,
+                method: 'GET',
+                data: {
+                    id_jo_cont_item: joContItemId,
+                    id_kasbon_cont: currentKasbonContStr
+                },
+                success: function(res) {
+                    if (res.success && res.has_conflict) {
+                        // Ada conflict — tampilkan modal, pass hasConflict=true saat proceed
+                        showConflictModal(
+                            res.conflict.id_kasbon_cont,
+                            res.conflict.nilai_kasbon,
+                            function() {
+                                executeSaveItem(joContItemId, rowIndex, nilaiKasbon, true);
+                            }
+                        );
+                    } else {
+                        // Tidak ada conflict — langsung simpan
+                        executeSaveItem(joContItemId, rowIndex, nilaiKasbon, false);
+                    }
+                },
+                error: function() {
+                    // Check gagal — tetap simpan tanpa clear
+                    executeSaveItem(joContItemId, rowIndex, nilaiKasbon, false);
+                }
+            });
+        }
+
+        // Bind tombol & Enter
+        $('#btnSaveItemInput').on('click', saveItemInput);
+        $('#inputNilaiKasbon').on('keydown', function(e) {
+            if (e.key === 'Enter') saveItemInput();
+        });
+        $('#inputNilaiKasbon').on('input blur', validateCaInput);
+
+        // ══════════════════════════════════════════════════════════
+        // CLEAR SINGLE ITEM
+        // ══════════════════════════════════════════════════════════
         function clearItem(index) {
             const item = mergedItems[index];
             showConfirm({
@@ -1395,14 +1887,15 @@
             });
         }
 
-        // ── RESET ALL ──
+        // ══════════════════════════════════════════════════════════
+        // RESET ALL
+        // ══════════════════════════════════════════════════════════
         $('#btnResetAllItems').on('click', function() {
             const filledCount = mergedItems.filter(i => i.has_kasbon && i.nilai_kasbon > 0).length;
             if (filledCount === 0) {
                 showFloatingAlert('error', 'No CA amounts to reset');
                 return;
             }
-
             showConfirm({
                 title: 'Reset All CA Amounts?',
                 desc: `This will clear the CA amount for all ${filledCount} filled item(s).`,
@@ -1411,7 +1904,8 @@
                 iconClass: 'danger',
             }, function() {
                 showFloatingAlert('saving', 'Resetting all CA amounts...');
-                const payload = mergedItems.filter(i => i.has_kasbon && i.nilai_kasbon > 0)
+                const payload = mergedItems
+                    .filter(i => i.has_kasbon && i.nilai_kasbon > 0)
                     .map(i => ({
                         id_jo_cont_item: i.id_jo_cont_item,
                         nilai_kasbon: 0
@@ -1431,11 +1925,11 @@
                     success: function(response) {
                         if (response.success) {
                             showFloatingAlert('success', 'All CA amounts have been reset!');
-                            mergedItems.forEach(function(item, index) {
+                            mergedItems.forEach(function(item, idx) {
                                 if (item.has_kasbon && item.nilai_kasbon > 0) {
-                                    mergedItems[index].nilai_kasbon = 0;
-                                    mergedItems[index].has_kasbon = false;
-                                    refreshRowAfterSave(index, 0, false);
+                                    mergedItems[idx].nilai_kasbon = 0;
+                                    mergedItems[idx].has_kasbon = false;
+                                    refreshRowAfterSave(idx, 0, false);
                                 }
                             });
                             closeInputCard();
@@ -1452,7 +1946,9 @@
             });
         });
 
-        // ── UPDATE FOOTER ──
+        // ══════════════════════════════════════════════════════════
+        // UPDATE FOOTER
+        // ══════════════════════════════════════════════════════════
         function updateFooter() {
             let totalHargaJual = 0,
                 totalHPP = 0,
@@ -1467,14 +1963,15 @@
             $('#footerTotalCA').text(formatNumber(totalCA));
         }
 
-        // ── JO ITEMS MODAL ──
+        // ══════════════════════════════════════════════════════════
+        // JO ITEMS MODAL
+        // ══════════════════════════════════════════════════════════
         function renderJoItemsModal(items) {
             $('#joItemsModalLoading').hide();
             if (!items || !items.length) {
                 $('#joItemsModalEmpty').show();
                 return;
             }
-
             let rows = '',
                 totalHpp = 0,
                 totalSell = 0;
@@ -1504,7 +2001,9 @@
             $('#joItemsModalContent').show();
         }
 
-        // ── UPDATE HEADER ──
+        // ══════════════════════════════════════════════════════════
+        // UPDATE HEADER
+        // ══════════════════════════════════════════════════════════
         $('#btnSaveHeader').on('click', function() {
             const idJoCont = $('#id_jo_cont').val();
             const idDep = $('#id_md_dep').val();
@@ -1535,13 +2034,15 @@
                     note: $('#note').val(),
                     priority: priority,
                     due_date: dueDate,
+                    ca_release_status: $('#ca_release_status').val(),
+                    ca_release_date: $('#ca_release_date').val(),
                     _token: csrfToken,
                 },
                 success: function(response) {
                     $('#btnSaveHeader').prop('disabled', false);
                     if (response.success) {
                         showFloatingAlert('success', 'Header updated successfully!');
-                        if (idJoCont != originalIdJoCont) {
+                        if (idJoCont !== originalIdJoCont) {
                             showFloatingAlert('saving', 'JO Contract changed — reloading page...');
                             setTimeout(() => window.location.reload(), 1200);
                         }
@@ -1556,18 +2057,49 @@
             });
         });
 
-        // ── INIT ──
+        // ══════════════════════════════════════════════════════════
+        // CA RELEASE STATUS TOGGLE
+        // ══════════════════════════════════════════════════════════
+        function handleReleaseStatusChange() {
+            const status = $('#ca_release_status').val();
+            const $statusWrapper = $('#caReleaseStatusWrapper');
+            const $dateWrapper = $('#caReleaseDateWrapper');
+
+            if (status === 'release') {
+                $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
+                $dateWrapper.show();
+            } else {
+                $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
+                $dateWrapper.hide();
+                $('#ca_release_date').val('');
+            }
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // INIT
+        // ══════════════════════════════════════════════════════════
         $(document).ready(function() {
+
+            // ── Select2 ──
             $('.select2-field').select2({
                 theme: 'bootstrap-5',
                 width: '100%'
             });
 
+            // Init release status toggle on load
+            handleReleaseStatusChange();
+
+            // CA Release Status change handler
+            $('#ca_release_status').on('change', function() {
+                handleReleaseStatusChange();
+            });
+
+            // ── JO Summary ──
             function populateJoSummary(idJoCont) {
                 if (!idJoCont) return;
                 const $opt = $('#id_jo_cont').find(`option[value="${idJoCont}"]`);
-                const no = $opt.data('no') || idJoCont,
-                    rawDate = $opt.data('tgl') || '';
+                const no = $opt.data('no') || idJoCont;
+                const rawDate = $opt.data('tgl') || '';
 
                 $('#joSummaryNo').text(no);
                 $('#joSummaryNo2').text(no);
@@ -1615,12 +2147,13 @@
                 populateJoSummary(id);
             });
 
+            // ── View Items button ──
             $(document).on('click', '#btnJoDetail', function() {
                 const id = $('#id_jo_cont').val();
                 if (!id) return;
                 const $opt = $('#id_jo_cont').find('option:selected');
-                $('#joItemsModalSubtitle').text(($opt.data('no') || id) + ' — ' + ($opt.data('title') ||
-                    ''));
+                $('#joItemsModalSubtitle').text(
+                    ($opt.data('no') || id) + ' — ' + ($opt.data('title') || ''));
                 $('#joItemsModalLoading').show();
                 $('#joItemsModalContent').hide();
                 $('#joItemsModalEmpty').hide();
@@ -1646,7 +2179,10 @@
                 }
             });
 
+            // ── Rupiah input setup ──
             setupRupiahInput(document.getElementById('inputNilaiKasbon'));
+
+            // ── Render tabel ──
             renderTable();
         });
     </script>

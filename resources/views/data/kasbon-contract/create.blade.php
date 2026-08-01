@@ -412,6 +412,38 @@
             font-size: .875rem;
             padding: 10px;
         }
+
+        /* RELEASE STATUS BADGE */
+        .release-status-pending {
+            background: #fff3cd;
+            border: 1.5px solid #ffc107;
+            color: #856404;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .release-status-release {
+            background: #d1fae5;
+            border: 1.5px solid #10b981;
+            color: #065f46;
+            border-radius: 8px;
+            padding: 6px 14px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Smooth transition for release date wrapper */
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
+        }
     </style>
 @endpush
 
@@ -625,9 +657,8 @@
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
-                                        <option value="normal" selected>Normal (Low)</option>
+                                        <option value="normal" selected>Normal</option>
                                         <option value="high">High</option>
-                                        <option value="urgent">Urgent</option>
                                     </select>
                                 </div>
 
@@ -635,6 +666,22 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Due Date & Time</label>
                                     <input type="datetime-local" name="due_date" id="due_date" class="form-control">
+                                </div>
+
+                                {{-- CA Release Status --}}
+                                <div class="col-md-12" id="caReleaseStatusWrapper">
+                                    <label class="form-label">CA Release Status</label>
+                                    <select name="ca_release_status" id="ca_release_status" class="form-select">
+                                        <option value="" selected>-- No Status (Pending) --</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="release">Release</option>
+                                    </select>
+                                </div>
+
+                                {{-- CA Release Date (hidden by default, shown only when status = release) --}}
+                                <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
+                                    <label class="form-label">CA Release Date</label>
+                                    <input type="date" name="ca_release_date" id="ca_release_date" class="form-control">
                                 </div>
 
                                 {{-- Note --}}
@@ -978,6 +1025,26 @@
         }
 
         // =============================================
+        // CA RELEASE STATUS TOGGLE
+        // =============================================
+        function handleReleaseStatusChange() {
+            const status = $('#ca_release_status').val();
+            const $statusWrapper = $('#caReleaseStatusWrapper');
+            const $dateWrapper   = $('#caReleaseDateWrapper');
+
+            if (status === 'release') {
+                // Status col: col-md-6, date col: col-md-6
+                $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
+                $dateWrapper.show();
+            } else {
+                // Status col: col-md-12, hide date
+                $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
+                $dateWrapper.hide();
+                $('#ca_release_date').val('');
+            }
+        }
+
+        // =============================================
         // DOCUMENT READY
         // =============================================
         $(document).ready(function() {
@@ -991,6 +1058,14 @@
 
             // Items card disabled until header saved
             $('#itemsCard').addClass('items-card-disabled');
+
+            // Init release status toggle on load
+            handleReleaseStatusChange();
+
+            // ── CA Release Status change handler ──
+            $('#ca_release_status').on('change', function() {
+                handleReleaseStatusChange();
+            });
 
             // ── JO Contract change → show summary card + load items ──
             $('#id_jo_cont').on('change', function() {
@@ -1176,13 +1251,15 @@
         // SAVE HEADER
         // =============================================
         $('#btnSaveHeader').on('click', function() {
-            const idJoCont = $('#id_jo_cont').val();
-            const idDep = $('#id_md_dep').val();
-            const idCabang = $('#id_md_cabang').val();
-            const idRelease = $('#id_md_release').val();
-            const tglKasbon = $('#tgl_kasbon').val();
-            const priority = $('#priority').val();
-            const dueDate = $('#due_date').val();
+            const idJoCont   = $('#id_jo_cont').val();
+            const idDep      = $('#id_md_dep').val();
+            const idCabang   = $('#id_md_cabang').val();
+            const idRelease  = $('#id_md_release').val();
+            const tglKasbon  = $('#tgl_kasbon').val();
+            const priority   = $('#priority').val();
+            const dueDate    = $('#due_date').val();
+            const caReleaseStatus = $('#ca_release_status').val();
+            const caReleaseDate   = $('#ca_release_date').val();
 
             if (!idJoCont || !idDep || !idCabang || !idRelease || !tglKasbon) {
                 showFloatingAlert('error', 'Please fill in all required fields');
@@ -1196,16 +1273,18 @@
                 url: '{{ route('kasbon-contract.header.store') }}',
                 method: 'POST',
                 data: {
-                    id_jo_cont: idJoCont,
-                    id_md_dep: idDep,
-                    id_md_cabang: idCabang,
-                    id_md_release: idRelease,
-                    tgl_kasbon: tglKasbon,
-                    tgl_release: $('#tgl_release').val(),
-                    note: $('#note').val(),
-                    priority: priority,
-                    due_date: dueDate,
-                    _token: $('input[name="_token"]').val(),
+                    id_jo_cont:         idJoCont,
+                    id_md_dep:          idDep,
+                    id_md_cabang:       idCabang,
+                    id_md_release:      idRelease,
+                    tgl_kasbon:         tglKasbon,
+                    tgl_release:        $('#tgl_release').val(),
+                    note:               $('#note').val(),
+                    priority:           priority,
+                    due_date:           dueDate,
+                    ca_release_status:  caReleaseStatus,
+                    ca_release_date:    caReleaseDate,
+                    _token:             $('input[name="_token"]').val(),
                 },
                 success: function(response) {
                     $('#btnSaveHeader').prop('disabled', false);
@@ -1234,8 +1313,8 @@
                 return;
             }
 
-            const itemId = $('#input_jo_cont_item').val();
-            const nilaiHpp = parseRupiah($('#input_nilai_hpp').val());
+            const itemId      = $('#input_jo_cont_item').val();
+            const nilaiHpp    = parseRupiah($('#input_nilai_hpp').val());
             const nilaiKasbon = parseRupiah($('#input_nilai_kasbon').val());
 
             if (!itemId) {
@@ -1257,10 +1336,10 @@
                 url: '{{ route('kasbon-contract.item.store') }}',
                 method: 'POST',
                 data: {
-                    id_kasbon_cont: currentKasbonContStr,
+                    id_kasbon_cont:  currentKasbonContStr,
                     id_jo_cont_item: itemId,
-                    nilai_kasbon: nilaiKasbon,
-                    _token: $('input[name="_token"]').val(),
+                    nilai_kasbon:    nilaiKasbon,
+                    _token:          $('input[name="_token"]').val(),
                 },
                 success: function(response) {
                     if (response.success) {
