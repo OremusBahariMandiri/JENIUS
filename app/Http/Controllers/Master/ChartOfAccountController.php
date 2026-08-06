@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Master;
 
 use App\Http\Controllers\Controller;
 use App\Models\Master\ChartOfAccount;
+use App\Models\Master\CostType;
 use App\Models\Master\ParentChartOfAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -38,33 +39,49 @@ class ChartOfAccountController extends Controller
         $this->middleware('check.access:chart_of_account,hapus')->only('destroy', 'bulkDelete');
     }
 
+    /**
+     * Build base query with all filters applied (reusable for index & export).
+     */
+    private function buildFilteredQuery(Request $request)
+    {
+        $query = ChartOfAccount::with('parentAccount.costType');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('account_name', 'like', "%{$search}%")
+                  ->orWhere('no_account', 'like', "%{$search}%")
+                  ->orWhere('parrent', 'like', "%{$search}%")
+                  ->orWhere('type', 'like', "%{$search}%")
+                  ->orWhere('payment_type', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('parent')) {
+            $query->where('parrent', $request->parent);
+        }
+
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
+
+        if ($request->filled('payment_type')) {
+            $query->where('payment_type', $request->payment_type);
+        }
+
+        if ($request->filled('id_md_cost_type')) {
+            $query->whereHas('parentAccount', function ($q) use ($request) {
+                $q->where('id_md_cost_type', $request->id_md_cost_type);
+            });
+        }
+
+        return $query;
+    }
+
     public function index(Request $request)
     {
         try {
-            // Eager load parentAccount + costType lewat parent
-            $query = ChartOfAccount::with('parentAccount.costType');
-
-            if ($request->has('search') && !empty($request->search)) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('account_name', 'like', "%{$search}%")
-                      ->orWhere('no_account', 'like', "%{$search}%")
-                      ->orWhere('parrent', 'like', "%{$search}%")
-                      ->orWhere('type', 'like', "%{$search}%")
-                      ->orWhere('payment_type', 'like', "%{$search}%");
-                });
-            }
-
-            if ($request->has('type') && !empty($request->type)) {
-                $query->where('type', $request->type);
-            }
-
-            // Filter by cost type lewat relasi parent
-            if ($request->has('id_md_cost_type') && !empty($request->id_md_cost_type)) {
-                $query->whereHas('parentAccount', function ($q) use ($request) {
-                    $q->where('id_md_cost_type', $request->id_md_cost_type);
-                });
-            }
+            $query = $this->buildFilteredQuery($request);
 
             $sortBy    = $request->get('sort_by', 'no_account');
             $sortOrder = $request->get('sort_order', 'asc');
@@ -77,11 +94,15 @@ class ChartOfAccountController extends Controller
             }
 
             $parentAccounts     = ParentChartOfAccount::with('costType')->orderBy('kode_perkiraan')->get();
+            $costTypes          = CostType::orderBy('name')->get();
             $typeOptions        = self::TYPE_OPTIONS;
             $paymentTypeOptions = self::PAYMENT_TYPE_OPTIONS;
 
+            // Kumpulkan filter aktif untuk ditampilkan di view
+            $currentFilters = $request->only(['search', 'parent', 'type', 'payment_type', 'id_md_cost_type']);
+
             return view('master.chart_of_account.index', compact(
-                'accounts', 'parentAccounts', 'typeOptions', 'paymentTypeOptions'
+                'accounts', 'parentAccounts', 'costTypes', 'typeOptions', 'paymentTypeOptions', 'currentFilters'
             ));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
@@ -93,6 +114,114 @@ class ChartOfAccountController extends Controller
 
             return back()->with('error', 'Error retrieving accounts: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Export — supports format=excel|pdf, respects active filter.
+     */
+    public function export(Request $request)
+    {
+        $format   = $request->get('format', 'excel');
+        $accounts = $this->buildFilteredQuery($request)
+            ->orderBy('no_account', 'asc')
+            ->get();
+
+        if ($format === 'pdf') {
+            if (class_exists('\Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf      = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'master.chart_of_account.export_pdf',
+                    compact('accounts')
+                )->setPaper('a4', 'landscape');
+
+                $filename = 'chart_of_account_' . date('Ymd_His') . '.pdf';
+
+                return $pdf->stream($filename);
+            }
+
+            // Fallback: printable HTML
+            $filename = 'chart_of_account_' . date('Ymd_His') . '.pdf';
+            $html     = view('master.chart_of_account.export_pdf', compact('accounts'))->render();
+
+            return response($html, 200, [
+                'Content-Type'        => 'text/html; charset=UTF-8',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        // Excel
+        return (new \App\Exports\DataMaster\ChartOfAccountExport($accounts))->download();
+    }
+
+    /**
+     * Build printable PDF HTML (fallback tanpa DomPDF) — landscape A4.
+     */
+    private function buildPdfHtml($accounts)
+    {
+        $total     = $accounts->count();
+        $printedAt = now()->format('d/m/Y H:i');
+
+        $rows = '';
+        foreach ($accounts as $i => $acc) {
+            $bg     = ($i % 2 === 0) ? '#fff' : '#f5f5f5';
+            $parent = $acc->parentAccount
+                ? e($acc->parentAccount->kode_perkiraan) . ' - ' . e($acc->parentAccount->nama)
+                : '-';
+            $rows .= '<tr style="background:' . $bg . ';">'
+                . '<td style="text-align:center;padding:4px 6px;border:1px solid #ccc;">' . ($i + 1) . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;">' . e($acc->no_account ?? '-') . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;">' . e($acc->account_name) . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;">' . $parent . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;">' . e($acc->parentAccount?->costType?->name ?? '-') . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;">' . e($acc->type ?? '-') . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;">' . e($acc->payment_type ?? '-') . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;text-align:right;">' . number_format($acc->opening_balance, 2) . '</td>'
+                . '<td style="padding:4px 6px;border:1px solid #ccc;text-align:right;">' . number_format($acc->current_balance, 2) . '</td>'
+                . '</tr>';
+        }
+
+        return <<<HTML
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Chart of Account</title>
+    <style>
+        @page { size: A4 landscape; margin: 12mm 10mm; }
+        @media print { .no-print { display: none; } }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 9px; color: #000; margin: 0; padding: 20px; }
+        h2 { font-size: 13px; font-weight: bold; margin: 0 0 2px 0; }
+        p.sub { font-size: 8.5px; color: #555; margin: 0 0 10px 0; }
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #000; color: #fff; font-size: 8px; font-weight: bold; text-transform: uppercase; padding: 5px 6px; border: 1px solid #000; text-align: left; }
+        .footer { margin-top: 10px; font-size: 8px; color: #555; text-align: right; }
+        .print-btn { position: fixed; top: 12px; right: 12px; padding: 7px 16px; background: #111; color: #fff; border: none; cursor: pointer; font-size: 11px; border-radius: 2px; }
+        tr { page-break-inside: avoid; }
+    </style>
+</head>
+<body>
+    <button class="print-btn no-print" onclick="window.print()">Print / Save PDF</button>
+    <h2>Chart of Account</h2>
+    <p class="sub">Printed: {$printedAt} &mdash; Total: {$total} records</p>
+    <table>
+        <thead>
+            <tr>
+                <th width="3%">No</th>
+                <th width="8%">No. Account</th>
+                <th width="20%">Account Name</th>
+                <th width="18%">Parent Account</th>
+                <th width="10%">Cost Type</th>
+                <th width="8%">Type</th>
+                <th width="9%">Payment Type</th>
+                <th width="12%">Opening Balance</th>
+                <th width="12%">Current Balance</th>
+            </tr>
+        </thead>
+        <tbody>{$rows}</tbody>
+    </table>
+    <div class="footer">{$total} account(s) &mdash; {$printedAt}</div>
+</body>
+</html>
+HTML;
     }
 
     public function create()
@@ -304,11 +433,11 @@ class ChartOfAccountController extends Controller
             $query = ChartOfAccount::with('parentAccount.costType')
                 ->select('id_md_chart_of_account', 'no_account', 'account_name', 'type', 'parrent');
 
-            if ($request->has('type') && !empty($request->type)) {
+            if ($request->filled('type')) {
                 $query->where('type', $request->type);
             }
 
-            if ($request->has('id_md_cost_type') && !empty($request->id_md_cost_type)) {
+            if ($request->filled('id_md_cost_type')) {
                 $query->whereHas('parentAccount', fn($q) => $q->where('id_md_cost_type', $request->id_md_cost_type));
             }
 

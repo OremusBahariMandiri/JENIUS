@@ -1085,7 +1085,7 @@
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('release_to.*') ? 'active' : '' }}"
                                     href="{{ route('release_to.index') }}">
-                                    <i class="fas fa-share-square"></i>
+                                    <i class="fas fa-paper-plane"></i>
                                     <span>Release To</span>
                                 </a>
                             </div>
@@ -1094,7 +1094,7 @@
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('cost-type.*') ? 'active' : '' }}"
                                     href="{{ route('cost-type.index') }}">
-                                    <i class="fas fa-share-square"></i>
+                                    <i class="fas fa-tags"></i>
                                     <span>Cost Type</span>
                                 </a>
                             </div>
@@ -1103,7 +1103,7 @@
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('parent-coa.*') ? 'active' : '' }}"
                                     href="{{ route('parent-coa.index') }}">
-                                    <i class="fas fa-share-square"></i>
+                                    <i class="fas fa-folder-open"></i>
                                     <span>Parent COA</span>
                                 </a>
                             </div>
@@ -1112,7 +1112,7 @@
                             <div class="submenu-item">
                                 <a class="nav-link {{ request()->routeIs('chart-of-account.*') ? 'active' : '' }}"
                                     href="{{ route('chart-of-account.index') }}">
-                                    <i class="fas fa-share-square"></i>
+                                    <i class="fas 	fa-chart-bar"></i>
                                     <span>Chart Of Account</span>
                                 </a>
                             </div>
@@ -1230,7 +1230,7 @@
                         auth()->user()->hasAccessToMenu('lpj_general')))
                 <div class="nav-item has-submenu" data-tooltip="Cash Advance">
                     <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenLpj">
-                        <i class="fas fa-cash-register"></i>
+                        <i class="fas fa-file-invoice-dollar"></i>
                         <span>LPJ</span>
                         <i class="fas fa-chevron-down submenu-indicator"></i>
                     </a>
