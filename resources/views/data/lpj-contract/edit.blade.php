@@ -1772,15 +1772,15 @@
                     }]
                 }),
                 success: function(r) {
+                    $('#btnSaveItemInput').prop('disabled', false);
                     if (r.success) {
-                        showFloatingAlert('success', 'LPJ Amount cleared!');
-                        mergedItems[index].amount_lpj = 0;
-                        mergedItems[index].has_lpj = false;
-                        mergedItems[index].id_md_chart_of_account = null;
-                        if (parseInt($('#activeRowIndex').val()) === index) closeInputCard();
-                        renderTable(); // re-render supaya rowspan tetap benar
-                        updateFooter();
+                        showFloatingAlert('success', 'LPJ Amount saved!');
+                        mergedItems[rowIndex].amount_lpj = amountLpj;
+                        mergedItems[rowIndex].has_lpj = true;
+                        mergedItems[rowIndex].id_md_chart_of_account = coaId;
                         closeInputCard();
+                        renderTable();
+                        updateFooter();
                     } else {
                         showFloatingAlert('error', r.message || 'Failed to save');
                     }

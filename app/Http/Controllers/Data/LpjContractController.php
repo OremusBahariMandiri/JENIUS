@@ -288,7 +288,7 @@ class LpjContractController extends Controller
             'items.*.id_kasbon_cont_item'      => 'required',
             'items.*.id_jo_cont_item'          => 'required',
             'items.*.amount_lpj'               => 'required|numeric|min:0',
-            'items.*.id_md_chart_of_account'   => 'nullable|exists:a12_md_chart_of_account,id_md_chart_of_account',
+            'items.*.id_md_chart_of_account'   => 'nullable|exists:a13_md_chart_of_account,id_md_chart_of_account',
         ]);
 
         if ($validator->fails()) {
@@ -359,7 +359,7 @@ class LpjContractController extends Controller
             'hpp_ops'                => 'nullable|numeric|min:0',
             'nilai_kasbon'           => 'required|numeric|min:0',
             'amount_lpj'             => 'required|numeric|min:0',
-            'id_md_chart_of_account' => 'nullable|exists:a12_md_chart_of_account,id_md_chart_of_account',
+            'id_md_chart_of_account' => 'nullable|exists:a13_md_chart_of_account,id_md_chart_of_account',
         ]);
 
         if ($validator->fails()) {
