@@ -207,6 +207,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Chart of Account Routes
     Route::prefix('master/chart-of-account')->name('chart-of-account.')->group(function () {
+        Route::get('/export', [ChartOfAccountController::class, 'export'])->name('export');
         Route::get('/', [ChartOfAccountController::class, 'index'])->name('index');
         Route::get('/create', [ChartOfAccountController::class, 'create'])->name('create');
         Route::post('/', [ChartOfAccountController::class, 'store'])->name('store');
