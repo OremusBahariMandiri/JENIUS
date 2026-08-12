@@ -85,7 +85,7 @@
                                         <th>Title</th>
                                         <th class="text-center">Items</th>
                                         <th class="text-center">Total</th>
-                                        <th class="text-center">Invoice</th>
+                                        <th class="text-center">JO PDF</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>

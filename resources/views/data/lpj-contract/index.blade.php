@@ -72,6 +72,7 @@
                                     <th class="text-end">Total Kasbon (IDR)</th>
                                     <th class="text-end">Total LPJ (IDR)</th>
                                     <th class="text-center">Evidence</th>
+                                    <th class="text-center">LPJ PDF</th>
                                     <th class="text-center" width="12%">Action</th>
                                 </tr>
                             </thead>
@@ -94,6 +95,14 @@
                                                 </a>
                                             @else
                                                 <span class="text-muted">—</span>
+                                            @endif
+                                        </td>
+                                        <td class="text-center">
+                                            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-contract', 'detail')))
+                                            <a href="{{ route('lpj-contract.export-pdf', $lpj->id) }}" target="_blank"
+                                                class="btn btn-sm btn-outline-danger">
+                                                <i class="fas fa-file-pdf"></i>
+                                             </a>
                                             @endif
                                         </td>
                                         <td class="text-center">
@@ -124,7 +133,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center py-5">
+                                        <td colspan="11" class="text-center py-5">
                                             <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                             <h5 class="text-muted">No LPJ Contract Data</h5>
                                             <p class="text-muted mb-0">Start by adding a new LPJ Contract</p>

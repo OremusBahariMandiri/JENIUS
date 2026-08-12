@@ -740,8 +740,8 @@ class JoContractController extends Controller
 
         DB::beginTransaction();
         try {
-            $joContract  = JoContract::findOrFail($id);
-            $itemsCount  = $joContract->items()->count();
+            $joContract = JoContract::findOrFail($id);
+            $itemsCount = $joContract->items()->count();
 
             foreach ($joContract->items as $item) {
                 $item->delete();
@@ -752,17 +752,46 @@ class JoContractController extends Controller
 
             Log::info('JO Contract Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
-            if ($request->expectsJson()) return response()->json(['success' => true, 'message' => 'JO Contract and all related items successfully deleted']);
-            return redirect()->route('jo-contract.index')->with('success', "JO Contract deleted successfully along with {$itemsCount} item(s)");
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'JO Contract and all related items successfully deleted']);
+            }
+            return redirect()->route('jo-contract.index')
+                ->with('success', "JO Contract deleted successfully along with {$itemsCount} item(s)");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
-            if ($request->expectsJson()) return response()->json(['success' => false, 'message' => 'JO Contract not found'], 404);
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'JO Contract not found'], 404);
+            }
             return back()->with('error', 'JO Contract not found');
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            Log::error('Delete JO Contract Failed - FK Constraint', ['id' => $id, 'error' => $e->getMessage()]);
+
+            // Foreign key constraint violation (MySQL error code 1451)
+            if ($e->getCode() === '23000') {
+                $friendlyMessage = $this->resolveFkDeleteMessage($e->getMessage());
+
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $friendlyMessage,
+                    ], 422);
+                }
+                return back()->with('error', $friendlyMessage);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to delete JO Contract. Please try again.'], 500);
+            }
+            return back()->with('error', 'Failed to delete JO Contract. Please try again.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Delete JO Contract Failed', ['id' => $id, 'error' => $e->getMessage()]);
-            if ($request->expectsJson()) return response()->json(['success' => false, 'message' => 'Error deleting JO contract: ' . $e->getMessage()], 500);
-            return back()->with('error', 'Error deleting JO contract: ' . $e->getMessage());
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to delete JO Contract. Please try again.'], 500);
+            }
+            return back()->with('error', 'Failed to delete JO Contract. Please try again.');
         }
     }
 
@@ -1014,5 +1043,28 @@ class JoContractController extends Controller
             Log::error('syncItemsKurs failed', ['id' => $id, 'error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    private function resolveFkDeleteMessage(string $rawError): string
+    {
+        $map = [
+            // table name (dari constraint) => label yang ditampilkan ke user
+            'd01_lpj_cont'       => 'LPJ Contract',
+            'c01_kasbon_cont'    => 'Cash Advance (Kasbon)',
+            'c02_kasbon_cont_item' => 'Cash Advance Item',
+            'd03_lpj_cont_item'  => 'LPJ Contract Item',
+            'd02_lpj_kasbon'     => 'LPJ Kasbon',
+        ];
+
+        foreach ($map as $table => $label) {
+            if (str_contains($rawError, $table)) {
+                return "Cannot delete this JO Contract because it is still referenced by \"{$label}\" data. "
+                    . "Please delete the related {$label} records first before removing this JO Contract.";
+            }
+        }
+
+        // Fallback jika tabel tidak ada di peta di atas
+        return 'Cannot delete this JO Contract because it is still being used by other related data. '
+            . 'Please remove all related records first before deleting this JO Contract.';
     }
 }

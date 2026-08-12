@@ -429,6 +429,8 @@ Route::middleware(['auth'])->group(function () {
     //================= END KASBON GENERAL ROUTE GROUP =================//
 
     //================= LPJ CONTRACT ROUTE GROUP =================//
+    Route::get('lpj-contract/{id}/export-pdf', [LpjContractController::class, 'exportPdf'])
+        ->name('lpj-contract.export-pdf');
     Route::get('lpj-contract/{id}/refresh-kasbons', [LpjContractController::class, 'refreshKasbons'])
         ->name('lpj-contract.refresh-kasbons');
     Route::post('lpj-contract/{id}/add-kasbons',    [LpjContractController::class, 'addKasbons'])
