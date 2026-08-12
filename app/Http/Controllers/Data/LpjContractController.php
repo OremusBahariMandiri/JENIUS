@@ -153,7 +153,6 @@ class LpjContractController extends Controller
                 'redirect_url' => route('lpj-contract.edit', $lpj->id),
                 'data'         => ['id' => $lpj->id, 'id_lpj_cont' => $idLpjCont],
             ], 201);
-
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('LpjContract Store Header Failed', ['error' => $e->getMessage()]);
@@ -221,7 +220,12 @@ class LpjContractController extends Controller
             }
 
             return view('data.lpj-contract.edit', compact(
-                'lpj', 'joContracts', 'invoices', 'mergedItems', 'joKurs', 'coaList'
+                'lpj',
+                'joContracts',
+                'invoices',
+                'mergedItems',
+                'joKurs',
+                'coaList'
             ));
         } catch (\Exception $e) {
             Log::error('LpjContract Edit Failed', ['id' => $id, 'error' => $e->getMessage()]);
@@ -726,5 +730,102 @@ class LpjContractController extends Controller
             }
             return back()->with('error', 'Error deleting LPJ: ' . $e->getMessage());
         }
+    }
+
+    public function exportPdf($id)
+    {
+        try {
+            $lpj = LpjContract::with([
+                'joContract.contract',
+                'joContract.area',
+                'kasbons.kasbonContract.items.joContractItem.invoice',
+                'items.kasbonContractItem',
+                'items.chartOfAccount',
+            ])->findOrFail($id);
+
+            // Hitung total LPJ (sum amount_lpj dari semua item yang sudah diisi)
+            $totalLpj = $lpj->items->sum('amount_lpj');
+
+            // Terbilang dari total LPJ
+            $terbilang = $this->toTerbilang((int) round($totalLpj)) . ' Rupiah';
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                'data.lpj-contract.pdf',   // resources/views/data/lpj-contract/pdf.blade.php
+                compact('lpj', 'terbilang')
+            )
+                ->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled'      => false,
+                    'defaultFont'          => 'Arial',
+                    'dpi'                  => 150,
+                ]);
+
+            $filename = 'LPJ-Contract-'
+                . str_replace(['/', '\\'], '-', $lpj->no_lpj_cont ?? $id)
+                . '.pdf';
+
+            return $pdf->stream($filename);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'LPJ Contract not found'], 404);
+            }
+            return back()->with('error', 'LPJ Contract not found');
+        } catch (\Exception $e) {
+            Log::error('LPJ Contract Export PDF Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to export PDF: ' . $e->getMessage()], 500);
+            }
+            return back()->with('error', 'Failed to export PDF: ' . $e->getMessage());
+        }
+    }
+
+    // ========================================
+    // TERBILANG — Indonesian number-to-words helper
+    // (sama persis dengan KasbonContractController)
+    // ========================================
+
+    private function toTerbilang(int $number): string
+    {
+        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
+
+        $words = [
+            '',
+            'Satu',
+            'Dua',
+            'Tiga',
+            'Empat',
+            'Lima',
+            'Enam',
+            'Tujuh',
+            'Delapan',
+            'Sembilan',
+            'Sepuluh',
+            'Sebelas',
+        ];
+
+        if ($number === 0)  return 'Nol';
+        if ($number < 12)   return $words[$number];
+        if ($number < 20)   return $this->toTerbilang($number - 10) . ' Belas';
+        if ($number < 100)  return $words[(int) ($number / 10)] . ' Puluh'
+            . ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
+        if ($number < 200)  return 'Seratus'
+            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 1000) return $words[(int) ($number / 100)] . ' Ratus'
+            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 2000) return 'Seribu'
+            . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000)
+            return $this->toTerbilang((int) ($number / 1000)) . ' Ribu'
+                . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000_000)
+            return $this->toTerbilang((int) ($number / 1_000_000)) . ' Juta'
+                . ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
+        if ($number < 1_000_000_000_000)
+            return $this->toTerbilang((int) ($number / 1_000_000_000)) . ' Miliar'
+                . ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
+
+        return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun'
+            . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
     }
 }

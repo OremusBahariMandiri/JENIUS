@@ -952,7 +952,7 @@
                                     <label class="form-label fw-bold" style="color:#1e40af; font-size:0.875rem;">
                                         Chart of Account
                                     </label>
-                                    <select id="inputCoa" class="form-select" style="font-size:.875rem;">
+                                    <select id="inputCoa" class="form-select select2-coa" style="font-size:.875rem;">
                                         <option value="">— Select COA (optional) —</option>
                                         @foreach ($coaList as $coa)
                                             <option value="{{ $coa->id_md_chart_of_account }}">
@@ -1061,10 +1061,18 @@
     </div>
 
     <div class="final-save-section">
-        <div class="d-flex justify-content-end">
-            <a href="{{ route('lpj-contract.index') }}" class="btn btn-final-back">
-                <i class="fas fa-arrow-left me-1"></i> Back to List
-            </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <div></div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('lpj-contract.export-pdf', $lpj->id) }}" target="_blank" class="btn"
+                    style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
+                           border-color:red; background-color:rgb(255, 237, 237); color:red">
+                    <i class="fas fa-file-pdf me-2"></i> Generate LPJ
+                </a>
+                <a href="{{ route('lpj-contract.index') }}" class="btn btn-final-back">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+            </div>
         </div>
     </div>
 
@@ -1127,7 +1135,7 @@
                         {{-- CA Target --}}
                         <div class="col-md-12">
                             <label class="form-label fw-semibold required-field">Target Cash Advance</label>
-                            <select id="newItemKasbonCont" class="form-select">
+                            <select id="newItemKasbonCont" class="form-select select2-coa">
                                 <option value="">-- Select Cash Advance --</option>
                                 @foreach ($lpj->kasbons as $lpjKasbon)
                                     @if ($lpjKasbon->kasbonContract)
@@ -1141,7 +1149,7 @@
                         {{-- Category --}}
                         <div class="col-md-12">
                             <label class="form-label fw-semibold required-field">Category</label>
-                            <select id="newItemCategory" class="form-select">
+                            <select id="newItemCategory" class="form-select select2-coa">
                                 <option value="">-- Select Category --</option>
                                 @foreach ($invoices->groupBy('invoice_ctg') as $cat => $inv)
                                     <option value="{{ $cat }}">{{ $cat }}</option>
@@ -1151,7 +1159,7 @@
                         {{-- Item --}}
                         <div class="col-md-12">
                             <label class="form-label fw-semibold required-field">Item</label>
-                            <select id="newItemInvoice" class="form-select" disabled>
+                            <select id="newItemInvoice" class="form-select select2-coa" disabled>
                                 <option value="">-- Select category first --</option>
                             </select>
                         </div>
@@ -1296,7 +1304,7 @@
                                 {{-- COA --}}
                                 <div class="col-md-6">
                                     <label class="form-label fw-semibold">Chart of Account</label>
-                                    <select id="newItemCoa" class="form-select" style="font-size:.875rem;">
+                                    <select id="newItemCoa" class="form-select select2-coa" style="font-size:.875rem;">
                                         <option value="">— Select COA —</option>
                                         @foreach ($coaList as $coa)
                                             <option value="{{ $coa->id_md_chart_of_account }}">
@@ -1337,6 +1345,47 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    <style>
+        /* ── Select2 COA — di dalam card maupun modal ── */
+        .select2-coa+.select2-container {
+            width: 100% !important;
+        }
+
+        .select2-coa+.select2-container .select2-selection--single {
+            height: calc(1.5em + 0.75rem + 2px) !important;
+            padding: 0.375rem 0.75rem !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 0.375rem !important;
+            font-size: .875rem;
+        }
+
+        .select2-coa+.select2-container .select2-selection--single .select2-selection__rendered {
+            line-height: 1.5 !important;
+            padding-left: 0 !important;
+            color: #212529;
+            font-size: .875rem;
+        }
+
+        .select2-coa+.select2-container .select2-selection--single .select2-selection__arrow {
+            height: 100% !important;
+        }
+
+        /* Fokus border hijau sesuai tema LPJ */
+        .select2-coa+.select2-container--bootstrap-5 .select2-selection {
+            border-color: #ced4da !important;
+        }
+
+        .select2-coa+.select2-container--bootstrap-5.select2-container--focus .select2-selection {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, .25) !important;
+        }
+
+        /* Dropdown di dalam modal tidak terpotong */
+        .modal .select2-dropdown {
+            z-index: 10600 !important;
+        }
+    </style>
 
     <script>
         const currentLpjId = {{ $lpj->id }};
@@ -2310,10 +2359,45 @@
             });
         });
 
+        function initCoaSelect2(context) {
+            $(context).find('.select2-coa').each(function() {
+                if ($(this).hasClass('select2-hidden-accessible')) return; // sudah diinit
+
+                const isInsideModal = $(this).closest('.modal').length > 0;
+
+                $(this).select2({
+                    theme: 'bootstrap-5',
+                    width: '100%',
+                    placeholder: $(this).find('option:first').text(),
+                    allowClear: true,
+                    // dropdownParent: agar tidak terpotong di dalam modal
+                    dropdownParent: isInsideModal ?
+                        $(this).closest('.modal') : $(document.body),
+                });
+            });
+        }
+
         // ══════════════════════════════════════════════════════════
         // INIT
         // ══════════════════════════════════════════════════════════
         $(document).ready(function() {
+            // Init COA di input card (bukan modal)
+            initCoaSelect2('#inputItemCard');
+
+            // Re-init saat modal Add New Item dibuka
+            $('#modalAddNewItem').on('shown.bs.modal', function() {
+                initCoaSelect2(this);
+            });
+
+            // Destroy select2 di modal saat ditutup agar tidak double-init
+            $('#modalAddNewItem').on('hidden.bs.modal', function() {
+                $(this).find('.select2-coa').each(function() {
+                    if ($(this).hasClass('select2-hidden-accessible')) {
+                        $(this).select2('destroy');
+                    }
+                });
+            });
+
             renderTable();
         });
     </script>

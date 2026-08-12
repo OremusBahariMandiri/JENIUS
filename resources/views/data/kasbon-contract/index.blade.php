@@ -73,10 +73,10 @@
 
                         {{-- ── SUMMARY CARDS ── --}}
                         @php
-                            $countHigh     = $kasbonContracts->where('priority', 'high')->count();
-                            $countNormal   = $kasbonContracts->where('priority', 'normal')->count();
+                            $countHigh = $kasbonContracts->where('priority', 'high')->count();
+                            $countNormal = $kasbonContracts->where('priority', 'normal')->count();
                             $countReleased = $kasbonContracts->where('ca_release_status', 'release')->count();
-                            $countPending  = $kasbonContracts->where('ca_release_status', '!=', 'release')->count();
+                            $countPending = $kasbonContracts->where('ca_release_status', '!=', 'release')->count();
                         @endphp
 
                         <div class="row g-3 mb-4">
@@ -84,12 +84,14 @@
                             <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#fff1f2; border-color:#f87171 !important;">
-                                    <div style="width:42px;height:42px;background:#fee2e2;border-radius:10px;
+                                    <div
+                                        style="width:42px;height:42px;background:#fee2e2;border-radius:10px;
                                         display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                         <i class="fas fa-arrow-up" style="color:#dc2626;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                        <div
+                                            style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
                                             High
                                         </div>
                                         <div style="font-size:1.6rem;font-weight:700;color:#b91c1c;line-height:1.1;">
@@ -106,12 +108,14 @@
                             <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#f9fafb; border-color:#d1d5db !important;">
-                                    <div style="width:42px;height:42px;background:#f3f4f6;border-radius:10px;
+                                    <div
+                                        style="width:42px;height:42px;background:#f3f4f6;border-radius:10px;
                                         display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                         <i class="fas fa-minus" style="color:#6b7280;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                        <div
+                                            style="font-size:.75rem;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
                                             Normal
                                         </div>
                                         <div style="font-size:1.6rem;font-weight:700;color:#374151;line-height:1.1;">
@@ -128,12 +132,14 @@
                             <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#d1fae5; border-color:#6ee7b7 !important;">
-                                    <div style="width:42px;height:42px;background:#a7f3d0;border-radius:10px;
+                                    <div
+                                        style="width:42px;height:42px;background:#a7f3d0;border-radius:10px;
                                         display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                         <i class="fas fa-check-circle" style="color:#059669;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#065f46;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                        <div
+                                            style="font-size:.75rem;color:#065f46;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
                                             Released
                                         </div>
                                         <div style="font-size:1.6rem;font-weight:700;color:#059669;line-height:1.1;">
@@ -150,12 +156,14 @@
                             <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#fffbeb; border-color:#fcd34d !important;">
-                                    <div style="width:42px;height:42px;background:#fef3c7;border-radius:10px;
+                                    <div
+                                        style="width:42px;height:42px;background:#fef3c7;border-radius:10px;
                                         display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                         <i class="fas fa-clock" style="color:#d97706;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                        <div
+                                            style="font-size:.75rem;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
                                             Pending
                                         </div>
                                         <div style="font-size:1.6rem;font-weight:700;color:#d97706;line-height:1.1;">
@@ -183,7 +191,7 @@
                                         <th class="text-center">Items</th>
                                         <th class="text-end">Total HPP</th>
                                         <th class="text-end">Total CA</th>
-                                        <th class="text-center">Invoice</th>
+                                        <th class="text-center">CA PDF</th>
                                         <th class="text-center">Priority</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center" width="10%">Action</th>
@@ -193,7 +201,7 @@
                                     @forelse($kasbonContracts as $kasbon)
                                         @php
                                             $isReleased = $kasbon->ca_release_status === 'release';
-                                            $rowClass   = (!$isReleased && $kasbon->priority === 'high') ? 'row-high' : '';
+                                            $rowClass = !$isReleased && $kasbon->priority === 'high' ? 'row-high' : '';
                                         @endphp
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $loop->iteration }}</td>
@@ -297,17 +305,21 @@
                             {{-- TABLE LEGEND --}}
                             <div class="d-flex flex-wrap gap-3 mt-3 px-1" style="font-size:.8rem;">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span style="display:inline-block;width:16px;height:16px;border-radius:4px;
+                                    <span
+                                        style="display:inline-block;width:16px;height:16px;border-radius:4px;
                                         background:#fee2e2;border:1px solid #fca5a5;flex-shrink:0;"></span>
                                     <span style="color:#6b7280;">
-                                        <span style="font-weight:600;color:#b91c1c;">Red</span> — High priority, not yet released
+                                        <span style="font-weight:600;color:#b91c1c;">Red</span> — High priority, not yet
+                                        released
                                     </span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span style="display:inline-block;width:16px;height:16px;border-radius:4px;
+                                    <span
+                                        style="display:inline-block;width:16px;height:16px;border-radius:4px;
                                         background:#ffffff;border:1px solid #d1d5db;flex-shrink:0;"></span>
                                     <span style="color:#6b7280;">
-                                        <span style="font-weight:600;color:#374151;">White</span> — Normal priority or already released
+                                        <span style="font-weight:600;color:#374151;">White</span> — Normal priority or
+                                        already released
                                     </span>
                                 </div>
                             </div>
@@ -462,6 +474,7 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <style>
+        /* ── Select2 di dalam modal ── */
         .modal .select2-container {
             width: 100% !important;
         }
@@ -483,6 +496,7 @@
             height: 100% !important;
         }
 
+        /* ── Card & header ── */
         .kasbonContractPage .card {
             border: none;
             border-radius: 10px;
@@ -493,12 +507,86 @@
             padding: 1rem 1.5rem;
         }
 
+        /* ── DataTables wrapper — ikuti pola LPJ ── */
+        .kasbonContractPage .dataTables_wrapper {
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .kasbonContractPage .dataTables_wrapper .dataTables_length,
+        .kasbonContractPage .dataTables_wrapper .dataTables_filter {
+            margin-bottom: 1rem !important;
+        }
+
+        .kasbonContractPage .dataTables_wrapper .dataTables_filter {
+            text-align: right !important;
+        }
+
+        .kasbonContractPage .dataTables_wrapper .dataTables_filter input {
+            margin-left: 5px !important;
+            border-radius: 4px !important;
+            border: 1px solid #ced4da !important;
+            padding: 0.375rem 0.75rem !important;
+        }
+
+        .kasbonContractPage .dataTables_wrapper .dataTables_length select {
+            border-radius: 4px !important;
+            border: 1px solid #ced4da !important;
+            padding: 0.375rem 2rem 0.375rem 0.75rem !important;
+        }
+
+        /* ── Tabel utama: width 100%, tidak boleh geser ── */
+        .kasbonContractPage #kasbonContractTable {
+            width: 100% !important;
+            transition: all 0.3s ease;
+        }
+
+        .kasbonContractPage #kasbonContractTable tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        .kasbonContractPage #kasbonContractTable tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        /* ── Table responsive wrapper: overflow scroll, bukan geser layout ── */
+        .kasbonContractPage .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* ── Paginate ── */
+        .kasbonContractPage .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0.375rem 0.75rem !important;
+            margin: 0 2px !important;
+            border-radius: 4px !important;
+        }
+
+        .kasbonContractPage .dataTables_wrapper .dataTables_paginate .paginate_button.current {
+            background: var(--primary-green) !important;
+            color: white !important;
+            border: 1px solid var(--primary-green) !important;
+        }
+
+        .kasbonContractPage .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+            background: var(--primary-green) !important;
+            color: white !important;
+            border: 1px solid var(--primary-green) !important;
+        }
+
+        /* ── Misc ── */
         .kasbonContractPage .btn-sm {
             transition: transform 0.2s;
         }
 
         .kasbonContractPage .btn-sm:hover {
             transform: scale(1.1);
+        }
+
+        .kasbonContractPage .badge {
+            font-weight: 500;
+            padding: 0.35rem 0.65rem;
         }
 
         /* High priority + NOT released = red row */
@@ -525,7 +613,11 @@
                 !$('#kasbonContractTable tbody tr td[colspan]').length;
 
             if (hasData) {
-                $('#kasbonContractTable').DataTable({
+                if ($.fn.DataTable.isDataTable('#kasbonContractTable')) {
+                    $('#kasbonContractTable').DataTable().destroy();
+                }
+
+                var table = $('#kasbonContractTable').DataTable({
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [
@@ -535,29 +627,96 @@
                     order: [
                         [2, 'desc']
                     ],
-                    columnDefs: [
-                        { orderable: false, targets: 0 },
-                        { orderable: false, targets: -1 },
-                        { responsivePriority: 1,     targets: -1 },
-                        { responsivePriority: 2,     targets: 1 },
-                        { responsivePriority: 3,     targets: 12 },  // Status
-                        { responsivePriority: 4,     targets: 11 },  // Priority
-                        { responsivePriority: 10001, targets: 4 },
-                        { responsivePriority: 10002, targets: 5 },
-                        { responsivePriority: 10003, targets: 6 },
+                    columnDefs: [{
+                            orderable: false,
+                            targets: 0
+                        },
+                        {
+                            orderable: false,
+                            targets: -1
+                        },
+                        {
+                            responsivePriority: 1,
+                            targets: -1
+                        }, // Action
+                        {
+                            responsivePriority: 2,
+                            targets: 1
+                        }, // CA No
+                        {
+                            responsivePriority: 3,
+                            targets: 12
+                        }, // Status
+                        {
+                            responsivePriority: 4,
+                            targets: 11
+                        }, // Priority
+                        {
+                            responsivePriority: 5,
+                            targets: 2
+                        }, // CA Date
+                        {
+                            responsivePriority: 6,
+                            targets: 3
+                        }, // JO No
+                        {
+                            responsivePriority: 10001,
+                            targets: 4
+                        }, // Dep
+                        {
+                            responsivePriority: 10002,
+                            targets: 5
+                        }, // Branch
+                        {
+                            responsivePriority: 10003,
+                            targets: 6
+                        }, // Release To
                     ],
                     language: {
                         search: 'Search:',
+                        lengthMenu: 'Show _MENU_ entries per page',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                        infoEmpty: 'Showing 0 to 0 of 0 entries',
+                        infoFiltered: '(filtered from _MAX_ total entries)',
+                        paginate: {
+                            first: 'First',
+                            last: 'Last',
+                            next: 'Next',
+                            previous: 'Previous'
+                        },
                         emptyTable: 'No Kasbon Contract data available',
                     },
+                    autoWidth: true,
                     drawCallback: function(settings) {
                         var api = this.api();
                         var startIndex = api.page.info().start;
-                        api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+                        api.column(0, {
+                            page: 'current'
+                        }).nodes().each(function(cell, i) {
                             cell.innerHTML = startIndex + i + 1;
                         });
+                        api.columns.adjust();
                     },
                 });
+
+                // Adjust on window resize (sama seperti LPJ index)
+                let resizeTimer;
+                $(window).on('resize', function() {
+                    clearTimeout(resizeTimer);
+                    resizeTimer = setTimeout(function() {
+                        if ($.fn.DataTable.isDataTable('#kasbonContractTable')) {
+                            $('#kasbonContractTable').DataTable().columns.adjust().responsive
+                                .recalc();
+                        }
+                    }, 300);
+                });
+
+                // Initial adjust setelah DOM settle
+                setTimeout(function() {
+                    if ($.fn.DataTable.isDataTable('#kasbonContractTable')) {
+                        $('#kasbonContractTable').DataTable().columns.adjust().responsive.recalc();
+                    }
+                }, 100);
             }
 
             // Select2 in filter modal
@@ -591,7 +750,7 @@
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
                 const name = $(this).data('name');
-                const url  = $(this).data('url');
+                const url = $(this).data('url');
 
                 Swal.fire({
                     title: 'Delete Kasbon Contract?',
@@ -616,7 +775,9 @@
                             html: 'Please wait...',
                             allowOutsideClick: false,
                             allowEscapeKey: false,
-                            didOpen: () => { Swal.showLoading(); },
+                            didOpen: () => {
+                                Swal.showLoading();
+                            },
                         });
                         $('#deleteForm').attr('action', url).submit();
                     }

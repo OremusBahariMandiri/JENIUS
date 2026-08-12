@@ -919,9 +919,52 @@ class KasbonContractController extends Controller
         DB::beginTransaction();
         try {
             $kasbonContract = KasbonContract::findOrFail($id);
-            $itemsCount     = $kasbonContract->items()->count();
 
-            // Hapus semua item terlebih dahulu
+            // ── Cek apakah kasbon ini sudah dipakai di LPJ ──────────────
+            $usedInLpj = \App\Models\Data\LpjKasbon::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
+                ->exists();
+
+            if ($usedInLpj) {
+                DB::rollBack();
+
+                // Ambil nomor LPJ yang memakai kasbon ini untuk pesan yang lebih informatif
+                $lpjNumbers = \App\Models\Data\LpjKasbon::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
+                    ->with('lpjContract:id,id_lpj_cont,no_lpj_cont')
+                    ->get()
+                    ->map(fn($lk) => $lk->lpjContract?->no_lpj_cont ?? $lk->id_lpj_cont)
+                    ->filter()
+                    ->unique()
+                    ->implode(', ');
+
+                $message = "Cannot delete Cash Advance \"{$kasbonContract->id_kasbon_cont}\" because it is already used in LPJ: {$lpjNumbers}. "
+                    . "Please remove it from the related LPJ first before deleting.";
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            // ── Cek apakah ada kasbon item yang origin-nya dari LPJ ─────
+            $hasLpjOriginItems = $kasbonContract->items()
+                ->whereNotNull('origin_lpj_cont')
+                ->exists();
+
+            if ($hasLpjOriginItems) {
+                DB::rollBack();
+
+                $message = "Cannot delete Cash Advance \"{$kasbonContract->id_kasbon_cont}\" because some of its items were created from an LPJ entry. "
+                    . "Please delete the related LPJ items first.";
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            // ── Aman untuk dihapus ───────────────────────────────────────
+            $itemsCount = $kasbonContract->items()->count();
+
             foreach ($kasbonContract->items as $item) {
                 $item->delete();
             }
@@ -935,26 +978,43 @@ class KasbonContractController extends Controller
             if ($request->expectsJson()) {
                 return response()->json([
                     'success' => true,
-                    'message' => 'Kasbon Contract and all related items successfully deleted'
+                    'message' => 'Cash Advance deleted successfully along with ' . $itemsCount . ' item(s)',
                 ]);
             }
 
             return redirect()
                 ->route('kasbon-contract.index')
-                ->with('success', "Kasbon Contract deleted successfully along with {$itemsCount} item(s)");
+                ->with('success', "Cash Advance deleted successfully along with {$itemsCount} item(s)");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Kasbon Contract not found'], 404);
+                return response()->json(['success' => false, 'message' => 'Cash Advance not found'], 404);
             }
-            return back()->with('error', 'Kasbon Contract not found');
+            return back()->with('error', 'Cash Advance not found');
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            Log::error('KasbonContract Delete FK Constraint', ['id' => $id, 'error' => $e->getMessage()]);
+
+            if ($e->getCode() === '23000') {
+                $message = $this->resolveFkDeleteMessage($e->getMessage());
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to delete Cash Advance. Please try again.'], 500);
+            }
+            return back()->with('error', 'Failed to delete Cash Advance. Please try again.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('KasbonContract Delete Failed', ['id' => $id, 'error' => $e->getMessage()]);
+
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Error deleting Kasbon Contract: ' . $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Failed to delete Cash Advance. Please try again.'], 500);
             }
-            return back()->with('error', 'Error deleting Kasbon Contract: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete Cash Advance. Please try again.');
         }
     }
 
@@ -1386,5 +1446,25 @@ class KasbonContractController extends Controller
             Log::error('clearConflictItem failed', ['error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    private function resolveFkDeleteMessage(string $rawError): string
+    {
+        $map = [
+            'd01_lpj_cont'         => 'LPJ Contract',
+            'd02_lpj_kasbon'       => 'LPJ Cash Advance',
+            'd03_lpj_cont_item'    => 'LPJ Contract Item',
+            'c02_kasbon_cont_item' => 'Cash Advance Item',
+        ];
+
+        foreach ($map as $table => $label) {
+            if (str_contains($rawError, $table)) {
+                return "Cannot delete this Cash Advance because it is still referenced by \"{$label}\" data. "
+                    . "Please remove the related {$label} records first.";
+            }
+        }
+
+        return 'Cannot delete this Cash Advance because it is still being used by other related data. '
+            . 'Please remove all related records first before deleting.';
     }
 }
