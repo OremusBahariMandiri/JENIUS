@@ -378,6 +378,10 @@
             font-size: .875rem;
             padding: 10px;
         }
+
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
+        }
     </style>
 @endpush
 
@@ -571,6 +575,23 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Due Date & Time</label>
                                     <input type="datetime-local" name="due_date" id="due_date" class="form-control">
+                                </div>
+
+                                {{-- CA Release Status --}}
+                                <div class="col-md-12" id="caReleaseStatusWrapper">
+                                    <label class="form-label">CA Release Status</label>
+                                    <select name="ca_release_status" id="ca_release_status" class="form-select">
+                                        <option value="" selected>-- No Status (Pending) --</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="release">Release</option>
+                                    </select>
+                                </div>
+
+                                {{-- CA Release Date --}}
+                                <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
+                                    <label class="form-label">CA Release Date</label>
+                                    <input type="date" name="ca_release_date" id="ca_release_date"
+                                        class="form-control">
                                 </div>
 
                                 <div class="col-md-12">
@@ -841,6 +862,24 @@
             });
         }
 
+        // =============================================
+        // CA RELEASE STATUS TOGGLE
+        // =============================================
+        function handleReleaseStatusChange() {
+            const status = $('#ca_release_status').val();
+            const $statusWrapper = $('#caReleaseStatusWrapper');
+            const $dateWrapper = $('#caReleaseDateWrapper');
+
+            if (status === 'release') {
+                $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
+                $dateWrapper.show();
+            } else {
+                $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
+                $dateWrapper.hide();
+                $('#ca_release_date').val('');
+            }
+        }
+
         $(document).ready(function() {
             setupRupiahInput(document.getElementById('input_nilai_kasbon'));
             $('.select2-field').select2({
@@ -848,6 +887,14 @@
                 width: '100%'
             });
             $('#itemsCard').addClass('items-card-disabled');
+
+            // Init release status toggle on load
+            handleReleaseStatusChange();
+
+            // CA Release Status change handler
+            $('#ca_release_status').on('change', function() {
+                handleReleaseStatusChange();
+            });
 
             $('#id_jo_tram').on('change', function() {
                 const id = $(this).val(),
@@ -1003,10 +1050,10 @@
             $('#btnSaveHeader').prop('disabled', true);
 
             $.ajax({
-                url: '{{ route('kasbon-tramper.header.store') }}', // ← kasbon-tramper, bukan kasbon-contract
+                url: '{{ route('kasbon-tramper.header.store') }}',
                 method: 'POST',
                 data: {
-                    id_jo_tram: idJoTram, // ← id_jo_tram, bukan id_jo_cont
+                    id_jo_tram: idJoTram,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
                     id_md_release: idRelease,
@@ -1015,6 +1062,8 @@
                     note: $('#note').val(),
                     priority: priority,
                     due_date: dueDate,
+                    ca_release_status: $('#ca_release_status').val(),
+                    ca_release_date: $('#ca_release_date').val(),
                     _token: $('input[name="_token"]').val(),
                 },
                 success: function(response) {

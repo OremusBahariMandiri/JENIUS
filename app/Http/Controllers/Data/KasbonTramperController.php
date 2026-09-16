@@ -129,15 +129,17 @@ class KasbonTramperController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_tram'    => 'required|exists:b03_jo_tram,id_jo_tram',
-                'id_md_dep'     => 'required|exists:a08_md_dep,id_md_dep',
-                'id_md_cabang'  => 'required|exists:a09_md_branch,id_md_branch',
-                'id_md_release' => 'required|exists:a10_md_release_to,id_md_release',
-                'tgl_kasbon'    => 'required|date',
-                'tgl_release'   => 'nullable|date',
-                'note'          => 'nullable|string',
-                'priority'      => 'required|in:urgent,high,normal',
-                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
+                'id_jo_tram'        => 'required|exists:b03_jo_tram,id_jo_tram',
+                'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
+                'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
+                'tgl_kasbon'        => 'required|date',
+                'tgl_release'       => 'nullable|date',
+                'note'              => 'nullable|string',
+                'priority'          => 'required|in:urgent,high,normal',
+                'due_date'          => 'nullable|date_format:Y-m-d\TH:i',
+                'ca_release_status' => 'nullable|in:pending,release',
+                'ca_release_date'   => 'nullable|date',
             ], [
                 'id_jo_tram.required'    => 'Job Order Tramper is required',
                 'id_jo_tram.exists'      => 'Selected Job Order Tramper does not exist',
@@ -164,18 +166,22 @@ class KasbonTramperController extends Controller
             $lastKasbon = KasbonTramper::orderBy('id', 'desc')->first();
             $newNomor   = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
 
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonTramper = KasbonTramper::create([
-                'id_kasbon_tram' => $idKasbonTram,
-                'id_jo_tram'     => $request->id_jo_tram,
-                'id_md_dep'      => $request->id_md_dep,
-                'id_md_cabang'   => $request->id_md_cabang,
-                'id_md_release'  => $request->id_md_release,
-                'nomor'          => $newNomor,
-                'tgl_kasbon'     => $request->tgl_kasbon,
-                'tgl_release'    => $request->tgl_release,
-                'note'           => $request->note,
-                'priority'       => $request->priority ?? 'normal',
-                'due_date'       => $request->due_date ?: null,
+                'id_kasbon_tram'    => $idKasbonTram,
+                'id_jo_tram'        => $request->id_jo_tram,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'nomor'             => $newNomor,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority ?? 'normal',
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             DB::commit();
@@ -188,23 +194,25 @@ class KasbonTramperController extends Controller
                 'success'      => true,
                 'message'      => 'Kasbon Tramper header saved successfully',
                 'redirect_url' => route('kasbon-tramper.edit', $kasbonTramper->id),
-                'data'         => [
-                    'id'             => $kasbonTramper->id,
-                    'id_kasbon_tram' => $kasbonTramper->id_kasbon_tram,
-                    'id_jo_tram'     => $kasbonTramper->id_jo_tram,
-                    'id_md_dep'      => $kasbonTramper->id_md_dep,
-                    'id_md_cabang'   => $kasbonTramper->id_md_cabang,
-                    'id_md_release'  => $kasbonTramper->id_md_release,
-                    'nomor'          => $kasbonTramper->nomor,
-                    'tgl_kasbon'     => $kasbonTramper->tgl_kasbon,
-                    'tgl_release'    => $kasbonTramper->tgl_release,
-                    'note'           => $kasbonTramper->note,
-                    'priority'       => $kasbonTramper->priority,
-                    'due_date'       => $kasbonTramper->due_date,
-                    'joTramper'      => $kasbonTramper->joTramper,
-                    'departemen'     => $kasbonTramper->departemen,
-                    'cabang'         => $kasbonTramper->cabang,
-                    'release'        => $kasbonTramper->release,
+                'data' => [
+                    'id'                => $kasbonTramper->id,
+                    'id_kasbon_tram'    => $kasbonTramper->id_kasbon_tram,
+                    'id_jo_tram'        => $kasbonTramper->id_jo_tram,
+                    'id_md_dep'         => $kasbonTramper->id_md_dep,
+                    'id_md_cabang'      => $kasbonTramper->id_md_cabang,
+                    'id_md_release'     => $kasbonTramper->id_md_release,
+                    'nomor'             => $kasbonTramper->nomor,
+                    'tgl_kasbon'        => $kasbonTramper->tgl_kasbon,
+                    'tgl_release'       => $kasbonTramper->tgl_release,
+                    'note'              => $kasbonTramper->note,
+                    'priority'          => $kasbonTramper->priority,
+                    'due_date'          => $kasbonTramper->due_date,
+                    'ca_release_status' => $kasbonTramper->ca_release_status,
+                    'ca_release_date'   => $kasbonTramper->ca_release_date,
+                    'joTramper'         => $kasbonTramper->joTramper,
+                    'departemen'        => $kasbonTramper->departemen,
+                    'cabang'            => $kasbonTramper->cabang,
+                    'release'           => $kasbonTramper->release,
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -228,15 +236,17 @@ class KasbonTramperController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_tram'    => 'required|exists:b03_jo_tram,id_jo_tram',
-                'id_md_dep'     => 'required|exists:a08_md_dep,id_md_dep',
-                'id_md_cabang'  => 'required|exists:a09_md_branch,id_md_branch',
-                'id_md_release' => 'required|exists:a10_md_release_to,id_md_release',
-                'tgl_kasbon'    => 'required|date',
-                'tgl_release'   => 'nullable|date',
-                'note'          => 'nullable|string',
-                'priority'      => 'required|in:urgent,high,normal',
-                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
+                'id_jo_tram'        => 'required|exists:b03_jo_tram,id_jo_tram',
+                'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
+                'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
+                'tgl_kasbon'        => 'required|date',
+                'tgl_release'       => 'nullable|date',
+                'note'              => 'nullable|string',
+                'priority'          => 'required|in:urgent,high,normal',
+                'due_date'          => 'nullable|date_format:Y-m-d\TH:i',
+                'ca_release_status' => 'nullable|in:pending,release',
+                'ca_release_date'   => 'nullable|date',
             ], [
                 'id_jo_tram.required'    => 'Job Order Tramper is required',
                 'id_md_dep.required'     => 'Departemen is required',
@@ -257,16 +267,20 @@ class KasbonTramperController extends Controller
             DB::beginTransaction();
 
             $kasbonTramper = KasbonTramper::findOrFail($id);
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonTramper->update([
-                'id_jo_tram'    => $request->id_jo_tram,
-                'id_md_dep'     => $request->id_md_dep,
-                'id_md_cabang'  => $request->id_md_cabang,
-                'id_md_release' => $request->id_md_release,
-                'tgl_kasbon'    => $request->tgl_kasbon,
-                'tgl_release'   => $request->tgl_release,
-                'note'          => $request->note,
-                'priority'      => $request->priority,           // ← dari $request
-                'due_date'      => $request->due_date ?: null,   // ← dari $request
+                'id_jo_tram'        => $request->id_jo_tram,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority,
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? ($request->ca_release_date ?: null) : null,
             ]);
 
             DB::commit();
@@ -595,6 +609,8 @@ class KasbonTramperController extends Controller
             'items.*.nilai_kasbon'         => 'required|numeric|min:0',
             'priority'                     => 'required|in:urgent,high,normal',
             'due_date'                     => 'nullable|date_format:Y-m-d\TH:i',
+            'ca_release_status' => 'nullable|in:pending,release',
+            'ca_release_date'   => 'nullable|date',
         ], [
             'id_jo_tram.required'    => 'Job Order Tramper is required',
             'id_md_dep.required'     => 'Departemen is required',
@@ -621,18 +637,22 @@ class KasbonTramperController extends Controller
             $lastKasbon = KasbonTramper::orderBy('id', 'desc')->first();
             $newNomor   = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
 
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonTramper = KasbonTramper::create([
-                'id_kasbon_tram' => $idKasbonTram,
-                'id_jo_tram'     => $request->id_jo_tram,
-                'id_md_dep'      => $request->id_md_dep,
-                'id_md_cabang'   => $request->id_md_cabang,
-                'id_md_release'  => $request->id_md_release,
-                'nomor'          => $newNomor,
-                'tgl_kasbon'     => $request->tgl_kasbon,
-                'tgl_release'    => $request->tgl_release,
-                'note'           => $request->note,
-                'priority'       => $request->priority ?? 'normal',
-                'due_date'       => $request->due_date ?: null,
+                'id_kasbon_tram'    => $idKasbonTram,
+                'id_jo_tram'        => $request->id_jo_tram,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'nomor'             => $newNomor,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority ?? 'normal',
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             foreach ($request->items as $itemData) {
@@ -812,16 +832,20 @@ class KasbonTramperController extends Controller
         try {
             $kasbonTramper = KasbonTramper::findOrFail($id);
 
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonTramper->update([
-                'id_jo_tram'    => $request->id_jo_tram,
-                'id_md_dep'     => $request->id_md_dep,
-                'id_md_cabang'  => $request->id_md_cabang,
-                'id_md_release' => $request->id_md_release,
-                'tgl_kasbon'    => $request->tgl_kasbon,
-                'tgl_release'   => $request->tgl_release,
-                'note'          => $request->note,
-                'priority'      => $request->priority,
-                'due_date'      => $request->due_date ?: null,
+                'id_jo_tram'        => $request->id_jo_tram,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority,
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             foreach ($kasbonTramper->items as $oldItem) {

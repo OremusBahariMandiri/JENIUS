@@ -365,6 +365,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-tramper.items.get');
     Route::get('kasbon-tramper/jo-items', [KasbonTramperController::class, 'getJoTramperItems'])
         ->name('kasbon-tramper.jo-items.get');
+    Route::get('kasbon-tramper/item/check-conflict', [KasbonTramperController::class, 'checkItemConflict'])
+        ->name('kasbon-tramper.item.check-conflict');
+    Route::post('kasbon-tramper/item/clear-conflict', [KasbonTramperController::class, 'clearConflictItem'])
+        ->name('kasbon-tramper.item.clear-conflict');
     Route::resource('kasbon-tramper', KasbonTramperController::class);
     Route::get('kasbon-tramper-select', [KasbonTramperController::class, 'getForSelect'])
         ->name('kasbon-tramper.select');
@@ -395,6 +399,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-other.items.get');
     Route::get('kasbon-other/jo-items', [KasbonOtherController::class, 'getJoOtherItems'])
         ->name('kasbon-other.jo-items.get');
+    Route::get('kasbon-other/item/check-conflict', [KasbonOtherController::class, 'checkItemConflict'])
+        ->name('kasbon-other.item.check-conflict');
+    Route::post('kasbon-other/item/clear-conflict', [KasbonOtherController::class, 'clearConflictItem'])
+        ->name('kasbon-other.item.clear-conflict');
     Route::resource('kasbon-other', KasbonOtherController::class);
     Route::get('kasbon-other-select', [KasbonOtherController::class, 'getForSelect'])
         ->name('kasbon-other.select');

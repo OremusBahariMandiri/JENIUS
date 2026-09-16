@@ -352,6 +352,10 @@
             font-size: .875rem;
             padding: 10px;
         }
+
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
+        }
     </style>
 @endpush
 
@@ -542,116 +546,132 @@
                                     <input type="datetime-local" name="due_date" id="due_date" class="form-control">
                                 </div>
 
+                                {{-- CA Release Status --}}
+                                <div class="col-md-12" id="caReleaseStatusWrapper">
+                                    <label class="form-label">CA Release Status</label>
+                                    <select name="ca_release_status" id="ca_release_status" class="form-select">
+                                        <option value="" selected>-- No Status (Pending) --</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="release">Release</option>
+                                    </select>
+                                </div>
+
+                                {{-- CA Release Date (hidden by default) --}}
+                                <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
+                                    <label class="form-label">CA Release Date</label>
+                                    <input type="date" name="ca_release_date" id="ca_release_date"
+                                        class="form-control">
+                                </div>
+
+                                {{-- Note --}}
                                 <div class="col-md-12">
-                                    <label class="form-label">Note</label>
-                                    <textarea name="note" id="note" class="form-control" rows="3"
-                                        placeholder="Enter any additional notes..."></textarea>
+                                </div>
+
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="button" class="btn btn-success px-4" id="btnSaveHeader">
+                                        <i class="fas fa-save me-1"></i> Save Header
+                                    </button>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="d-flex justify-content-end mt-4">
-                                <button type="button" class="btn btn-success px-4" id="btnSaveHeader">
-                                    <i class="fas fa-save me-1"></i> Save Header
-                                </button>
+                        {{-- ITEMS CARD --}}
+                        <div class="card shadow mb-4 items-card-disabled" id="itemsCard">
+                            <div class="card-header text-black" style="background-color: #d1fae5">
+                                <h6 class="mb-0"><i class="fas fa-list me-2"></i>Cash Advance Items</h6>
                             </div>
-                        </div>
-                    </div>
-
-                    {{-- ITEMS CARD --}}
-                    <div class="card shadow mb-4 items-card-disabled" id="itemsCard">
-                        <div class="card-header text-black" style="background-color: #d1fae5">
-                            <h6 class="mb-0"><i class="fas fa-list me-2"></i>Cash Advance Items</h6>
-                        </div>
-                        <div class="card-body p-4">
-                            <div class="add-item-form-section">
-                                <h6><i class="fas fa-plus-square"></i> Add New Item</h6>
-                                <div class="row g-3">
-                                    <div class="col-md-12">
-                                        <label class="form-label required-field">JO Other Item</label>
-                                        <select id="input_jo_other_item" class="form-select">
-                                            <option value="">-- Save header &amp; select JO Other first --</option>
-                                        </select>
-                                        <small class="text-muted mt-1 d-block" id="hppHint"></small>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label">HPP (Ops Costs)</label>
-                                        <div class="currency-group">
-                                            <span class="currency-label">IDR</span>
-                                            <input type="text" id="input_nilai_hpp"
-                                                class="form-control currency-input" readonly
-                                                style="background-color:#e9ecef;">
+                            <div class="card-body p-4">
+                                <div class="add-item-form-section">
+                                    <h6><i class="fas fa-plus-square"></i> Add New Item</h6>
+                                    <div class="row g-3">
+                                        <div class="col-md-12">
+                                            <label class="form-label required-field">JO Other Item</label>
+                                            <select id="input_jo_other_item" class="form-select">
+                                                <option value="">-- Save header &amp; select JO Other first --
+                                                </option>
+                                            </select>
+                                            <small class="text-muted mt-1 d-block" id="hppHint"></small>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label required-field">CA Amount</label>
-                                        <div class="currency-group">
-                                            <span class="currency-label">IDR</span>
-                                            <input type="text" id="input_nilai_kasbon"
-                                                class="form-control currency-input" placeholder="0,00">
+                                        <div class="col-md-6">
+                                            <label class="form-label">HPP (Ops Costs)</label>
+                                            <div class="currency-group">
+                                                <span class="currency-label">IDR</span>
+                                                <input type="text" id="input_nilai_hpp"
+                                                    class="form-control currency-input" readonly
+                                                    style="background-color:#e9ecef;">
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div class="col-md-12">
-                                        <button type="button" class="btn btn-add-to-table w-100" id="btnAddToTable">
-                                            <i class="fas fa-arrow-down me-1"></i> Add to Table
-                                        </button>
+                                        <div class="col-md-6">
+                                            <label class="form-label required-field">CA Amount</label>
+                                            <div class="currency-group">
+                                                <span class="currency-label">IDR</span>
+                                                <input type="text" id="input_nilai_kasbon"
+                                                    class="form-control currency-input" placeholder="0,00">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-12">
+                                            <button type="button" class="btn btn-add-to-table w-100" id="btnAddToTable">
+                                                <i class="fas fa-arrow-down me-1"></i> Add to Table
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="d-flex gap-2 mb-3">
-                                <button type="button" class="btn btn-danger" id="resetAllBtn">
-                                    <i class="fas fa-trash-alt me-1"></i> Reset All Items
-                                </button>
-                            </div>
+                                <div class="d-flex gap-2 mb-3">
+                                    <button type="button" class="btn btn-danger" id="resetAllBtn">
+                                        <i class="fas fa-trash-alt me-1"></i> Reset All Items
+                                    </button>
+                                </div>
 
-                            <div class="table-responsive">
-                                <table class="table table-items table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:5%;">No</th>
-                                            <th>JO Item</th>
-                                            <th>Category</th>
-                                            <th style="width:18%;">HPP (IDR)</th>
-                                            <th style="width:18%;">CA Amount (IDR)</th>
-                                            <th style="width:18%;">Remaining (IDR)</th>
-                                            <th style="width:8%;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="itemsTableBody">
-                                        <tr class="no-items-row">
-                                            <td colspan="7">
-                                                <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-                                                <p class="mb-0 fw-bold">No items yet</p>
-                                                <small class="text-muted">Save the header first, then add items
-                                                    above</small>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot class="table-footer">
-                                        <tr>
-                                            <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
-                                            <td>
-                                                <div class="currency-group-footer"><span
-                                                        class="currency-label-footer">IDR</span><span class="value-footer"
-                                                        id="footerTotalHPP">0,00</span></div>
-                                            </td>
-                                            <td>
-                                                <div class="currency-group-footer"><span
-                                                        class="currency-label-footer">IDR</span><span class="value-footer"
-                                                        id="footerTotalKasbon">0,00</span></div>
-                                            </td>
-                                            <td>
-                                                <div class="currency-group-footer"><span
-                                                        class="currency-label-footer">IDR</span><span class="value-footer"
-                                                        id="footerTotalRemaining">0,00</span></div>
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                                <div class="table-responsive">
+                                    <table class="table table-items table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:5%;">No</th>
+                                                <th>JO Item</th>
+                                                <th>Category</th>
+                                                <th style="width:18%;">HPP (IDR)</th>
+                                                <th style="width:18%;">CA Amount (IDR)</th>
+                                                <th style="width:18%;">Remaining (IDR)</th>
+                                                <th style="width:8%;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="itemsTableBody">
+                                            <tr class="no-items-row">
+                                                <td colspan="7">
+                                                    <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                                    <p class="mb-0 fw-bold">No items yet</p>
+                                                    <small class="text-muted">Save the header first, then add items
+                                                        above</small>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot class="table-footer">
+                                            <tr>
+                                                <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
+                                                <td>
+                                                    <div class="currency-group-footer"><span
+                                                            class="currency-label-footer">IDR</span><span
+                                                            class="value-footer" id="footerTotalHPP">0,00</span></div>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group-footer"><span
+                                                            class="currency-label-footer">IDR</span><span
+                                                            class="value-footer" id="footerTotalKasbon">0,00</span></div>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group-footer"><span
+                                                            class="currency-label-footer">IDR</span><span
+                                                            class="value-footer" id="footerTotalRemaining">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
                             </div>
                         </div>
-                    </div>
                 </form>
 
                 <div class="final-save-section">
@@ -812,6 +832,26 @@
                 theme: 'bootstrap-5',
                 width: '100%'
             });
+
+            function handleReleaseStatusChange() {
+                const status = $('#ca_release_status').val();
+                const $statusWrapper = $('#caReleaseStatusWrapper');
+                const $dateWrapper = $('#caReleaseDateWrapper');
+                if (status === 'release') {
+                    $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
+                    $dateWrapper.show();
+                } else {
+                    $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
+                    $dateWrapper.hide();
+                    $('#ca_release_date').val('');
+                }
+            }
+            handleReleaseStatusChange(); // init on load
+            $('#ca_release_status').on('change', function() {
+                handleReleaseStatusChange();
+            });
+
+
             $('#itemsCard').addClass('items-card-disabled');
 
             $('#id_jo_other').on('change', function() {
@@ -953,6 +993,8 @@
             const tglKasbon = $('#tgl_kasbon').val();
             const priority = $('#priority').val();
             const dueDate = $('#due_date').val();
+            const caReleaseStatus = $('#ca_release_status').val();
+            const caReleaseDate = $('#ca_release_date').val();
 
             if (!idJoOther || !idDep || !idCabang || !idRelease || !tglKasbon) {
                 showFloatingAlert('error', 'Please fill in all required fields');
@@ -975,6 +1017,8 @@
                     note: $('#note').val(),
                     priority: priority,
                     due_date: dueDate,
+                    ca_release_status: $('#ca_release_status').val(),
+                    ca_release_date: $('#ca_release_date').val(),
                     _token: $('input[name="_token"]').val(),
                 },
                 success: function(r) {

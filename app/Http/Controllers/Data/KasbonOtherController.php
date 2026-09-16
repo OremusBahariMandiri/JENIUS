@@ -120,7 +120,7 @@ class KasbonOtherController extends Controller
     }
 
     // ========================================
-    // STORE HEADER
+    // STORE HEADER (Realtime Auto-save AJAX)
     // ========================================
 
     public function storeHeader(Request $request)
@@ -129,15 +129,17 @@ class KasbonOtherController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_other'   => 'required|exists:b05_jo_other,id_jo_other',
-                'id_md_dep'     => 'required|exists:a08_md_dep,id_md_dep',
-                'id_md_cabang'  => 'required|exists:a09_md_branch,id_md_branch',
-                'id_md_release' => 'required|exists:a10_md_release_to,id_md_release',
-                'tgl_kasbon'    => 'required|date',
-                'tgl_release'   => 'nullable|date',
-                'note'          => 'nullable|string',
-                'priority' => 'required|in:high,normal',
-                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
+                'id_jo_other'      => 'required|exists:b05_jo_other,id_jo_other',
+                'id_md_dep'        => 'required|exists:a08_md_dep,id_md_dep',
+                'id_md_cabang'     => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_release'    => 'required|exists:a10_md_release_to,id_md_release',
+                'tgl_kasbon'       => 'required|date',
+                'tgl_release'      => 'nullable|date',
+                'note'             => 'nullable|string',
+                'priority'         => 'required|in:high,normal',
+                'due_date'         => 'nullable|date_format:Y-m-d\TH:i',
+                'ca_release_status' => 'nullable|in:pending,release',
+                'ca_release_date'  => 'nullable|date',
             ], [
                 'id_jo_other.required'   => 'Job Order Other is required',
                 'id_jo_other.exists'     => 'Selected Job Order Other does not exist',
@@ -149,6 +151,7 @@ class KasbonOtherController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::error('KasbonOther Header Validation Failed', ['errors' => $validator->errors()->toArray()]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
@@ -158,22 +161,25 @@ class KasbonOtherController extends Controller
 
             DB::beginTransaction();
 
-            $idKasbonOther = IdGenerator::generateCaNo('c05_kasbon_other', 'id_kasbon_other');
-            $lastKasbon    = KasbonOther::orderBy('id', 'desc')->first();
-            $newNomor      = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
+            $idKasbonOther   = IdGenerator::generateCaNo('c05_kasbon_other', 'id_kasbon_other');
+            $lastKasbon      = KasbonOther::orderBy('id', 'desc')->first();
+            $newNomor        = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
 
             $kasbonOther = KasbonOther::create([
-                'id_kasbon_other' => $idKasbonOther,
-                'id_jo_other'     => $request->id_jo_other,
-                'id_md_dep'       => $request->id_md_dep,
-                'id_md_cabang'    => $request->id_md_cabang,
-                'id_md_release'   => $request->id_md_release,
-                'nomor'           => $newNomor,
-                'tgl_kasbon'      => $request->tgl_kasbon,
-                'tgl_release'     => $request->tgl_release,
-                'note'            => $request->note,
-                'priority'        => $request->priority ?? 'normal',
-                'due_date'        => $request->due_date ?: null,
+                'id_kasbon_other'   => $idKasbonOther,
+                'id_jo_other'       => $request->id_jo_other,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'nomor'             => $newNomor,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority ?? 'normal',
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             DB::commit();
@@ -187,27 +193,29 @@ class KasbonOtherController extends Controller
                 'message'      => 'Kasbon Other header saved successfully',
                 'redirect_url' => route('kasbon-other.edit', $kasbonOther->id),
                 'data'         => [
-                    'id'              => $kasbonOther->id,
-                    'id_kasbon_other' => $kasbonOther->id_kasbon_other,
-                    'id_jo_other'     => $kasbonOther->id_jo_other,
-                    'id_md_dep'       => $kasbonOther->id_md_dep,
-                    'id_md_cabang'    => $kasbonOther->id_md_cabang,
-                    'id_md_release'   => $kasbonOther->id_md_release,
-                    'nomor'           => $kasbonOther->nomor,
-                    'tgl_kasbon'      => $kasbonOther->tgl_kasbon,
-                    'tgl_release'     => $kasbonOther->tgl_release,
-                    'note'            => $kasbonOther->note,
-                    'priority'        => $kasbonOther->priority,
-                    'due_date'        => $kasbonOther->due_date,
-                    'joOther'         => $kasbonOther->joOther,
-                    'departemen'      => $kasbonOther->departemen,
-                    'cabang'          => $kasbonOther->cabang,
-                    'release'         => $kasbonOther->release,
+                    'id'                => $kasbonOther->id,
+                    'id_kasbon_other'   => $kasbonOther->id_kasbon_other,
+                    'id_jo_other'       => $kasbonOther->id_jo_other,
+                    'id_md_dep'         => $kasbonOther->id_md_dep,
+                    'id_md_cabang'      => $kasbonOther->id_md_cabang,
+                    'id_md_release'     => $kasbonOther->id_md_release,
+                    'nomor'             => $kasbonOther->nomor,
+                    'tgl_kasbon'        => $kasbonOther->tgl_kasbon,
+                    'tgl_release'       => $kasbonOther->tgl_release,
+                    'note'              => $kasbonOther->note,
+                    'priority'          => $kasbonOther->priority,
+                    'due_date'          => $kasbonOther->due_date,
+                    'ca_release_status' => $kasbonOther->ca_release_status,
+                    'ca_release_date'   => $kasbonOther->ca_release_date,
+                    'joOther'           => $kasbonOther->joOther,
+                    'departemen'        => $kasbonOther->departemen,
+                    'cabang'            => $kasbonOther->cabang,
+                    'release'           => $kasbonOther->release,
                 ]
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('KasbonOther Store Header Failed', ['error' => $e->getMessage()]);
+            Log::error('KasbonOther Store Header Failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to save Kasbon Other header',
@@ -217,7 +225,7 @@ class KasbonOtherController extends Controller
     }
 
     // ========================================
-    // UPDATE HEADER
+    // UPDATE HEADER (Realtime Auto-save AJAX)
     // ========================================
 
     public function updateHeader(Request $request, $id)
@@ -226,15 +234,17 @@ class KasbonOtherController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_other'   => 'required|exists:b05_jo_other,id_jo_other',
-                'id_md_dep'     => 'required|exists:a08_md_dep,id_md_dep',
-                'id_md_cabang'  => 'required|exists:a09_md_branch,id_md_branch',
-                'id_md_release' => 'required|exists:a10_md_release_to,id_md_release',
-                'tgl_kasbon'    => 'required|date',
-                'tgl_release'   => 'nullable|date',
-                'note'          => 'nullable|string',
-                'priority'      => 'required|in:urgent,high,normal',
-                'due_date'      => 'nullable|date_format:Y-m-d\TH:i',
+                'id_jo_other'       => 'required|exists:b05_jo_other,id_jo_other',
+                'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
+                'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
+                'tgl_kasbon'        => 'required|date',
+                'tgl_release'       => 'nullable|date',
+                'note'              => 'nullable|string',
+                'priority'          => 'required|in:urgent,high,normal',
+                'due_date'          => 'nullable|date_format:Y-m-d\TH:i',
+                'ca_release_status' => 'nullable|in:pending,release',
+                'ca_release_date'   => 'nullable|date',
             ], [
                 'id_jo_other.required'   => 'Job Order Other is required',
                 'id_md_dep.required'     => 'Departemen is required',
@@ -254,17 +264,21 @@ class KasbonOtherController extends Controller
 
             DB::beginTransaction();
 
-            $kasbonOther = KasbonOther::findOrFail($id);
+            $kasbonOther     = KasbonOther::findOrFail($id);
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonOther->update([
-                'id_jo_other'   => $request->id_jo_other,
-                'id_md_dep'     => $request->id_md_dep,
-                'id_md_cabang'  => $request->id_md_cabang,
-                'id_md_release' => $request->id_md_release,
-                'tgl_kasbon'    => $request->tgl_kasbon,
-                'tgl_release'   => $request->tgl_release,
-                'note'          => $request->note,
-                'priority'      => $request->priority,           // ← dari $request
-                'due_date'      => $request->due_date ?: null,   // ← dari $request
+                'id_jo_other'       => $request->id_jo_other,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority,
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? ($request->ca_release_date ?: null) : null,
             ]);
 
             DB::commit();
@@ -290,7 +304,7 @@ class KasbonOtherController extends Controller
     }
 
     // ========================================
-    // STORE ITEM
+    // STORE ITEM (Realtime Auto-save AJAX)
     // ========================================
 
     public function storeItem(Request $request)
@@ -309,6 +323,7 @@ class KasbonOtherController extends Controller
             ]);
 
             if ($validator->fails()) {
+                Log::error('KasbonOther Item Validation Failed', ['errors' => $validator->errors()->toArray()]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
@@ -321,14 +336,13 @@ class KasbonOtherController extends Controller
             try {
                 $maxId = DB::table('c06_kasbon_other_item')
                     ->lockForUpdate()
-                    ->max('id_kasbon_other_item');
-
-                $newIdKasbonOtherItem = $maxId ? (string)((int)$maxId + 1) : '1';
+                    ->selectRaw('MAX(CAST(id_kasbon_other_item AS UNSIGNED)) as max_id')
+                    ->value('max_id');
+                $newIdKasbonOtherItem = (string)(((int) $maxId) + 1);
 
                 $joOtherItem = JoOtherItem::find($request->id_jo_other_item);
-                $nilaiHpp    = $joOtherItem ? (float)$joOtherItem->hpp_ops : 0;
-
-                $nilaiKasbon = (float)$request->nilai_kasbon;
+                $nilaiHpp    = $joOtherItem ? (float) $joOtherItem->hpp_ops : 0;
+                $nilaiKasbon = (float) $request->nilai_kasbon;
                 $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
                 $item = KasbonOtherItem::create([
@@ -344,7 +358,7 @@ class KasbonOtherController extends Controller
 
                 DB::commit();
 
-                Log::info('KasbonOther Item Created', ['id' => $item->id]);
+                Log::info('KasbonOther Item Created', ['id' => $item->id, 'id_kasbon_other_item' => $item->id_kasbon_other_item]);
 
                 return response()->json([
                     'success' => true,
@@ -354,26 +368,38 @@ class KasbonOtherController extends Controller
                         'id_kasbon_other_item' => $item->id_kasbon_other_item,
                         'id_kasbon_other'      => $item->id_kasbon_other,
                         'id_jo_other_item'     => $item->id_jo_other_item,
-                        'nilai_hpp_other_item' => (float)$item->nilai_hpp_other_item,
-                        'nilai_kasbon'         => (float)$item->nilai_kasbon,
-                        'total_kasbon'         => (float)$item->total_kasbon,
+                        'nilai_hpp_other_item' => (float) $item->nilai_hpp_other_item,
+                        'nilai_kasbon'         => (float) $item->nilai_kasbon,
+                        'total_kasbon'         => (float) $item->total_kasbon,
                         'jo_other_item'        => $item->joOtherItem,
                     ]
                 ], 201);
             } catch (\Illuminate\Database\QueryException $e) {
                 DB::rollBack();
+
                 if ($e->getCode() === '23000' && strpos($e->getMessage(), 'Duplicate entry') !== false) {
+                    Log::error('Duplicate Key - Retrying...', ['error' => $e->getMessage()]);
                     sleep(1);
                     if (!$request->has('_retry')) {
                         $request->merge(['_retry' => true]);
                         return $this->storeItem($request);
                     }
                 }
+
                 throw $e;
             }
         } catch (\Exception $e) {
-            if (DB::transactionLevel() > 0) DB::rollBack();
-            Log::error('KasbonOther Store Item Failed', ['error' => $e->getMessage()]);
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+
+            Log::error('KasbonOther Store Item Failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'line'  => $e->getLine(),
+                'file'  => $e->getFile(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add item',
@@ -383,11 +409,13 @@ class KasbonOtherController extends Controller
     }
 
     // ========================================
-    // UPDATE ITEM
+    // UPDATE ITEM (Realtime Auto-save AJAX)
     // ========================================
 
     public function updateItem(Request $request, $id)
     {
+        Log::info('=== KasbonOther Update Item START ===', ['id' => $id, 'data' => $request->all()]);
+
         try {
             $validator = Validator::make($request->all(), [
                 'id_jo_other_item' => 'required|exists:b06_jo_other_item,id_jo_other_item',
@@ -406,8 +434,8 @@ class KasbonOtherController extends Controller
 
             $item        = KasbonOtherItem::findOrFail($id);
             $joOtherItem = JoOtherItem::find($request->id_jo_other_item);
-            $nilaiHpp    = $joOtherItem ? (float)$joOtherItem->hpp_ops : (float)$item->nilai_hpp_other_item;
-            $nilaiKasbon = (float)$request->nilai_kasbon;
+            $nilaiHpp    = $joOtherItem ? (float) $joOtherItem->hpp_ops : (float) $item->nilai_hpp_other_item;
+            $nilaiKasbon = (float) $request->nilai_kasbon;
             $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
             $item->update([
@@ -417,7 +445,9 @@ class KasbonOtherController extends Controller
                 'total_kasbon'         => $totalKasbon,
             ]);
 
-            $item->refresh()->load('joOtherItem');
+            $item->refresh();
+            $item->load('joOtherItem');
+
             DB::commit();
 
             Log::info('KasbonOther Item Updated', ['id' => $id]);
@@ -430,45 +460,64 @@ class KasbonOtherController extends Controller
                     'id_kasbon_other_item' => $item->id_kasbon_other_item,
                     'id_kasbon_other'      => $item->id_kasbon_other,
                     'id_jo_other_item'     => $item->id_jo_other_item,
-                    'nilai_hpp_other_item' => (float)$item->nilai_hpp_other_item,
-                    'nilai_kasbon'         => (float)$item->nilai_kasbon,
-                    'total_kasbon'         => (float)$item->total_kasbon,
+                    'nilai_hpp_other_item' => (float) $item->nilai_hpp_other_item,
+                    'nilai_kasbon'         => (float) $item->nilai_kasbon,
+                    'total_kasbon'         => (float) $item->total_kasbon,
                     'jo_other_item'        => $item->joOtherItem,
                 ]
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('KasbonOther Update Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Failed to update item', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update item',
+                'error'   => $e->getMessage()
+            ], 500);
         }
     }
 
     // ========================================
-    // DESTROY ITEM
+    // DESTROY ITEM (Realtime AJAX)
     // ========================================
 
     public function destroyItem($id)
     {
+        Log::info('=== KasbonOther Delete Item START ===', ['id' => $id]);
+
         try {
             DB::beginTransaction();
+
             $item = KasbonOtherItem::findOrFail($id);
             $item->delete();
+
             DB::commit();
+
             Log::info('KasbonOther Item Deleted', ['id' => $id]);
-            return response()->json(['success' => true, 'message' => 'Item deleted successfully'], 200);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item deleted successfully'
+            ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('KasbonOther Delete Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Failed to delete item', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete item',
+                'error'   => $e->getMessage()
+            ], 500);
         }
     }
 
     // ========================================
-    // GET ITEMS
+    // GET ITEMS (Load existing data)
     // ========================================
 
     public function getItems($kasbonOtherId)
     {
+        Log::info('=== KasbonOther Get Items START ===', ['kasbon_other_id' => $kasbonOtherId]);
+
         try {
             $items = KasbonOtherItem::where('id_kasbon_other', $kasbonOtherId)
                 ->with('joOtherItem')
@@ -481,42 +530,56 @@ class KasbonOtherController extends Controller
                     'id_kasbon_other_item' => $item->id_kasbon_other_item,
                     'id_kasbon_other'      => $item->id_kasbon_other,
                     'id_jo_other_item'     => $item->id_jo_other_item,
-                    'nilai_hpp_other_item' => (float)$item->nilai_hpp_other_item,
-                    'nilai_kasbon'         => (float)$item->nilai_kasbon,
-                    'total_kasbon'         => (float)$item->total_kasbon,
+                    'nilai_hpp_other_item' => (float) $item->nilai_hpp_other_item,
+                    'nilai_kasbon'         => (float) $item->nilai_kasbon,
+                    'total_kasbon'         => (float) $item->total_kasbon,
                     'jo_other_item'        => $item->joOtherItem,
                 ];
             });
 
-            return response()->json(['success' => true, 'data' => $formattedItems], 200);
+            Log::info('KasbonOther Items Retrieved', ['count' => $items->count()]);
+
+            return response()->json([
+                'success' => true,
+                'data'    => $formattedItems
+            ], 200);
         } catch (\Exception $e) {
             Log::error('KasbonOther Get Items Failed', ['kasbon_other_id' => $kasbonOtherId, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Failed to fetch items', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch items',
+                'error'   => $e->getMessage()
+            ], 500);
         }
     }
 
     // ========================================
-    // SHOW ITEM
+    // SHOW ITEM (for edit modal)
     // ========================================
 
     public function showItem($id)
     {
         try {
             $item = KasbonOtherItem::with('joOtherItem')->findOrFail($id);
+
             return response()->json([
                 'success' => true,
                 'data'    => [
                     'id'                   => $item->id,
                     'id_kasbon_other_item' => $item->id_kasbon_other_item,
                     'id_jo_other_item'     => $item->id_jo_other_item,
-                    'nilai_hpp_other_item' => (float)$item->nilai_hpp_other_item,
-                    'nilai_kasbon'         => (float)$item->nilai_kasbon,
-                    'total_kasbon'         => (float)$item->total_kasbon,
+                    'nilai_hpp_other_item' => (float) $item->nilai_hpp_other_item,
+                    'nilai_kasbon'         => (float) $item->nilai_kasbon,
+                    'total_kasbon'         => (float) $item->total_kasbon,
                     'jo_other_item'        => $item->joOtherItem,
                 ]
             ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Item not found: ' . $e->getMessage()], 404);
+            Log::error('KasbonOther Show Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Item not found: ' . $e->getMessage()
+            ], 404);
         }
     }
 
@@ -526,6 +589,8 @@ class KasbonOtherController extends Controller
 
     public function store(Request $request)
     {
+        Log::info('KasbonOther Store Request', ['all_data' => $request->all()]);
+
         $validator = Validator::make($request->all(), [
             'id_jo_other'                    => 'required|exists:b05_jo_other,id_jo_other',
             'id_md_dep'                      => 'required|exists:a08_md_dep,id_md_dep',
@@ -537,8 +602,10 @@ class KasbonOtherController extends Controller
             'items'                          => 'required|array|min:1',
             'items.*.id_jo_other_item'       => 'required|exists:b06_jo_other_item,id_jo_other_item',
             'items.*.nilai_kasbon'           => 'required|numeric|min:0',
-            'priority'                       => 'required|in:urgent,high,normal',
+            'priority'                       => 'required|in:high,normal',
             'due_date'                       => 'nullable|date_format:Y-m-d\TH:i',
+            'ca_release_status'              => 'nullable|in:pending,release',
+            'ca_release_date'                => 'nullable|date',
         ], [
             'id_jo_other.required'   => 'Job Order Other is required',
             'id_md_dep.required'     => 'Departemen is required',
@@ -547,9 +614,11 @@ class KasbonOtherController extends Controller
             'priority.required'      => 'Priority is required',
             'tgl_kasbon.required'    => 'Cash Advance Date is required',
             'items.required'         => 'At least one item is required',
+            'items.min'              => 'At least one item is required',
         ]);
 
         if ($validator->fails()) {
+            Log::error('KasbonOther Validation Failed', ['errors' => $validator->errors()->toArray()]);
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
             }
@@ -558,28 +627,31 @@ class KasbonOtherController extends Controller
 
         DB::beginTransaction();
         try {
-            $idKasbonOther = IdGenerator::generateCaNo('c05_kasbon_other', 'id_kasbon_other');
-            $lastKasbon    = KasbonOther::orderBy('id', 'desc')->first();
-            $newNomor      = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
+            $idKasbonOther   = IdGenerator::generateCaNo('c05_kasbon_other', 'id_kasbon_other');
+            $lastKasbon      = KasbonOther::orderBy('id', 'desc')->first();
+            $newNomor        = $lastKasbon ? $lastKasbon->nomor + 1 : 1;
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
 
             $kasbonOther = KasbonOther::create([
-                'id_kasbon_other' => $idKasbonOther,
-                'id_jo_other'     => $request->id_jo_other,
-                'id_md_dep'       => $request->id_md_dep,
-                'id_md_cabang'    => $request->id_md_cabang,
-                'id_md_release'   => $request->id_md_release,
-                'nomor'           => $newNomor,
-                'tgl_kasbon'      => $request->tgl_kasbon,
-                'tgl_release'     => $request->tgl_release,
-                'note'            => $request->note,
-                'priority'        => $request->priority ?? 'normal',
-                'due_date'        => $request->due_date ?: null,
+                'id_kasbon_other'   => $idKasbonOther,
+                'id_jo_other'       => $request->id_jo_other,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'nomor'             => $newNomor,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority ?? 'normal',
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             foreach ($request->items as $itemData) {
                 $joOtherItem = JoOtherItem::find($itemData['id_jo_other_item']);
-                $nilaiHpp    = $joOtherItem ? (float)$joOtherItem->hpp_ops : 0;
-                $nilaiKasbon = (float)$itemData['nilai_kasbon'];
+                $nilaiHpp    = $joOtherItem ? (float) $joOtherItem->hpp_ops : 0;
+                $nilaiKasbon = (float) $itemData['nilai_kasbon'];
                 $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
                 KasbonOtherItem::create([
@@ -593,16 +665,34 @@ class KasbonOtherController extends Controller
 
             DB::commit();
 
+            Log::info('KasbonOther Store Success', ['id' => $kasbonOther->id, 'total_items' => count($request->items)]);
+
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'Kasbon Other successfully added', 'data' => $kasbonOther->load('items')], 201);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Kasbon Other successfully added',
+                    'data'    => $kasbonOther->load('items')
+                ], 201);
             }
-            return redirect()->route('kasbon-other.index')->with('success', 'Kasbon Other successfully added with ' . count($request->items) . ' item(s)');
+
+            return redirect()
+                ->route('kasbon-other.index')
+                ->with('success', 'Kasbon Other successfully added with ' . count($request->items) . ' item(s)');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('KasbonOther Store Failed', ['error' => $e->getMessage()]);
+            Log::error('KasbonOther Store Failed', [
+                'error_message' => $e->getMessage(),
+                'error_line'    => $e->getLine(),
+                'error_file'    => $e->getFile(),
+            ]);
+
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Error creating Kasbon Other: ' . $e->getMessage()], 500);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error creating Kasbon Other: ' . $e->getMessage(),
+                ], 500);
             }
+
             return back()->withInput()->with('error', 'Error creating Kasbon Other: ' . $e->getMessage());
         }
     }
@@ -613,6 +703,8 @@ class KasbonOtherController extends Controller
 
     public function show(Request $request, $id)
     {
+        Log::info('=== KasbonOther Show START ===', ['id' => $id]);
+
         try {
             $kasbonOther = KasbonOther::with([
                 'joOther',
@@ -632,13 +724,20 @@ class KasbonOtherController extends Controller
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'data' => $kasbonOther, 'summary' => $summary]);
             }
+
+            if (!view()->exists('data.kasbon-other.show')) {
+                return back()->with('error', 'View file not found: data.kasbon-other.show');
+            }
+
             return view('data.kasbon-other.show', compact('kasbonOther', 'summary'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::error('KasbonOther Not Found', ['id' => $id]);
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Kasbon Other not found'], 404);
             }
             return back()->with('error', 'Kasbon Other not found');
         } catch (\Exception $e) {
+            Log::error('KasbonOther Show Failed', ['id' => $id, 'error' => $e->getMessage()]);
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'Error loading Kasbon Other: ' . $e->getMessage()], 500);
             }
@@ -668,13 +767,14 @@ class KasbonOtherController extends Controller
                 'id_jo_other_item'     => $joItem->id_jo_other_item,
                 'invoice_typ'          => $joItem->invoice->invoice_typ ?? $joItem->id_jo_other_item,
                 'invoice_ctg'          => $joItem->invoice->invoice_ctg ?? '-',
-                'hargajual_idr'        => (float)$joItem->hargajual_idr,
-                'hpp_ops'              => (float)$joItem->hpp_ops,
+                'hargajual_idr'        => (float) $joItem->hargajual_idr,
+                'hpp_ops'              => (float) $joItem->hpp_ops,
                 'id_kasbon_other_item' => $kasbonItem?->id ?? null,
-                'nilai_hpp_other_item' => $kasbonItem ? (float)$kasbonItem->nilai_hpp_other_item : (float)$joItem->hpp_ops,
-                'nilai_kasbon'         => $kasbonItem ? (float)$kasbonItem->nilai_kasbon : 0,
-                'total_kasbon'         => $kasbonItem ? (float)$kasbonItem->total_kasbon : (float)$joItem->hpp_ops,
+                'nilai_hpp_other_item' => $kasbonItem ? (float) $kasbonItem->nilai_hpp_other_item : (float) $joItem->hpp_ops,
+                'nilai_kasbon'         => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
+                'total_kasbon'         => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
                 'has_kasbon'           => $kasbonItem !== null,
+                'origin_lpj_other'     => $kasbonItem->origin_lpj_other ?? null,  // ← baru
             ];
         });
 
@@ -699,6 +799,8 @@ class KasbonOtherController extends Controller
 
     public function update(Request $request, $id)
     {
+        Log::info('KasbonOther Update Request', ['id' => $id, 'all_data' => $request->all()]);
+
         $validator = Validator::make($request->all(), [
             'id_jo_other'              => 'required|exists:b05_jo_other,id_jo_other',
             'id_md_dep'                => 'required|exists:a08_md_dep,id_md_dep',
@@ -710,8 +812,10 @@ class KasbonOtherController extends Controller
             'items'                    => 'required|array|min:1',
             'items.*.id_jo_other_item' => 'required|exists:b06_jo_other_item,id_jo_other_item',
             'items.*.nilai_kasbon'     => 'required|numeric|min:0',
-            'priority'                 => 'required|in:urgent,high,normal',
+            'priority'                 => 'required|in:high,normal',
             'due_date'                 => 'nullable|date_format:Y-m-d\TH:i',
+            'ca_release_status'        => 'nullable|in:pending,release',
+            'ca_release_date'          => 'nullable|date',
         ]);
 
         if ($validator->fails()) {
@@ -723,17 +827,21 @@ class KasbonOtherController extends Controller
 
         DB::beginTransaction();
         try {
-            $kasbonOther = KasbonOther::findOrFail($id);
+            $kasbonOther     = KasbonOther::findOrFail($id);
+            $caReleaseStatus = $request->ca_release_status ?: 'pending';
+
             $kasbonOther->update([
-                'id_jo_other'   => $request->id_jo_other,
-                'id_md_dep'     => $request->id_md_dep,
-                'id_md_cabang'  => $request->id_md_cabang,
-                'id_md_release' => $request->id_md_release,
-                'tgl_kasbon'    => $request->tgl_kasbon,
-                'tgl_release'   => $request->tgl_release,
-                'note'          => $request->note,
-                'priority'      => $request->priority,
-                'due_date'      => $request->due_date ?: null,
+                'id_jo_other'       => $request->id_jo_other,
+                'id_md_dep'         => $request->id_md_dep,
+                'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_release'     => $request->id_md_release,
+                'tgl_kasbon'        => $request->tgl_kasbon,
+                'tgl_release'       => $request->tgl_release,
+                'note'              => $request->note,
+                'priority'          => $request->priority,
+                'due_date'          => $request->due_date ?: null,
+                'ca_release_status' => $caReleaseStatus,
+                'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
             foreach ($kasbonOther->items as $oldItem) {
@@ -742,8 +850,8 @@ class KasbonOtherController extends Controller
 
             foreach ($request->items as $itemData) {
                 $joOtherItem = JoOtherItem::find($itemData['id_jo_other_item']);
-                $nilaiHpp    = $joOtherItem ? (float)$joOtherItem->hpp_ops : 0;
-                $nilaiKasbon = (float)$itemData['nilai_kasbon'];
+                $nilaiHpp    = $joOtherItem ? (float) $joOtherItem->hpp_ops : 0;
+                $nilaiKasbon = (float) $itemData['nilai_kasbon'];
                 $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
                 KasbonOtherItem::create([
@@ -756,18 +864,31 @@ class KasbonOtherController extends Controller
             }
 
             DB::commit();
+
             Log::info('KasbonOther Update Success', ['id' => $id]);
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'Kasbon Other successfully updated', 'data' => $kasbonOther->fresh()->load('items')]);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Kasbon Other successfully updated',
+                    'data'    => $kasbonOther->fresh()->load('items')
+                ]);
             }
-            return redirect()->route('kasbon-other.index')->with('success', 'Kasbon Other successfully updated with ' . count($request->items) . ' item(s)');
+
+            return redirect()
+                ->route('kasbon-other.index')
+                ->with('success', 'Kasbon Other successfully updated with ' . count($request->items) . ' item(s)');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('KasbonOther Update Failed', ['id' => $id, 'error' => $e->getMessage()]);
+
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Error updating Kasbon Other: ' . $e->getMessage()], 500);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error updating Kasbon Other: ' . $e->getMessage(),
+                ], 500);
             }
+
             return back()->withInput()->with('error', 'Error updating Kasbon Other: ' . $e->getMessage());
         }
     }
@@ -778,41 +899,111 @@ class KasbonOtherController extends Controller
 
     public function destroy(Request $request, $id)
     {
+        Log::info('=== KasbonOther Delete START ===', ['id' => $id]);
+
         DB::beginTransaction();
         try {
             $kasbonOther = KasbonOther::findOrFail($id);
-            $itemsCount  = $kasbonOther->items()->count();
+
+            // ── Cek apakah kasbon ini sudah dipakai di LPJ ──────────────
+            $usedInLpj = \App\Models\Data\LpjKasbonOther::where('id_kasbon_other', $kasbonOther->id_kasbon_other)
+                ->exists();
+
+            if ($usedInLpj) {
+                DB::rollBack();
+
+                $lpjNumbers = \App\Models\Data\LpjKasbonOther::where('id_kasbon_other', $kasbonOther->id_kasbon_other)
+                    ->with('lpjOther:id,id_lpj_other,no_lpj_other')
+                    ->get()
+                    ->map(fn($lk) => $lk->lpjOther?->no_lpj_other ?? $lk->id_lpj_other)
+                    ->filter()
+                    ->unique()
+                    ->implode(', ');
+
+                $message = "Cannot delete Cash Advance \"{$kasbonOther->id_kasbon_other}\" because it is already used in LPJ: {$lpjNumbers}. "
+                    . "Please remove it from the related LPJ first before deleting.";
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            // ── Cek apakah ada kasbon item yang origin-nya dari LPJ ─────
+            $hasLpjOriginItems = $kasbonOther->items()
+                ->whereNotNull('origin_lpj_other')
+                ->exists();
+
+            if ($hasLpjOriginItems) {
+                DB::rollBack();
+
+                $message = "Cannot delete Cash Advance \"{$kasbonOther->id_kasbon_other}\" because some of its items were created from an LPJ entry. "
+                    . "Please delete the related LPJ items first.";
+
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            // ── Aman untuk dihapus ───────────────────────────────────────
+            $itemsCount = $kasbonOther->items()->count();
 
             foreach ($kasbonOther->items as $item) {
                 $item->delete();
             }
+
             $kasbonOther->delete();
 
             DB::commit();
-            Log::info('KasbonOther Deleted', ['id' => $id]);
+
+            Log::info('KasbonOther Deleted', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'Kasbon Other and all related items successfully deleted']);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cash Advance deleted successfully along with ' . $itemsCount . ' item(s)',
+                ]);
             }
-            return redirect()->route('kasbon-other.index')->with('success', "Kasbon Other deleted successfully along with {$itemsCount} item(s)");
+
+            return redirect()
+                ->route('kasbon-other.index')
+                ->with('success', "Cash Advance deleted successfully along with {$itemsCount} item(s)");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Kasbon Other not found'], 404);
+                return response()->json(['success' => false, 'message' => 'Cash Advance not found'], 404);
             }
-            return back()->with('error', 'Kasbon Other not found');
+            return back()->with('error', 'Cash Advance not found');
+        } catch (\Illuminate\Database\QueryException $e) {
+            DB::rollBack();
+            Log::error('KasbonOther Delete FK Constraint', ['id' => $id, 'error' => $e->getMessage()]);
+
+            if ($e->getCode() === '23000') {
+                $message = $this->resolveFkDeleteMessage($e->getMessage());
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 422);
+                }
+                return back()->with('error', $message);
+            }
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to delete Cash Advance. Please try again.'], 500);
+            }
+            return back()->with('error', 'Failed to delete Cash Advance. Please try again.');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('KasbonOther Delete Failed', ['id' => $id, 'error' => $e->getMessage()]);
+
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Error deleting Kasbon Other: ' . $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Failed to delete Cash Advance. Please try again.'], 500);
             }
-            return back()->with('error', 'Error deleting Kasbon Other: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete Cash Advance. Please try again.');
         }
     }
 
     // ========================================
-    // GET FOR SELECT
+    // GET FOR SELECT (API dropdown)
     // ========================================
 
     public function getForSelect(Request $request)
@@ -827,15 +1018,17 @@ class KasbonOtherController extends Controller
                 $query->where('id_md_dep', $request->id_md_dep);
             }
 
-            $kasbonOthers = $query->orderBy('id', 'desc')->get()->map(function ($kasbon) {
-                return [
-                    'id'              => $kasbon->id,
-                    'id_kasbon_other' => $kasbon->id_kasbon_other,
-                    'text'            => $kasbon->id_kasbon_other . ' - ' . ($kasbon->joOther->no_jo_other ?? '-'),
-                    'jo_other'        => $kasbon->joOther ? $kasbon->joOther->no_jo_other : null,
-                    'departemen'      => $kasbon->departemen ? $kasbon->departemen->nama_dep : null,
-                ];
-            });
+            $kasbonOthers = $query->orderBy('id', 'desc')
+                ->get()
+                ->map(function ($kasbon) {
+                    return [
+                        'id'              => $kasbon->id,
+                        'id_kasbon_other' => $kasbon->id_kasbon_other,
+                        'text'            => $kasbon->id_kasbon_other . ' - ' . ($kasbon->joOther->no_jo_other ?? '-'),
+                        'jo_other'        => $kasbon->joOther ? $kasbon->joOther->no_jo_other : null,
+                        'departemen'      => $kasbon->departemen ? $kasbon->departemen->nama_dep : null,
+                    ];
+                });
 
             return response()->json(['success' => true, 'data' => $kasbonOthers]);
         } catch (\Exception $e) {
@@ -844,7 +1037,7 @@ class KasbonOtherController extends Controller
     }
 
     // ========================================
-    // GET JO OTHER ITEMS
+    // GET JO OTHER ITEMS BY JO OTHER (API)
     // ========================================
 
     public function getJoOtherItems(Request $request)
@@ -865,8 +1058,8 @@ class KasbonOtherController extends Controller
                         'text'             => $item->invoice ? $item->invoice->invoice_typ : $item->id_jo_other_item,
                         'invoice_typ'      => $item->invoice ? $item->invoice->invoice_typ : null,
                         'invoice_ctg'      => $item->invoice ? $item->invoice->invoice_ctg : null,
-                        'hpp_ops'          => (float)$item->hpp_ops,
-                        'hargajual_idr'    => (float)$item->hargajual_idr,
+                        'hpp_ops'          => (float) $item->hpp_ops,
+                        'hargajual_idr'    => (float) $item->hargajual_idr,
                     ];
                 });
 
@@ -894,13 +1087,16 @@ class KasbonOtherController extends Controller
         DB::beginTransaction();
         try {
             $kasbonOthers = KasbonOther::whereIn('id', $request->ids)->get();
+
             foreach ($kasbonOthers as $kasbon) {
                 foreach ($kasbon->items as $item) {
                     $item->delete();
                 }
                 $kasbon->delete();
             }
+
             DB::commit();
+
             return response()->json(['success' => true, 'message' => 'Kasbon Others successfully deleted']);
         } catch (\Exception $e) {
             DB::rollBack();
@@ -921,17 +1117,22 @@ class KasbonOtherController extends Controller
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors()
+            ], 422);
         }
 
         try {
             $kasbonOther = KasbonOther::findOrFail($id);
+
             DB::beginTransaction();
 
             foreach ($request->items as $itemData) {
                 $joOtherItem = JoOtherItem::find($itemData['id_jo_other_item']);
-                $nilaiHpp    = $joOtherItem ? (float)$joOtherItem->hpp_ops : 0;
-                $nilaiKasbon = (float)$itemData['nilai_kasbon'];
+                $nilaiHpp    = $joOtherItem ? (float) $joOtherItem->hpp_ops : 0;
+                $nilaiKasbon = (float) $itemData['nilai_kasbon'];
                 $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
                 $existing = KasbonOtherItem::where('id_kasbon_other', $kasbonOther->id_kasbon_other)
@@ -946,9 +1147,12 @@ class KasbonOtherController extends Controller
                     ]);
                 } else {
                     if ($nilaiKasbon > 0) {
-                        $maxId = DB::table('c06_kasbon_other_item')->max('id_kasbon_other_item');
+                        $maxId = DB::table('c06_kasbon_other_item')
+                            ->lockForUpdate()
+                            ->selectRaw('MAX(CAST(id_kasbon_other_item AS UNSIGNED)) as max_id')
+                            ->value('max_id');
                         KasbonOtherItem::create([
-                            'id_kasbon_other_item' => $maxId ? (string)((int)$maxId + 1) : '1',
+                            'id_kasbon_other_item' => (string)(((int) $maxId) + 1),
                             'id_kasbon_other'      => $kasbonOther->id_kasbon_other,
                             'id_jo_other_item'     => $itemData['id_jo_other_item'],
                             'nilai_hpp_other_item' => $nilaiHpp,
@@ -965,32 +1169,117 @@ class KasbonOtherController extends Controller
                 ->selectRaw('SUM(nilai_hpp_other_item) as total_hpp, SUM(nilai_kasbon) as total_kasbon, SUM(total_kasbon) as total_remaining')
                 ->first();
 
-            return response()->json(['success' => true, 'message' => 'Items saved successfully', 'totals' => $totals]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Items saved successfully',
+                'totals'  => $totals,
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('bulkSaveItems KasbonOther failed', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Failed to save items: ' . $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save items: ' . $e->getMessage()
+            ], 500);
         }
     }
+
+    // ========================================
+    // CHECK ITEM CONFLICT
+    // ========================================
+
+    public function checkItemConflict(Request $request)
+    {
+        try {
+            $idJoOtherItem = $request->get('id_jo_other_item');
+            $idKasbonOther = $request->get('id_kasbon_other');
+
+            if (!$idJoOtherItem) {
+                return response()->json(['success' => false, 'message' => 'id_jo_other_item is required'], 422);
+            }
+
+            $conflict = KasbonOtherItem::where('id_jo_other_item', $idJoOtherItem)
+                ->where('id_kasbon_other', '!=', $idKasbonOther)
+                ->where('nilai_kasbon', '>', 0)
+                ->whereNull('deleted_at')
+                ->with('kasbonOther')
+                ->first();
+
+            if ($conflict) {
+                return response()->json([
+                    'success'      => true,
+                    'has_conflict' => true,
+                    'conflict'     => [
+                        'id_kasbon_other'      => $conflict->id_kasbon_other,
+                        'nilai_kasbon'         => (float) $conflict->nilai_kasbon,
+                        'id_kasbon_other_item' => $conflict->id_kasbon_other_item,
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'success'      => true,
+                'has_conflict' => false,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
+    // CLEAR CONFLICT ITEM
+    // ========================================
+
+    public function clearConflictItem(Request $request)
+    {
+        try {
+            $idJoOtherItem = $request->get('id_jo_other_item');
+            $idKasbonOther = $request->get('id_kasbon_other');
+
+            if (!$idJoOtherItem) {
+                return response()->json(['success' => false, 'message' => 'id_jo_other_item is required'], 422);
+            }
+
+            DB::beginTransaction();
+
+            KasbonOtherItem::where('id_jo_other_item', $idJoOtherItem)
+                ->where('id_kasbon_other', '!=', $idKasbonOther)
+                ->where('nilai_kasbon', '>', 0)
+                ->each(function ($item) {
+                    $item->update([
+                        'nilai_kasbon' => 0,
+                        'total_kasbon' => $item->nilai_hpp_other_item,
+                    ]);
+                });
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Conflict cleared successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('clearConflictItem KasbonOther failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
+    // EXPORT PDF (single record)
+    // ========================================
 
     public function exportPdf($id)
     {
         try {
             $kasbonOther = KasbonOther::with([
                 'joOther.customer',
-                'joOther.items.invoice',   // seluruh JO items (sumber baris tabel)
+                'joOther.items.invoice',
                 'departemen',
                 'cabang',
                 'release',
-                'items',                   // kasbon items (lookup nilai_kasbon)
+                'items',
             ])->findOrFail($id);
 
-            // Hitung total CA persis seperti footerTotalCA di edit view:
-            // iterasi joOther->items, join ke kasbonLookup by id_jo_other_item
             $kasbonLookup = $kasbonOther->items->keyBy('id_jo_other_item');
-            $joItems      = $kasbonOther->joOther
-                ? $kasbonOther->joOther->items
-                : collect();
+            $joItems      = $kasbonOther->joOther ? $kasbonOther->joOther->items : collect();
 
             $totalCA = $joItems->sum(function ($joItem) use ($kasbonLookup) {
                 $k = $kasbonLookup->get($joItem->id_jo_other_item);
@@ -1000,7 +1289,7 @@ class KasbonOtherController extends Controller
             $terbilang = $this->toTerbilang((int) round($totalCA)) . ' Rupiah';
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
-                'data.kasbon-other.pdf',   // resources/views/data/kasbon-other/pdf.blade.php
+                'data.kasbon-other.pdf',
                 compact('kasbonOther', 'terbilang')
             )
                 ->setPaper('a4', 'portrait')
@@ -1030,52 +1319,9 @@ class KasbonOtherController extends Controller
         }
     }
 
-    /**
-     * Simple Indonesian number-to-words (terbilang) helper.
-     */
-    private function toTerbilang(int $number): string
-    {
-        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
-
-        $words = [
-            '',
-            'Satu',
-            'Dua',
-            'Tiga',
-            'Empat',
-            'Lima',
-            'Enam',
-            'Tujuh',
-            'Delapan',
-            'Sembilan',
-            'Sepuluh',
-            'Sebelas',
-        ];
-
-        if ($number === 0)  return 'Nol';
-        if ($number < 12)   return $words[$number];
-        if ($number < 20)   return $this->toTerbilang($number - 10) . ' Belas';
-        if ($number < 100)  return $words[(int) ($number / 10)] . ' Puluh'
-            . ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
-        if ($number < 200)  return 'Seratus'
-            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
-        if ($number < 1000) return $words[(int) ($number / 100)] . ' Ratus'
-            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
-        if ($number < 2000) return 'Seribu'
-            . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
-        if ($number < 1_000_000)
-            return $this->toTerbilang((int) ($number / 1000)) . ' Ribu'
-                . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
-        if ($number < 1_000_000_000)
-            return $this->toTerbilang((int) ($number / 1_000_000)) . ' Juta'
-                . ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
-        if ($number < 1_000_000_000_000)
-            return $this->toTerbilang((int) ($number / 1_000_000_000)) . ' Miliar'
-                . ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
-
-        return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun'
-            . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
-    }
+    // ========================================
+    // EXPORT (list Excel / PDF)
+    // ========================================
 
     public function export(Request $request)
     {
@@ -1107,6 +1353,10 @@ class KasbonOtherController extends Controller
 
         return (new \App\Exports\Data\KasbonOtherExport($kasbonOthers))->download();
     }
+
+    // ========================================
+    // PRIVATE HELPERS
+    // ========================================
 
     private function buildExportQuery(Request $request)
     {
@@ -1141,5 +1391,45 @@ class KasbonOtherController extends Controller
         if ($request->filled('tgl_kasbon_to'))   $filters['tgl_kasbon_to']   = $request->tgl_kasbon_to;
 
         return $filters;
+    }
+
+    private function resolveFkDeleteMessage(string $rawError): string
+    {
+        $map = [
+            'd05_lpj_other'         => 'LPJ Other',
+            'd06_lpj_kasbon_other'  => 'LPJ Cash Advance Other',
+            'd07_lpj_other_item'    => 'LPJ Other Item',
+            'c06_kasbon_other_item' => 'Cash Advance Other Item',
+        ];
+
+        foreach ($map as $table => $label) {
+            if (str_contains($rawError, $table)) {
+                return "Cannot delete this Cash Advance because it is still referenced by \"{$label}\" data. "
+                    . "Please remove the related {$label} records first.";
+            }
+        }
+
+        return 'Cannot delete this Cash Advance because it is still being used by other related data. '
+            . 'Please remove all related records first before deleting.';
+    }
+
+    private function toTerbilang(int $number): string
+    {
+        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
+
+        $words = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
+
+        if ($number === 0)           return 'Nol';
+        if ($number < 12)            return $words[$number];
+        if ($number < 20)            return $this->toTerbilang($number - 10) . ' Belas';
+        if ($number < 100)           return $words[(int)($number / 10)] . ' Puluh' . ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
+        if ($number < 200)           return 'Seratus' . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 1000)          return $words[(int)($number / 100)] . ' Ratus' . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 2000)          return 'Seribu' . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000)     return $this->toTerbilang((int)($number / 1000)) . ' Ribu' . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000_000) return $this->toTerbilang((int)($number / 1_000_000)) . ' Juta' . ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
+        if ($number < 1_000_000_000_000) return $this->toTerbilang((int)($number / 1_000_000_000)) . ' Miliar' . ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
+
+        return $this->toTerbilang((int)($number / 1_000_000_000_000)) . ' Triliun' . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
     }
 }

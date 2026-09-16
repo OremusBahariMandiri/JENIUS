@@ -69,50 +69,94 @@
                             </div>
                         @endif
 
-                        {{-- ── PRIORITY SUMMARY CARDS ── --}}
                         @php
-                            $countHigh   = $kasbonTrampers->where('priority', 'high')->count();
+                            $countHigh = $kasbonTrampers->where('priority', 'high')->count();
                             $countNormal = $kasbonTrampers->where('priority', 'normal')->count();
+                            $countReleased = $kasbonTrampers->where('ca_release_status', 'release')->count();
+                            $countPending = $kasbonTrampers->where('ca_release_status', '!=', 'release')->count();
                         @endphp
 
                         <div class="row g-3 mb-4">
-                            <div class="col-6">
+                            {{-- High --}}
+                            <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#fff1f2; border-color:#f87171 !important;">
-                                    <div style="width:42px;height:42px;background:#fee2e2;border-radius:10px;
-                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <div
+                                        style="width:42px;height:42px;background:#fee2e2;border-radius:10px;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                         <i class="fas fa-arrow-up" style="color:#dc2626;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            High
-                                        </div>
+                                        <div
+                                            style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                            High</div>
                                         <div style="font-size:1.6rem;font-weight:700;color:#b91c1c;line-height:1.1;">
-                                            {{ $countHigh }}
-                                        </div>
+                                            {{ $countHigh }}</div>
                                         <div style="font-size:.72rem;color:#dc2626;">
-                                            document{{ $countHigh !== 1 ? 's' : '' }}
-                                        </div>
+                                            document{{ $countHigh !== 1 ? 's' : '' }}</div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-6">
+
+                            {{-- Normal --}}
+                            <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#f9fafb; border-color:#d1d5db !important;">
-                                    <div style="width:42px;height:42px;background:#f3f4f6;border-radius:10px;
-                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <div
+                                        style="width:42px;height:42px;background:#f3f4f6;border-radius:10px;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                                         <i class="fas fa-minus" style="color:#6b7280;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            Normal
-                                        </div>
+                                        <div
+                                            style="font-size:.75rem;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                            Normal</div>
                                         <div style="font-size:1.6rem;font-weight:700;color:#374151;line-height:1.1;">
-                                            {{ $countNormal }}
-                                        </div>
+                                            {{ $countNormal }}</div>
                                         <div style="font-size:.72rem;color:#6b7280;">
-                                            document{{ $countNormal !== 1 ? 's' : '' }}
-                                        </div>
+                                            document{{ $countNormal !== 1 ? 's' : '' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Released --}}
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
+                                    style="background:#d1fae5; border-color:#6ee7b7 !important;">
+                                    <div
+                                        style="width:42px;height:42px;background:#a7f3d0;border-radius:10px;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fas fa-check-circle" style="color:#059669;font-size:1.1rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div
+                                            style="font-size:.75rem;color:#065f46;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                            Released</div>
+                                        <div style="font-size:1.6rem;font-weight:700;color:#059669;line-height:1.1;">
+                                            {{ $countReleased }}</div>
+                                        <div style="font-size:.72rem;color:#10b981;">
+                                            document{{ $countReleased !== 1 ? 's' : '' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Pending --}}
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
+                                    style="background:#fffbeb; border-color:#fcd34d !important;">
+                                    <div
+                                        style="width:42px;height:42px;background:#fef3c7;border-radius:10px;
+                display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fas fa-clock" style="color:#d97706;font-size:1.1rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div
+                                            style="font-size:.75rem;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
+                                            Pending</div>
+                                        <div style="font-size:1.6rem;font-weight:700;color:#d97706;line-height:1.1;">
+                                            {{ $countPending }}</div>
+                                        <div style="font-size:.72rem;color:#f59e0b;">
+                                            document{{ $countPending !== 1 ? 's' : '' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -132,15 +176,17 @@
                                         <th class="text-center">Items</th>
                                         <th class="text-end">Total HPP</th>
                                         <th class="text-end">Total CA</th>
-                                        <th class="text-center">Invoice</th>
+                                        <th class="text-center">CA PDF</th>
                                         <th class="text-center">Priority</th>
-                                        <th class="text-center" width="12%">Action</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center" width="10%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($kasbonTrampers as $kasbon)
                                         @php
-                                            $rowClass = $kasbon->priority === 'high' ? 'row-high' : '';
+                                            $isReleased = $kasbon->ca_release_status === 'release';
+                                            $rowClass = !$isReleased && $kasbon->priority === 'high' ? 'row-high' : '';
                                         @endphp
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $loop->iteration }}</td>
@@ -158,7 +204,7 @@
                                                 {{ number_format($kasbon->items->sum('nilai_kasbon'), 2, ',', '.') }}
                                             </td>
 
-                                            {{-- Invoice / PDF --}}
+                                            {{-- CA PDF --}}
                                             <td class="text-center">
                                                 @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('kasbon-tramper', 'detail')))
                                                     <a href="{{ route('kasbon-tramper.export-pdf', $kasbon->id) }}"
@@ -178,6 +224,26 @@
                                                 @else
                                                     <span class="badge bg-secondary" style="font-size:.75rem;">
                                                         Normal
+                                                    </span>
+                                                @endif
+                                            </td>
+
+                                            {{-- Release Status --}}
+                                            <td class="text-center">
+                                                @if ($kasbon->ca_release_status === 'release')
+                                                    <span class="badge"
+                                                        style="background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; font-size:.75rem;">
+                                                        <i class="fas fa-check-circle me-1"></i>Released
+                                                    </span>
+                                                    @if ($kasbon->ca_release_date)
+                                                        <div style="font-size:.7rem; color:#6b7280; margin-top:3px;">
+                                                            {{ $kasbon->ca_release_date->format('d/m/Y') }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="badge"
+                                                        style="background:#fef3c7; color:#92400e; border:1px solid #fcd34d; font-size:.75rem;">
+                                                        <i class="fas fa-clock me-1"></i>Pending
                                                     </span>
                                                 @endif
                                             </td>
@@ -211,7 +277,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="13" class="text-center py-5">
+                                            <td colspan="14" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No Kasbon Tramper Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new Kasbon Tramper</p>
@@ -224,17 +290,21 @@
                             {{-- TABLE LEGEND --}}
                             <div class="d-flex flex-wrap gap-3 mt-3 px-1" style="font-size:.8rem;">
                                 <div class="d-flex align-items-center gap-2">
-                                    <span style="display:inline-block;width:16px;height:16px;border-radius:4px;
+                                    <span
+                                        style="display:inline-block;width:16px;height:16px;border-radius:4px;
                                         background:#fee2e2;border:1px solid #fca5a5;flex-shrink:0;"></span>
                                     <span style="color:#6b7280;">
-                                        <span style="font-weight:600;color:#b91c1c;">Red</span> — High priority document
+                                        <span style="font-weight:600;color:#b91c1c;">Red</span> — High priority, not yet
+                                        released
                                     </span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
-                                    <span style="display:inline-block;width:16px;height:16px;border-radius:4px;
+                                    <span
+                                        style="display:inline-block;width:16px;height:16px;border-radius:4px;
                                         background:#ffffff;border:1px solid #d1d5db;flex-shrink:0;"></span>
                                     <span style="color:#6b7280;">
-                                        <span style="font-weight:600;color:#374151;">White</span> — Normal priority document
+                                        <span style="font-weight:600;color:#374151;">White</span> — Normal priority
+                                        document
                                     </span>
                                 </div>
                             </div>
@@ -389,30 +459,50 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <style>
-        .modal .select2-container { width: 100% !important; }
+        .modal .select2-container {
+            width: 100% !important;
+        }
+
         .modal .select2-container .select2-selection--single {
             height: calc(1.5em + 0.75rem + 2px) !important;
             padding: 0.375rem 0.75rem !important;
             border: 1px solid #ced4da !important;
             border-radius: 0.375rem !important;
         }
+
         .modal .select2-container .select2-selection--single .select2-selection__rendered {
             line-height: 1.5 !important;
             padding-left: 0 !important;
             color: #212529;
         }
+
         .modal .select2-container .select2-selection--single .select2-selection__arrow {
             height: 100% !important;
         }
-        .kasbonTramperPage .card { border: none; border-radius: 10px; }
-        .kasbonTramperPage .card-header { border-radius: 10px 10px 0 0 !important; padding: 1rem 1.5rem; }
-        .kasbonTramperPage .btn-sm { transition: transform 0.2s; }
-        .kasbonTramperPage .btn-sm:hover { transform: scale(1.1); }
+
+        .kasbonTramperPage .card {
+            border: none;
+            border-radius: 10px;
+        }
+
+        .kasbonTramperPage .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem 1.5rem;
+        }
+
+        .kasbonTramperPage .btn-sm {
+            transition: transform 0.2s;
+        }
+
+        .kasbonTramperPage .btn-sm:hover {
+            transform: scale(1.1);
+        }
 
         /* High priority row = red */
         .kasbonTramperPage table tbody tr.row-high td {
             background-color: #fc4d4d !important;
         }
+
         .kasbonTramperPage table.dataTable tbody tr.row-high:hover td {
             background-color: #ff1919 !important;
         }
@@ -435,16 +525,57 @@
                 $('#kasbonTramperTable').DataTable({
                     responsive: true,
                     pageLength: 10,
-                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
-                    order: [[2, 'desc']],
-                    columnDefs: [
-                        { orderable: false, targets: 0 },
-                        { orderable: false, targets: -1 },
-                        { responsivePriority: 1, targets: -1 },
-                        { responsivePriority: 2, targets: 1 },
-                        { responsivePriority: 10001, targets: 4 },
-                        { responsivePriority: 10002, targets: 5 },
-                        { responsivePriority: 10003, targets: 6 },
+                    lengthMenu: [
+                        [10, 25, 50, -1],
+                        [10, 25, 50, 'All']
+                    ],
+                    order: [
+                        [2, 'desc']
+                    ],
+                    columnDefs: [{
+                            orderable: false,
+                            targets: 0
+                        },
+                        {
+                            orderable: false,
+                            targets: -1
+                        },
+                        {
+                            responsivePriority: 1,
+                            targets: -1
+                        }, // Action
+                        {
+                            responsivePriority: 2,
+                            targets: 1
+                        }, // CA No
+                        {
+                            responsivePriority: 3,
+                            targets: 12
+                        }, // Status
+                        {
+                            responsivePriority: 4,
+                            targets: 11
+                        }, // Priority
+                        {
+                            responsivePriority: 5,
+                            targets: 2
+                        }, // CA Date
+                        {
+                            responsivePriority: 6,
+                            targets: 3
+                        }, // JO No
+                        {
+                            responsivePriority: 10001,
+                            targets: 4
+                        }, // Dep
+                        {
+                            responsivePriority: 10002,
+                            targets: 5
+                        }, // Branch
+                        {
+                            responsivePriority: 10003,
+                            targets: 6
+                        }, // Release To
                     ],
                     language: {
                         search: 'Search:',
@@ -453,7 +584,9 @@
                     drawCallback: function(settings) {
                         var api = this.api();
                         var startIndex = api.page.info().start;
-                        api.column(0, { page: 'current' }).nodes().each(function(cell, i) {
+                        api.column(0, {
+                            page: 'current'
+                        }).nodes().each(function(cell, i) {
                             cell.innerHTML = startIndex + i + 1;
                         });
                     },
@@ -474,8 +607,12 @@
                 });
             });
 
-            $('#filterButton').on('click', function() { $('#filterModal').modal('show'); });
-            $('#exportButton').on('click', function() { $('#exportModal').modal('show'); });
+            $('#filterButton').on('click', function() {
+                $('#filterModal').modal('show');
+            });
+            $('#exportButton').on('click', function() {
+                $('#exportModal').modal('show');
+            });
 
             $('#resetFilter').on('click', function() {
                 $('#filterForm input[type="date"]').val('');
@@ -485,7 +622,7 @@
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
                 const name = $(this).data('name');
-                const url  = $(this).data('url');
+                const url = $(this).data('url');
                 Swal.fire({
                     title: 'Delete Kasbon Tramper?',
                     html: `<div class="text-start">
@@ -509,7 +646,9 @@
                             html: 'Please wait...',
                             allowOutsideClick: false,
                             allowEscapeKey: false,
-                            didOpen: () => { Swal.showLoading(); },
+                            didOpen: () => {
+                                Swal.showLoading();
+                            },
                         });
                         $('#deleteForm').attr('action', url).submit();
                     }
