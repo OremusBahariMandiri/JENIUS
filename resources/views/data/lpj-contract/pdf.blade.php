@@ -130,7 +130,6 @@
     $kasbonOrder  = [];
     $kasbonGroups = [];
 
-    $totalHpp    = 0;
     $totalKasbon = 0;
     $totalLpj    = 0;
 
@@ -150,11 +149,9 @@
             $cat         = optional(optional($kasbonItem->joContractItem)->invoice)->invoice_ctg ?? 'Uncategorized';
             $invoiceTyp  = optional(optional($kasbonItem->joContractItem)->invoice)->invoice_typ ?? $kasbonItem->id_kasbon_cont_item;
 
-            $nilaiHpp    = (float) $kasbonItem->nilai_hpp_cont_item;
             $nilaiKasbon = (float) $kasbonItem->nilai_kasbon;
             $amountLpj   = $lpjItem ? (float) $lpjItem->amount_lpj : 0;
 
-            $totalHpp    += $nilaiHpp;
             $totalKasbon += $nilaiKasbon;
             $totalLpj    += $amountLpj;
 
@@ -164,12 +161,13 @@
             }
             $kasbonGroups[$kNo]['catGroups'][$cat][] = [
                 'typ'    => $invoiceTyp,
-                'hpp'    => $nilaiHpp,
                 'kasbon' => $nilaiKasbon,
                 'lpj'    => $amountLpj,
             ];
         }
     }
+
+    $totalSelisih = $totalKasbon - $totalLpj;
 
     /* ── Blank row padding ── */
     $totalRows = 0;
@@ -237,16 +235,16 @@
 
 {{-- ══════════════════════════════════════════════
      ITEMS TABLE
-     Kolom: Deskripsi | CA No | HPP | Kasbon | LPJ
+     Kolom: Deskripsi | CA No | Kasbon | LPJ | Selisih
 ══════════════════════════════════════════════ --}}
 <table class="items-table" style="margin-top:6px;">
 <thead>
     <tr>
-        <th style="width:30%;">Deskripsi</th>
+        <th style="width:32%;">Deskripsi</th>
         <th style="width:18%;">CA No</th>
-        <th style="width:17%;">HPP (IDR)</th>
         <th style="width:17%;">Kasbon (IDR)</th>
-        <th style="width:18%;">LPJ (IDR)</th>
+        <th style="width:17%;">LPJ (IDR)</th>
+        <th style="width:16%;">Selisih (IDR)</th>
     </tr>
 </thead>
 <tbody>
@@ -264,12 +262,15 @@
             </tr>
 
             @foreach ($catGroups[$cat] as $item)
+            @php $selisihItem = $item['kasbon'] - $item['lpj']; @endphp
             <tr>
                 <td>{{ $item['typ'] }}</td>
                 <td class="text-center" style="font-size:7.5pt; color:#1e3a5f;">{{ $kNo }}</td>
-                <td class="text-right">{{ number_format($item['hpp'],    2, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($item['kasbon'], 2, ',', '.') }}</td>
                 <td class="text-right">{{ number_format($item['lpj'],    2, ',', '.') }}</td>
+                <td class="text-right" style="color: {{ $selisihItem >= 0 ? '#16a34a' : '#dc2626' }}; font-weight: bold;">
+                    {{ number_format($selisihItem, 2, ',', '.') }}
+                </td>
             </tr>
             @endforeach
         @endforeach
@@ -285,9 +286,11 @@
     {{-- Total --}}
     <tr class="total-row">
         <td colspan="2"><strong>Total</strong></td>
-        <td class="text-right">{{ number_format($totalHpp,    2, ',', '.') }}</td>
-        <td class="text-right">{{ number_format($totalKasbon, 2, ',', '.') }}</td>
-        <td class="text-right">{{ number_format($totalLpj,    2, ',', '.') }}</td>
+        <td class="text-right">{{ number_format($totalKasbon,  2, ',', '.') }}</td>
+        <td class="text-right">{{ number_format($totalLpj,     2, ',', '.') }}</td>
+        <td class="text-right" style="color: {{ $totalSelisih >= 0 ? '#16a34a' : '#dc2626' }};">
+            {{ number_format($totalSelisih, 2, ',', '.') }}
+        </td>
     </tr>
 
 </tbody>
