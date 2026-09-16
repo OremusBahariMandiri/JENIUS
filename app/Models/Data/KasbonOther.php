@@ -29,15 +29,18 @@ class KasbonOther extends Model
         'note',
         'priority',
         'due_date',
+        'ca_release_status',   // ← baru
+        'ca_release_date',     // ← baru
     ];
 
     protected $casts = [
-        'tgl_kasbon'  => 'date',
-        'tgl_release' => 'date',
-        'created_at'  => 'datetime',
-        'updated_at'  => 'datetime',
-        'deleted_at'  => 'datetime',
-        'due_date'    => 'datetime',
+        'tgl_kasbon'        => 'date',
+        'tgl_release'       => 'date',
+        'ca_release_date'   => 'date',     // ← baru
+        'created_at'        => 'datetime',
+        'updated_at'        => 'datetime',
+        'deleted_at'        => 'datetime',
+        'due_date'          => 'datetime',
     ];
 
     public function joOther()

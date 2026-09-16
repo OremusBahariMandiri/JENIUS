@@ -15,12 +15,47 @@
             'nilai_kasbon' => $i['nilai_kasbon'],
             'total_kasbon' => $i['total_kasbon'],
             'has_kasbon' => $i['has_kasbon'],
+            'origin_lpj_other' => $i['origin_lpj_other'] ?? null, // ← tambah ini
         ],
     );
 @endphp
 
 @push('styles')
     <style>
+        /* Rows added from LPJ — blue tint */
+        .table-kasbon tbody tr.row-from-lpj td {
+            background: #eff6ff !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj:hover td {
+            background: #dbeafe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj.tr-active td {
+            background: #bfdbfe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj .category-cell {
+            background: #dbeafe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj .cell-readonly {
+            background: #e0eeff !important;
+        }
+
+        .lpj-origin-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+            font-size: .8rem;
+            color: #1e40af;
+        }
+
         .kasbonOtherEditPage .card {
             border: none;
             border-radius: 10px;
@@ -561,6 +596,40 @@
             font-size: .875rem;
             padding: 10px;
         }
+
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
+        }
+
+        .validate-hint {
+            font-size: .76rem;
+            font-weight: 600;
+            margin-top: 5px;
+            min-height: 18px;
+            transition: color .2s;
+        }
+
+        .validate-hint.hint-danger {
+            color: #dc3545;
+        }
+
+        .validate-hint.hint-ok {
+            color: #10b981;
+        }
+
+        .validate-hint.hint-info {
+            color: #6b7280;
+        }
+
+        .currency-input.input-invalid {
+            border-color: #dc3545 !important;
+            box-shadow: 0 0 0 .2rem rgba(220, 53, 69, .2) !important;
+        }
+
+        .currency-input.input-valid {
+            border-color: #10b981 !important;
+            box-shadow: 0 0 0 .2rem rgba(16, 185, 129, .15) !important;
+        }
     </style>
 @endpush
 
@@ -786,145 +855,176 @@
                                         value="{{ $kasbonOther->due_date ? $kasbonOther->due_date->format('Y-m-d\TH:i') : '' }}">
                                 </div>
 
+                                {{-- CA Release Status --}}
+                                <div class="col-md-12" id="caReleaseStatusWrapper">
+                                    <label class="form-label">CA Release Status</label>
+                                    <select name="ca_release_status" id="ca_release_status" class="form-select">
+                                        <option value="" {{ !$kasbonOther->ca_release_status ? 'selected' : '' }}>--
+                                            No Status (Pending) --</option>
+                                        <option value="pending"
+                                            {{ $kasbonOther->ca_release_status == 'pending' ? 'selected' : '' }}>Pending
+                                        </option>
+                                        <option value="release"
+                                            {{ $kasbonOther->ca_release_status == 'release' ? 'selected' : '' }}>Release
+                                        </option>
+                                    </select>
+                                </div>
+
+                                {{-- CA Release Date --}}
+                                <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
+                                    <label class="form-label">CA Release Date</label>
+                                    <input type="date" name="ca_release_date" id="ca_release_date"
+                                        class="form-control"
+                                        value="{{ $kasbonOther->ca_release_date ? $kasbonOther->ca_release_date->format('Y-m-d') : '' }}">
+                                </div>
+
                                 <div class="col-md-12">
                                     <label class="form-label">Note</label>
                                     <textarea name="note" id="note" class="form-control" rows="3">{{ $kasbonOther->note }}</textarea>
                                 </div>
-                            </div>
 
-                            <div class="d-flex justify-content-end mt-4">
-                                <button type="button" class="btn btn-success px-4" id="btnSaveHeader">
-                                    <i class="fas fa-save me-1"></i> Update Header
+                                <div class="d-flex justify-content-end mt-4">
+                                    <button type="button" class="btn btn-success px-4" id="btnSaveHeader">
+                                        <i class="fas fa-save me-1"></i> Update Header
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ===== ITEMS CARD ===== --}}
+                        <div class="card shadow mb-4" id="itemsCard">
+                            <div class="card-header text-black d-flex justify-content-between align-items-center"
+                                style="background-color:#d1fae5">
+                                <h6 class="mb-0">
+                                    <i class="fas fa-list me-2"></i>
+                                    Cash Advance Items
+                                    <span class="items-count-badge" id="itemsCountBadge">0</span>
+                                </h6>
+                                <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
+                                    style="border-radius:8px;">
+                                    <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
                                 </button>
                             </div>
-                        </div>
-                    </div>
+                            <div class="card-body p-4">
 
-                    {{-- ===== ITEMS CARD ===== --}}
-                    <div class="card shadow mb-4" id="itemsCard">
-                        <div class="card-header text-black d-flex justify-content-between align-items-center"
-                            style="background-color:#d1fae5">
-                            <h6 class="mb-0">
-                                <i class="fas fa-list me-2"></i>
-                                Cash Advance Items
-                                <span class="items-count-badge" id="itemsCountBadge">0</span>
-                            </h6>
-                            <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
-                                style="border-radius:8px;">
-                                <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
-                            </button>
-                        </div>
-                        <div class="card-body p-4">
+                                {{-- INPUT CARD --}}
+                                <div class="input-item-card" id="inputItemCard">
+                                    <div class="card-title-bar">
+                                        <i class="fas fa-pen-to-square"></i>
+                                        <span>Input CA Amount</span>
+                                    </div>
+                                    <div class="row g-3 mb-4">
+                                        <div class="col-md-4">
+                                            <div class="info-field">
+                                                <div class="info-label">Description</div>
+                                                <div class="info-value" id="infoInvoiceTyp">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="info-field">
+                                                <div class="info-label">Category</div>
+                                                <div class="info-value" id="infoInvoiceCtg">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="info-field">
+                                                <div class="info-label">Selling Price (IDR)</div>
+                                                <div class="info-value" id="infoHargaJual">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="info-field">
+                                                <div class="info-label">Total CA / HPP (IDR)</div>
+                                                <div class="info-value" id="infoTotalKasbon">—</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row g-3">
+                                        <div class="col-12">
+                                            <label class="form-label fw-bold" style="color:#1e40af; font-size:0.875rem;">
+                                                CA Amount (IDR) <span style="color:#dc3545;">*</span>
+                                            </label>
+                                            <div class="currency-group">
+                                                <span class="currency-label">IDR</span>
+                                                <input type="text" id="inputNilaiKasbon"
+                                                    class="form-control currency-input" placeholder="0,00"
+                                                    autocomplete="off">
+                                            </div>
+                                            {{-- Hint validasi realtime --}}
+                                            <div id="caValidationHint" class="validate-hint hint-info"></div>
+                                        </div>
+                                        <div class="col-12 d-flex justify-content-end gap-2 mt-1">
+                                            <button type="button" class="btn btn-cancel-item-input"
+                                                id="btnCancelItemInput">
+                                                <i class="fas fa-times me-1"></i> Cancel
+                                            </button>
+                                            <button type="button" class="btn btn-save-item-input" id="btnSaveItemInput">
+                                                <i class="fas fa-save me-1"></i> Save CA Amount
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="activeJoOtherItemId" value="">
+                                    <input type="hidden" id="activeRowIndex" value="">
+                                    <input type="hidden" id="activeHppValue" value="0">
+                                </div>
 
-                            {{-- INPUT CARD --}}
-                            <div class="input-item-card" id="inputItemCard">
-                                <div class="card-title-bar">
-                                    <i class="fas fa-pen-to-square"></i>
-                                    <span>Input CA Amount</span>
+                                {{-- ===== TABLE ===== --}}
+                                <div class="table-responsive">
+                                    <table class="table table-kasbon table-bordered mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th style="width:4%;">No</th>
+                                                <th style="width:13%;">Category</th>
+                                                <th class="text-start" style="min-width:200px;">Description</th>
+                                                <th style="width:15%;">Selling Price (IDR)</th>
+                                                <th style="width:15%;">Total CA / HPP (IDR)</th>
+                                                <th style="width:15%;">CA Amount (IDR)</th>
+                                                <th style="width:10%;">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="kasbonItemsBody">
+                                            <tr id="loadingRow">
+                                                <td colspan="7" class="text-center py-4 text-muted">
+                                                    <i class="fas fa-circle-notch fa-spin me-2"></i> Loading data...
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                        <tfoot>
+                                            <tr>
+                                                <td colspan="3" class="text-center pe-3">
+                                                    <strong>GRAND TOTAL</strong>
+                                                </td>
+                                                <td>
+                                                    <div class="footer-currency-wrap">
+                                                        <span class="footer-currency-label">IDR</span>
+                                                        <span class="footer-value" id="footerTotalHargaJual">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="footer-currency-wrap">
+                                                        <span class="footer-currency-label">IDR</span>
+                                                        <span class="footer-value" id="footerTotalHPP">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="footer-currency-wrap">
+                                                        <span class="footer-currency-label">IDR</span>
+                                                        <span class="footer-value" id="footerTotalCA">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
                                 </div>
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-4">
-                                        <div class="info-field">
-                                            <div class="info-label">Description</div>
-                                            <div class="info-value" id="infoInvoiceTyp">—</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="info-field">
-                                            <div class="info-label">Category</div>
-                                            <div class="info-value" id="infoInvoiceCtg">—</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="info-field">
-                                            <div class="info-label">Selling Price (IDR)</div>
-                                            <div class="info-value" id="infoHargaJual">—</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div class="info-field">
-                                            <div class="info-label">Total CA / HPP (IDR)</div>
-                                            <div class="info-value" id="infoTotalKasbon">—</div>
-                                        </div>
-                                    </div>
+                                <div class="lpj-origin-note mt-2" id="lpjOriginNoteKasbon" style="display:none;">
+                                    <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
+                                    <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ
+                                        page.</span>
                                 </div>
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label class="form-label fw-bold" style="color:#2c3e50; font-size:0.875rem;">
-                                            CA Amount (IDR) <span style="color:#dc3545;">*</span>
-                                        </label>
-                                        <div class="currency-group">
-                                            <span class="currency-label">IDR</span>
-                                            <input type="text" id="inputNilaiKasbon"
-                                                class="form-control currency-input" placeholder="0,00"
-                                                autocomplete="off">
-                                        </div>
-                                    </div>
-                                    <div class="col-12 d-flex justify-content-end gap-2 mt-1">
-                                        <button type="button" class="btn btn-cancel-item-input" id="btnCancelItemInput">
-                                            <i class="fas fa-times me-1"></i> Cancel
-                                        </button>
-                                        <button type="button" class="btn btn-save-item-input" id="btnSaveItemInput">
-                                            <i class="fas fa-save me-1"></i> Save CA Amount
-                                        </button>
-                                    </div>
-                                </div>
-                                <input type="hidden" id="activeJoOtherItemId" value="">
-                                <input type="hidden" id="activeRowIndex" value="">
+
                             </div>
-
-                            {{-- ===== TABLE ===== --}}
-                            <div class="table-responsive">
-                                <table class="table table-kasbon table-bordered mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th style="width:4%;">No</th>
-                                            <th style="width:13%;">Category</th>
-                                            <th class="text-start" style="min-width:200px;">Description</th>
-                                            <th style="width:15%;">Selling Price (IDR)</th>
-                                            <th style="width:15%;">Total CA / HPP (IDR)</th>
-                                            <th style="width:15%;">CA Amount (IDR)</th>
-                                            <th style="width:10%;">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="kasbonItemsBody">
-                                        <tr id="loadingRow">
-                                            <td colspan="7" class="text-center py-4 text-muted">
-                                                <i class="fas fa-circle-notch fa-spin me-2"></i> Loading data...
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="3" class="text-center pe-3">
-                                                <strong>GRAND TOTAL</strong>
-                                            </td>
-                                            <td>
-                                                <div class="footer-currency-wrap">
-                                                    <span class="footer-currency-label">IDR</span>
-                                                    <span class="footer-value" id="footerTotalHargaJual">0,00</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="footer-currency-wrap">
-                                                    <span class="footer-currency-label">IDR</span>
-                                                    <span class="footer-value" id="footerTotalHPP">0,00</span>
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div class="footer-currency-wrap">
-                                                    <span class="footer-currency-label">IDR</span>
-                                                    <span class="footer-value" id="footerTotalCA">0,00</span>
-                                                </div>
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            </div>
-
                         </div>
-                    </div>
 
                 </form>
 
@@ -1013,6 +1113,8 @@
         const currentKasbonOtherStr = '{{ $kasbonOther->id_kasbon_other }}';
         const originalIdJoOther = '{{ $kasbonOther->id_jo_other }}';
         const bulkSaveUrl = '{{ route('kasbon-other.items.bulk-save', $kasbonOther->id) }}';
+        const checkConflictUrl = '{{ route('kasbon-other.item.check-conflict') }}';
+        const clearConflictUrl = '{{ route('kasbon-other.item.clear-conflict') }}';
         const updateHeaderUrl = '/kasbon-other/header/update/{{ $kasbonOther->id }}';
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
@@ -1099,6 +1201,148 @@
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // REALTIME VALIDATION — CA Amount vs HPP
+        // ══════════════════════════════════════════════════════════
+        function setHint($el, $input, msg, type) {
+            $el.text(msg)
+                .removeClass('hint-danger hint-ok hint-info')
+                .addClass(type ? 'hint-' + type : '');
+            if ($input) {
+                $input.removeClass('input-invalid input-valid');
+                if (type === 'danger') $input.addClass('input-invalid');
+                if (type === 'ok') $input.addClass('input-valid');
+            }
+        }
+
+        function validateCaInput() {
+            const ca = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp = parseFloat($('#activeHppValue').val() || '0');
+            const $input = $('#inputNilaiKasbon');
+            const $hint = $('#caValidationHint');
+
+            if (ca <= 0 || hpp <= 0) {
+                $input.removeClass('input-invalid input-valid');
+                setHint($hint, null, '', '');
+                return;
+            }
+            if (ca > hpp) {
+                setHint($hint, $input,
+                    `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
+            } else {
+                setHint($hint, $input, '', '');
+            }
+        }
+
+        function resetCaValidation() {
+            $('#inputNilaiKasbon').removeClass('input-invalid input-valid');
+            setHint($('#caValidationHint'), null, '', '');
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // CONFLICT MODAL
+        // ══════════════════════════════════════════════════════════
+        let conflictProceedCb = null;
+
+        function showConflictModal(kasbonNo, nilaiKasbon, onProceed) {
+            const formattedAmt = 'IDR ' + formatNumber(nilaiKasbon);
+            $('#conflictKasbonNo').text(kasbonNo);
+            $('#conflictKasbonNoInline').text(kasbonNo);
+            $('#conflictAmount').text('Current CA Amount: ' + formattedAmt);
+            conflictProceedCb = onProceed;
+            $('#conflictModal').addClass('show');
+        }
+
+        $('#conflictModal').on('click', function(e) {
+            if (e.target === this) closeConflictModal(false);
+        });
+        $('#conflictModalCancel').on('click', function() {
+            closeConflictModal(false);
+        });
+        $('#conflictModalProceed').on('click', function() {
+            closeConflictModal(true);
+        });
+
+        function closeConflictModal(proceed) {
+            $('#conflictModal').removeClass('show');
+            if (proceed && typeof conflictProceedCb === 'function') {
+                conflictProceedCb();
+            } else {
+                $('#btnSaveItemInput').prop('disabled', false);
+            }
+            conflictProceedCb = null;
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // SAVE ITEM CORE
+        // ══════════════════════════════════════════════════════════
+        function doSaveItem(joOtherItemId, rowIndex, nilaiKasbon) {
+            $.ajax({
+                url: bulkSaveUrl,
+                method: 'POST',
+                contentType: 'application/json',
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: JSON.stringify({
+                    items: [{
+                        id_jo_other_item: joOtherItemId,
+                        nilai_kasbon: nilaiKasbon
+                    }],
+                    _token: csrfToken
+                }),
+                success: function(response) {
+                    $('#btnSaveItemInput').prop('disabled', false);
+                    if (response.success) {
+                        showFloatingAlert('success', 'CA Amount saved successfully!');
+                        mergedItems[rowIndex].nilai_kasbon = nilaiKasbon;
+                        mergedItems[rowIndex].has_kasbon = true;
+                        refreshRowAfterSave(rowIndex, nilaiKasbon, true);
+                        updateFooter();
+                        closeInputCard();
+                    } else {
+                        showFloatingAlert('error', response.message || 'Failed to save');
+                    }
+                },
+                error: function(xhr) {
+                    $('#btnSaveItemInput').prop('disabled', false);
+                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to save item');
+                }
+            });
+        }
+
+        function executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, hasConflict) {
+            showFloatingAlert('saving', hasConflict ? 'Removing previous CA amount...' : 'Saving...');
+
+            if (hasConflict) {
+                $.ajax({
+                    url: clearConflictUrl,
+                    method: 'POST',
+                    data: {
+                        id_jo_other_item: joOtherItemId,
+                        id_kasbon_other: currentKasbonOtherStr,
+                        _token: csrfToken
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            showFloatingAlert('saving', 'Saving new CA amount...');
+                            doSaveItem(joOtherItemId, rowIndex, nilaiKasbon);
+                        } else {
+                            $('#btnSaveItemInput').prop('disabled', false);
+                            showFloatingAlert('error', 'Failed to clear previous CA amount: ' + (res.message ||
+                                ''));
+                        }
+                    },
+                    error: function() {
+                        showFloatingAlert('saving', 'Saving...');
+                        doSaveItem(joOtherItemId, rowIndex, nilaiKasbon);
+                    }
+                });
+            } else {
+                doSaveItem(joOtherItemId, rowIndex, nilaiKasbon);
+            }
         }
 
         function setupRupiahInput(input) {
@@ -1254,16 +1498,32 @@
         // ── OPEN EDIT ITEM ──
         function openEditItem(index) {
             const item = mergedItems[index];
+
             $('#infoInvoiceTyp').text(item.invoice_typ);
             $('#infoInvoiceCtg').text(item.invoice_ctg);
             $('#infoHargaJual').text(formatNumber(item.hargajual_idr));
             $('#infoTotalKasbon').text(formatNumber(item.hpp_ops));
-            $('#inputNilaiKasbon').val('');
+
+            // ← simpan HPP untuk validasi
+            $('#activeHppValue').val(item.hpp_ops || 0);
             $('#activeJoOtherItemId').val(item.id_jo_other_item);
             $('#activeRowIndex').val(index);
+
+            // ← prefill old value jika sudah ada
+            if (item.has_kasbon && item.nilai_kasbon > 0) {
+                $('#inputNilaiKasbon').val(formatRupiah(item.nilai_kasbon.toFixed(2).replace('.', ',')));
+            } else {
+                $('#inputNilaiKasbon').val('');
+            }
+
+            // ← reset & trigger validasi awal
+            resetCaValidation();
+            validateCaInput();
+
             $('.item-row').removeClass('tr-active');
             $(`#row_${index}`).addClass('tr-active');
             $('#inputItemCard').addClass('active');
+
             $('html, body').animate({
                 scrollTop: $('#inputItemCard').offset().top - 120
             }, 400);
@@ -1277,6 +1537,8 @@
             $('#inputNilaiKasbon').val('');
             $('#activeJoOtherItemId').val('');
             $('#activeRowIndex').val('');
+            $('#activeHppValue').val('0');
+            resetCaValidation();
             $('.item-row').removeClass('tr-active');
         }
 
@@ -1285,13 +1547,16 @@
         $('#inputNilaiKasbon').on('keydown', function(e) {
             if (e.key === 'Enter') saveItemInput();
         });
+        // ← tambah binding validasi realtime
+        $('#inputNilaiKasbon').on('input blur', validateCaInput);
 
         function saveItemInput() {
-            const joTramItemId = $('#activeJoOtherItemId').val();
+            const joOtherItemId = $('#activeJoOtherItemId').val();
             const rowIndex = parseInt($('#activeRowIndex').val());
             const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp = parseFloat($('#activeHppValue').val() || '0');
 
-            if (!joTramItemId) {
+            if (!joOtherItemId) {
                 showFloatingAlert('error', 'No item selected');
                 return;
             }
@@ -1299,40 +1564,38 @@
                 showFloatingAlert('error', 'Please enter a CA Amount');
                 return;
             }
+            if (hpp > 0 && nilaiKasbon > hpp) {
+                showFloatingAlert('error',
+                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
+                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
+                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                return;
+            }
 
-            showFloatingAlert('saving', 'Saving...');
             $('#btnSaveItemInput').prop('disabled', true);
 
             $.ajax({
-                url: bulkSaveUrl,
-                method: 'POST',
-                contentType: 'application/json',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
+                url: checkConflictUrl,
+                method: 'GET',
+                data: {
+                    id_jo_other_item: joOtherItemId,
+                    id_kasbon_other: currentKasbonOtherStr // ← sudah benar
                 },
-                data: JSON.stringify({
-                    items: [{
-                        id_jo_other_item: joTramItemId,
-                        nilai_kasbon: nilaiKasbon
-                    }],
-                    _token: csrfToken
-                }),
-                success: function(response) {
-                    $('#btnSaveItemInput').prop('disabled', false);
-                    if (response.success) {
-                        showFloatingAlert('success', 'CA Amount saved successfully!');
-                        mergedItems[rowIndex].nilai_kasbon = nilaiKasbon;
-                        mergedItems[rowIndex].has_kasbon = true;
-                        refreshRowAfterSave(rowIndex, nilaiKasbon, true);
-                        updateFooter();
-                        closeInputCard();
+                success: function(res) {
+                    if (res.success && res.has_conflict) {
+                        showConflictModal(
+                            res.conflict.id_kasbon_other,
+                            res.conflict.nilai_kasbon,
+                            function() {
+                                executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, true);
+                            }
+                        );
                     } else {
-                        showFloatingAlert('error', response.message || 'Failed to save');
+                        executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
                     }
                 },
-                error: function(xhr) {
-                    $('#btnSaveItemInput').prop('disabled', false);
-                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to save item');
+                error: function() {
+                    executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
                 }
             });
         }
@@ -1522,6 +1785,8 @@
                     note: $('#note').val(),
                     priority: priority,
                     due_date: dueDate,
+                    ca_release_status: $('#ca_release_status').val(),
+                    ca_release_date: $('#ca_release_date').val(),
                     _token: csrfToken,
                 },
                 success: function(response) {
@@ -1558,6 +1823,25 @@
                     year: 'numeric'
                 });
             }
+
+            // ── CA Release Status toggle ──
+            function handleReleaseStatusChange() {
+                const status = $('#ca_release_status').val();
+                const $statusWrapper = $('#caReleaseStatusWrapper');
+                const $dateWrapper = $('#caReleaseDateWrapper');
+                if (status === 'release') {
+                    $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
+                    $dateWrapper.show();
+                } else {
+                    $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
+                    $dateWrapper.hide();
+                    $('#ca_release_date').val('');
+                }
+            }
+            handleReleaseStatusChange(); // init on load
+            $('#ca_release_status').on('change', function() {
+                handleReleaseStatusChange();
+            });
 
             function populateJoSummary(idJoOther) {
                 if (!idJoOther) return;

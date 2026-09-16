@@ -29,6 +29,8 @@ class KasbonTramper extends Model
         'note',
         'priority',
         'due_date',
+        'ca_release_status',
+        'ca_release_date',
     ];
 
     protected $casts = [
@@ -38,6 +40,7 @@ class KasbonTramper extends Model
         'updated_at'  => 'datetime',
         'deleted_at'  => 'datetime',
         'due_date'    => 'datetime',
+        'ca_release_date'   => 'date',
     ];
 
     public function joTramper()
