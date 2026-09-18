@@ -6,22 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('lpj_other', function (Blueprint $table) {
+        Schema::create('d07_lpj_other', function (Blueprint $table) {
             $table->id();
+            $table->string('id_lpj_other')->unique();
+            $table->string('no_lpj_other')->nullable();
+            $table->string('id_jo_other');
+            $table->foreign('id_jo_other')->references('id_jo_other')->on('b05_jo_other');
+            $table->date('date')->nullable();
+            $table->decimal('amount', 15, 2)->nullable();
+            $table->text('note')->nullable();
+            $table->string('evidence')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('lpj_other');
+        Schema::dropIfExists('d07_lpj_other');
     }
 };
