@@ -43,4 +43,6 @@ class LpjContract extends Model
     {
         return $this->hasMany(LpjContractItem::class, 'id_lpj_cont', 'id_lpj_cont');
     }
+
+    //triger
 }
