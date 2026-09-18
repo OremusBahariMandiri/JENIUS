@@ -15,6 +15,7 @@ use App\Http\Controllers\Data\KasbonContractController;
 use App\Http\Controllers\Data\KasbonGenController;
 use App\Http\Controllers\Data\KasbonOtherController;
 use App\Http\Controllers\Data\KasbonTramperController;
+use App\Http\Controllers\Data\LpjTramperController;
 use App\Http\Controllers\Master\BranchController;
 use App\Http\Controllers\Master\ChartOfAccountController;
 use App\Http\Controllers\Master\CostTypeController;
@@ -233,6 +234,12 @@ Route::middleware(['auth'])->group(function () {
             ->name('jo-tramper.item.show');
         Route::post('jo-tramper/item/store', [JoTramperController::class, 'storeItem'])
             ->name('jo-tramper.item.store');
+        Route::put('jo-tramper/item/update/{id}',        [JoTramperController::class, 'updateItem'])
+            ->name('jo-tramper.item.update');
+        Route::patch('jo-tramper/item/update-kurs/{id}', [JoTramperController::class, 'updateItemKurs'])
+            ->name('jo-tramper.item.update-kurs');
+        Route::get('jo-tramper/item/show/{id}',          [JoTramperController::class, 'showItem'])
+            ->name('jo-tramper.item.show');
         Route::put('jo-tramper/item/update/{id}', [JoTramperController::class, 'updateItem'])
             ->name('jo-tramper.item.update');
         Route::delete('jo-tramper/item/destroy/{id}', [JoTramperController::class, 'destroyItem'])
@@ -459,4 +466,26 @@ Route::middleware(['auth'])->group(function () {
         ->only(['index', 'create', 'show', 'edit', 'destroy']);
     //================= END LPJ CONTRACT ROUTE GROUP =================//
 
+    //================= LPJ CONTRACT ROUTE GROUP =================//
+    Route::get('lpj-tramper/{id}/export-pdf', [LpjTramperController::class, 'exportPdf'])
+        ->name('lpj-tramper.export-pdf');
+    Route::get('lpj-tramper/{id}/refresh-kasbons', [LpjTramperController::class, 'refreshKasbons'])
+        ->name('lpj-tramper.refresh-kasbons');
+    Route::post('lpj-tramper/{id}/add-kasbons', [LpjTramperController::class, 'addKasbons'])
+        ->name('lpj-tramper.add-kasbons');
+    Route::post('lpj-tramper/header/store', [LpjTramperController::class, 'storeHeader'])
+        ->name('lpj-tramper.header.store');
+    Route::post('lpj-tramper/header/update/{id}', [LpjTramperController::class, 'updateHeader'])
+        ->name('lpj-tramper.header.update');
+    Route::post('lpj-tramper/{id}/items/bulk-save', [LpjTramperController::class, 'bulkSaveItems'])
+        ->name('lpj-tramper.items.bulk-save');
+    Route::post('lpj-tramper/{id}/item/store-new', [LpjTramperController::class, 'storeNewItem'])
+        ->name('lpj-tramper.item.store-new');
+    Route::get('lpj-tramper/api/kasbons-by-jo', [LpjTramperController::class, 'getKasbonsByJo'])
+        ->name('lpj-tramper.kasbons-by-jo');
+    Route::get('lpj-tramper/api/jo-kurs', [LpjTramperController::class, 'getJoKurs'])
+        ->name('lpj-tramper.jo-kurs');
+    Route::resource('lpj-tramper', LpjTramperController::class)
+        ->only(['index', 'create', 'show', 'edit', 'destroy']);
+    //================= END LPJ CONTRACT ROUTE GROUP =================//
 });

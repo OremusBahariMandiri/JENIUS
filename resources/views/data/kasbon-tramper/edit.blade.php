@@ -5,16 +5,18 @@
 @php
     $mergedItemsJs = collect($mergedItems)->map(
         fn($i) => [
-            'id_jo_tram_item'     => $i['id_jo_tram_item'],
-            'invoice_typ'         => $i['invoice_typ'],
-            'invoice_ctg'         => $i['invoice_ctg'],
-            'hargajual_idr'       => $i['hargajual_idr'],
-            'hpp_ops'             => $i['hpp_ops'],
+            'id_jo_tram_item' => $i['id_jo_tram_item'],
+            'invoice_typ' => $i['invoice_typ'],
+            'invoice_ctg' => $i['invoice_ctg'],
+            'hargajual_idr' => $i['hargajual_idr'],
+            'hpp_ops' => $i['hpp_ops'],
             'id_kasbon_tram_item' => $i['id_kasbon_tram_item'],
             'nilai_hpp_tram_item' => $i['nilai_hpp_tram_item'],
-            'nilai_kasbon'        => $i['nilai_kasbon'],
-            'total_kasbon'        => $i['total_kasbon'],
-            'has_kasbon'          => $i['has_kasbon'],
+            'nilai_kasbon' => $i['nilai_kasbon'],
+            'total_kasbon' => $i['total_kasbon'],
+            'has_kasbon' => $i['has_kasbon'],
+            'has_kasbon' => $i['has_kasbon'],
+            'origin_lpj_tram' => $i['origin_lpj_tram'] ?? null,
         ],
     );
 @endphp
@@ -74,7 +76,9 @@
             color: white;
         }
 
-        .floating-badge-alert i { font-size: 1.3rem; }
+        .floating-badge-alert i {
+            font-size: 1.3rem;
+        }
 
         .floating-badge-alert .alert-text {
             flex: 1;
@@ -83,329 +87,714 @@
         }
 
         @keyframes slideInRight {
-            from { transform: translateX(400px); opacity: 0; }
-            to   { transform: translateX(0);     opacity: 1; }
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @keyframes slideOutRight {
-            from { transform: translateX(0);     opacity: 1; }
-            to   { transform: translateX(400px); opacity: 0; }
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
         }
 
-        .floating-badge-alert.hiding { animation: slideOutRight 0.4s ease-in; }
+        .floating-badge-alert.hiding {
+            animation: slideOutRight 0.4s ease-in;
+        }
 
         /* CONFIRM MODAL */
         .confirm-modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
-            z-index: 10000; display: none; align-items: center;
-            justify-content: center; backdrop-filter: blur(3px);
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
         }
-        .confirm-modal-overlay.show { display: flex; }
+
+        .confirm-modal-overlay.show {
+            display: flex;
+        }
 
         .confirm-modal-box {
-            background: white; border-radius: 16px; padding: 32px;
-            max-width: 420px; width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: modalIn 0.25s ease-out;
         }
 
         @keyframes modalIn {
-            from { transform: scale(0.9); opacity: 0; }
-            to   { transform: scale(1);   opacity: 1; }
+            from {
+                transform: scale(0.9);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .confirm-modal-box .modal-icon {
-            width: 56px; height: 56px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.5rem; margin: 0 auto 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin: 0 auto 16px;
         }
-        .confirm-modal-box .modal-icon.danger  { background: #fee2e2; color: #dc2626; }
-        .confirm-modal-box .modal-icon.warning { background: #fef3c7; color: #d97706; }
-        .confirm-modal-box h5 { text-align: center; font-weight: 700; color: #1f2937; margin-bottom: 8px; }
-        .confirm-modal-box p  { text-align: center; color: #6b7280; font-size: 0.9rem; margin-bottom: 24px; }
-        .confirm-modal-box .modal-actions { display: flex; gap: 10px; }
-        .confirm-modal-box .modal-actions .btn { flex: 1; padding: 10px; font-weight: 600; }
+
+        .confirm-modal-box .modal-icon.danger {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .confirm-modal-box .modal-icon.warning {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .confirm-modal-box h5 {
+            text-align: center;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 8px;
+        }
+
+        .confirm-modal-box p {
+            text-align: center;
+            color: #6b7280;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .confirm-modal-box .modal-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .confirm-modal-box .modal-actions .btn {
+            flex: 1;
+            padding: 10px;
+            font-weight: 600;
+        }
 
         /* INPUT ITEM CARD */
         .input-item-card {
-            border: 2px dashed #10b981; border-radius: 12px;
-            padding: 24px; margin-bottom: 20px; display: none;
+            border: 2px dashed #10b981;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            display: none;
         }
+
         .input-item-card.active {
-            display: block; border: 2px solid #10b981;
+            display: block;
+            border: 2px solid #10b981;
             background: #f0fdf4;
-            box-shadow: 0 0 0 4px rgba(16,185,129,0.08);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
         }
+
         .input-item-card .card-title-bar {
-            display: flex; align-items: center; gap: 10px;
-            margin-bottom: 20px; padding-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
             border-bottom: 1px solid #bbf7d0;
         }
-        .input-item-card .card-title-bar i    { color: #10b981; font-size: 1rem; }
-        .input-item-card .card-title-bar span { font-weight: 700; color: #2c3e50; font-size: 1rem; }
+
+        .input-item-card .card-title-bar i {
+            color: #10b981;
+            font-size: 1rem;
+        }
+
+        .input-item-card .card-title-bar span {
+            font-weight: 700;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
 
         .info-field {
-            background: white; border: 1px solid #e5e7eb;
-            border-radius: 8px; padding: 10px 14px;
-        }
-        .info-field .info-label {
-            font-size: 0.72rem; font-weight: 600; color: #9ca3af;
-            text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;
-        }
-        .info-field .info-value {
-            font-size: 0.9rem; font-weight: 700; color: #2c3e50;
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            background: white;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 10px 14px;
         }
 
-        .currency-group { display: flex; align-items: stretch; }
-        .currency-group .currency-label {
-            background-color: #2c3e50; color: white; padding: 0 14px;
-            font-size: 0.7rem; border-radius: 8px 0 0 8px; min-width: 52px;
-            text-align: center; font-weight: 700;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        .info-field .info-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
         }
+
+        .info-field .info-value {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: #2c3e50;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .currency-group {
+            display: flex;
+            align-items: stretch;
+        }
+
+        .currency-group .currency-label {
+            background-color: #2c3e50;
+            color: white;
+            padding: 0 14px;
+            font-size: 0.7rem;
+            border-radius: 8px 0 0 8px;
+            min-width: 52px;
+            text-align: center;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
         .currency-group .currency-input {
             border-radius: 0 8px 8px 0 !important;
             border-left: none !important;
-            font-size: 1.05rem; font-weight: 600;
+            font-size: 1.05rem;
+            font-weight: 600;
         }
+
         .currency-group .currency-input:focus {
             border-color: #10b981 !important;
-            box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25) !important;
+            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
         }
 
         .btn-save-item-input {
             background: linear-gradient(135deg, #10b981, #059669);
-            border: none; color: white; padding: 10px 28px;
-            border-radius: 8px; font-weight: 600;
-            box-shadow: 0 4px 12px rgba(16,185,129,0.35);
+            border: none;
+            color: white;
+            padding: 10px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
             transition: all 0.25s;
         }
+
         .btn-save-item-input:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(16,185,129,0.45); color: white;
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+            color: white;
         }
 
         .btn-cancel-item-input {
-            background: white; border: 1px solid #d1d5db; color: #6b7280;
-            padding: 10px 22px; border-radius: 8px; font-weight: 600; transition: all 0.25s;
+            background: white;
+            border: 1px solid #d1d5db;
+            color: #6b7280;
+            padding: 10px 22px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.25s;
         }
-        .btn-cancel-item-input:hover { background: #f3f4f6; color: #374151; }
+
+        .btn-cancel-item-input:hover {
+            background: #f3f4f6;
+            color: #374151;
+        }
 
         /* TABLE */
         .table-kasbon thead th {
-            background-color: #2c3e50; color: white;
-            border: 1px solid #2c3e50; padding: 12px 10px;
-            font-weight: 600; font-size: 0.875rem;
-            vertical-align: middle; text-align: center; white-space: nowrap;
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid #2c3e50;
+            padding: 12px 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            vertical-align: middle;
+            text-align: center;
+            white-space: nowrap;
         }
+
         .table-kasbon tbody td {
-            border: 1px solid #dee2e6; padding: 10px 12px;
-            vertical-align: middle; font-size: 0.875rem; background-color: #fff;
+            border: 1px solid #dee2e6;
+            padding: 10px 12px;
+            vertical-align: middle;
+            font-size: 0.875rem;
+            background-color: #fff;
         }
-        .table-kasbon tbody tr:hover td      { background-color: #f0fdf4; }
-        .table-kasbon tbody tr.tr-active td  { background-color: #d1fae5 !important; }
+
+        .table-kasbon tbody tr:hover td {
+            background-color: #f0fdf4;
+        }
+
+        .table-kasbon tbody tr.tr-active td {
+            background-color: #d1fae5 !important;
+        }
 
         .table-kasbon .category-cell {
-            background: #e8f5e9 !important; font-weight: 600; color: #2c3e50;
-            text-align: center; vertical-align: middle !important;
+            background: #e8f5e9 !important;
+            font-weight: 600;
+            color: #2c3e50;
+            text-align: center;
+            vertical-align: middle !important;
             border-right: 2px solid #dee2e6;
         }
 
-        .cell-right   { text-align: right; }
-        .cell-center  { text-align: center; }
-        .cell-readonly { background-color: #f8f9fa !important; color: #495057; font-weight: 500; }
+        .cell-right {
+            text-align: right;
+        }
+
+        .cell-center {
+            text-align: center;
+        }
+
+        .cell-readonly {
+            background-color: #f8f9fa !important;
+            color: #495057;
+            font-weight: 500;
+        }
 
         .table-kasbon tfoot td {
-            background-color: #ffffff; color: #2C3E50; font-weight: 700;
-            padding: 14px 12px; font-size: 0.9rem; border: 1px solid #dee2e6;
+            background-color: #ffffff;
+            color: #2C3E50;
+            font-weight: 700;
+            padding: 14px 12px;
+            font-size: 0.9rem;
+            border: 1px solid #dee2e6;
         }
 
         .footer-currency-wrap {
-            display: flex; align-items: center;
-            justify-content: space-between; width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
         }
+
         .footer-currency-label {
-            background-color: #2C3E50; color: white; padding: 4px 10px;
-            border-radius: 5px; font-size: .78rem; font-weight: 700;
-            min-width: 44px; text-align: center; flex-shrink: 0;
+            background-color: #2C3E50;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-size: .78rem;
+            font-weight: 700;
+            min-width: 44px;
+            text-align: center;
+            flex-shrink: 0;
         }
+
         .footer-value {
-            color: #2C3E50; font-weight: 700; font-size: .95rem;
-            text-align: right; flex: 1;
+            color: #2C3E50;
+            font-weight: 700;
+            font-size: .95rem;
+            text-align: right;
+            flex: 1;
         }
 
         .btn-edit-row {
-            background-color: #10b981; border-color: #10b981;
-            padding: 0.3rem 0.6rem; font-size: 0.8rem;
-            border-radius: 6px; transition: all 0.2s;
+            background-color: #10b981;
+            border-color: #10b981;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            transition: all 0.2s;
         }
+
         .btn-edit-row:hover {
-            background-color: #059669; border-color: #059669; transform: scale(1.08);
+            background-color: #059669;
+            border-color: #059669;
+            transform: scale(1.08);
         }
 
         .btn-clear-row {
-            background-color: #ef4444; border-color: #ef4444;
-            padding: 0.3rem 0.6rem; font-size: 0.8rem;
-            border-radius: 6px; transition: all 0.2s;
+            background-color: #ef4444;
+            border-color: #ef4444;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            transition: all 0.2s;
         }
+
         .btn-clear-row:hover:not(:disabled) {
-            background-color: #dc2626; border-color: #dc2626; transform: scale(1.08);
+            background-color: #dc2626;
+            border-color: #dc2626;
+            transform: scale(1.08);
         }
+
         .btn-clear-row:disabled {
-            opacity: 0.35; cursor: not-allowed; transform: none !important;
+            opacity: 0.35;
+            cursor: not-allowed;
+            transform: none !important;
         }
 
         .items-count-badge {
-            background: #10b981; color: white; font-size: 0.75rem;
-            font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px;
+            background: #10b981;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 8px;
         }
 
         .no-items-row td {
-            text-align: center; padding: 50px 20px;
-            color: #6c757d; background: #f8f9fa !important;
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+            background: #f8f9fa !important;
         }
 
         .final-save-section {
-            position: sticky; bottom: 0; background: white;
-            padding: 18px 20px; box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
-            border-radius: 12px 12px 0 0; margin-top: 30px; z-index: 100;
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 18px 20px;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 12px 12px 0 0;
+            margin-top: 30px;
+            z-index: 100;
         }
 
         .btn-final-back {
             background: linear-gradient(135deg, #868686, #5e5e5e);
-            border: none; color: white; padding: 13px 35px;
-            border-radius: 10px; font-weight: 700; font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(27,27,27,0.3); transition: all 0.3s;
+            border: none;
+            color: white;
+            padding: 13px 35px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 4px 15px rgba(27, 27, 27, 0.3);
+            transition: all 0.3s;
         }
+
         .btn-final-back:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(49,49,49,0.45); color: white;
+            box-shadow: 0 6px 20px rgba(49, 49, 49, 0.45);
+            color: white;
         }
 
         .jo-summary-card {
-            background: #fff; border: 1.5px solid #10b981;
-            border-radius: 12px; padding: 1.25rem 1.5rem;
-            transition: all 0.3s; animation: fadeInDown 0.35s ease-out;
+            background: #fff;
+            border: 1.5px solid #10b981;
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            transition: all 0.3s;
+            animation: fadeInDown 0.35s ease-out;
         }
 
         @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-8px); }
-            to   { opacity: 1; transform: translateY(0);    }
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .jo-summary-card .jo-meta-label {
-            font-size: .72rem; color: #9ca3af; font-weight: 600;
-            text-transform: uppercase; letter-spacing: .5px;
-        }
-        .jo-summary-card .jo-meta-value {
-            font-size: .875rem; font-weight: 700; color: #2c3e50; margin-top: 2px;
+            font-size: .72rem;
+            color: #9ca3af;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .5px;
         }
 
-        #joItemsModal .modal-content { border-radius: 12px; border: none; }
-        #joItemsModal .modal-header  {
-            background: #d1fae5; border-radius: 12px 12px 0 0; border-bottom: none;
+        .jo-summary-card .jo-meta-value {
+            font-size: .875rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-top: 2px;
         }
+
+        #joItemsModal .modal-content {
+            border-radius: 12px;
+            border: none;
+        }
+
+        #joItemsModal .modal-header {
+            background: #d1fae5;
+            border-radius: 12px 12px 0 0;
+            border-bottom: none;
+        }
+
         #joItemsModal table thead th {
-            background: #2c3e50; color: white; border-color: #2c3e50;
-            font-size: .85rem; padding: 10px;
+            background: #2c3e50;
+            color: white;
+            border-color: #2c3e50;
+            font-size: .85rem;
+            padding: 10px;
         }
-        #joItemsModal table tbody td { font-size: .875rem; padding: 8px 10px; vertical-align: middle; }
-        #joItemsModal table tbody tr:hover { background: #e8f5e9; }
-        #joItemsModal tfoot td { background: #f8f9fa; font-weight: 700; font-size: .875rem; padding: 10px; }
+
+        #joItemsModal table tbody td {
+            font-size: .875rem;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        #joItemsModal table tbody tr:hover {
+            background: #e8f5e9;
+        }
+
+        #joItemsModal tfoot td {
+            background: #f8f9fa;
+            font-weight: 700;
+            font-size: .875rem;
+            padding: 10px;
+        }
 
         .validate-hint {
-            font-size: .76rem; font-weight: 600; margin-top: 5px;
-            min-height: 18px; transition: color .2s;
+            font-size: .76rem;
+            font-weight: 600;
+            margin-top: 5px;
+            min-height: 18px;
+            transition: color .2s;
         }
-        .validate-hint.hint-danger { color: #dc3545; }
-        .validate-hint.hint-ok     { color: #10b981; }
-        .validate-hint.hint-info   { color: #6b7280; }
+
+        .validate-hint.hint-danger {
+            color: #dc3545;
+        }
+
+        .validate-hint.hint-ok {
+            color: #10b981;
+        }
+
+        .validate-hint.hint-info {
+            color: #6b7280;
+        }
 
         .currency-input.input-invalid {
             border-color: #dc3545 !important;
-            box-shadow: 0 0 0 .2rem rgba(220,53,69,.2) !important;
+            box-shadow: 0 0 0 .2rem rgba(220, 53, 69, .2) !important;
         }
+
         .currency-input.input-valid {
             border-color: #10b981 !important;
-            box-shadow: 0 0 0 .2rem rgba(16,185,129,.15) !important;
+            box-shadow: 0 0 0 .2rem rgba(16, 185, 129, .15) !important;
         }
 
         /* CONFLICT MODAL */
         .conflict-modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.55);
-            z-index: 10500; display: none; align-items: center;
-            justify-content: center; backdrop-filter: blur(4px);
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 10500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
         }
-        .conflict-modal-overlay.show { display: flex; }
+
+        .conflict-modal-overlay.show {
+            display: flex;
+        }
 
         .conflict-modal-box {
-            background: white; border-radius: 16px; max-width: 460px; width: 92%;
-            box-shadow: 0 24px 64px rgba(0,0,0,.25);
-            animation: conflictModalIn 0.28s cubic-bezier(.34,1.56,.64,1); overflow: hidden;
+            background: white;
+            border-radius: 16px;
+            max-width: 460px;
+            width: 92%;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, .25);
+            animation: conflictModalIn 0.28s cubic-bezier(.34, 1.56, .64, 1);
+            overflow: hidden;
         }
 
         @keyframes conflictModalIn {
-            from { transform: scale(0.88); opacity: 0; }
-            to   { transform: scale(1);    opacity: 1; }
+            from {
+                transform: scale(0.88);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .conflict-modal-header {
             background: linear-gradient(135deg, #f59e0b, #d97706);
-            padding: 22px 24px 18px; display: flex; align-items: flex-start; gap: 14px;
-        }
-        .conflict-modal-header .icon-wrap {
-            width: 44px; height: 44px; border-radius: 50%;
-            background: rgba(255,255,255,.22); display: flex;
-            align-items: center; justify-content: center;
-            flex-shrink: 0; font-size: 1.3rem; color: white;
-        }
-        .conflict-modal-header .title-wrap h5 {
-            color: white; font-weight: 700; font-size: 1.05rem; margin: 0 0 4px;
-        }
-        .conflict-modal-header .title-wrap p {
-            color: rgba(255,255,255,.88); font-size: .82rem; margin: 0; line-height: 1.45;
+            padding: 22px 24px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
         }
 
-        .conflict-modal-body { padding: 22px 24px 0; }
+        .conflict-modal-header .icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .conflict-modal-header .title-wrap h5 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin: 0 0 4px;
+        }
+
+        .conflict-modal-header .title-wrap p {
+            color: rgba(255, 255, 255, .88);
+            font-size: .82rem;
+            margin: 0;
+            line-height: 1.45;
+        }
+
+        .conflict-modal-body {
+            padding: 22px 24px 0;
+        }
 
         .conflict-detail-card {
-            background: #fffbeb; border: 1.5px solid #fde68a;
-            border-radius: 10px; padding: 14px 18px; margin-bottom: 16px;
+            background: #fffbeb;
+            border: 1.5px solid #fde68a;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
         }
+
         .conflict-detail-card .label {
-            font-size: .72rem; font-weight: 700; color: #92400e;
-            text-transform: uppercase; letter-spacing: .5px; margin-bottom: 5px;
+            font-size: .72rem;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 5px;
         }
+
         .conflict-detail-card .kasbon-no {
-            font-size: 1rem; font-weight: 700; color: #b45309; font-family: monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #b45309;
+            font-family: monospace;
         }
-        .conflict-detail-card .amount { font-size: .875rem; color: #78350f; margin-top: 3px; }
+
+        .conflict-detail-card .amount {
+            font-size: .875rem;
+            color: #78350f;
+            margin-top: 3px;
+        }
 
         .conflict-warning-text {
-            background: #fee2e2; border: 1px solid #fca5a5; border-radius: 8px;
-            padding: 12px 16px; font-size: .82rem; color: #991b1b;
-            display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px;
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: .82rem;
+            color: #991b1b;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
         }
-        .conflict-warning-text i { flex-shrink: 0; margin-top: 2px; }
 
-        .conflict-modal-footer { padding: 0 24px 22px; display: flex; gap: 10px; }
-        .conflict-modal-footer .btn { flex: 1; padding: 11px; font-weight: 600; border-radius: 9px; }
-        .btn-conflict-cancel {
-            background: white; border: 1.5px solid #d1d5db; color: #374151; transition: all .2s;
+        .conflict-warning-text i {
+            flex-shrink: 0;
+            margin-top: 2px;
         }
-        .btn-conflict-cancel:hover { background: #f3f4f6; }
+
+        .conflict-modal-footer {
+            padding: 0 24px 22px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .conflict-modal-footer .btn {
+            flex: 1;
+            padding: 11px;
+            font-weight: 600;
+            border-radius: 9px;
+        }
+
+        .btn-conflict-cancel {
+            background: white;
+            border: 1.5px solid #d1d5db;
+            color: #374151;
+            transition: all .2s;
+        }
+
+        .btn-conflict-cancel:hover {
+            background: #f3f4f6;
+        }
+
         .btn-conflict-proceed {
             background: linear-gradient(135deg, #ef4444, #dc2626);
-            border: none; color: white;
-            box-shadow: 0 4px 12px rgba(220,38,38,.35); transition: all .2s;
-        }
-        .btn-conflict-proceed:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(220,38,38,.45); color: white;
+            border: none;
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, .35);
+            transition: all .2s;
         }
 
-        #caReleaseDateWrapper { transition: all 0.25s ease; }
+        .btn-conflict-proceed:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(220, 38, 38, .45);
+            color: white;
+        }
+
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
+        }
+
+        /* Rows added from LPJ — blue tint */
+        .table-kasbon tbody tr.row-from-lpj td {
+            background: #eff6ff !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj:hover td {
+            background: #dbeafe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj.tr-active td {
+            background: #bfdbfe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj .category-cell {
+            background: #dbeafe !important;
+        }
+
+        .table-kasbon tbody tr.row-from-lpj .cell-readonly {
+            background: #e0eeff !important;
+        }
+
+        .lpj-origin-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+            font-size: .8rem;
+            color: #1e40af;
+        }
     </style>
 @endpush
 
@@ -446,7 +835,7 @@
                 <div class="conflict-detail-card">
                     <div class="label">Existing Cash Advance</div>
                     <div class="kasbon-no" id="conflictKasbonNo">—</div>
-                    <div class="amount"    id="conflictAmount">—</div>
+                    <div class="amount" id="conflictAmount">—</div>
                 </div>
                 <div class="conflict-warning-text">
                     <i class="fas fa-exclamation-circle"></i>
@@ -458,7 +847,7 @@
                 </div>
             </div>
             <div class="conflict-modal-footer">
-                <button type="button" class="btn btn-conflict-cancel"  id="conflictModalCancel">
+                <button type="button" class="btn btn-conflict-cancel" id="conflictModalCancel">
                     <i class="fas fa-times me-1"></i> Cancel
                 </button>
                 <button type="button" class="btn btn-conflict-proceed" id="conflictModalProceed">
@@ -486,8 +875,8 @@
                 </div>
 
                 <input type="hidden" id="current_kasbon_tramper_id" value="{{ $kasbonTramper->id }}">
-                <input type="hidden" id="current_kasbon_tram_str"   value="{{ $kasbonTramper->id_kasbon_tram }}">
-                <input type="hidden" id="original_id_jo_tram"       value="{{ $kasbonTramper->id_jo_tram }}">
+                <input type="hidden" id="current_kasbon_tram_str" value="{{ $kasbonTramper->id_kasbon_tram }}">
+                <input type="hidden" id="original_id_jo_tram" value="{{ $kasbonTramper->id_jo_tram }}">
 
                 <form id="kasbonTramperForm">
                     @csrf
@@ -529,8 +918,7 @@
                                     <select name="id_jo_tram" id="id_jo_tram" class="form-select select2-field" required>
                                         <option value="">-- Select JO Tramper --</option>
                                         @foreach ($joTrampers as $jo)
-                                            <option value="{{ $jo->id_jo_tram }}"
-                                                data-no="{{ $jo->no_jo_tram }}"
+                                            <option value="{{ $jo->id_jo_tram }}" data-no="{{ $jo->no_jo_tram }}"
                                                 data-title="{{ $jo->title }}"
                                                 data-tgl="{{ optional($jo->tgl_jo_tram)->format('Y-m-d') ?? '' }}"
                                                 data-vessel="{{ $jo->vessel->vessel_name ?? '—' }}"
@@ -555,15 +943,18 @@
                                     <div class="jo-summary-card">
                                         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                                             <div class="d-flex align-items-center gap-3" style="flex:1; min-width:0;">
-                                                <div style="width:48px; height:48px; border-radius:10px; background:#d1fae5;
+                                                <div
+                                                    style="width:48px; height:48px; border-radius:10px; background:#d1fae5;
                                                     display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                                                     <i class="fas fa-ship" style="color:#059669; font-size:1.2rem;"></i>
                                                 </div>
                                                 <div style="min-width:0;">
                                                     <div id="joSummaryNo"
-                                                        style="font-weight:700; font-size:1.05rem; color:#2c3e50; letter-spacing:.4px;"></div>
+                                                        style="font-weight:700; font-size:1.05rem; color:#2c3e50; letter-spacing:.4px;">
+                                                    </div>
                                                     <div id="joSummaryTitle"
-                                                        style="font-size:.875rem; color:#6b7280; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
+                                                        style="font-size:.875rem; color:#6b7280; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                                                    </div>
                                                 </div>
                                             </div>
                                             <button type="button" id="btnJoDetail"
@@ -580,7 +971,8 @@
                                         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px 24px;">
                                             <div>
                                                 <div class="jo-meta-label">JO No.</div>
-                                                <div class="jo-meta-value" id="joSummaryNo2" style="font-family:monospace; font-size:.82rem;"></div>
+                                                <div class="jo-meta-value" id="joSummaryNo2"
+                                                    style="font-family:monospace; font-size:.82rem;"></div>
                                             </div>
                                             <div>
                                                 <div class="jo-meta-label">JO Date</div>
@@ -589,7 +981,8 @@
                                             <div>
                                                 <div class="jo-meta-label">Total Items</div>
                                                 <div class="jo-meta-value" id="joSummaryItemCount">
-                                                    <i class="fas fa-circle-notch fa-spin" style="color:#10b981; font-size:.8rem;"></i>
+                                                    <i class="fas fa-circle-notch fa-spin"
+                                                        style="color:#10b981; font-size:.8rem;"></i>
                                                 </div>
                                             </div>
                                             <div>
@@ -611,7 +1004,8 @@
                                             <div>
                                                 <div class="jo-meta-label">Note</div>
                                                 <div class="jo-meta-value" id="joSummaryNote"
-                                                    style="font-size:.82rem; line-height:1.4; white-space:pre-wrap;">—</div>
+                                                    style="font-size:.82rem; line-height:1.4; white-space:pre-wrap;">—
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -634,7 +1028,8 @@
                                 {{-- Branch --}}
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Branch</label>
-                                    <select name="id_md_cabang" id="id_md_cabang" class="form-select select2-field" required>
+                                    <select name="id_md_cabang" id="id_md_cabang" class="form-select select2-field"
+                                        required>
                                         <option value="">-- Select Branch --</option>
                                         @foreach ($cabangs as $cabang)
                                             <option value="{{ $cabang->id_md_branch }}"
@@ -648,7 +1043,8 @@
                                 {{-- Release To --}}
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Release To</label>
-                                    <select name="id_md_release" id="id_md_release" class="form-select select2-field" required>
+                                    <select name="id_md_release" id="id_md_release" class="form-select select2-field"
+                                        required>
                                         <option value="">-- Select Release To --</option>
                                         @foreach ($releases as $rel)
                                             <option value="{{ $rel->id_md_release }}"
@@ -670,8 +1066,10 @@
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
-                                        <option value="normal" {{ $kasbonTramper->priority == 'normal' ? 'selected' : '' }}>Normal</option>
-                                        <option value="high"   {{ $kasbonTramper->priority == 'high'   ? 'selected' : '' }}>High</option>
+                                        <option value="normal"
+                                            {{ $kasbonTramper->priority == 'normal' ? 'selected' : '' }}>Normal</option>
+                                        <option value="high" {{ $kasbonTramper->priority == 'high' ? 'selected' : '' }}>
+                                            High</option>
                                     </select>
                                 </div>
 
@@ -686,16 +1084,22 @@
                                 <div class="col-md-12" id="caReleaseStatusWrapper">
                                     <label class="form-label">CA Release Status</label>
                                     <select name="ca_release_status" id="ca_release_status" class="form-select">
-                                        <option value=""        {{ !$kasbonTramper->ca_release_status ? 'selected' : '' }}>-- No Status (Pending) --</option>
-                                        <option value="pending" {{ $kasbonTramper->ca_release_status == 'pending' ? 'selected' : '' }}>Pending</option>
-                                        <option value="release" {{ $kasbonTramper->ca_release_status == 'release' ? 'selected' : '' }}>Release</option>
+                                        <option value="" {{ !$kasbonTramper->ca_release_status ? 'selected' : '' }}>
+                                            -- No Status (Pending) --</option>
+                                        <option value="pending"
+                                            {{ $kasbonTramper->ca_release_status == 'pending' ? 'selected' : '' }}>Pending
+                                        </option>
+                                        <option value="release"
+                                            {{ $kasbonTramper->ca_release_status == 'release' ? 'selected' : '' }}>Release
+                                        </option>
                                     </select>
                                 </div>
 
                                 {{-- CA Release Date --}}
                                 <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
                                     <label class="form-label">CA Release Date</label>
-                                    <input type="date" name="ca_release_date" id="ca_release_date" class="form-control"
+                                    <input type="date" name="ca_release_date" id="ca_release_date"
+                                        class="form-control"
                                         value="{{ $kasbonTramper->ca_release_date ? $kasbonTramper->ca_release_date->format('Y-m-d') : '' }}">
                                 </div>
 
@@ -771,8 +1175,8 @@
                                         <div class="currency-group">
                                             <span class="currency-label">IDR</span>
                                             <input type="text" id="inputNilaiKasbon"
-                                                class="form-control currency-input"
-                                                placeholder="0,00" autocomplete="off">
+                                                class="form-control currency-input" placeholder="0,00"
+                                                autocomplete="off">
                                         </div>
                                         <div id="caValidationHint" class="validate-hint hint-info"></div>
                                     </div>
@@ -788,8 +1192,8 @@
 
                                 {{-- Hidden fields --}}
                                 <input type="hidden" id="activeJoContItemId" value="">
-                                <input type="hidden" id="activeRowIndex"     value="">
-                                <input type="hidden" id="activeHppValue"     value="0">
+                                <input type="hidden" id="activeRowIndex" value="">
+                                <input type="hidden" id="activeHppValue" value="0">
                             </div>
 
                             {{-- TABLE --}}
@@ -849,8 +1253,8 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div></div>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('kasbon-tramper.export-pdf', $kasbonTramper->id) }}"
-                                target="_blank" class="btn"
+                            <a href="{{ route('kasbon-tramper.export-pdf', $kasbonTramper->id) }}" target="_blank"
+                                class="btn"
                                 style="padding:13px 35px; border-radius:10px; font-weight:700; font-size:1rem;
                                        border-color:red; background-color:rgb(255,237,237); color:red">
                                 <i class="fas fa-file-pdf me-2"></i> Generate CA
@@ -902,11 +1306,18 @@
                                 <tfoot>
                                     <tr>
                                         <td colspan="3" style="text-align:right; font-weight:700;">GRAND TOTAL</td>
-                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;" id="joItemsTotalHpp"></td>
-                                        <td style="text-align:right; font-weight:700; font-family:monospace;" id="joItemsTotalSell"></td>
+                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;"
+                                            id="joItemsTotalHpp"></td>
+                                        <td style="text-align:right; font-weight:700; font-family:monospace;"
+                                            id="joItemsTotalSell"></td>
                                     </tr>
                                 </tfoot>
                             </table>
+                            <div class="lpj-origin-note mt-2" id="lpjOriginNoteKasbon" style="display:none;">
+                                <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
+                                <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ
+                                    page.</span>
+                            </div>
                         </div>
                     </div>
                     <div id="joItemsModalEmpty"
@@ -937,23 +1348,29 @@
         // CONSTANTS
         // ══════════════════════════════════════════════════════════
         const currentKasbonTramperId = {{ $kasbonTramper->id }};
-        const currentKasbonTramStr   = '{{ $kasbonTramper->id_kasbon_tram }}';
-        const originalIdJoTram       = '{{ $kasbonTramper->id_jo_tram }}';
-        const bulkSaveUrl            = '{{ route('kasbon-tramper.items.bulk-save', $kasbonTramper->id) }}';
-        const checkConflictUrl       = '{{ route('kasbon-tramper.item.check-conflict') }}';
-        const clearConflictUrl       = '{{ route('kasbon-tramper.item.clear-conflict') }}';
-        const updateHeaderUrl        = '/kasbon-tramper/header/update/{{ $kasbonTramper->id }}';
-        const csrfToken              = $('meta[name="csrf-token"]').attr('content');
+        const currentKasbonTramStr = '{{ $kasbonTramper->id_kasbon_tram }}';
+        const originalIdJoTram = '{{ $kasbonTramper->id_jo_tram }}';
+        const bulkSaveUrl = '{{ route('kasbon-tramper.items.bulk-save', $kasbonTramper->id) }}';
+        const checkConflictUrl = '{{ route('kasbon-tramper.item.check-conflict') }}';
+        const clearConflictUrl = '{{ route('kasbon-tramper.item.clear-conflict') }}';
+        const updateHeaderUrl = '/kasbon-tramper/header/update/{{ $kasbonTramper->id }}';
+        const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
-        let mergedItems       = @json($mergedItemsJs);
-        let confirmCallback   = null;
+        let mergedItems = @json($mergedItemsJs);
+        let confirmCallback = null;
         let conflictProceedCb = null;
-        let joItemsCache      = [];
+        let joItemsCache = [];
 
         // ══════════════════════════════════════════════════════════
         // CONFIRM MODAL
         // ══════════════════════════════════════════════════════════
-        function showConfirm({ title, desc, okLabel = 'Yes, proceed', okClass = 'btn-danger', iconClass = 'danger' }, callback) {
+        function showConfirm({
+            title,
+            desc,
+            okLabel = 'Yes, proceed',
+            okClass = 'btn-danger',
+            iconClass = 'danger'
+        }, callback) {
             $('#confirmModalTitle').text(title);
             $('#confirmModalDesc').text(desc);
             $('#confirmModalOk').text(okLabel).removeClass().addClass(`btn ${okClass}`);
@@ -963,7 +1380,10 @@
         }
 
         $('#confirmModalCancel, #confirmModal').on('click', function(e) {
-            if (e.target === this) { $('#confirmModal').removeClass('show'); confirmCallback = null; }
+            if (e.target === this) {
+                $('#confirmModal').removeClass('show');
+                confirmCallback = null;
+            }
         });
         $('#confirmModalOk').on('click', function() {
             $('#confirmModal').removeClass('show');
@@ -982,9 +1402,15 @@
             $('#conflictModal').addClass('show');
         }
 
-        $('#conflictModal').on('click', function(e) { if (e.target === this) closeConflictModal(false); });
-        $('#conflictModalCancel').on('click',  function() { closeConflictModal(false); });
-        $('#conflictModalProceed').on('click', function() { closeConflictModal(true);  });
+        $('#conflictModal').on('click', function(e) {
+            if (e.target === this) closeConflictModal(false);
+        });
+        $('#conflictModalCancel').on('click', function() {
+            closeConflictModal(false);
+        });
+        $('#conflictModalProceed').on('click', function() {
+            closeConflictModal(true);
+        });
 
         function closeConflictModal(proceed) {
             $('#conflictModal').removeClass('show');
@@ -1000,12 +1426,22 @@
         // FLOATING ALERT
         // ══════════════════════════════════════════════════════════
         function showFloatingAlert(type, message) {
-            const $alert = $('#floatingBadgeAlert'), $icon = $('#alertIcon');
+            const $alert = $('#floatingBadgeAlert'),
+                $icon = $('#alertIcon');
             $alert.removeClass('alert-saving alert-success alert-error hiding');
             switch (type) {
-                case 'saving':  $alert.addClass('alert-saving');  $icon.attr('class', 'fas fa-circle-notch fa-spin'); break;
-                case 'success': $alert.addClass('alert-success'); $icon.attr('class', 'fas fa-check-circle');         break;
-                default:        $alert.addClass('alert-error');   $icon.attr('class', 'fas fa-exclamation-circle');   break;
+                case 'saving':
+                    $alert.addClass('alert-saving');
+                    $icon.attr('class', 'fas fa-circle-notch fa-spin');
+                    break;
+                case 'success':
+                    $alert.addClass('alert-success');
+                    $icon.attr('class', 'fas fa-check-circle');
+                    break;
+                default:
+                    $alert.addClass('alert-error');
+                    $icon.attr('class', 'fas fa-exclamation-circle');
+                    break;
             }
             $('#alertText').text(message);
             $alert.addClass('show');
@@ -1023,7 +1459,9 @@
         function formatRupiah(value) {
             let number = value.toString().replace(/[^\d,]/g, '').replace(/\./g, '');
             if (number === '') return '';
-            let parts = number.split(','), intPart = parts[0], dec = parts.length > 1 ? parts[1] : '';
+            let parts = number.split(','),
+                intPart = parts[0],
+                dec = parts.length > 1 ? parts[1] : '';
             if (dec.length > 2) dec = dec.substring(0, 2);
             intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             return parts.length > 1 ? intPart + ',' + dec : intPart + ',00';
@@ -1035,31 +1473,46 @@
         }
 
         function formatNumber(amount) {
-            return parseFloat(amount || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return parseFloat(amount || 0).toLocaleString('id-ID', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
         }
 
         function setupRupiahInput(input) {
             input.addEventListener('input', function() {
-                let cursor = this.selectionStart, before = this.value.substring(0, cursor);
+                let cursor = this.selectionStart,
+                    before = this.value.substring(0, cursor);
                 this.value = formatRupiah(this.value);
                 if (!before.includes(',')) {
-                    let digits = before.replace(/\D/g, '').length, newPos = 0, count = 0;
+                    let digits = before.replace(/\D/g, '').length,
+                        newPos = 0,
+                        count = 0;
                     for (let i = 0; i < this.value.length; i++) {
-                        if (/\d/.test(this.value[i])) { count++; if (count === digits) { newPos = i + 1; break; } }
+                        if (/\d/.test(this.value[i])) {
+                            count++;
+                            if (count === digits) {
+                                newPos = i + 1;
+                                break;
+                            }
+                        }
                     }
                     this.setSelectionRange(newPos, newPos);
                 } else {
-                    let commaPos = this.value.indexOf(','), decDigits = (before.split(',')[1] || '').length;
-                    this.setSelectionRange(commaPos + 1 + Math.min(decDigits, 2), commaPos + 1 + Math.min(decDigits, 2));
+                    let commaPos = this.value.indexOf(','),
+                        decDigits = (before.split(',')[1] || '').length;
+                    this.setSelectionRange(commaPos + 1 + Math.min(decDigits, 2), commaPos + 1 + Math.min(decDigits,
+                        2));
                 }
             });
             input.addEventListener('blur', function() {
                 if (this.value) {
-                    if (!this.value.includes(',')) { this.value += ',00'; }
-                    else {
+                    if (!this.value.includes(',')) {
+                        this.value += ',00';
+                    } else {
                         let parts = this.value.split(',');
                         if (parts[1] !== undefined) {
-                            if (parts[1].length === 0)    this.value = parts[0] + ',00';
+                            if (parts[1].length === 0) this.value = parts[0] + ',00';
                             else if (parts[1].length < 2) this.value = parts[0] + ',' + parts[1].padEnd(2, '0');
                         }
                     }
@@ -1075,17 +1528,25 @@
             if ($input) {
                 $input.removeClass('input-invalid input-valid');
                 if (type === 'danger') $input.addClass('input-invalid');
-                if (type === 'ok')     $input.addClass('input-valid');
+                if (type === 'ok') $input.addClass('input-valid');
             }
         }
 
         function validateCaInput() {
-            const ca  = parseRupiah($('#inputNilaiKasbon').val());
+            const ca = parseRupiah($('#inputNilaiKasbon').val());
             const hpp = parseFloat($('#activeHppValue').val() || '0');
-            const $input = $('#inputNilaiKasbon'), $hint = $('#caValidationHint');
-            if (ca <= 0 || hpp <= 0) { $input.removeClass('input-invalid input-valid'); setHint($hint, null, '', ''); return; }
-            if (ca > hpp) { setHint($hint, $input, `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger'); }
-            else          { setHint($hint, $input, '', ''); }
+            const $input = $('#inputNilaiKasbon'),
+                $hint = $('#caValidationHint');
+            if (ca <= 0 || hpp <= 0) {
+                $input.removeClass('input-invalid input-valid');
+                setHint($hint, null, '', '');
+                return;
+            }
+            if (ca > hpp) {
+                setHint($hint, $input, `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
+            } else {
+                setHint($hint, $input, '', '');
+            }
         }
 
         function resetCaValidation() {
@@ -1097,13 +1558,20 @@
         // GROUP BY CATEGORY
         // ══════════════════════════════════════════════════════════
         function groupByCategory(items) {
-            const groups = {}, order = [];
+            const groups = {},
+                order = [];
             items.forEach(function(item) {
                 const cat = item.invoice_ctg || 'Uncategorized';
-                if (!groups[cat]) { groups[cat] = []; order.push(cat); }
+                if (!groups[cat]) {
+                    groups[cat] = [];
+                    order.push(cat);
+                }
                 groups[cat].push(item);
             });
-            return { groups, order };
+            return {
+                groups,
+                order
+            };
         }
 
         // ══════════════════════════════════════════════════════════
@@ -1116,63 +1584,81 @@
 
             if (!mergedItems.length) {
                 $tbody.html(`
-                    <tr class="no-items-row">
-                        <td colspan="7">
-                            <i class="fas fa-inbox fa-3x d-block mb-3 text-muted opacity-50"></i>
-                            <p class="mb-1 fw-bold">No items found for this JO Tramper</p>
-                            <small>Make sure the selected JO Tramper has items</small>
-                        </td>
-                    </tr>`);
+            <tr class="no-items-row">
+                <td colspan="7">
+                    <i class="fas fa-inbox fa-3x d-block mb-3 text-muted opacity-50"></i>
+                    <p class="mb-1 fw-bold">No items found for this JO Tramper</p>
+                    <small>Make sure the selected JO Tramper has items</small>
+                </td>
+            </tr>`);
+                $('#lpjOriginNoteKasbon').hide(); // ← TAMBAH
                 updateFooter();
                 return;
             }
 
-            const { groups, order } = groupByCategory(mergedItems);
-            let rowNo = 1;
+            const {
+                groups,
+                order
+            } = groupByCategory(mergedItems);
+            let rowNo = 1,
+                hasOriginItems = false; // ← TAMBAH hasOriginItems
 
             order.forEach(function(category) {
-                const items = groups[category], rowspan = items.length;
+                const items = groups[category],
+                    rowspan = items.length;
                 items.forEach(function(item, catIndex) {
                     const globalIndex = mergedItems.indexOf(item);
-                    const hasFilled   = item.has_kasbon && item.nilai_kasbon > 0;
+                    const hasFilled = item.has_kasbon && item.nilai_kasbon > 0;
+                    const isFromLpj = !!item.origin_lpj_tram; // ← TAMBAH
+                    if (isFromLpj) hasOriginItems = true; // ← TAMBAH
+
+                    // ← TAMBAH badge
+                    const lpjBadge = isFromLpj ?
+                        `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` :
+                        '';
 
                     const clearBtn = `
-                        <button type="button" class="btn btn-danger btn-sm btn-clear-row"
-                            onclick="clearItem(${globalIndex})"
-                            ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
-                            <i class="fas fa-trash"></i>
-                        </button>`;
+                <button type="button" class="btn btn-danger btn-sm btn-clear-row"
+                    onclick="clearItem(${globalIndex})"
+                    ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
+                    <i class="fas fa-trash"></i>
+                </button>`;
 
-                    const categoryCell = catIndex === 0
-                        ? `<td class="category-cell" rowspan="${rowspan}">${category}</td>`
-                        : '';
+                    const categoryCell = catIndex === 0 ?
+                        `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
+                        '';
+
+                    // ← TAMBAH rowClass
+                    const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
 
                     $tbody.append(`
-                        <tr class="item-row" id="row_${globalIndex}"
-                            data-index="${globalIndex}"
-                            data-jo-item="${item.id_jo_tram_item}"
-                            data-category="${category}">
-                            <td class="cell-center fw-bold text-muted">${rowNo++}</td>
-                            ${categoryCell}
-                            <td class="text-start">
-                                <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
-                            </td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                            <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
-                            <td class="cell-center">
-                                <div class="d-flex gap-1 justify-content-center">
-                                    <button type="button" class="btn btn-primary btn-sm btn-edit-row"
-                                        onclick="openEditItem(${globalIndex})" title="Edit CA amount">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    ${clearBtn}
-                                </div>
-                            </td>
-                        </tr>`);
+                <tr class="${rowClass}" id="row_${globalIndex}"
+                    data-index="${globalIndex}"
+                    data-jo-item="${item.id_jo_tram_item}"
+                    data-category="${category}">
+                    <td class="cell-center fw-bold text-muted">${rowNo++}</td>
+                    ${categoryCell}
+                    <td class="text-start">
+                        <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
+                        ${lpjBadge}
+                    </td>
+                    <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
+                    <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
+                    <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                    <td class="cell-center">
+                        <div class="d-flex gap-1 justify-content-center">
+                            <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                                onclick="openEditItem(${globalIndex})" title="Edit CA amount">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            ${clearBtn}
+                        </div>
+                    </td>
+                </tr>`);
                 });
             });
 
+            $('#lpjOriginNoteKasbon').toggle(hasOriginItems); // ← TAMBAH
             updateFooter();
         }
 
@@ -1209,7 +1695,9 @@
             $('.item-row').removeClass('tr-active');
             $(`#row_${index}`).addClass('tr-active');
             $('#inputItemCard').addClass('active');
-            $('html, body').animate({ scrollTop: $('#inputItemCard').offset().top - 120 }, 400);
+            $('html, body').animate({
+                scrollTop: $('#inputItemCard').offset().top - 120
+            }, 400);
             setTimeout(() => $('#inputNilaiKasbon').focus(), 450);
         }
 
@@ -1230,16 +1718,25 @@
         // ══════════════════════════════════════════════════════════
         function doSaveItem(joTramItemId, rowIndex, nilaiKasbon) {
             $.ajax({
-                url: bulkSaveUrl, method: 'POST',
+                url: bulkSaveUrl,
+                method: 'POST',
                 contentType: 'application/json',
-                headers: { 'X-CSRF-TOKEN': csrfToken },
-                data: JSON.stringify({ items: [{ id_jo_tram_item: joTramItemId, nilai_kasbon: nilaiKasbon }], _token: csrfToken }),
+                headers: {
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                data: JSON.stringify({
+                    items: [{
+                        id_jo_tram_item: joTramItemId,
+                        nilai_kasbon: nilaiKasbon
+                    }],
+                    _token: csrfToken
+                }),
                 success: function(response) {
                     $('#btnSaveItemInput').prop('disabled', false);
                     if (response.success) {
                         showFloatingAlert('success', 'CA Amount saved successfully!');
                         mergedItems[rowIndex].nilai_kasbon = nilaiKasbon;
-                        mergedItems[rowIndex].has_kasbon   = true;
+                        mergedItems[rowIndex].has_kasbon = true;
                         refreshRowAfterSave(rowIndex, nilaiKasbon, true);
                         updateFooter();
                         closeInputCard();
@@ -1258,13 +1755,26 @@
             showFloatingAlert('saving', hasConflict ? 'Removing previous CA amount...' : 'Saving...');
             if (hasConflict) {
                 $.ajax({
-                    url: clearConflictUrl, method: 'POST',
-                    data: { id_jo_tram_item: joTramItemId, id_kasbon_tram: currentKasbonTramStr, _token: csrfToken },
-                    success: function(res) {
-                        if (res.success) { showFloatingAlert('saving', 'Saving new CA amount...'); doSaveItem(joTramItemId, rowIndex, nilaiKasbon); }
-                        else { $('#btnSaveItemInput').prop('disabled', false); showFloatingAlert('error', 'Failed to clear previous CA: ' + (res.message || '')); }
+                    url: clearConflictUrl,
+                    method: 'POST',
+                    data: {
+                        id_jo_tram_item: joTramItemId,
+                        id_kasbon_tram: currentKasbonTramStr,
+                        _token: csrfToken
                     },
-                    error: function() { showFloatingAlert('saving', 'Saving...'); doSaveItem(joTramItemId, rowIndex, nilaiKasbon); }
+                    success: function(res) {
+                        if (res.success) {
+                            showFloatingAlert('saving', 'Saving new CA amount...');
+                            doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
+                        } else {
+                            $('#btnSaveItemInput').prop('disabled', false);
+                            showFloatingAlert('error', 'Failed to clear previous CA: ' + (res.message || ''));
+                        }
+                    },
+                    error: function() {
+                        showFloatingAlert('saving', 'Saving...');
+                        doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
+                    }
                 });
             } else {
                 doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
@@ -1276,23 +1786,35 @@
         // ══════════════════════════════════════════════════════════
         function saveItemInput() {
             const joTramItemId = $('#activeJoContItemId').val();
-            const rowIndex     = parseInt($('#activeRowIndex').val());
-            const nilaiKasbon  = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp          = parseFloat($('#activeHppValue').val() || '0');
+            const rowIndex = parseInt($('#activeRowIndex').val());
+            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp = parseFloat($('#activeHppValue').val() || '0');
 
-            if (!joTramItemId) { showFloatingAlert('error', 'No item selected'); return; }
-            if (nilaiKasbon <= 0) { showFloatingAlert('error', 'Please enter a CA Amount'); return; }
+            if (!joTramItemId) {
+                showFloatingAlert('error', 'No item selected');
+                return;
+            }
+            if (nilaiKasbon <= 0) {
+                showFloatingAlert('error', 'Please enter a CA Amount');
+                return;
+            }
             if (hpp > 0 && nilaiKasbon > hpp) {
-                showFloatingAlert('error', `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
-                setHint($('#caValidationHint'), $('#inputNilaiKasbon'), `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                showFloatingAlert('error',
+                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
+                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
+                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
                 return;
             }
 
             $('#btnSaveItemInput').prop('disabled', true);
 
             $.ajax({
-                url: checkConflictUrl, method: 'GET',
-                data: { id_jo_tram_item: joTramItemId, id_kasbon_tram: currentKasbonTramStr },
+                url: checkConflictUrl,
+                method: 'GET',
+                data: {
+                    id_jo_tram_item: joTramItemId,
+                    id_kasbon_tram: currentKasbonTramStr
+                },
                 success: function(res) {
                     if (res.success && res.has_conflict) {
                         showConflictModal(res.conflict.id_kasbon_tram, res.conflict.nilai_kasbon, function() {
@@ -1302,12 +1824,16 @@
                         executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, false);
                     }
                 },
-                error: function() { executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, false); }
+                error: function() {
+                    executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, false);
+                }
             });
         }
 
         $('#btnSaveItemInput').on('click', saveItemInput);
-        $('#inputNilaiKasbon').on('keydown', function(e) { if (e.key === 'Enter') saveItemInput(); });
+        $('#inputNilaiKasbon').on('keydown', function(e) {
+            if (e.key === 'Enter') saveItemInput();
+        });
         $('#inputNilaiKasbon').on('input blur', validateCaInput);
 
         // ══════════════════════════════════════════════════════════
@@ -1318,25 +1844,40 @@
             showConfirm({
                 title: 'Clear CA Amount?',
                 desc: `This will remove the CA amount for "${item.invoice_typ}".`,
-                okLabel: 'Yes, clear it', okClass: 'btn-danger', iconClass: 'danger',
+                okLabel: 'Yes, clear it',
+                okClass: 'btn-danger',
+                iconClass: 'danger',
             }, function() {
                 showFloatingAlert('saving', 'Clearing...');
                 $.ajax({
-                    url: bulkSaveUrl, method: 'POST',
+                    url: bulkSaveUrl,
+                    method: 'POST',
                     contentType: 'application/json',
-                    headers: { 'X-CSRF-TOKEN': csrfToken },
-                    data: JSON.stringify({ items: [{ id_jo_tram_item: item.id_jo_tram_item, nilai_kasbon: 0 }], _token: csrfToken }),
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: JSON.stringify({
+                        items: [{
+                            id_jo_tram_item: item.id_jo_tram_item,
+                            nilai_kasbon: 0
+                        }],
+                        _token: csrfToken
+                    }),
                     success: function(response) {
                         if (response.success) {
                             showFloatingAlert('success', 'CA Amount cleared!');
                             mergedItems[index].nilai_kasbon = 0;
-                            mergedItems[index].has_kasbon   = false;
+                            mergedItems[index].has_kasbon = false;
                             refreshRowAfterSave(index, 0, false);
                             if (parseInt($('#activeRowIndex').val()) === index) closeInputCard();
                             updateFooter();
-                        } else { showFloatingAlert('error', response.message || 'Failed to clear'); }
+                        } else {
+                            showFloatingAlert('error', response.message || 'Failed to clear');
+                        }
                     },
-                    error: function(xhr) { showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to clear item'); }
+                    error: function(xhr) {
+                        showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to clear item');
+                    }
                 });
             });
         }
@@ -1346,37 +1887,56 @@
         // ══════════════════════════════════════════════════════════
         $('#btnResetAllItems').on('click', function() {
             const filledCount = mergedItems.filter(i => i.has_kasbon && i.nilai_kasbon > 0).length;
-            if (filledCount === 0) { showFloatingAlert('error', 'No CA amounts to reset'); return; }
+            if (filledCount === 0) {
+                showFloatingAlert('error', 'No CA amounts to reset');
+                return;
+            }
             showConfirm({
                 title: 'Reset All CA Amounts?',
                 desc: `This will clear the CA amount for all ${filledCount} filled item(s).`,
-                okLabel: 'Yes, reset all', okClass: 'btn-danger', iconClass: 'danger',
+                okLabel: 'Yes, reset all',
+                okClass: 'btn-danger',
+                iconClass: 'danger',
             }, function() {
                 showFloatingAlert('saving', 'Resetting all CA amounts...');
                 const payload = mergedItems
                     .filter(i => i.has_kasbon && i.nilai_kasbon > 0)
-                    .map(i => ({ id_jo_tram_item: i.id_jo_tram_item, nilai_kasbon: 0 }));
+                    .map(i => ({
+                        id_jo_tram_item: i.id_jo_tram_item,
+                        nilai_kasbon: 0
+                    }));
 
                 $.ajax({
-                    url: bulkSaveUrl, method: 'POST',
+                    url: bulkSaveUrl,
+                    method: 'POST',
                     contentType: 'application/json',
-                    headers: { 'X-CSRF-TOKEN': csrfToken },
-                    data: JSON.stringify({ items: payload, _token: csrfToken }),
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: JSON.stringify({
+                        items: payload,
+                        _token: csrfToken
+                    }),
                     success: function(response) {
                         if (response.success) {
                             showFloatingAlert('success', 'All CA amounts have been reset!');
                             mergedItems.forEach(function(item, idx) {
                                 if (item.has_kasbon && item.nilai_kasbon > 0) {
                                     mergedItems[idx].nilai_kasbon = 0;
-                                    mergedItems[idx].has_kasbon   = false;
+                                    mergedItems[idx].has_kasbon = false;
                                     refreshRowAfterSave(idx, 0, false);
                                 }
                             });
                             closeInputCard();
                             updateFooter();
-                        } else { showFloatingAlert('error', response.message || 'Failed to reset'); }
+                        } else {
+                            showFloatingAlert('error', response.message || 'Failed to reset');
+                        }
                     },
-                    error: function(xhr) { showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to reset CA amounts'); }
+                    error: function(xhr) {
+                        showFloatingAlert('error', xhr.responseJSON?.message ||
+                            'Failed to reset CA amounts');
+                    }
                 });
             });
         });
@@ -1385,11 +1945,13 @@
         // UPDATE FOOTER
         // ══════════════════════════════════════════════════════════
         function updateFooter() {
-            let totalHargaJual = 0, totalHPP = 0, totalCA = 0;
+            let totalHargaJual = 0,
+                totalHPP = 0,
+                totalCA = 0;
             mergedItems.forEach(function(item) {
                 totalHargaJual += parseFloat(item.hargajual_idr) || 0;
-                totalHPP       += parseFloat(item.hpp_ops)       || 0;
-                totalCA        += parseFloat(item.nilai_kasbon)   || 0;
+                totalHPP += parseFloat(item.hpp_ops) || 0;
+                totalCA += parseFloat(item.nilai_kasbon) || 0;
             });
             $('#footerTotalHargaJual').text(formatNumber(totalHargaJual));
             $('#footerTotalHPP').text(formatNumber(totalHPP));
@@ -1401,11 +1963,18 @@
         // ══════════════════════════════════════════════════════════
         function renderJoItemsModal(items) {
             $('#joItemsModalLoading').hide();
-            if (!items || !items.length) { $('#joItemsModalEmpty').show(); return; }
-            let rows = '', totalHpp = 0, totalSell = 0;
+            if (!items || !items.length) {
+                $('#joItemsModalEmpty').show();
+                return;
+            }
+            let rows = '',
+                totalHpp = 0,
+                totalSell = 0;
             items.forEach(function(item, idx) {
-                const hpp = parseFloat(item.hpp_ops || 0), sell = parseFloat(item.hargajual_idr || 0);
-                totalHpp += hpp; totalSell += sell;
+                const hpp = parseFloat(item.hpp_ops || 0),
+                    sell = parseFloat(item.hargajual_idr || 0);
+                totalHpp += hpp;
+                totalSell += sell;
                 rows += `
                     <tr>
                         <td style="text-align:center;">${idx + 1}</td>
@@ -1426,9 +1995,9 @@
         // UPDATE HEADER
         // ══════════════════════════════════════════════════════════
         $('#btnSaveHeader').on('click', function() {
-            const idJoTram  = $('#id_jo_tram').val();
-            const idDep     = $('#id_md_dep').val();
-            const idCabang  = $('#id_md_cabang').val();
+            const idJoTram = $('#id_jo_tram').val();
+            const idDep = $('#id_md_dep').val();
+            const idCabang = $('#id_md_cabang').val();
             const idRelease = $('#id_md_release').val();
             const tglKasbon = $('#tgl_kasbon').val();
 
@@ -1444,18 +2013,18 @@
                 url: updateHeaderUrl,
                 method: 'POST',
                 data: {
-                    id_jo_tram:        idJoTram,
-                    id_md_dep:         idDep,
-                    id_md_cabang:      idCabang,
-                    id_md_release:     idRelease,
-                    tgl_kasbon:        tglKasbon,
-                    tgl_release:       $('#tgl_release').val(),
-                    note:              $('#note').val(),
-                    priority:          $('#priority').val(),
-                    due_date:          $('#due_date').val(),
+                    id_jo_tram: idJoTram,
+                    id_md_dep: idDep,
+                    id_md_cabang: idCabang,
+                    id_md_release: idRelease,
+                    tgl_kasbon: tglKasbon,
+                    tgl_release: $('#tgl_release').val(),
+                    note: $('#note').val(),
+                    priority: $('#priority').val(),
+                    due_date: $('#due_date').val(),
                     ca_release_status: $('#ca_release_status').val(),
-                    ca_release_date:   $('#ca_release_date').val(),
-                    _token:            csrfToken,
+                    ca_release_date: $('#ca_release_date').val(),
+                    _token: csrfToken,
                 },
                 success: function(response) {
                     $('#btnSaveHeader').prop('disabled', false);
@@ -1496,47 +2065,59 @@
         // ══════════════════════════════════════════════════════════
         $(document).ready(function() {
 
-            $('.select2-field').select2({ theme: 'bootstrap-5', width: '100%' });
+            $('.select2-field').select2({
+                theme: 'bootstrap-5',
+                width: '100%'
+            });
 
             handleReleaseStatusChange();
             $('#ca_release_status').on('change', handleReleaseStatusChange);
 
             function populateJoSummary(idJoTram) {
                 if (!idJoTram) return;
-                const $opt     = $('#id_jo_tram').find(`option[value="${idJoTram}"]`);
-                const no       = $opt.data('no')    || idJoTram;
-                const rawDate  = $opt.data('tgl')   || '';
+                const $opt = $('#id_jo_tram').find(`option[value="${idJoTram}"]`);
+                const no = $opt.data('no') || idJoTram;
+                const rawDate = $opt.data('tgl') || '';
                 const rawStart = $opt.data('start') || '';
-                const rawEnd   = $opt.data('end')   || '';
+                const rawEnd = $opt.data('end') || '';
 
-                const fmtDate = d => d
-                    ? new Date(d).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric' })
-                    : '—';
+                const fmtDate = d => d ?
+                    new Date(d).toLocaleDateString('id-ID', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
+                    }) :
+                    '—';
 
                 $('#joSummaryNo').text(no);
                 $('#joSummaryNo2').text(no);
-                $('#joSummaryTitle').text($opt.data('title')    || '—');
-                $('#joSummaryVessel').text($opt.data('vessel')  || '—');
+                $('#joSummaryTitle').text($opt.data('title') || '—');
+                $('#joSummaryVessel').text($opt.data('vessel') || '—');
                 $('#joSummaryCustomer').text($opt.data('customer') || '—');
-                $('#joSummaryPort').text($opt.data('port')      || '—');
-                $('#joSummaryNote').text($opt.data('note')      || '—');
+                $('#joSummaryPort').text($opt.data('port') || '—');
+                $('#joSummaryNote').text($opt.data('note') || '—');
                 $('#joSummaryDate').text(fmtDate(rawDate));
                 $('#joSummaryDateRange').text(
                     rawStart || rawEnd ? fmtDate(rawStart) + ' — ' + fmtDate(rawEnd) : '—'
                 );
-                $('#joSummaryItemCount').html('<i class="fas fa-circle-notch fa-spin" style="color:#10b981; font-size:.8rem;"></i>');
+                $('#joSummaryItemCount').html(
+                    '<i class="fas fa-circle-notch fa-spin" style="color:#10b981; font-size:.8rem;"></i>');
                 $('#joSummaryWrapper').show();
 
                 $.ajax({
                     url: '{{ route('kasbon-tramper.jo-items.get') }}',
                     method: 'GET',
-                    data: { id_jo_tram: idJoTram },
+                    data: {
+                        id_jo_tram: idJoTram
+                    },
                     success: function(r) {
                         const n = r.success ? r.data.length : 0;
                         $('#joSummaryItemCount').text(n + ' item' + (n !== 1 ? 's' : ''));
                         if (r.success) joItemsCache = r.data;
                     },
-                    error: function() { $('#joSummaryItemCount').text('—'); }
+                    error: function() {
+                        $('#joSummaryItemCount').text('—');
+                    }
                 });
             }
 
@@ -1545,7 +2126,10 @@
             $('#id_jo_tram').on('change', function() {
                 const id = $(this).val();
                 joItemsCache = [];
-                if (!id) { $('#joSummaryWrapper').hide(); return; }
+                if (!id) {
+                    $('#joSummaryWrapper').hide();
+                    return;
+                }
                 populateJoSummary(id);
             });
 
@@ -1553,7 +2137,8 @@
                 const id = $('#id_jo_tram').val();
                 if (!id) return;
                 const $opt = $('#id_jo_tram').find('option:selected');
-                $('#joItemsModalSubtitle').text(($opt.data('no') || id) + ' — ' + ($opt.data('title') || ''));
+                $('#joItemsModalSubtitle').text(($opt.data('no') || id) + ' — ' + ($opt.data('title') ||
+                    ''));
                 $('#joItemsModalLoading').show();
                 $('#joItemsModalContent').hide();
                 $('#joItemsModalEmpty').hide();
@@ -1565,9 +2150,16 @@
                     $.ajax({
                         url: '{{ route('kasbon-tramper.jo-items.get') }}',
                         method: 'GET',
-                        data: { id_jo_tram: id },
-                        success: function(r) { joItemsCache = r.success ? r.data : []; renderJoItemsModal(joItemsCache); },
-                        error: function() { renderJoItemsModal([]); }
+                        data: {
+                            id_jo_tram: id
+                        },
+                        success: function(r) {
+                            joItemsCache = r.success ? r.data : [];
+                            renderJoItemsModal(joItemsCache);
+                        },
+                        error: function() {
+                            renderJoItemsModal([]);
+                        }
                     });
                 }
             });

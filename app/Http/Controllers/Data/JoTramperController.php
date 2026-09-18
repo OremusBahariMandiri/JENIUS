@@ -9,6 +9,8 @@ use App\Models\Master\Customer;
 use App\Models\Master\Port;
 use App\Models\Master\Invoice;
 use App\Helpers\IdGenerator;
+use App\Models\Data\KasbonTramperItem;
+use App\Models\Data\LpjTramperItem;
 use App\Models\Master\Vessel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -406,7 +408,7 @@ class JoTramperController extends Controller
                 'pendapatan_idr' => 'nullable|numeric|min:0',
                 'pendapatan_usd' => 'nullable|numeric|min:0',
                 'hpp_ops'        => 'nullable|numeric|min:0',
-                'note' => 'nullable|string',
+                'note'           => 'nullable|string',
             ];
 
             if ($request->pendapatan_usd && $request->pendapatan_usd > 0) {
@@ -430,7 +432,7 @@ class JoTramperController extends Controller
             $pendapatanIDR = $request->pendapatan_idr ?? 0;
             $pendapatanUSD = $request->pendapatan_usd ?? 0;
             $kursUSD       = $request->kurs_usd ?? 0;
-            $hppOps        = $request->hpp_ops ?? 0;
+            $hppOps        = (float) ($request->hpp_ops ?? 0);
 
             $hargajualIDR = $pendapatanIDR > 0
                 ? $pendapatanIDR
@@ -444,8 +446,11 @@ class JoTramperController extends Controller
                 'tgl_kurs_usd'   => $request->tgl_kurs_usd ?? null,
                 'hpp_ops'        => $hppOps,
                 'hargajual_idr'  => $hargajualIDR,
-                'note' => $request->note,
+                'note'           => $request->note,
             ]);
+
+            // ── SINKRONISASI HPP KE KASBON & LPJ ── ← TAMBAH INI
+            $this->syncHppToKasbonAndLpj($item, $hppOps);
 
             $item->refresh();
             $item->load('invoice');
@@ -992,6 +997,71 @@ class JoTramperController extends Controller
             }
             return back()->with('error', 'Failed to export PDF: ' . $e->getMessage());
         }
+    }
+
+    // ========================================
+    // SYNC HPP KE KASBON & LPJ
+    // Dipanggil setiap kali HPP di JO item diupdate
+    // ========================================
+    private function syncHppToKasbonAndLpj(JoTramperItem $joItem, float $newHpp): void
+    {
+        Log::info('=== syncHpp START ===', [
+            'id_jo_tram_item' => $joItem->id_jo_tram_item,
+            'new_hpp'         => $newHpp,
+        ]);
+
+        // 1. Cari semua kasbon item yang terkait jo item ini
+        $kasbonItems = KasbonTramperItem::where(
+            'id_jo_tram_item',
+            (string) $joItem->id_jo_tram_item
+        )->get();
+
+        Log::info('KasbonItems found', [
+            'count' => $kasbonItems->count(),
+            'ids'   => $kasbonItems->pluck('id_kasbon_tram_item'),
+        ]);
+
+        foreach ($kasbonItems as $kasbonItem) {
+            // total_kasbon = hpp_baru - nilai_kasbon
+            $totalKasbon = $newHpp - (float) $kasbonItem->nilai_kasbon;
+
+            $kasbonItem->update([
+                'nilai_hpp_tram_item' => $newHpp,
+                'total_kasbon'        => $totalKasbon,
+            ]);
+
+            Log::info('KasbonItem updated', [
+                'id_kasbon_tram_item' => $kasbonItem->id_kasbon_tram_item,
+                'nilai_hpp_tram_item' => $newHpp,
+                'total_kasbon'        => $totalKasbon,
+            ]);
+
+            // 2. Cari semua lpj item yang terkait kasbon item ini
+            $lpjItems = LpjTramperItem::where(
+                'id_kasbon_tram_item',
+                (string) $kasbonItem->id_kasbon_tram_item
+            )->get();
+
+            Log::info('LpjItems found', [
+                'id_kasbon_tram_item' => $kasbonItem->id_kasbon_tram_item,
+                'count'               => $lpjItems->count(),
+                'ids'                 => $lpjItems->pluck('id_lpj_tram_item'),
+            ]);
+
+            foreach ($lpjItems as $lpjItem) {
+                // Clamp amount_lpj jika melebihi hpp baru
+                if ((float) $lpjItem->amount_lpj > $newHpp) {
+                    $lpjItem->update(['amount_lpj' => $newHpp]);
+
+                    Log::info('LpjItem clamped', [
+                        'id_lpj_tram_item' => $lpjItem->id_lpj_tram_item,
+                        'amount_lpj'       => $newHpp,
+                    ]);
+                }
+            }
+        }
+
+        Log::info('=== syncHpp END ===');
     }
 
     /**

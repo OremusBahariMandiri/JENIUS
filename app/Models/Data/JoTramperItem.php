@@ -26,6 +26,7 @@ class JoTramperItem extends Model
         'hpp_ops',
         'hargajual_idr',
         'note',
+        'origin_lpj_tram',
     ];
 
     protected $casts = [

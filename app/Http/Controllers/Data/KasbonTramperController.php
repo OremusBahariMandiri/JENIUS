@@ -779,7 +779,8 @@ class KasbonTramperController extends Controller
                 'nilai_hpp_tram_item' => $kasbonItem ? (float)$kasbonItem->nilai_hpp_tram_item : (float)$joItem->hpp_ops,
                 'nilai_kasbon'        => $kasbonItem ? (float)$kasbonItem->nilai_kasbon : 0,
                 'total_kasbon'        => $kasbonItem ? (float)$kasbonItem->total_kasbon : (float)$joItem->hpp_ops,
-                'has_kasbon'          => $kasbonItem !== null,
+                'has_kasbon'          => $kasbonItem->nilai_kasbon > 0,
+                'origin_lpj_tram'     => $kasbonItem->joTramperItem->origin_lpj_tram ?? null,
             ];
         });
 

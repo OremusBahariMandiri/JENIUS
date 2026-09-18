@@ -6,6 +6,8 @@ use App\Helpers\IdGenerator;
 use App\Http\Controllers\Controller;
 use App\Models\Data\JoContract;
 use App\Models\Data\JoContractItem;
+use App\Models\Data\KasbonContractItem;
+use App\Models\Data\LpjContractItem;
 use App\Models\Master\Contract;
 use App\Models\Master\Area;
 use App\Models\Master\Invoice;
@@ -386,7 +388,7 @@ class JoContractController extends Controller
             $pendapatanIDR = $request->pendapatan_idr ?? 0;
             $pendapatanUSD = $request->pendapatan_usd ?? 0;
             $kursUSD       = $request->kurs_usd ?? 0;
-            $hppOps        = $request->hpp_ops ?? 0;
+            $hppOps        = (float) ($request->hpp_ops ?? 0);
             $hargajualIDR  = $pendapatanIDR > 0 ? $pendapatanIDR : ($pendapatanUSD * $kursUSD);
 
             $item->update([
@@ -399,6 +401,9 @@ class JoContractController extends Controller
                 'hargajual_idr'  => $hargajualIDR,
                 'note'           => $request->note,
             ]);
+
+            // ── SINKRONISASI HPP KE KASBON & LPJ ── ← TAMBAH INI
+            $this->syncHppToKasbonAndLpj($item, $hppOps);
 
             $item->refresh();
             $item->load('invoice');
@@ -994,6 +999,71 @@ class JoContractController extends Controller
             Log::error('updateItemKurs failed', ['id' => $id, 'error' => $e->getMessage()]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    // ========================================
+    // SYNC HPP KE KASBON & LPJ
+    // Dipanggil setiap kali HPP di JO item diupdate
+    // ========================================
+    private function syncHppToKasbonAndLpj(JoContractItem $joItem, float $newHpp): void
+    {
+        Log::info('=== syncHpp Contract START ===', [
+            'id_jo_cont_item' => $joItem->id_jo_cont_item,
+            'new_hpp'         => $newHpp,
+        ]);
+
+        // 1. Cari semua kasbon item yang terkait jo item ini
+        $kasbonItems = KasbonContractItem::where(
+            'id_jo_cont_item',
+            (string) $joItem->id_jo_cont_item
+        )->get();
+
+        Log::info('KasbonContractItems found', [
+            'count' => $kasbonItems->count(),
+            'ids'   => $kasbonItems->pluck('id_kasbon_cont_item'),
+        ]);
+
+        foreach ($kasbonItems as $kasbonItem) {
+            // total_kasbon = hpp_baru - nilai_kasbon
+            $totalKasbon = $newHpp - (float) $kasbonItem->nilai_kasbon;
+
+            $kasbonItem->update([
+                'nilai_hpp_cont_item' => $newHpp,
+                'total_kasbon'        => $totalKasbon,
+            ]);
+
+            Log::info('KasbonContractItem updated', [
+                'id_kasbon_cont_item' => $kasbonItem->id_kasbon_cont_item,
+                'nilai_hpp_cont_item' => $newHpp,
+                'total_kasbon'        => $totalKasbon,
+            ]);
+
+            // 2. Cari semua lpj item yang terkait kasbon item ini
+            $lpjItems = LpjContractItem::where(
+                'id_kasbon_cont_item',
+                (string) $kasbonItem->id_kasbon_cont_item
+            )->get();
+
+            Log::info('LpjContractItems found', [
+                'id_kasbon_cont_item' => $kasbonItem->id_kasbon_cont_item,
+                'count'               => $lpjItems->count(),
+                'ids'                 => $lpjItems->pluck('id_lpj_cont_item'),
+            ]);
+
+            foreach ($lpjItems as $lpjItem) {
+                // Clamp amount_lpj jika melebihi hpp baru
+                if ((float) $lpjItem->amount_lpj > $newHpp) {
+                    $lpjItem->update(['amount_lpj' => $newHpp]);
+
+                    Log::info('LpjContractItem clamped', [
+                        'id_lpj_cont_item' => $lpjItem->id_lpj_cont_item,
+                        'amount_lpj'       => $newHpp,
+                    ]);
+                }
+            }
+        }
+
+        Log::info('=== syncHpp Contract END ===');
     }
 
     private function toTerbilang(int $number): string

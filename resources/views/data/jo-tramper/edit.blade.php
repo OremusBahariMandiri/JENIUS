@@ -453,6 +453,37 @@
         .btn-final-back i {
             margin-right: 10px;
         }
+
+        /* Rows added from LPJ — blue tint */
+        .joTramperEditPage .table-items tbody tr.row-from-lpj td {
+            background: #eff6ff !important;
+        }
+
+        .joTramperEditPage .table-items tbody tr.row-from-lpj:hover td {
+            background: #dbeafe !important;
+        }
+
+        .joTramperEditPage .table-items tbody tr.row-from-lpj .category-cell {
+            background: #dbeafe !important;
+        }
+
+        .joTramperEditPage .table-items tbody tr.row-from-lpj .item-number-cell {
+            background: #dbeafe !important;
+        }
+
+        /* LPJ origin note */
+        .lpj-origin-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+            font-size: .8rem;
+            color: #1e40af;
+        }
     </style>
 @endpush
 
@@ -736,20 +767,37 @@
                                                     fn($i) => $i->invoice->invoice_ctg,
                                                 );
                                                 $globalIndex = 1;
+                                                $hasLpjItems = false;
                                             @endphp
                                             @foreach ($groupedItems as $category => $items)
                                                 @foreach ($items as $index => $item)
-                                                    <tr class="item-row" data-item-id="{{ $item->id_jo_tram_item }}"
+                                                    @php
+                                                        $isFromLpj = !empty($item->origin_lpj_tram);
+                                                        if ($isFromLpj) {
+                                                            $hasLpjItems = true;
+                                                        }
+                                                    @endphp
+                                                    <tr class="item-row {{ $isFromLpj ? 'row-from-lpj' : '' }}"
+                                                        data-item-id="{{ $item->id_jo_tram_item }}"
                                                         data-invoice-id="{{ $item->id_md_invoice }}"
                                                         data-category="{{ $item->invoice->invoice_ctg }}"
                                                         data-item-text="{{ $item->invoice->invoice_typ }}"
-                                                        data-item-number="{{ $globalIndex }}">
+                                                        data-item-number="{{ $globalIndex }}"
+                                                        data-origin-lpj="{{ $item->origin_lpj_tram ?? '' }}">
                                                         <td class="item-number-cell">{{ $globalIndex }}</td>
                                                         @if ($index === 0)
                                                             <td class="category-cell" rowspan="{{ $items->count() }}">
                                                                 {{ $category }}</td>
                                                         @endif
-                                                        <td class="item-text-cell">{{ $item->invoice->invoice_typ }}</td>
+                                                        <td class="item-text-cell text-start">
+                                                            <span class="fw-semibold"
+                                                                style="color:#2c3e50;">{{ $item->invoice->invoice_typ }}</span>
+                                                            @if ($isFromLpj)
+                                                                <span class="badge ms-1"
+                                                                    style="background:#3b82f6; font-size:.65rem;">From
+                                                                    LPJ</span>
+                                                            @endif
+                                                        </td>
                                                         <td class="num-cell">
                                                             {{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
                                                         <td class="num-cell">
@@ -812,6 +860,12 @@
                                         </tr>
                                     </tfoot>
                                 </table>
+                                <div class="lpj-origin-note mt-2" id="lpjOriginNote"
+                                    style="{{ isset($hasLpjItems) && $hasLpjItems ? '' : 'display:none;' }}">
+                                    <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
+                                    <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ
+                                        page.</span>
+                                </div>
                             </div>
 
                             <div class="d-flex justify-content-end mt-2">
@@ -1131,6 +1185,15 @@
             });
         });
 
+        // ── Tambah fungsi ini ──
+        function syncLpjNote() {
+            if ($('.item-row.row-from-lpj').length > 0) {
+                $('#lpjOriginNote').show();
+            } else {
+                $('#lpjOriginNote').hide();
+            }
+        }
+
         // ========================================
         // ADD / UPDATE ITEM TO TABLE
         // ========================================
@@ -1208,6 +1271,7 @@
                     insertRowWithCategoryGrouping(newItemId, category, itemText, r.data);
                     updateGrandTotal();
                     clearItemForm();
+                    syncLpjNote();
                 },
                 error: function(xhr) {
                     const msg = xhr.responseJSON?.message || 'Failed to add item';
@@ -1451,6 +1515,7 @@
                     removeRowFromTable(row, category);
                     renumberAllItems();
                     updateGrandTotal();
+                    syncLpjNote();
 
                     if ($('#itemsTableBody tr.item-row').length === 0) {
                         $('#itemsTableBody').html(emptyRowHtml());
@@ -1517,6 +1582,7 @@
                 $('#itemsTableBody').html(emptyRowHtml());
                 globalItemNumber = 0;
                 updateGrandTotal();
+                syncLpjNote();
             }).catch(() => {
                 showFloatingAlert('error', 'Some items could not be deleted');
             });
@@ -1629,6 +1695,7 @@
 
         $(document).ready(function() {
             updateGrandTotal();
+            syncLpjNote();
         });
     </script>
 @endpush
