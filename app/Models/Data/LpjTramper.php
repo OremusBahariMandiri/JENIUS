@@ -3,19 +3,19 @@
 namespace App\Models\Data;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Data\JoContract;
+use App\Models\Data\JoTramper;
 
-class LpjContract extends Model
+class LpjTramper extends Model
 {
-    protected $table = 'd01_lpj_cont';
+    protected $table = 'd04_lpj_tram';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
 
     protected $fillable = [
-        'id_lpj_cont',
-        'no_lpj_cont',
-        'id_jo_cont',
+        'id_lpj_tram',
+        'no_lpj_tram',
+        'id_jo_tram',
         'date',
         'amount',
         'note',
@@ -29,19 +29,18 @@ class LpjContract extends Model
         'updated_at' => 'datetime',
     ];
 
-    public function joContract()
+    public function joTramper()
     {
-        return $this->belongsTo(JoContract::class, 'id_jo_cont', 'id_jo_cont');
+        return $this->belongsTo(JoTramper::class, 'id_jo_tram', 'id_jo_tram');
     }
 
     public function kasbons()
     {
-        return $this->hasMany(LpjKasbon::class, 'id_lpj_cont', 'id_lpj_cont');
+        return $this->hasMany(LpjKasbonTramper::class, 'id_lpj_tram', 'id_lpj_tram');
     }
 
     public function items()
     {
-        return $this->hasMany(LpjContractItem::class, 'id_lpj_cont', 'id_lpj_cont');
+        return $this->hasMany(LpjTramperItem::class, 'id_lpj_tram', 'id_lpj_tram');
     }
-
 }

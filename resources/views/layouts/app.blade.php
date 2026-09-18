@@ -1247,7 +1247,7 @@
                         @endif
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_tramper'))
                             <div class="submenu-item">
-                                <a class="nav-link" href="">
+                                <a class="nav-link" href="{{ route('lpj-tramper.index') }}">
                                     <i class="fas fa-truck-moving"></i>
                                     <span>LPJ Tramper</span>
                                 </a>
