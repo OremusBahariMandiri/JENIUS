@@ -772,15 +772,14 @@ class KasbonTramperController extends Controller
                 'id_jo_tram_item'     => $joItem->id_jo_tram_item,
                 'invoice_typ'         => $joItem->invoice->invoice_typ ?? $joItem->id_jo_tram_item,
                 'invoice_ctg'         => $joItem->invoice->invoice_ctg ?? '-',
-                'hargajual_idr'       => (float)$joItem->hargajual_idr,
-                'hpp_ops'             => (float)$joItem->hpp_ops,
-                // dari kasbon item (jika sudah ada)
+                'hargajual_idr'       => (float) $joItem->hargajual_idr,
+                'hpp_ops'             => (float) $joItem->hpp_ops,
                 'id_kasbon_tram_item' => $kasbonItem?->id ?? null,
-                'nilai_hpp_tram_item' => $kasbonItem ? (float)$kasbonItem->nilai_hpp_tram_item : (float)$joItem->hpp_ops,
-                'nilai_kasbon'        => $kasbonItem ? (float)$kasbonItem->nilai_kasbon : 0,
-                'total_kasbon'        => $kasbonItem ? (float)$kasbonItem->total_kasbon : (float)$joItem->hpp_ops,
-                'has_kasbon'          => $kasbonItem->nilai_kasbon > 0,
-                'origin_lpj_tram'     => $kasbonItem->joTramperItem->origin_lpj_tram ?? null,
+                'nilai_hpp_tram_item' => $kasbonItem ? (float) $kasbonItem->nilai_hpp_tram_item : (float) $joItem->hpp_ops,
+                'nilai_kasbon'        => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
+                'total_kasbon'        => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
+                'has_kasbon'          => $kasbonItem ? $kasbonItem->nilai_kasbon > 0 : false,
+                'origin_lpj_tram'     => $kasbonItem?->joTramperItem?->origin_lpj_tram ?? null,
             ];
         });
 
