@@ -15,6 +15,7 @@ use App\Http\Controllers\Data\KasbonContractController;
 use App\Http\Controllers\Data\KasbonGenController;
 use App\Http\Controllers\Data\KasbonOtherController;
 use App\Http\Controllers\Data\KasbonTramperController;
+use App\Http\Controllers\Data\LpjOtherController;
 use App\Http\Controllers\Data\LpjTramperController;
 use App\Http\Controllers\Master\BranchController;
 use App\Http\Controllers\Master\ChartOfAccountController;
@@ -466,7 +467,7 @@ Route::middleware(['auth'])->group(function () {
         ->only(['index', 'create', 'show', 'edit', 'destroy']);
     //================= END LPJ CONTRACT ROUTE GROUP =================//
 
-    //================= LPJ CONTRACT ROUTE GROUP =================//
+    //================= LPJ TRAMPER ROUTE GROUP =================//
     Route::get('lpj-tramper/{id}/export-pdf', [LpjTramperController::class, 'exportPdf'])
         ->name('lpj-tramper.export-pdf');
     Route::get('lpj-tramper/{id}/refresh-kasbons', [LpjTramperController::class, 'refreshKasbons'])
@@ -487,5 +488,29 @@ Route::middleware(['auth'])->group(function () {
         ->name('lpj-tramper.jo-kurs');
     Route::resource('lpj-tramper', LpjTramperController::class)
         ->only(['index', 'create', 'show', 'edit', 'destroy']);
-    //================= END LPJ CONTRACT ROUTE GROUP =================//
+    //================= END LPJ TRAMPER ROUTE GROUP =================//
+
+
+    //================= LPJ OTHER ROUTE GROUP =================//
+    Route::get('lpj-other/{id}/export-pdf',      [LpjOtherController::class, 'exportPdf'])
+        ->name('lpj-other.export-pdf');
+    Route::get('lpj-other/{id}/refresh-kasbons', [LpjOtherController::class, 'refreshKasbons'])
+        ->name('lpj-other.refresh-kasbons');
+    Route::post('lpj-other/{id}/add-kasbons',    [LpjOtherController::class, 'addKasbons'])
+        ->name('lpj-other.add-kasbons');
+    Route::post('lpj-other/header/store',        [LpjOtherController::class, 'storeHeader'])
+        ->name('lpj-other.header.store');
+    Route::post('lpj-other/header/update/{id}',  [LpjOtherController::class, 'updateHeader'])
+        ->name('lpj-other.header.update');
+    Route::post('lpj-other/{id}/items/bulk-save', [LpjOtherController::class, 'bulkSaveItems'])
+        ->name('lpj-other.items.bulk-save');
+    Route::post('lpj-other/{id}/item/store-new', [LpjOtherController::class, 'storeNewItem'])
+        ->name('lpj-other.item.store-new');
+    Route::get('lpj-other/api/kasbons-by-jo',    [LpjOtherController::class, 'getKasbonsByJo'])
+        ->name('lpj-other.kasbons-by-jo');
+    Route::get('lpj-other/api/jo-kurs',          [LpjOtherController::class, 'getJoKurs'])
+        ->name('lpj-other.jo-kurs');
+    Route::resource('lpj-other', LpjOtherController::class)
+        ->only(['index', 'create', 'show', 'edit', 'destroy']);
+    //================= END LPJ OTHER ROUTE GROUP =================//
 });
