@@ -8,6 +8,11 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel')</title>
 
+    <link rel="icon" href="{{ asset('favicon/favicon_jenius.ico') }}" type="image/x-icon">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon/favicon_jenius_32x32.png') }}">
+    <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('favicon/favicon_jenius_64x64.png') }}">
+    <link rel="apple-touch-icon" sizes="192x192" href="{{ asset('favicon/favicon_jenius_192x192.png') }}">
+
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -57,6 +62,32 @@
             border-right: 1px solid var(--border-color);
         }
 
+        .sidebar-logo-img {
+            height: 90px;
+            /* sesuaikan ukurannya */
+            width: auto;
+            display: block;
+        }
+
+        /* Logo switching */
+        .sidebar-logo-full {
+            display: block;
+        }
+
+        .sidebar-logo-icon {
+            display: none;
+            height: 44px;
+            width: auto;
+        }
+
+        .sidebar.collapsed .sidebar-logo-full {
+            display: none;
+        }
+
+        .sidebar.collapsed .sidebar-logo-icon {
+            display: block;
+        }
+
         .sidebar.collapsed {
             width: var(--sidebar-collapsed-width);
         }
@@ -69,6 +100,55 @@
             border-bottom: 1px solid var(--border-color);
             height: var(--topbar-height);
             background: #ffffff;
+        }
+
+        /* Nav icon center saat collapsed */
+        .sidebar.collapsed .nav-item {
+            margin: 4px 6px;
+        }
+
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 12px 0;
+            width: 100%;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            font-size: 20px;
+            min-width: unset;
+            margin: 0;
+        }
+
+        /* Footer saat collapsed */
+        .sidebar.collapsed .sidebar-footer {
+            padding: 12px 6px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .sidebar.collapsed .user-profile {
+            justify-content: center;
+            padding: 8px 0;
+            width: 100%;
+            gap: 0;
+        }
+
+        /* Header saat collapsed */
+        .sidebar.collapsed .sidebar-header {
+            justify-content: left;
+            padding: 0 20px;
+            gap: 0;
+            height: var(--topbar-height);
+        }
+
+        .sidebar.collapsed .sidebar-logo {
+            justify-content: center;
+            flex: 1;
+        }
+
+        .sidebar.collapsed .sidebar-toggle {
+            display: flex;
+            flex-shrink: 0;
         }
 
         .sidebar-logo {
@@ -959,8 +1039,8 @@
     <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <a href="" class="sidebar-logo">
-                <i class="bi bi-grid-3x3-gap-fill"></i>
-                <span class="sidebar-logo-text">Jenius</span>
+                <img src="{{ asset('images/jenius-logo.png') }}" alt="Jenius"
+                    class="sidebar-logo-img sidebar-logo-full">
             </a>
             <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
                 <i class="bi bi-list"></i>
@@ -1255,7 +1335,7 @@
                         @endif
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_other'))
                             <div class="submenu-item">
-                                <a class="nav-link" href="">
+                                <a class="nav-link" href="{{ route('lpj-other.index') }}">
                                     <i class="fas fa-ellipsis-h"></i>
                                     <span>LPJ Other</span>
                                 </a>
