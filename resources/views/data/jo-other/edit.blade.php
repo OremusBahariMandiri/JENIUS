@@ -4,6 +4,35 @@
 
 @push('styles')
     <style>
+        .joOtherEditPage .table-items tbody tr.row-from-lpj td {
+            background: #eff6ff !important;
+        }
+
+        .joOtherEditPage .table-items tbody tr.row-from-lpj:hover td {
+            background: #dbeafe !important;
+        }
+
+        .joOtherEditPage .table-items tbody tr.row-from-lpj .category-cell {
+            background: #dbeafe !important;
+        }
+
+        .joOtherEditPage .table-items tbody tr.row-from-lpj .item-number-cell {
+            background: #dbeafe !important;
+        }
+
+        .lpj-origin-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+            font-size: .8rem;
+            color: #1e40af;
+        }
+
         .joOtherEditPage .card {
             border: none;
             border-radius: 10px;
@@ -102,27 +131,13 @@
         }
 
         @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(400px); opacity: 0; }
+            to   { transform: translateX(0);     opacity: 1; }
         }
 
         @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
+            from { transform: translateX(0);     opacity: 1; }
+            to   { transform: translateX(400px); opacity: 0; }
         }
 
         .floating-badge-alert.hiding {
@@ -177,18 +192,10 @@
             gap: 10px;
         }
 
-        .add-item-form-section.edit-mode h6 {
-            color: #1e40af;
-        }
+        .add-item-form-section.edit-mode h6 { color: #1e40af; }
 
-        .add-item-form-section h6 i {
-            color: var(--primary-green);
-            font-size: 1.2rem;
-        }
-
-        .add-item-form-section.edit-mode h6 i {
-            color: #3b82f6;
-        }
+        .add-item-form-section h6 i          { color: var(--primary-green); font-size: 1.2rem; }
+        .add-item-form-section.edit-mode h6 i { color: #3b82f6; }
 
         .add-item-form-section .form-label {
             font-weight: 600;
@@ -298,19 +305,12 @@
             text-align: center;
         }
 
-        .table-items tbody td.num-cell {
-            text-align: right;
-        }
-
+        .table-items tbody td.num-cell      { text-align: right; }
         .table-items tbody td.item-text-cell,
         .table-items tbody td.category-cell,
-        .table-items tbody td.item-number-cell {
-            text-align: left;
-        }
+        .table-items tbody td.item-number-cell { text-align: left; }
 
-        .table-items tbody tr:hover {
-            background-color: #f8f9fa;
-        }
+        .table-items tbody tr:hover { background-color: #f8f9fa; }
 
         .table-items .item-number-cell {
             font-weight: 600;
@@ -324,8 +324,7 @@
             font-weight: 600;
         }
 
-        .btn-remove-row,
-        .btn-edit-row {
+        .btn-remove-row, .btn-edit-row {
             padding: 0.4rem 0.6rem;
             font-size: 0.875rem;
             border-radius: 6px;
@@ -349,16 +348,8 @@
             box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
         }
 
-        .table-footer {
-            background: #2c3e50;
-            color: white;
-            font-weight: 700;
-        }
-
-        .table-footer td {
-            padding: 15px 10px;
-            font-size: 0.95rem;
-        }
+        .table-footer { background: #2c3e50; color: white; font-weight: 700; }
+        .table-footer td { padding: 15px 10px; font-size: 0.95rem; }
 
         .currency-group-footer {
             display: flex;
@@ -598,14 +589,14 @@
                                     <div>
                                         <label class="form-label mb-1">Kurs Date</label>
                                         @php
-                                            $firstItem = $joOther->items->first();
-                                            $defaultDate =
-                                                $firstItem && $firstItem->tgl_kurs_usd
-                                                    ? $firstItem->tgl_kurs_usd->format('Y-m-d\TH:i')
-                                                    : '';
+                                            $firstItem  = $joOther->items->first();
+                                            $defaultDate = $firstItem && $firstItem->tgl_kurs_usd
+                                                ? $firstItem->tgl_kurs_usd->format('Y-m-d\TH:i')
+                                                : '';
                                         @endphp
                                         <input type="datetime-local" id="global_tgl_kurs_usd"
-                                            class="form-control form-control-sm" value="{{ $defaultDate }}"
+                                            class="form-control form-control-sm"
+                                            value="{{ $defaultDate }}"
                                             style="min-width: 190px;">
                                     </div>
                                     <div>
@@ -649,7 +640,8 @@
                                     </div>
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Note (Optional)</label>
-                                        <textarea id="input_note" class="form-control" rows="3" placeholder="Add notes for this item..."></textarea>
+                                        <textarea id="input_note" class="form-control" rows="3"
+                                            placeholder="Add notes for this item..."></textarea>
                                     </div>
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Income (IDR)</label>
@@ -717,21 +709,45 @@
                                                     fn($i) => $i->invoice->invoice_ctg,
                                                 );
                                                 $globalIndex = 1;
+                                                $hasLpjItems = false; 
                                             @endphp
+
                                             @foreach ($groupedItems as $category => $items)
                                                 @foreach ($items as $index => $item)
-                                                    <tr class="item-row" data-item-id="{{ $item->id_jo_other_item }}"
+                                                    @php
+                                                        $isFromLpj = !empty($item->origin_lpj_other);
+                                                        if ($isFromLpj) {
+                                                            $hasLpjItems = true;
+                                                        }
+                                                    @endphp
+                                                    <tr class="item-row {{ $isFromLpj ? 'row-from-lpj' : '' }}"
+                                                        data-item-id="{{ $item->id_jo_other_item }}"
                                                         data-invoice-id="{{ $item->id_md_invoice }}"
                                                         data-category="{{ $item->invoice->invoice_ctg }}"
                                                         data-item-text="{{ $item->invoice->invoice_typ }}"
-                                                        data-item-number="{{ $globalIndex }}">
+                                                        data-item-number="{{ $globalIndex }}"
+                                                        data-origin-lpj="{{ $item->origin_lpj_other ?? '' }}">
+
                                                         <td class="item-number-cell">{{ $globalIndex }}</td>
+
                                                         @if ($index === 0)
-                                                            <td class="category-cell" rowspan="{{ $items->count() }}">
+                                                            <td class="category-cell"
+                                                                rowspan="{{ $items->count() }}">
                                                                 {{ $category }}
                                                             </td>
                                                         @endif
-                                                        <td class="item-text-cell">{{ $item->invoice->invoice_typ }}</td>
+
+                                                        <td class="item-text-cell text-start">
+                                                            <span class="fw-semibold"
+                                                                style="color:#2c3e50;">{{ $item->invoice->invoice_typ }}</span>
+                                                            {{-- ← BADGE "From LPJ" seperti JO Contract --}}
+                                                            @if ($isFromLpj)
+                                                                <span class="badge ms-1"
+                                                                    style="background:#3b82f6; font-size:.65rem;">
+                                                                    From LPJ
+                                                                </span>
+                                                            @endif
+                                                        </td>
                                                         <td class="num-cell">
                                                             {{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
                                                         <td class="num-cell">
@@ -771,29 +787,41 @@
                                         <tr>
                                             <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
                                             <td>
-                                                <div class="currency-group-footer"><span
-                                                        class="currency-label-footer">IDR</span><span class="value-footer"
-                                                        id="footerTotalIDR">0,00</span></div>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">IDR</span>
+                                                    <span class="value-footer" id="footerTotalIDR">0,00</span>
+                                                </div>
                                             </td>
                                             <td>
-                                                <div class="currency-group-footer"><span
-                                                        class="currency-label-footer">USD</span><span class="value-footer"
-                                                        id="footerTotalUSD">0,00</span></div>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">USD</span>
+                                                    <span class="value-footer" id="footerTotalUSD">0,00</span>
+                                                </div>
                                             </td>
                                             <td>
-                                                <div class="currency-group-footer"><span
-                                                        class="currency-label-footer">IDR</span><span class="value-footer"
-                                                        id="footerTotalHPP">0,00</span></div>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">IDR</span>
+                                                    <span class="value-footer" id="footerTotalHPP">0,00</span>
+                                                </div>
                                             </td>
                                             <td>
-                                                <div class="currency-group-footer"><span
-                                                        class="currency-label-footer">IDR</span><span class="value-footer"
-                                                        id="footerTotalSelling">0,00</span></div>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">IDR</span>
+                                                    <span class="value-footer" id="footerTotalSelling">0,00</span>
+                                                </div>
                                             </td>
                                             <td></td>
                                         </tr>
                                     </tfoot>
                                 </table>
+
+                                {{-- ← NOTE BIRU — pakai $hasLpjItems yang sudah di-set di loop atas --}}
+                                <div class="lpj-origin-note mt-2" id="lpjOriginNote"
+                                    style="{{ isset($hasLpjItems) && $hasLpjItems ? '' : 'display:none;' }}">
+                                    <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
+                                    <span>Rows highlighted in <strong>blue</strong> are items that were added from an
+                                        LPJ page.</span>
+                                </div>
                             </div>
 
                             <div class="d-flex justify-content-end mt-2">
@@ -812,7 +840,8 @@
                         <div class="d-flex gap-2">
                             <a href="{{ route('jo-other.export-pdf', $joOther->id_jo_other) }}" target="_blank"
                                 class="btn"
-                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem; border-color:red; background-color:rgb(255, 237, 237); color:red">
+                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
+                                       border-color:red; background-color:rgb(255, 237, 237); color:red">
                                 <i class="fas fa-file-pdf me-2"></i> Generate Invoice
                             </a>
                             <a href="{{ route('jo-other.index') }}" class="btn btn-final-back">
@@ -847,7 +876,7 @@
             @endforeach
         };
 
-        // ── Floating Alert ─────────────────────────────────────────
+        // ── Floating Alert ──────────────────────────────────────────
         function showFloatingAlert(type, message) {
             const alert = $('#floatingBadgeAlert');
             alert.removeClass('alert-saving alert-success alert-error hiding');
@@ -901,19 +930,15 @@
                 this.value = formatRupiah(this.value);
                 if (!before.includes(',')) {
                     const digits = before.replace(/\D/g, '').length;
-                    let pos = 0,
-                        cnt = 0;
+                    let pos = 0, cnt = 0;
                     for (let i = 0; i < this.value.length; i++) {
-                        if (/\d/.test(this.value[i]) && ++cnt === digits) {
-                            pos = i + 1;
-                            break;
-                        }
+                        if (/\d/.test(this.value[i]) && ++cnt === digits) { pos = i + 1; break; }
                     }
                     this.setSelectionRange(pos, pos);
                 } else {
-                    const cp = this.value.indexOf(',');
+                    const cp  = this.value.indexOf(',');
                     const dec = (before.split(',')[1] || '').length;
-                    const np = cp + 1 + Math.min(dec, 2);
+                    const np  = cp + 1 + Math.min(dec, 2);
                     this.setSelectionRange(np, np);
                 }
             });
@@ -922,8 +947,8 @@
                 if (!this.value.includes(',')) this.value += ',00';
                 else {
                     const p = this.value.split(',');
-                    if (!p[1] || !p[1].length) this.value = p[0] + ',00';
-                    else if (p[1].length < 2) this.value = p[0] + ',' + p[1].padEnd(2, '0');
+                    if (!p[1] || !p[1].length)      this.value = p[0] + ',00';
+                    else if (p[1].length < 2)        this.value = p[0] + ',' + p[1].padEnd(2, '0');
                 }
             });
         }
@@ -933,13 +958,13 @@
             if (el) setupRupiahInput(el);
         });
 
-        // ── Selling Price (tanpa HPP) ──────────────────────────────────
+        // ── Selling Price ────────────────────────────────────────────
         function calculateHargaJual() {
             const kurs = parseRupiah($('#global_kurs_usd_display').val());
-            const idr = parseRupiah($('#input_pendapatan_idr').val());
-            const usd = parseRupiah($('#input_pendapatan_usd').val());
+            const idr  = parseRupiah($('#input_pendapatan_idr').val());
+            const usd  = parseRupiah($('#input_pendapatan_usd').val());
             let hj = 0;
-            if (idr > 0) hj = idr;
+            if (idr > 0)             hj = idr;
             else if (usd > 0 && kurs > 0) hj = usd * kurs;
             $('#input_harga_jual').val(formatRupiah(hj.toFixed(2).replace('.', ',')));
         }
@@ -957,9 +982,9 @@
             calculateHargaJual();
         });
 
-        // ── Category dropdown ───────────────────────────────────────
+        // ── Category dropdown ────────────────────────────────────────
         $('#input_category').on('change', function() {
-            const category = $(this).val();
+            const category  = $(this).val();
             const itemSelect = $('#input_item');
             if (!category) {
                 itemSelect.prop('disabled', true).html('<option value="">Select category first</option>');
@@ -979,14 +1004,14 @@
             $('#input_note').val(masterNote);
         });
 
-        // ── Update Header ───────────────────────────────────────────
+        // ── Update Header ────────────────────────────────────────────
         $('#btnSaveHeader').on('click', function() {
-            const custId = $('#id_md_cust').val();
+            const custId  = $('#id_md_cust').val();
             const otherId = $('#id_md_other').val();
-            const portId = $('#id_md_port').val();
-            const title = $('#title').val();
-            const ds = $('#date_start').val();
-            const de = $('#date_end').val();
+            const portId  = $('#id_md_port').val();
+            const title   = $('#title').val();
+            const ds      = $('#date_start').val();
+            const de      = $('#date_end').val();
 
             if (!custId || !otherId || !portId || !title || !ds || !de) {
                 showFloatingAlert('error', 'Please fill all required fields');
@@ -999,20 +1024,20 @@
                 url: `/data/jo-other/header/update/${currentJoOtherId}`,
                 method: 'POST',
                 data: {
-                    id_md_cust: custId,
-                    id_md_other: otherId,
-                    id_md_port: portId,
+                    id_md_cust:   custId,
+                    id_md_other:  otherId,
+                    id_md_port:   portId,
                     id_md_vessel: $('#id_md_vessel').val(),
                     tgl_jo_other: $('#tgl_jo_other').val(),
-                    date_start: ds,
-                    date_end: de,
-                    title: title,
-                    note: $('#note').val(),
-                    _token: $('meta[name="csrf-token"]').attr('content')
+                    date_start:   ds,
+                    date_end:     de,
+                    title:        title,
+                    note:         $('#note').val(),
+                    _token:       $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(r) {
                     if (r.success) showFloatingAlert('success', 'Header updated successfully!');
-                    else showFloatingAlert('error', r.message || 'Failed to update header');
+                    else           showFloatingAlert('error', r.message || 'Failed to update header');
                 },
                 error: function(xhr) {
                     showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to update header');
@@ -1020,19 +1045,25 @@
             });
         });
 
-        // ── Add / Update Item ───────────────────────────────────────
+        // ── syncLpjNote ──────────────────────────────────────────────
+        function syncLpjNote() {
+            if ($('.item-row.row-from-lpj').length > 0) $('#lpjOriginNote').show();
+            else                                         $('#lpjOriginNote').hide();
+        }
+
+        // ── Add / Update Item ────────────────────────────────────────
         $('#btnAddToTable').on('click', function() {
-            const editingId = $('#editing_item_id').val();
-            const category = $('#input_category').val();
-            const itemId = $('#input_item').val();
-            const itemText = $('#input_item option:selected').text();
-            const note = $('#input_note').val();
+            const editingId     = $('#editing_item_id').val();
+            const category      = $('#input_category').val();
+            const itemId        = $('#input_item').val();
+            const itemText      = $('#input_item option:selected').text();
+            const note          = $('#input_note').val();
             const pendapatanIDR = parseRupiah($('#input_pendapatan_idr').val());
             const pendapatanUSD = parseRupiah($('#input_pendapatan_usd').val());
-            const hpp = parseRupiah($('#input_hpp').val());
-            const hargaJual = parseRupiah($('#input_harga_jual').val());
-            const kursRate = parseRupiah($('#global_kurs_usd_display').val()) || 0;
-            const kursDate = $('#global_tgl_kurs_usd').val() || null;
+            const hpp           = parseRupiah($('#input_hpp').val());
+            const hargaJual     = parseRupiah($('#input_harga_jual').val());
+            const kursRate      = parseRupiah($('#global_kurs_usd_display').val()) || 0;
+            const kursDate      = $('#global_tgl_kurs_usd').val() || null;
 
             if (!category || !itemId) {
                 showFloatingAlert('error', 'Please select category and item');
@@ -1055,22 +1086,19 @@
                 url: '/data/jo-other/item/store',
                 method: 'POST',
                 data: {
-                    id_jo_other: currentJoOtherId,
-                    id_md_invoice: itemId,
-                    invoice_ctg: category,
-                    pendapatan_idr: pendapatanIDR,
-                    pendapatan_usd: pendapatanUSD,
-                    hpp_ops: hpp,
-                    kurs_usd: kursRate,
-                    tgl_kurs_usd: kursDate,
-                    note: note,
-                    _token: $('meta[name="csrf-token"]').attr('content')
+                    id_jo_other:     currentJoOtherId,
+                    id_md_invoice:   itemId,
+                    invoice_ctg:     category,
+                    pendapatan_idr:  pendapatanIDR,
+                    pendapatan_usd:  pendapatanUSD,
+                    hpp_ops:         hpp,
+                    kurs_usd:        kursRate,
+                    tgl_kurs_usd:    kursDate,
+                    note:            note,
+                    _token:          $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(r) {
-                    if (!r.success) {
-                        showFloatingAlert('error', 'Failed to add item');
-                        return;
-                    }
+                    if (!r.success) { showFloatingAlert('error', 'Failed to add item'); return; }
                     showFloatingAlert('success', 'Item added successfully!');
                     $('.no-items-row').remove();
                     const newItemId = r.data.id_jo_other_item || r.data.id;
@@ -1078,9 +1106,11 @@
                         showFloatingAlert('error', 'Item created but ID invalid. Please refresh.');
                         return;
                     }
-                    insertRowWithCategoryGrouping(newItemId, category, itemText, r.data);
+                    // Item baru dari form TIDAK punya origin_lpj_other → isFromLpj = false
+                    insertRowWithCategoryGrouping(newItemId, category, itemText, r.data, false);
                     updateGrandTotal();
                     clearItemForm();
+                    syncLpjNote();
                 },
                 error: function(xhr) {
                     showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to add item');
@@ -1088,11 +1118,10 @@
             });
         });
 
-        // ── Insert Row ──────────────────────────────────────────────
-        function insertRowWithCategoryGrouping(itemId, category, itemText, data) {
+        // ── Insert Row ───────────────────────────────────────────────
+        function insertRowWithCategoryGrouping(itemId, category, itemText, data, isFromLpj = false) {
             globalItemNumber++;
-            let categoryExists = false,
-                insertAfterRow = null;
+            let categoryExists = false, insertAfterRow = null;
 
             $('#itemsTableBody tr.item-row').each(function() {
                 if ($(this).data('category') === category) {
@@ -1104,53 +1133,66 @@
             });
 
             const actionBtns = `
-            <button type="button" class="btn btn-primary btn-sm btn-edit-row"
-                onclick="editItem('${itemId}')"><i class="fas fa-edit"></i></button>
-            <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                onclick="removeItem(this,'${itemId}')"><i class="fas fa-trash"></i></button>`;
+                <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                    onclick="editItem('${itemId}')"><i class="fas fa-edit"></i></button>
+                <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                    onclick="removeItem(this,'${itemId}')"><i class="fas fa-trash"></i></button>`;
+
+            const lpjBadge = isFromLpj
+                ? `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>`
+                : '';
+            const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
 
             let newRow;
             if (categoryExists) {
-                newRow = `<tr class="item-row" data-item-id="${itemId}" data-category="${category}" data-item-text="${itemText}">
-                <td class="item-number-cell">${globalItemNumber}</td>
-                <td class="item-text-cell">${itemText}</td>
-<td class="num-cell">${formatNumber(data.pendapatan_idr)}</td>
-<td class="num-cell">${formatNumber(data.pendapatan_usd)}</td>
-<td class="num-cell">${formatNumber(data.hargajual_idr)}</td>
-<td class="num-cell">${formatNumber(data.hpp_ops)}</td>
-                <td class="text-center">${actionBtns}</td></tr>`;
+                newRow = `<tr class="${rowClass}"
+                    data-item-id="${itemId}"
+                    data-category="${category}"
+                    data-item-text="${itemText}"
+                    data-origin-lpj="${isFromLpj ? '1' : ''}">
+                    <td class="item-number-cell">${globalItemNumber}</td>
+                    <td class="item-text-cell text-start">
+                        <span class="fw-semibold" style="color:#2c3e50;">${itemText}</span>${lpjBadge}
+                    </td>
+                    <td class="num-cell">${formatNumber(data.pendapatan_idr)}</td>
+                    <td class="num-cell">${formatNumber(data.pendapatan_usd)}</td>
+                    <td class="num-cell">${formatNumber(data.hargajual_idr)}</td>
+                    <td class="num-cell">${formatNumber(data.hpp_ops)}</td>
+                    <td class="text-center">${actionBtns}</td>
+                </tr>`;
                 insertAfterRow.after(newRow);
             } else {
-                newRow = `<tr class="item-row" data-item-id="${itemId}" data-category="${category}" data-item-text="${itemText}">
-                <td class="item-number-cell">${globalItemNumber}</td>
-                <td class="category-cell" rowspan="1">${category}</td>
-                <td class="item-text-cell">${itemText}</td>
-<td class="num-cell">${formatNumber(data.pendapatan_idr)}</td>
-<td class="num-cell">${formatNumber(data.pendapatan_usd)}</td>
-<td class="num-cell">${formatNumber(data.hargajual_idr)}</td>
-<td class="num-cell">${formatNumber(data.hpp_ops)}</td>
-                <td class="text-center">${actionBtns}</td></tr>`;
+                newRow = `<tr class="${rowClass}"
+                    data-item-id="${itemId}"
+                    data-category="${category}"
+                    data-item-text="${itemText}"
+                    data-origin-lpj="${isFromLpj ? '1' : ''}">
+                    <td class="item-number-cell">${globalItemNumber}</td>
+                    <td class="category-cell" rowspan="1">${category}</td>
+                    <td class="item-text-cell text-start">
+                        <span class="fw-semibold" style="color:#2c3e50;">${itemText}</span>${lpjBadge}
+                    </td>
+                    <td class="num-cell">${formatNumber(data.pendapatan_idr)}</td>
+                    <td class="num-cell">${formatNumber(data.pendapatan_usd)}</td>
+                    <td class="num-cell">${formatNumber(data.hargajual_idr)}</td>
+                    <td class="num-cell">${formatNumber(data.hpp_ops)}</td>
+                    <td class="text-center">${actionBtns}</td>
+                </tr>`;
                 $('#itemsTableBody').append(newRow);
             }
             renumberAllItems();
         }
 
-        // ── Edit Item ───────────────────────────────────────────────
+        // ── Edit Item ────────────────────────────────────────────────
         function editItem(itemId) {
-            if (!itemId) {
-                showFloatingAlert('error', 'Invalid item ID');
-                return;
-            }
+            if (!itemId) { showFloatingAlert('error', 'Invalid item ID'); return; }
             showFloatingAlert('saving', 'Loading item data...');
 
             $.ajax({
                 url: `/data/jo-other/item/show/${itemId}`,
                 method: 'GET',
                 success: function(r) {
-                    if (!r.success) {
-                        showFloatingAlert('error', 'Failed to load item data');
-                        return;
-                    }
+                    if (!r.success) { showFloatingAlert('error', 'Failed to load item data'); return; }
                     hideFloatingAlert();
 
                     const item = r.data;
@@ -1163,25 +1205,21 @@
                     $('#input_category').val(item.invoice_ctg).trigger('change');
 
                     setTimeout(() => {
-                        _skipNoteUpdate = true; // ← tambah ini
-
+                        _skipNoteUpdate = true;
                         $('#input_item').val(item.id_md_invoice).trigger('change.select2');
 
-                        const idr = parseFloat(item.pendapatan_idr) || 0;
-                        const usd = parseFloat(item.pendapatan_usd) || 0;
-                        const hpp = parseFloat(item.hpp_ops) || 0;
-                        const kurs = parseFloat(item.kurs_usd) || 0;
+                        const idr  = parseFloat(item.pendapatan_idr) || 0;
+                        const usd  = parseFloat(item.pendapatan_usd) || 0;
+                        const hpp  = parseFloat(item.hpp_ops)        || 0;
+                        const kurs = parseFloat(item.kurs_usd)       || 0;
 
-                        $('#input_pendapatan_idr').val(idr > 0 ? formatRupiah(idr.toFixed(2).replace(
-                            '.', ',')) : '');
-                        $('#input_pendapatan_usd').val(usd > 0 ? formatRupiah(usd.toFixed(2).replace(
-                            '.', ',')) : '');
+                        $('#input_pendapatan_idr').val(idr > 0 ? formatRupiah(idr.toFixed(2).replace('.', ',')) : '');
+                        $('#input_pendapatan_usd').val(usd > 0 ? formatRupiah(usd.toFixed(2).replace('.', ',')) : '');
                         $('#input_hpp').val(formatRupiah(hpp.toFixed(2).replace('.', ',')));
-                        $('#input_note').val(item.note || ''); // ← set note dari DB
+                        $('#input_note').val(item.note || '');
 
                         if (usd > 0 && kurs > 0) {
-                            $('#global_kurs_usd_display').val(formatRupiah(kurs.toFixed(2).replace('.',
-                                ',')));
+                            $('#global_kurs_usd_display').val(formatRupiah(kurs.toFixed(2).replace('.', ',')));
                             $('#global_kurs_usd').val(kurs);
                         }
                         if (item.tgl_kurs_usd) {
@@ -1189,14 +1227,11 @@
                             $('#global_tgl_kurs_usd').val(dt);
                         }
 
-                        _skipNoteUpdate = false; // ← tambah ini
-
+                        _skipNoteUpdate = false;
                         calculateHargaJual();
                     }, 300);
 
-                    $('html, body').animate({
-                        scrollTop: $('#addItemFormSection').offset().top - 100
-                    }, 500);
+                    $('html, body').animate({ scrollTop: $('#addItemFormSection').offset().top - 100 }, 500);
                 },
                 error: function(xhr) {
                     showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to load item data');
@@ -1206,12 +1241,10 @@
 
         $('#btnCancelEdit').on('click', function() {
             clearItemForm();
-            $('html, body').animate({
-                scrollTop: $('#itemsTableBody').offset().top - 200
-            }, 500);
+            $('html, body').animate({ scrollTop: $('#itemsTableBody').offset().top - 200 }, 500);
         });
 
-        // ── Update Item ─────────────────────────────────────────────
+        // ── Update Item ──────────────────────────────────────────────
         function updateItemToDatabase(itemId, category, invoiceId, itemText,
             pendapatanIDR, pendapatanUSD, hpp, hargaJual, kursRate, kursDate, note) {
 
@@ -1221,35 +1254,35 @@
                 url: `/data/jo-other/item/update/${itemId}`,
                 method: 'PUT',
                 data: {
-                    id_jo_other: currentJoOtherId,
-                    id_md_invoice: invoiceId,
-                    invoice_ctg: category,
+                    id_jo_other:    currentJoOtherId,
+                    id_md_invoice:  invoiceId,
+                    invoice_ctg:    category,
                     pendapatan_idr: pendapatanIDR,
                     pendapatan_usd: pendapatanUSD,
-                    hpp_ops: hpp,
-                    kurs_usd: kursRate,
-                    tgl_kurs_usd: kursDate,
-                    note: note,
-                    _token: $('meta[name="csrf-token"]').attr('content')
+                    hpp_ops:        hpp,
+                    kurs_usd:       kursRate,
+                    tgl_kurs_usd:   kursDate,
+                    note:           note,
+                    _token:         $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(r) {
-                    if (!r.success) {
-                        showFloatingAlert('error', 'Failed to update item');
-                        return;
-                    }
+                    if (!r.success) { showFloatingAlert('error', 'Failed to update item'); return; }
                     showFloatingAlert('success', 'Item updated successfully!');
 
-                    const row = $(`.item-row[data-item-id="${itemId}"]`);
+                    const row    = $(`.item-row[data-item-id="${itemId}"]`);
                     const oldCat = row.data('category');
 
                     if (oldCat !== category) {
+                        // Pertahankan status LPJ saat pindah kategori
+                        const wasFromLpj = !!row.data('origin-lpj');
                         removeRowFromTable(row, oldCat);
-                        insertRowWithCategoryGrouping(itemId, category, itemText, r.data);
+                        insertRowWithCategoryGrouping(itemId, category, itemText, r.data, wasFromLpj);
+                        syncLpjNote();
                     } else {
                         row.attr('data-item-text', itemText);
-                        row.find('.item-text-cell').text(itemText);
+                        row.find('.item-text-cell').find('span.fw-semibold').text(itemText);
                         const hasCat = row.find('.category-cell').length > 0;
-                        const off = hasCat ? 0 : -1;
+                        const off    = hasCat ? 0 : -1;
                         row.find('td').eq(3 + off).text(formatNumber(r.data.pendapatan_idr));
                         row.find('td').eq(4 + off).text(formatNumber(r.data.pendapatan_usd));
                         row.find('td').eq(5 + off).text(formatNumber(r.data.hargajual_idr));
@@ -1263,20 +1296,17 @@
                     }, 500);
                 },
                 error: function(xhr) {
-                    const errors = xhr.responseJSON?.errors ?
-                        Object.values(xhr.responseJSON.errors).flat().join(', ') :
-                        xhr.responseJSON?.message || 'Failed to update item';
+                    const errors = xhr.responseJSON?.errors
+                        ? Object.values(xhr.responseJSON.errors).flat().join(', ')
+                        : xhr.responseJSON?.message || 'Failed to update item';
                     showFloatingAlert('error', errors);
                 }
             });
         }
 
-        // ── Remove Item ─────────────────────────────────────────────
+        // ── Remove Item ──────────────────────────────────────────────
         function removeItem(button, itemId) {
-            if (!itemId) {
-                showFloatingAlert('error', 'Invalid item ID');
-                return;
-            }
+            if (!itemId) { showFloatingAlert('error', 'Invalid item ID'); return; }
             if (!confirm('Are you sure you want to delete this item?')) return;
 
             showFloatingAlert('saving', 'Deleting item...');
@@ -1284,20 +1314,16 @@
             $.ajax({
                 url: `/data/jo-other/item/destroy/${itemId}`,
                 method: 'DELETE',
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                },
+                data: { _token: $('meta[name="csrf-token"]').attr('content') },
                 success: function(r) {
-                    if (!r.success) {
-                        showFloatingAlert('error', 'Failed to delete item');
-                        return;
-                    }
+                    if (!r.success) { showFloatingAlert('error', 'Failed to delete item'); return; }
                     showFloatingAlert('success', 'Item deleted successfully!');
-                    const row = $(button).closest('tr');
+                    const row      = $(button).closest('tr');
                     const category = row.data('category');
                     removeRowFromTable(row, category);
                     renumberAllItems();
                     updateGrandTotal();
+                    syncLpjNote();
                     if ($('#itemsTableBody tr.item-row').length === 0) {
                         $('#itemsTableBody').html(emptyRowHtml());
                     }
@@ -1315,10 +1341,11 @@
                 if (span > 1) {
                     const next = row.next(`.item-row[data-category="${category}"]`);
                     if (next.length) next.find('.item-text-cell').before(
-                        `<td class="category-cell" rowspan="${span - 1}">${category}</td>`);
+                        `<td class="category-cell" rowspan="${span - 1}">${category}</td>`
+                    );
                 }
             } else {
-                const prev = row.prevAll(`.item-row[data-category="${category}"]`).first();
+                const prev    = row.prevAll(`.item-row[data-category="${category}"]`).first();
                 const prevCat = prev.find('.category-cell');
                 if (prevCat.length) {
                     const s = parseInt(prevCat.attr('rowspan') || 1);
@@ -1328,10 +1355,9 @@
             row.remove();
         }
 
-        // ── Reset All ───────────────────────────────────────────────
+        // ── Reset All ────────────────────────────────────────────────
         $('#resetAllBtn').on('click', function() {
-            if (!confirm('Are you sure you want to remove ALL items? This will delete them from the database.'))
-                return;
+            if (!confirm('Are you sure you want to remove ALL items? This will delete them from the database.')) return;
 
             const ids = [];
             $('.item-row').each(function() {
@@ -1339,80 +1365,26 @@
                 if (id) ids.push(id);
             });
 
-            if (!ids.length) {
-                showFloatingAlert('error', 'No items to delete');
-                return;
-            }
+            if (!ids.length) { showFloatingAlert('error', 'No items to delete'); return; }
 
             showFloatingAlert('saving', 'Deleting all items...');
 
             Promise.all(ids.map(id => $.ajax({
                 url: `/data/jo-other/item/destroy/${id}`,
                 method: 'DELETE',
-                data: {
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                }
+                data: { _token: $('meta[name="csrf-token"]').attr('content') }
             }))).then(() => {
                 showFloatingAlert('success', 'All items deleted successfully!');
                 $('#itemsTableBody').html(emptyRowHtml());
                 globalItemNumber = 0;
                 updateGrandTotal();
+                syncLpjNote();
             }).catch(() => {
                 showFloatingAlert('error', 'Some items could not be deleted');
             });
         });
 
-        // ── Final Save ──────────────────────────────────────────────
-        $('#btnFinalSave').on('click', function() {
-            const custId = $('#id_md_cust').val();
-            const otherId = $('#id_md_other').val();
-            const portId = $('#id_md_port').val();
-            const title = $('#title').val();
-            const ds = $('#date_start').val();
-            const de = $('#date_end').val();
-
-            if (!custId || !otherId || !portId || !title || !ds || !de) {
-                showFloatingAlert('error', 'Please fill all required fields');
-                return;
-            }
-            if (!confirm('Save all changes and return to JO Other list?')) return;
-
-            showFloatingAlert('saving', 'Saving all changes...');
-
-            $.ajax({
-                url: `/data/jo-other/save-all/${currentJoOtherId}`,
-                method: 'POST',
-                data: {
-                    id_md_cust: custId,
-                    id_md_other: otherId,
-                    id_md_port: portId,
-                    id_md_vessel: $('#id_md_vessel').val(),
-                    date_start: ds,
-                    date_end: de,
-                    title: title,
-                    note: $('#note').val(),
-                    global_kurs_usd: parseRupiah($('#global_kurs_usd_display').val()),
-                    global_tgl_kurs_usd: $('#global_tgl_kurs_usd').val(),
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                },
-                success: function(r) {
-                    if (!r.success) {
-                        showFloatingAlert('error', r.message || 'Failed to save changes');
-                        return;
-                    }
-                    showFloatingAlert('success', 'All changes saved successfully!');
-                    setTimeout(() => {
-                        window.location.href = '{{ route('jo-other.index') }}';
-                    }, 1500);
-                },
-                error: function(xhr) {
-                    showFloatingAlert('error', xhr.responseJSON?.message ||
-                        'Failed to save all changes');
-                }
-            });
-        });
-
-        // ── Utilities ───────────────────────────────────────────────
+        // ── Utilities ────────────────────────────────────────────────
         function clearItemForm() {
             _skipNoteUpdate = false;
             $('#editing_item_id').val('');
@@ -1424,7 +1396,7 @@
             $('#input_item').prop('disabled', true).html('<option value="">Select category first</option>');
             $('#input_note').val('');
             ['input_pendapatan_idr', 'input_pendapatan_usd', 'input_hpp', 'input_harga_jual']
-            .forEach(id => $('#' + id).val(''));
+                .forEach(id => $('#' + id).val(''));
         }
 
         function renumberAllItems() {
@@ -1436,17 +1408,14 @@
         }
 
         function updateGrandTotal() {
-            let idr = 0,
-                usd = 0,
-                hpp = 0,
-                sell = 0;
+            let idr = 0, usd = 0, hpp = 0, sell = 0;
             $('.item-row').each(function() {
                 const hasCat = $(this).find('.category-cell').length > 0;
-                const off = hasCat ? 0 : -1;
-                idr += parseRupiah($(this).find('td').eq(3 + off).text());
-                usd += parseRupiah($(this).find('td').eq(4 + off).text());
+                const off    = hasCat ? 0 : -1;
+                idr  += parseRupiah($(this).find('td').eq(3 + off).text());
+                usd  += parseRupiah($(this).find('td').eq(4 + off).text());
                 sell += parseRupiah($(this).find('td').eq(6 + off).text());
-                hpp += parseRupiah($(this).find('td').eq(5 + off).text());
+                hpp  += parseRupiah($(this).find('td').eq(5 + off).text());
             });
             $('#footerTotalIDR').text(formatNumber(idr));
             $('#footerTotalUSD').text(formatNumber(usd));
@@ -1456,14 +1425,15 @@
 
         function emptyRowHtml() {
             return `<tr class="no-items-row"><td colspan="8">
-            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-            <p class="mb-0 fw-bold">No data available</p>
-            <small class="text-muted">Fill the form above and click "Save to Table"</small>
-        </td></tr>`;
+                <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                <p class="mb-0 fw-bold">No data available</p>
+                <small class="text-muted">Fill the form above and click "Save to Table"</small>
+            </td></tr>`;
         }
 
         $(document).ready(function() {
             updateGrandTotal();
+            syncLpjNote();
         });
     </script>
 @endpush

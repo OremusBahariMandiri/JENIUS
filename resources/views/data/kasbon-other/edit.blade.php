@@ -15,34 +15,28 @@
             'nilai_kasbon' => $i['nilai_kasbon'],
             'total_kasbon' => $i['total_kasbon'],
             'has_kasbon' => $i['has_kasbon'],
-            'origin_lpj_other' => $i['origin_lpj_other'] ?? null, // ← tambah ini
+            'origin_lpj_other' => $i['origin_lpj_other'] ?? null,
         ],
     );
 @endphp
 
 @push('styles')
     <style>
-        /* Rows added from LPJ — blue tint */
         .table-kasbon tbody tr.row-from-lpj td {
             background: #eff6ff !important;
         }
-
         .table-kasbon tbody tr.row-from-lpj:hover td {
             background: #dbeafe !important;
         }
-
         .table-kasbon tbody tr.row-from-lpj.tr-active td {
             background: #bfdbfe !important;
         }
-
         .table-kasbon tbody tr.row-from-lpj .category-cell {
             background: #dbeafe !important;
         }
-
         .table-kasbon tbody tr.row-from-lpj .cell-readonly {
             background: #e0eeff !important;
         }
-
         .lpj-origin-note {
             display: flex;
             align-items: center;
@@ -55,25 +49,21 @@
             font-size: .8rem;
             color: #1e40af;
         }
-
         .kasbonOtherEditPage .card {
             border: none;
             border-radius: 10px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
         }
-
         .kasbonOtherEditPage .card-header {
             border-radius: 10px 10px 0 0 !important;
             padding: 1rem 1.5rem;
             font-weight: 600;
         }
-
         .required-field::after {
             content: " *";
             color: #dc3545;
             font-weight: 600;
         }
-
         .floating-badge-alert {
             position: fixed;
             top: 80px;
@@ -87,66 +77,38 @@
             animation: slideInRight 0.4s ease-out;
             backdrop-filter: blur(10px);
         }
-
         .floating-badge-alert.show {
             display: flex;
             align-items: center;
             gap: 12px;
         }
-
         .floating-badge-alert.alert-saving {
             background: linear-gradient(135deg, #fbbf24, #f59e0b);
             color: white;
         }
-
         .floating-badge-alert.alert-success {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
         }
-
         .floating-badge-alert.alert-error {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
         }
-
-        .floating-badge-alert i {
-            font-size: 1.3rem;
-        }
-
+        .floating-badge-alert i { font-size: 1.3rem; }
         .floating-badge-alert .alert-text {
             flex: 1;
             font-weight: 600;
             font-size: 0.95rem;
         }
-
         @keyframes slideInRight {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
+            from { transform: translateX(400px); opacity: 0; }
+            to   { transform: translateX(0);     opacity: 1; }
         }
-
         @keyframes slideOutRight {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
+            from { transform: translateX(0);     opacity: 1; }
+            to   { transform: translateX(400px); opacity: 0; }
         }
-
-        .floating-badge-alert.hiding {
-            animation: slideOutRight 0.4s ease-in;
-        }
-
+        .floating-badge-alert.hiding { animation: slideOutRight 0.4s ease-in; }
         .confirm-modal-overlay {
             position: fixed;
             inset: 0;
@@ -157,11 +119,7 @@
             justify-content: center;
             backdrop-filter: blur(3px);
         }
-
-        .confirm-modal-overlay.show {
-            display: flex;
-        }
-
+        .confirm-modal-overlay.show { display: flex; }
         .confirm-modal-box {
             background: white;
             border-radius: 16px;
@@ -171,19 +129,10 @@
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: modalIn 0.25s ease-out;
         }
-
         @keyframes modalIn {
-            from {
-                transform: scale(0.9);
-                opacity: 0;
-            }
-
-            to {
-                transform: scale(1);
-                opacity: 1;
-            }
+            from { transform: scale(0.9); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
         }
-
         .confirm-modal-box .modal-icon {
             width: 56px;
             height: 56px;
@@ -194,42 +143,22 @@
             font-size: 1.5rem;
             margin: 0 auto 16px;
         }
-
-        .confirm-modal-box .modal-icon.danger {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-
-        .confirm-modal-box .modal-icon.warning {
-            background: #fef3c7;
-            color: #d97706;
-        }
-
+        .confirm-modal-box .modal-icon.danger  { background: #fee2e2; color: #dc2626; }
+        .confirm-modal-box .modal-icon.warning { background: #fef3c7; color: #d97706; }
         .confirm-modal-box h5 {
             text-align: center;
             font-weight: 700;
             color: #1f2937;
             margin-bottom: 8px;
         }
-
         .confirm-modal-box p {
             text-align: center;
             color: #6b7280;
             font-size: 0.9rem;
             margin-bottom: 24px;
         }
-
-        .confirm-modal-box .modal-actions {
-            display: flex;
-            gap: 10px;
-        }
-
-        .confirm-modal-box .modal-actions .btn {
-            flex: 1;
-            padding: 10px;
-            font-weight: 600;
-        }
-
+        .confirm-modal-box .modal-actions { display: flex; gap: 10px; }
+        .confirm-modal-box .modal-actions .btn { flex: 1; padding: 10px; font-weight: 600; }
         .input-item-card {
             border: 2px dashed #10b981;
             border-radius: 12px;
@@ -237,14 +166,12 @@
             margin-bottom: 20px;
             display: none;
         }
-
         .input-item-card.active {
             display: block;
             border: 2px solid #10b981;
             background: #f0f7ff;
             box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
         }
-
         .input-item-card .card-title-bar {
             display: flex;
             align-items: center;
@@ -253,25 +180,14 @@
             padding-bottom: 14px;
             border-bottom: 1px solid #bbf7d0;
         }
-
-        .input-item-card .card-title-bar i {
-            color: #10b981;
-            font-size: 1rem;
-        }
-
-        .input-item-card .card-title-bar span {
-            font-weight: 700;
-            color: #2c3e50;
-            font-size: 1rem;
-        }
-
+        .input-item-card .card-title-bar i    { color: #10b981; font-size: 1rem; }
+        .input-item-card .card-title-bar span { font-weight: 700; color: #2c3e50; font-size: 1rem; }
         .info-field {
             background: white;
             border: 1px solid #e5e7eb;
             border-radius: 8px;
             padding: 10px 14px;
         }
-
         .info-field .info-label {
             font-size: 0.72rem;
             font-weight: 600;
@@ -280,7 +196,6 @@
             letter-spacing: 0.5px;
             margin-bottom: 4px;
         }
-
         .info-field .info-value {
             font-size: 0.9rem;
             font-weight: 700;
@@ -289,12 +204,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
-        .currency-group {
-            display: flex;
-            align-items: stretch;
-        }
-
+        .currency-group { display: flex; align-items: stretch; }
         .currency-group .currency-label {
             background-color: #2c3e50;
             color: white;
@@ -309,19 +219,16 @@
             justify-content: center;
             flex-shrink: 0;
         }
-
         .currency-group .currency-input {
             border-radius: 0 8px 8px 0 !important;
             border-left: none !important;
             font-size: 1.05rem;
             font-weight: 600;
         }
-
         .currency-group .currency-input:focus {
             border-color: #10b981 !important;
             box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
         }
-
         .btn-save-item-input {
             background: linear-gradient(135deg, #10b981, #059669);
             border: none;
@@ -332,13 +239,11 @@
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
             transition: all 0.25s;
         }
-
         .btn-save-item-input:hover {
             transform: translateY(-1px);
             box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
             color: white;
         }
-
         .btn-cancel-item-input {
             background: white;
             border: 1px solid #d1d5db;
@@ -348,13 +253,7 @@
             font-weight: 600;
             transition: all 0.25s;
         }
-
-        .btn-cancel-item-input:hover {
-            background: #f3f4f6;
-            color: #374151;
-        }
-
-        /* ===== TABLE ===== */
+        .btn-cancel-item-input:hover { background: #f3f4f6; color: #374151; }
         .table-kasbon thead th {
             background-color: #2c3e50;
             color: white;
@@ -366,7 +265,6 @@
             text-align: center;
             white-space: nowrap;
         }
-
         .table-kasbon tbody td {
             border: 1px solid #dee2e6;
             padding: 10px 12px;
@@ -374,16 +272,8 @@
             font-size: 0.875rem;
             background-color: #fff;
         }
-
-        .table-kasbon tbody tr:hover td {
-            background-color: #f0fdf4;
-        }
-
-        .table-kasbon tbody tr.tr-active td {
-            background-color: #d1fae5 !important;
-        }
-
-        /* Category merged cell */
+        .table-kasbon tbody tr:hover td           { background-color: #f0fdf4; }
+        .table-kasbon tbody tr.tr-active td       { background-color: #d1fae5 !important; }
         .table-kasbon .category-cell {
             background: #e8f5e9 !important;
             font-weight: 600;
@@ -392,21 +282,9 @@
             vertical-align: middle !important;
             border-right: 2px solid #dee2e6;
         }
-
-        .cell-right {
-            text-align: right;
-        }
-
-        .cell-center {
-            text-align: center;
-        }
-
-        .cell-readonly {
-            background-color: #f8f9fa !important;
-            color: #495057;
-            font-weight: 500;
-        }
-
+        .cell-right   { text-align: right; }
+        .cell-center  { text-align: center; }
+        .cell-readonly { background-color: #f8f9fa !important; color: #495057; font-weight: 500; }
         .table-kasbon tfoot td {
             background-color: #ffffff;
             color: #2C3E50;
@@ -415,14 +293,12 @@
             font-size: 0.9rem;
             border: 1px solid #dee2e6;
         }
-
         .footer-currency-wrap {
             display: flex;
             align-items: center;
             justify-content: space-between;
             width: 100%;
         }
-
         .footer-currency-label {
             background-color: #2C3E50;
             color: white;
@@ -434,7 +310,6 @@
             text-align: center;
             flex-shrink: 0;
         }
-
         .footer-value {
             color: #2C3E50;
             font-weight: 700;
@@ -442,7 +317,6 @@
             text-align: right;
             flex: 1;
         }
-
         .btn-edit-row {
             background-color: #10b981;
             border-color: #10b981;
@@ -451,13 +325,11 @@
             border-radius: 6px;
             transition: all 0.2s;
         }
-
         .btn-edit-row:hover {
             background-color: #059669;
             border-color: #059669;
             transform: scale(1.08);
         }
-
         .btn-clear-row {
             background-color: #ef4444;
             border-color: #ef4444;
@@ -466,19 +338,12 @@
             border-radius: 6px;
             transition: all 0.2s;
         }
-
         .btn-clear-row:hover:not(:disabled) {
             background-color: #dc2626;
             border-color: #dc2626;
             transform: scale(1.08);
         }
-
-        .btn-clear-row:disabled {
-            opacity: 0.35;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
+        .btn-clear-row:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
         .items-count-badge {
             background: #10b981;
             color: white;
@@ -488,14 +353,12 @@
             border-radius: 10px;
             margin-left: 8px;
         }
-
         .no-items-row td {
             text-align: center;
             padding: 50px 20px;
             color: #6c757d;
             background: #f8f9fa !important;
         }
-
         .final-save-section {
             position: sticky;
             bottom: 0;
@@ -506,7 +369,6 @@
             margin-top: 30px;
             z-index: 100;
         }
-
         .btn-final-back {
             background: linear-gradient(135deg, #868686, #5e5e5e);
             border: none;
@@ -518,13 +380,11 @@
             box-shadow: 0 4px 15px rgba(27, 27, 27, 0.3);
             transition: all 0.3s;
         }
-
         .btn-final-back:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(49, 49, 49, 0.45);
             color: white;
         }
-
         .jo-summary-card {
             background: #fff;
             border: 1.5px solid #10b981;
@@ -533,19 +393,10 @@
             transition: all 0.3s;
             animation: fadeInDown 0.35s ease-out;
         }
-
         @keyframes fadeInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-8px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(-8px); }
+            to   { opacity: 1; transform: translateY(0);    }
         }
-
         .jo-summary-card .jo-meta-label {
             font-size: .72rem;
             color: #9ca3af;
@@ -553,54 +404,19 @@
             text-transform: uppercase;
             letter-spacing: .5px;
         }
-
         .jo-summary-card .jo-meta-value {
             font-size: .875rem;
             font-weight: 700;
             color: #2c3e50;
             margin-top: 2px;
         }
-
-        #joItemsModal .modal-content {
-            border-radius: 12px;
-            border: none;
-        }
-
-        #joItemsModal .modal-header {
-            background: #d1fae5;
-            border-radius: 12px 12px 0 0;
-            border-bottom: none;
-        }
-
-        #joItemsModal table thead th {
-            background: #2c3e50;
-            color: white;
-            border-color: #2c3e50;
-            font-size: .85rem;
-            padding: 10px;
-        }
-
-        #joItemsModal table tbody td {
-            font-size: .875rem;
-            padding: 8px 10px;
-            vertical-align: middle;
-        }
-
-        #joItemsModal table tbody tr:hover {
-            background: #e8f5e9;
-        }
-
-        #joItemsModal tfoot td {
-            background: #f8f9fa;
-            font-weight: 700;
-            font-size: .875rem;
-            padding: 10px;
-        }
-
-        #caReleaseDateWrapper {
-            transition: all 0.25s ease;
-        }
-
+        #joItemsModal .modal-content { border-radius: 12px; border: none; }
+        #joItemsModal .modal-header  { background: #d1fae5; border-radius: 12px 12px 0 0; border-bottom: none; }
+        #joItemsModal table thead th { background: #2c3e50; color: white; border-color: #2c3e50; font-size: .85rem; padding: 10px; }
+        #joItemsModal table tbody td { font-size: .875rem; padding: 8px 10px; vertical-align: middle; }
+        #joItemsModal table tbody tr:hover { background: #e8f5e9; }
+        #joItemsModal tfoot td { background: #f8f9fa; font-weight: 700; font-size: .875rem; padding: 10px; }
+        #caReleaseDateWrapper { transition: all 0.25s ease; }
         .validate-hint {
             font-size: .76rem;
             font-weight: 600;
@@ -608,24 +424,13 @@
             min-height: 18px;
             transition: color .2s;
         }
-
-        .validate-hint.hint-danger {
-            color: #dc3545;
-        }
-
-        .validate-hint.hint-ok {
-            color: #10b981;
-        }
-
-        .validate-hint.hint-info {
-            color: #6b7280;
-        }
-
+        .validate-hint.hint-danger { color: #dc3545; }
+        .validate-hint.hint-ok     { color: #10b981; }
+        .validate-hint.hint-info   { color: #6b7280; }
         .currency-input.input-invalid {
             border-color: #dc3545 !important;
             box-shadow: 0 0 0 .2rem rgba(220, 53, 69, .2) !important;
         }
-
         .currency-input.input-valid {
             border-color: #10b981 !important;
             box-shadow: 0 0 0 .2rem rgba(16, 185, 129, .15) !important;
@@ -635,13 +440,11 @@
 
 @section('content')
 
-    {{-- FLOATING BADGE ALERT --}}
     <div id="floatingBadgeAlert" class="floating-badge-alert">
         <i class="fas fa-circle-notch fa-spin" id="alertIcon"></i>
         <div class="alert-text" id="alertText">Processing...</div>
     </div>
 
-    {{-- CONFIRM MODAL --}}
     <div class="confirm-modal-overlay" id="confirmModal">
         <div class="confirm-modal-box">
             <div class="modal-icon" id="confirmModalIcon">
@@ -660,7 +463,6 @@
         <div class="row">
             <div class="col-lg-12">
 
-                {{-- PAGE HEADER --}}
                 <div class="card shadow mb-4">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color:#d1fae5">
@@ -673,14 +475,13 @@
                     </div>
                 </div>
 
-                <input type="hidden" id="current_kasbon_other_id" value="{{ $kasbonOther->id }}">
+                <input type="hidden" id="current_kasbon_other_id"  value="{{ $kasbonOther->id }}">
                 <input type="hidden" id="current_kasbon_other_str" value="{{ $kasbonOther->id_kasbon_other }}">
-                <input type="hidden" id="original_id_jo_other" value="{{ $kasbonOther->id_jo_other }}">
+                <input type="hidden" id="original_id_jo_other"     value="{{ $kasbonOther->id_jo_other }}">
 
                 <form id="kasbonOtherForm">
                     @csrf
 
-                    {{-- ===== HEADER CARD ===== --}}
                     <div class="card shadow mb-4">
                         <div class="card-header text-black" style="background-color:#d1fae5">
                             <h6 class="mb-0">
@@ -714,7 +515,8 @@
                                     <select name="id_jo_other" id="id_jo_other" class="form-select select2-field" required>
                                         <option value="">-- Select JO Other --</option>
                                         @foreach ($joOthers as $jo)
-                                            <option value="{{ $jo->id_jo_other }}" data-no="{{ $jo->no_jo_other }}"
+                                            <option value="{{ $jo->id_jo_other }}"
+                                                data-no="{{ $jo->no_jo_other }}"
                                                 data-title="{{ $jo->title }}"
                                                 data-tgl="{{ optional($jo->tgl_jo_other)->format('Y-m-d') ?? '' }}"
                                                 data-customer="{{ $jo->customer->customer ?? '—' }}"
@@ -730,23 +532,17 @@
                                     </small>
                                 </div>
 
-                                {{-- JO Other Summary Card --}}
                                 <div class="col-md-12" id="joSummaryWrapper" style="display:none;">
                                     <div class="jo-summary-card">
                                         <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                                             <div class="d-flex align-items-center gap-3" style="flex:1; min-width:0;">
-                                                <div
-                                                    style="width:48px; height:48px; border-radius:10px; background:#d1fae5;
+                                                <div style="width:48px; height:48px; border-radius:10px; background:#d1fae5;
                                                     display:flex; align-items:center; justify-content:center; flex-shrink:0;">
                                                     <i class="fas fa-file-alt" style="color:#059669; font-size:1.2rem;"></i>
                                                 </div>
                                                 <div style="min-width:0;">
-                                                    <div id="joSummaryNo"
-                                                        style="font-weight:700; font-size:1.05rem; color:#2c3e50; letter-spacing:.4px;">
-                                                    </div>
-                                                    <div id="joSummaryTitle"
-                                                        style="font-size:.875rem; color:#6b7280; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                                                    </div>
+                                                    <div id="joSummaryNo" style="font-weight:700; font-size:1.05rem; color:#2c3e50; letter-spacing:.4px;"></div>
+                                                    <div id="joSummaryTitle" style="font-size:.875rem; color:#6b7280; margin-top:3px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></div>
                                                 </div>
                                             </div>
                                             <button type="button" id="btnJoDetail"
@@ -762,8 +558,7 @@
                                         <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px 24px;">
                                             <div>
                                                 <div class="jo-meta-label">JO No.</div>
-                                                <div class="jo-meta-value" id="joSummaryNo2"
-                                                    style="font-family:monospace; font-size:.82rem;"></div>
+                                                <div class="jo-meta-value" id="joSummaryNo2" style="font-family:monospace; font-size:.82rem;"></div>
                                             </div>
                                             <div>
                                                 <div class="jo-meta-label">JO Date</div>
@@ -772,8 +567,7 @@
                                             <div>
                                                 <div class="jo-meta-label">Total Items</div>
                                                 <div class="jo-meta-value" id="joSummaryItemCount">
-                                                    <i class="fas fa-circle-notch fa-spin"
-                                                        style="color:#10b981; font-size:.8rem;"></i>
+                                                    <i class="fas fa-circle-notch fa-spin" style="color:#10b981; font-size:.8rem;"></i>
                                                 </div>
                                             </div>
                                             <div>
@@ -782,9 +576,7 @@
                                             </div>
                                             <div>
                                                 <div class="jo-meta-label">Note</div>
-                                                <div class="jo-meta-value" id="joSummaryNote"
-                                                    style="font-size:.82rem; line-height:1.4; white-space:pre-wrap;">—
-                                                </div>
+                                                <div class="jo-meta-value" id="joSummaryNote" style="font-size:.82rem; line-height:1.4; white-space:pre-wrap;">—</div>
                                             </div>
                                         </div>
                                     </div>
@@ -805,8 +597,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Branch</label>
-                                    <select name="id_md_cabang" id="id_md_cabang" class="form-select select2-field"
-                                        required>
+                                    <select name="id_md_cabang" id="id_md_cabang" class="form-select select2-field" required>
                                         <option value="">-- Select Branch --</option>
                                         @foreach ($cabangs as $cabang)
                                             <option value="{{ $cabang->id_md_branch }}"
@@ -819,8 +610,7 @@
 
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Release To</label>
-                                    <select name="id_md_release" id="id_md_release" class="form-select select2-field"
-                                        required>
+                                    <select name="id_md_release" id="id_md_release" class="form-select select2-field" required>
                                         <option value="">-- Select Release To --</option>
                                         @foreach ($releases as $rel)
                                             <option value="{{ $rel->id_md_release }}"
@@ -837,44 +627,32 @@
                                         value="{{ $kasbonOther->tgl_release ? $kasbonOther->tgl_release->format('Y-m-d') : '' }}">
                                 </div>
 
-                                {{-- Priority --}}
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
-                                        <option value="normal" {{ $kasbonOther->priority == 'normal' ? 'selected' : '' }}>
-                                            Normal</option>
-                                        <option value="high" {{ $kasbonOther->priority == 'high' ? 'selected' : '' }}>
-                                            High</option>
+                                        <option value="normal" {{ $kasbonOther->priority == 'normal' ? 'selected' : '' }}>Normal</option>
+                                        <option value="high"   {{ $kasbonOther->priority == 'high'   ? 'selected' : '' }}>High</option>
                                     </select>
                                 </div>
 
-                                {{-- Due Date --}}
                                 <div class="col-md-6">
                                     <label class="form-label">Due Date & Time</label>
                                     <input type="datetime-local" name="due_date" id="due_date" class="form-control"
                                         value="{{ $kasbonOther->due_date ? $kasbonOther->due_date->format('Y-m-d\TH:i') : '' }}">
                                 </div>
 
-                                {{-- CA Release Status --}}
                                 <div class="col-md-12" id="caReleaseStatusWrapper">
                                     <label class="form-label">CA Release Status</label>
                                     <select name="ca_release_status" id="ca_release_status" class="form-select">
-                                        <option value="" {{ !$kasbonOther->ca_release_status ? 'selected' : '' }}>--
-                                            No Status (Pending) --</option>
-                                        <option value="pending"
-                                            {{ $kasbonOther->ca_release_status == 'pending' ? 'selected' : '' }}>Pending
-                                        </option>
-                                        <option value="release"
-                                            {{ $kasbonOther->ca_release_status == 'release' ? 'selected' : '' }}>Release
-                                        </option>
+                                        <option value="" {{ !$kasbonOther->ca_release_status ? 'selected' : '' }}>-- No Status (Pending) --</option>
+                                        <option value="pending" {{ $kasbonOther->ca_release_status == 'pending' ? 'selected' : '' }}>Pending</option>
+                                        <option value="release" {{ $kasbonOther->ca_release_status == 'release' ? 'selected' : '' }}>Release</option>
                                     </select>
                                 </div>
 
-                                {{-- CA Release Date --}}
                                 <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
                                     <label class="form-label">CA Release Date</label>
-                                    <input type="date" name="ca_release_date" id="ca_release_date"
-                                        class="form-control"
+                                    <input type="date" name="ca_release_date" id="ca_release_date" class="form-control"
                                         value="{{ $kasbonOther->ca_release_date ? $kasbonOther->ca_release_date->format('Y-m-d') : '' }}">
                                 </div>
 
@@ -891,7 +669,6 @@
                             </div>
                         </div>
 
-                        {{-- ===== ITEMS CARD ===== --}}
                         <div class="card shadow mb-4" id="itemsCard">
                             <div class="card-header text-black d-flex justify-content-between align-items-center"
                                 style="background-color:#d1fae5">
@@ -907,7 +684,6 @@
                             </div>
                             <div class="card-body p-4">
 
-                                {{-- INPUT CARD --}}
                                 <div class="input-item-card" id="inputItemCard">
                                     <div class="card-title-bar">
                                         <i class="fas fa-pen-to-square"></i>
@@ -950,12 +726,10 @@
                                                     class="form-control currency-input" placeholder="0,00"
                                                     autocomplete="off">
                                             </div>
-                                            {{-- Hint validasi realtime --}}
                                             <div id="caValidationHint" class="validate-hint hint-info"></div>
                                         </div>
                                         <div class="col-12 d-flex justify-content-end gap-2 mt-1">
-                                            <button type="button" class="btn btn-cancel-item-input"
-                                                id="btnCancelItemInput">
+                                            <button type="button" class="btn btn-cancel-item-input" id="btnCancelItemInput">
                                                 <i class="fas fa-times me-1"></i> Cancel
                                             </button>
                                             <button type="button" class="btn btn-save-item-input" id="btnSaveItemInput">
@@ -964,11 +738,10 @@
                                         </div>
                                     </div>
                                     <input type="hidden" id="activeJoOtherItemId" value="">
-                                    <input type="hidden" id="activeRowIndex" value="">
-                                    <input type="hidden" id="activeHppValue" value="0">
+                                    <input type="hidden" id="activeRowIndex"      value="">
+                                    <input type="hidden" id="activeHppValue"      value="0">
                                 </div>
 
-                                {{-- ===== TABLE ===== --}}
                                 <div class="table-responsive">
                                     <table class="table table-kasbon table-bordered mb-0">
                                         <thead>
@@ -991,9 +764,7 @@
                                         </tbody>
                                         <tfoot>
                                             <tr>
-                                                <td colspan="3" class="text-center pe-3">
-                                                    <strong>GRAND TOTAL</strong>
-                                                </td>
+                                                <td colspan="3" class="text-center pe-3"><strong>GRAND TOTAL</strong></td>
                                                 <td>
                                                     <div class="footer-currency-wrap">
                                                         <span class="footer-currency-label">IDR</span>
@@ -1017,10 +788,10 @@
                                         </tfoot>
                                     </table>
                                 </div>
+
                                 <div class="lpj-origin-note mt-2" id="lpjOriginNoteKasbon" style="display:none;">
                                     <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
-                                    <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ
-                                        page.</span>
+                                    <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ page.</span>
                                 </div>
 
                             </div>
@@ -1040,7 +811,6 @@
         </div>
     </div>
 
-    {{-- JO ITEMS DETAIL MODAL --}}
     <div class="modal fade" id="joItemsModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content" style="border-radius:12px; border:none; box-shadow:0 20px 60px rgba(0,0,0,.15);">
@@ -1050,8 +820,7 @@
                         <h5 class="modal-title fw-bold mb-0" style="color:#2c3e50;">
                             <i class="fas fa-list-ul me-2" style="color:#059669;"></i>JO Other Items
                         </h5>
-                        <small id="joItemsModalSubtitle"
-                            style="color:#6b7280; font-size:.8rem; display:block; margin-top:2px;"></small>
+                        <small id="joItemsModalSubtitle" style="color:#6b7280; font-size:.8rem; display:block; margin-top:2px;"></small>
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
@@ -1076,17 +845,14 @@
                                 <tfoot>
                                     <tr>
                                         <td colspan="3" style="text-align:right; font-weight:700;">GRAND TOTAL</td>
-                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;"
-                                            id="joItemsTotalHpp"></td>
-                                        <td style="text-align:right; font-weight:700; font-family:monospace;"
-                                            id="joItemsTotalSell"></td>
+                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;" id="joItemsTotalHpp"></td>
+                                        <td style="text-align:right; font-weight:700; font-family:monospace;" id="joItemsTotalSell"></td>
                                     </tr>
                                 </tfoot>
                             </table>
                         </div>
                     </div>
-                    <div id="joItemsModalEmpty"
-                        style="display:none; text-align:center; padding:40px 20px; color:#6c757d;">
+                    <div id="joItemsModalEmpty" style="display:none; text-align:center; padding:40px 20px; color:#6c757d;">
                         <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
                         <p class="fw-bold mb-0">No items found for this JO Other</p>
                         <small>Items may not have been added yet.</small>
@@ -1104,32 +870,24 @@
 
 @push('scripts')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        const currentKasbonOtherId = {{ $kasbonOther->id }};
+        const currentKasbonOtherId  = {{ $kasbonOther->id }};
         const currentKasbonOtherStr = '{{ $kasbonOther->id_kasbon_other }}';
-        const originalIdJoOther = '{{ $kasbonOther->id_jo_other }}';
-        const bulkSaveUrl = '{{ route('kasbon-other.items.bulk-save', $kasbonOther->id) }}';
-        const checkConflictUrl = '{{ route('kasbon-other.item.check-conflict') }}';
-        const clearConflictUrl = '{{ route('kasbon-other.item.clear-conflict') }}';
-        const updateHeaderUrl = '/kasbon-other/header/update/{{ $kasbonOther->id }}';
-        const csrfToken = $('meta[name="csrf-token"]').attr('content');
+        const originalIdJoOther     = '{{ $kasbonOther->id_jo_other }}';
+        const bulkSaveUrl           = '{{ route('kasbon-other.items.bulk-save', $kasbonOther->id) }}';
+        const checkConflictUrl      = '{{ route('kasbon-other.item.check-conflict') }}';
+        const clearConflictUrl      = '{{ route('kasbon-other.item.clear-conflict') }}';
+        const updateHeaderUrl       = '/kasbon-other/header/update/{{ $kasbonOther->id }}';
+        const csrfToken             = $('meta[name="csrf-token"]').attr('content');
 
-        let mergedItems = @json($mergedItemsJs);
+        let mergedItems    = @json($mergedItemsJs);
         let confirmCallback = null;
-        let joItemsCache = [];
+        let joItemsCache   = [];
 
-        // ── CONFIRM MODAL ──
-        function showConfirm({
-            title,
-            desc,
-            okLabel = 'Yes, proceed',
-            okClass = 'btn-danger',
-            iconClass = 'danger'
-        }, callback) {
+        function showConfirm({ title, desc, okLabel = 'Yes, proceed', okClass = 'btn-danger', iconClass = 'danger' }, callback) {
             $('#confirmModalTitle').text(title);
             $('#confirmModalDesc').text(desc);
             $('#confirmModalOk').text(okLabel).removeClass().addClass(`btn ${okClass}`);
@@ -1139,10 +897,7 @@
         }
 
         $('#confirmModalCancel, #confirmModal').on('click', function(e) {
-            if (e.target === this) {
-                $('#confirmModal').removeClass('show');
-                confirmCallback = null;
-            }
+            if (e.target === this) { $('#confirmModal').removeClass('show'); confirmCallback = null; }
         });
 
         $('#confirmModalOk').on('click', function() {
@@ -1151,23 +906,13 @@
             confirmCallback = null;
         });
 
-        // ── FLOATING ALERT ──
         function showFloatingAlert(type, message) {
-            const $alert = $('#floatingBadgeAlert'),
-                $icon = $('#alertIcon');
+            const $alert = $('#floatingBadgeAlert'), $icon = $('#alertIcon');
             $alert.removeClass('alert-saving alert-success alert-error hiding');
             switch (type) {
-                case 'saving':
-                    $alert.addClass('alert-saving');
-                    $icon.attr('class', 'fas fa-circle-notch fa-spin');
-                    break;
-                case 'success':
-                    $alert.addClass('alert-success');
-                    $icon.attr('class', 'fas fa-check-circle');
-                    break;
-                default:
-                    $alert.addClass('alert-error');
-                    $icon.attr('class', 'fas fa-exclamation-circle');
+                case 'saving':  $alert.addClass('alert-saving');  $icon.attr('class', 'fas fa-circle-notch fa-spin'); break;
+                case 'success': $alert.addClass('alert-success'); $icon.attr('class', 'fas fa-check-circle'); break;
+                default:        $alert.addClass('alert-error');   $icon.attr('class', 'fas fa-exclamation-circle');
             }
             $('#alertText').text(message);
             $alert.addClass('show');
@@ -1179,13 +924,10 @@
             setTimeout(() => $('#floatingBadgeAlert').removeClass('show hiding'), 400);
         }
 
-        // ── NUMBER UTILS ──
         function formatRupiah(value) {
             let number = value.toString().replace(/[^\d,]/g, '').replace(/\./g, '');
             if (number === '') return '';
-            let parts = number.split(','),
-                intPart = parts[0],
-                dec = parts.length > 1 ? parts[1] : '';
+            let parts = number.split(','), intPart = parts[0], dec = parts.length > 1 ? parts[1] : '';
             if (dec.length > 2) dec = dec.substring(0, 2);
             intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             return parts.length > 1 ? intPart + ',' + dec : intPart + ',00';
@@ -1197,43 +939,25 @@
         }
 
         function formatNumber(amount) {
-            return parseFloat(amount || 0).toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            return parseFloat(amount || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         }
 
-        // ══════════════════════════════════════════════════════════
-        // REALTIME VALIDATION — CA Amount vs HPP
-        // ══════════════════════════════════════════════════════════
         function setHint($el, $input, msg, type) {
-            $el.text(msg)
-                .removeClass('hint-danger hint-ok hint-info')
-                .addClass(type ? 'hint-' + type : '');
+            $el.text(msg).removeClass('hint-danger hint-ok hint-info').addClass(type ? 'hint-' + type : '');
             if ($input) {
                 $input.removeClass('input-invalid input-valid');
                 if (type === 'danger') $input.addClass('input-invalid');
-                if (type === 'ok') $input.addClass('input-valid');
+                if (type === 'ok')     $input.addClass('input-valid');
             }
         }
 
         function validateCaInput() {
-            const ca = parseRupiah($('#inputNilaiKasbon').val());
+            const ca  = parseRupiah($('#inputNilaiKasbon').val());
             const hpp = parseFloat($('#activeHppValue').val() || '0');
-            const $input = $('#inputNilaiKasbon');
-            const $hint = $('#caValidationHint');
-
-            if (ca <= 0 || hpp <= 0) {
-                $input.removeClass('input-invalid input-valid');
-                setHint($hint, null, '', '');
-                return;
-            }
-            if (ca > hpp) {
-                setHint($hint, $input,
-                    `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
-            } else {
-                setHint($hint, $input, '', '');
-            }
+            const $input = $('#inputNilaiKasbon'), $hint = $('#caValidationHint');
+            if (ca <= 0 || hpp <= 0) { $input.removeClass('input-invalid input-valid'); setHint($hint, null, '', ''); return; }
+            if (ca > hpp) setHint($hint, $input, `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
+            else          setHint($hint, $input, '', '');
         }
 
         function resetCaValidation() {
@@ -1241,9 +965,6 @@
             setHint($('#caValidationHint'), null, '', '');
         }
 
-        // ══════════════════════════════════════════════════════════
-        // CONFLICT MODAL
-        // ══════════════════════════════════════════════════════════
         let conflictProceedCb = null;
 
         function showConflictModal(kasbonNo, nilaiKasbon, onProceed) {
@@ -1255,50 +976,30 @@
             $('#conflictModal').addClass('show');
         }
 
-        $('#conflictModal').on('click', function(e) {
-            if (e.target === this) closeConflictModal(false);
-        });
-        $('#conflictModalCancel').on('click', function() {
-            closeConflictModal(false);
-        });
-        $('#conflictModalProceed').on('click', function() {
-            closeConflictModal(true);
-        });
+        $('#conflictModal').on('click', function(e) { if (e.target === this) closeConflictModal(false); });
+        $('#conflictModalCancel').on('click',  function() { closeConflictModal(false); });
+        $('#conflictModalProceed').on('click', function() { closeConflictModal(true);  });
 
         function closeConflictModal(proceed) {
             $('#conflictModal').removeClass('show');
-            if (proceed && typeof conflictProceedCb === 'function') {
-                conflictProceedCb();
-            } else {
-                $('#btnSaveItemInput').prop('disabled', false);
-            }
+            if (proceed && typeof conflictProceedCb === 'function') conflictProceedCb();
+            else $('#btnSaveItemInput').prop('disabled', false);
             conflictProceedCb = null;
         }
 
-        // ══════════════════════════════════════════════════════════
-        // SAVE ITEM CORE
-        // ══════════════════════════════════════════════════════════
         function doSaveItem(joOtherItemId, rowIndex, nilaiKasbon) {
             $.ajax({
                 url: bulkSaveUrl,
                 method: 'POST',
                 contentType: 'application/json',
-                headers: {
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                data: JSON.stringify({
-                    items: [{
-                        id_jo_other_item: joOtherItemId,
-                        nilai_kasbon: nilaiKasbon
-                    }],
-                    _token: csrfToken
-                }),
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: JSON.stringify({ items: [{ id_jo_other_item: joOtherItemId, nilai_kasbon: nilaiKasbon }], _token: csrfToken }),
                 success: function(response) {
                     $('#btnSaveItemInput').prop('disabled', false);
                     if (response.success) {
                         showFloatingAlert('success', 'CA Amount saved successfully!');
                         mergedItems[rowIndex].nilai_kasbon = nilaiKasbon;
-                        mergedItems[rowIndex].has_kasbon = true;
+                        mergedItems[rowIndex].has_kasbon   = true;
                         refreshRowAfterSave(rowIndex, nilaiKasbon, true);
                         updateFooter();
                         closeInputCard();
@@ -1315,30 +1016,16 @@
 
         function executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, hasConflict) {
             showFloatingAlert('saving', hasConflict ? 'Removing previous CA amount...' : 'Saving...');
-
             if (hasConflict) {
                 $.ajax({
                     url: clearConflictUrl,
                     method: 'POST',
-                    data: {
-                        id_jo_other_item: joOtherItemId,
-                        id_kasbon_other: currentKasbonOtherStr,
-                        _token: csrfToken
-                    },
+                    data: { id_jo_other_item: joOtherItemId, id_kasbon_other: currentKasbonOtherStr, _token: csrfToken },
                     success: function(res) {
-                        if (res.success) {
-                            showFloatingAlert('saving', 'Saving new CA amount...');
-                            doSaveItem(joOtherItemId, rowIndex, nilaiKasbon);
-                        } else {
-                            $('#btnSaveItemInput').prop('disabled', false);
-                            showFloatingAlert('error', 'Failed to clear previous CA amount: ' + (res.message ||
-                                ''));
-                        }
+                        if (res.success) { showFloatingAlert('saving', 'Saving new CA amount...'); doSaveItem(joOtherItemId, rowIndex, nilaiKasbon); }
+                        else { $('#btnSaveItemInput').prop('disabled', false); showFloatingAlert('error', 'Failed to clear previous CA amount: ' + (res.message || '')); }
                     },
-                    error: function() {
-                        showFloatingAlert('saving', 'Saving...');
-                        doSaveItem(joOtherItemId, rowIndex, nilaiKasbon);
-                    }
+                    error: function() { showFloatingAlert('saving', 'Saving...'); doSaveItem(joOtherItemId, rowIndex, nilaiKasbon); }
                 });
             } else {
                 doSaveItem(joOtherItemId, rowIndex, nilaiKasbon);
@@ -1347,28 +1034,18 @@
 
         function setupRupiahInput(input) {
             input.addEventListener('input', function() {
-                let cursor = this.selectionStart,
-                    before = this.value.substring(0, cursor);
+                let cursor = this.selectionStart, before = this.value.substring(0, cursor);
                 this.value = formatRupiah(this.value);
                 if (!before.includes(',')) {
-                    let digits = before.replace(/\D/g, '').length,
-                        newPos = 0,
-                        count = 0;
+                    let digits = before.replace(/\D/g, '').length, newPos = 0, count = 0;
                     for (let i = 0; i < this.value.length; i++) {
-                        if (/\d/.test(this.value[i])) {
-                            count++;
-                            if (count === digits) {
-                                newPos = i + 1;
-                                break;
-                            }
-                        }
+                        if (/\d/.test(this.value[i])) { count++; if (count === digits) { newPos = i + 1; break; } }
                     }
                     this.setSelectionRange(newPos, newPos);
                 } else {
                     let commaPos = this.value.indexOf(',');
                     let decDigits = (before.split(',')[1] || '').length;
-                    let newPos = commaPos + 1 + Math.min(decDigits, 2);
-                    this.setSelectionRange(newPos, newPos);
+                    this.setSelectionRange(commaPos + 1 + Math.min(decDigits, 2), commaPos + 1 + Math.min(decDigits, 2));
                 }
             });
             input.addEventListener('blur', function() {
@@ -1377,7 +1054,7 @@
                     else {
                         let parts = this.value.split(',');
                         if (parts[1] !== undefined) {
-                            if (parts[1].length === 0) this.value = parts[0] + ',00';
+                            if (parts[1].length === 0)  this.value = parts[0] + ',00';
                             else if (parts[1].length < 2) this.value = parts[0] + ',' + parts[1].padEnd(2, '0');
                         }
                     }
@@ -1385,48 +1062,34 @@
             });
         }
 
-        // ── GROUP BY CATEGORY ──
         function groupByCategory(items) {
-            const groups = {},
-                order = [];
+            const groups = {}, order = [];
             items.forEach(function(item) {
                 const cat = item.invoice_ctg || 'Uncategorized';
-                if (!groups[cat]) {
-                    groups[cat] = [];
-                    order.push(cat);
-                }
+                if (!groups[cat]) { groups[cat] = []; order.push(cat); }
                 groups[cat].push(item);
             });
-            return {
-                groups,
-                order
-            };
+            return { groups, order };
         }
 
-        // ── RENDER TABLE — category merged (rowspan) ──
         function renderTable() {
             const $tbody = $('#kasbonItemsBody');
             $tbody.empty();
             $('#itemsCountBadge').text(mergedItems.length);
 
             if (!mergedItems.length) {
-                $tbody.html(`
-                    <tr class="no-items-row">
-                        <td colspan="7">
-                            <i class="fas fa-inbox fa-3x d-block mb-3 text-muted opacity-50"></i>
-                            <p class="mb-1 fw-bold">No items found for this JO Other</p>
-                            <small>Make sure the selected JO Other has items</small>
-                        </td>
-                    </tr>`);
+                $tbody.html(`<tr class="no-items-row"><td colspan="7">
+                    <i class="fas fa-inbox fa-3x d-block mb-3 text-muted opacity-50"></i>
+                    <p class="mb-1 fw-bold">No items found for this JO Other</p>
+                    <small>Make sure the selected JO Other has items</small>
+                </td></tr>`);
+                $('#lpjOriginNoteKasbon').hide();
                 updateFooter();
                 return;
             }
 
-            const {
-                groups,
-                order
-            } = groupByCategory(mergedItems);
-            let rowNo = 1;
+            const { groups, order } = groupByCategory(mergedItems);
+            let rowNo = 1, hasOriginItems = false;
 
             order.forEach(function(category) {
                 const items = groups[category];
@@ -1434,25 +1097,31 @@
 
                 items.forEach(function(item, catIndex) {
                     const globalIndex = mergedItems.indexOf(item);
-                    const hasFilled = item.has_kasbon && item.nilai_kasbon > 0;
+                    const hasFilled   = item.has_kasbon && item.nilai_kasbon > 0;
+                    const isFromLpj   = !!item.origin_lpj_other;
+                    if (isFromLpj) hasOriginItems = true;
 
-                    const statusBadge = hasFilled ?
-                        `<span class="badge bg-success ms-1" style="font-size:0.65rem;">Saved</span>` :
-                        `<span class="badge bg-secondary ms-1" style="font-size:0.65rem;">Not filled</span>`;
+                    const lpjBadge = isFromLpj
+                        ? `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>`
+                        : '';
 
-                    const clearBtn = `
-                        <button type="button" class="btn btn-danger btn-sm btn-clear-row"
-                            onclick="clearItem(${globalIndex})"
-                            ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
-                            <i class="fas fa-trash"></i>
-                        </button>`;
+                    const statusBadge = hasFilled
+                        ? `<span class="badge bg-success ms-1" style="font-size:0.65rem;">Saved</span>`
+                        : `<span class="badge bg-secondary ms-1" style="font-size:0.65rem;">Not filled</span>`;
 
-                    const categoryCell = catIndex === 0 ?
-                        `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
-                        '';
+                    const clearBtn = `<button type="button" class="btn btn-danger btn-sm btn-clear-row"
+                        onclick="clearItem(${globalIndex})"
+                        ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
+                        <i class="fas fa-trash"></i></button>`;
 
-                    const row = `
-                        <tr class="item-row" id="row_${globalIndex}"
+                    const categoryCell = catIndex === 0
+                        ? `<td class="category-cell" rowspan="${rowspan}">${category}</td>`
+                        : '';
+
+                    const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
+
+                    $tbody.append(`
+                        <tr class="${rowClass}" id="row_${globalIndex}"
                             data-index="${globalIndex}"
                             data-jo-item="${item.id_jo_other_item}"
                             data-category="${category}">
@@ -1460,6 +1129,7 @@
                             ${categoryCell}
                             <td class="text-start">
                                 <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
+                                ${lpjBadge}
                                 ${statusBadge}
                             </td>
                             <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
@@ -1474,20 +1144,19 @@
                                     ${clearBtn}
                                 </div>
                             </td>
-                        </tr>`;
-
-                    $tbody.append(row);
+                        </tr>`);
                 });
             });
 
+            $('#lpjOriginNoteKasbon').toggle(hasOriginItems);
             updateFooter();
         }
 
         function refreshRowAfterSave(globalIndex, nilaiKasbon, saved) {
             const $row = $(`#row_${globalIndex}`);
             $row.find('.nilai-kasbon-cell').text(formatNumber(nilaiKasbon));
-            $row.find('.badge')
-                .removeClass(saved ? 'bg-secondary' : 'bg-success')
+            $row.find('.badge.bg-success, .badge.bg-secondary')
+                .removeClass('bg-success bg-secondary')
                 .addClass(saved ? 'bg-success' : 'bg-secondary')
                 .text(saved ? 'Saved' : 'Not filled');
             $row.find('.btn-clear-row')
@@ -1495,38 +1164,25 @@
                 .attr('title', saved ? 'Clear CA amount' : 'No CA amount to clear');
         }
 
-        // ── OPEN EDIT ITEM ──
         function openEditItem(index) {
             const item = mergedItems[index];
-
             $('#infoInvoiceTyp').text(item.invoice_typ);
             $('#infoInvoiceCtg').text(item.invoice_ctg);
             $('#infoHargaJual').text(formatNumber(item.hargajual_idr));
             $('#infoTotalKasbon').text(formatNumber(item.hpp_ops));
-
-            // ← simpan HPP untuk validasi
             $('#activeHppValue').val(item.hpp_ops || 0);
             $('#activeJoOtherItemId').val(item.id_jo_other_item);
             $('#activeRowIndex').val(index);
-
-            // ← prefill old value jika sudah ada
-            if (item.has_kasbon && item.nilai_kasbon > 0) {
+            if (item.has_kasbon && item.nilai_kasbon > 0)
                 $('#inputNilaiKasbon').val(formatRupiah(item.nilai_kasbon.toFixed(2).replace('.', ',')));
-            } else {
+            else
                 $('#inputNilaiKasbon').val('');
-            }
-
-            // ← reset & trigger validasi awal
             resetCaValidation();
             validateCaInput();
-
             $('.item-row').removeClass('tr-active');
             $(`#row_${index}`).addClass('tr-active');
             $('#inputItemCard').addClass('active');
-
-            $('html, body').animate({
-                scrollTop: $('#inputItemCard').offset().top - 120
-            }, 400);
+            $('html, body').animate({ scrollTop: $('#inputItemCard').offset().top - 120 }, 400);
             setTimeout(() => $('#inputNilaiKasbon').focus(), 450);
         }
 
@@ -1542,33 +1198,21 @@
             $('.item-row').removeClass('tr-active');
         }
 
-        // ── SAVE ITEM ──
         $('#btnSaveItemInput').on('click', saveItemInput);
-        $('#inputNilaiKasbon').on('keydown', function(e) {
-            if (e.key === 'Enter') saveItemInput();
-        });
-        // ← tambah binding validasi realtime
+        $('#inputNilaiKasbon').on('keydown', function(e) { if (e.key === 'Enter') saveItemInput(); });
         $('#inputNilaiKasbon').on('input blur', validateCaInput);
 
         function saveItemInput() {
             const joOtherItemId = $('#activeJoOtherItemId').val();
-            const rowIndex = parseInt($('#activeRowIndex').val());
-            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
+            const rowIndex      = parseInt($('#activeRowIndex').val());
+            const nilaiKasbon   = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp           = parseFloat($('#activeHppValue').val() || '0');
 
-            if (!joOtherItemId) {
-                showFloatingAlert('error', 'No item selected');
-                return;
-            }
-            if (nilaiKasbon <= 0) {
-                showFloatingAlert('error', 'Please enter a CA Amount');
-                return;
-            }
+            if (!joOtherItemId) { showFloatingAlert('error', 'No item selected'); return; }
+            if (nilaiKasbon <= 0) { showFloatingAlert('error', 'Please enter a CA Amount'); return; }
             if (hpp > 0 && nilaiKasbon > hpp) {
-                showFloatingAlert('error',
-                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
-                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
-                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                showFloatingAlert('error', `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
+                setHint($('#caValidationHint'), $('#inputNilaiKasbon'), `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
                 return;
             }
 
@@ -1577,198 +1221,94 @@
             $.ajax({
                 url: checkConflictUrl,
                 method: 'GET',
-                data: {
-                    id_jo_other_item: joOtherItemId,
-                    id_kasbon_other: currentKasbonOtherStr // ← sudah benar
-                },
+                data: { id_jo_other_item: joOtherItemId, id_kasbon_other: currentKasbonOtherStr },
                 success: function(res) {
-                    if (res.success && res.has_conflict) {
-                        showConflictModal(
-                            res.conflict.id_kasbon_other,
-                            res.conflict.nilai_kasbon,
-                            function() {
-                                executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, true);
-                            }
-                        );
-                    } else {
+                    if (res.success && res.has_conflict)
+                        showConflictModal(res.conflict.id_kasbon_other, res.conflict.nilai_kasbon,
+                            function() { executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, true); });
+                    else
                         executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
-                    }
                 },
-                error: function() {
-                    executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
-                }
+                error: function() { executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false); }
             });
         }
 
-        // ── CLEAR SINGLE ITEM ──
         function clearItem(index) {
             const item = mergedItems[index];
             showConfirm({
                 title: 'Clear CA Amount?',
                 desc: `This will remove the CA amount for "${item.invoice_typ}".`,
-                okLabel: 'Yes, clear it',
-                okClass: 'btn-danger',
-                iconClass: 'danger',
+                okLabel: 'Yes, clear it', okClass: 'btn-danger', iconClass: 'danger',
             }, function() {
                 showFloatingAlert('saving', 'Clearing...');
                 $.ajax({
                     url: bulkSaveUrl,
                     method: 'POST',
                     contentType: 'application/json',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    data: JSON.stringify({
-                        items: [{
-                            id_jo_other_item: item.id_jo_other_item,
-                            nilai_kasbon: 0
-                        }],
-                        _token: csrfToken
-                    }),
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    data: JSON.stringify({ items: [{ id_jo_other_item: item.id_jo_other_item, nilai_kasbon: 0 }], _token: csrfToken }),
                     success: function(response) {
                         if (response.success) {
                             showFloatingAlert('success', 'CA Amount cleared!');
                             mergedItems[index].nilai_kasbon = 0;
-                            mergedItems[index].has_kasbon = false;
+                            mergedItems[index].has_kasbon   = false;
                             refreshRowAfterSave(index, 0, false);
                             if (parseInt($('#activeRowIndex').val()) === index) closeInputCard();
                             updateFooter();
-                        } else {
-                            showFloatingAlert('error', response.message || 'Failed to clear');
-                        }
+                        } else { showFloatingAlert('error', response.message || 'Failed to clear'); }
                     },
-                    error: function(xhr) {
-                        showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to clear item');
-                    }
+                    error: function(xhr) { showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to clear item'); }
                 });
             });
         }
 
-        // ── RESET ALL ──
         $('#btnResetAllItems').on('click', function() {
             const filledCount = mergedItems.filter(i => i.has_kasbon && i.nilai_kasbon > 0).length;
-            if (filledCount === 0) {
-                showFloatingAlert('error', 'No CA amounts to reset');
-                return;
-            }
-
+            if (filledCount === 0) { showFloatingAlert('error', 'No CA amounts to reset'); return; }
             showConfirm({
                 title: 'Reset All CA Amounts?',
                 desc: `This will clear the CA amount for all ${filledCount} filled item(s).`,
-                okLabel: 'Yes, reset all',
-                okClass: 'btn-danger',
-                iconClass: 'danger',
+                okLabel: 'Yes, reset all', okClass: 'btn-danger', iconClass: 'danger',
             }, function() {
                 showFloatingAlert('saving', 'Resetting all CA amounts...');
                 const payload = mergedItems.filter(i => i.has_kasbon && i.nilai_kasbon > 0)
-                    .map(i => ({
-                        id_jo_other_item: i.id_jo_other_item,
-                        nilai_kasbon: 0
-                    }));
-
+                    .map(i => ({ id_jo_other_item: i.id_jo_other_item, nilai_kasbon: 0 }));
                 $.ajax({
                     url: bulkSaveUrl,
                     method: 'POST',
                     contentType: 'application/json',
-                    headers: {
-                        'X-CSRF-TOKEN': csrfToken
-                    },
-                    data: JSON.stringify({
-                        items: payload,
-                        _token: csrfToken
-                    }),
+                    headers: { 'X-CSRF-TOKEN': csrfToken },
+                    data: JSON.stringify({ items: payload, _token: csrfToken }),
                     success: function(response) {
                         if (response.success) {
                             showFloatingAlert('success', 'All CA amounts have been reset!');
                             mergedItems.forEach(function(item, index) {
                                 if (item.has_kasbon && item.nilai_kasbon > 0) {
                                     mergedItems[index].nilai_kasbon = 0;
-                                    mergedItems[index].has_kasbon = false;
+                                    mergedItems[index].has_kasbon   = false;
                                     refreshRowAfterSave(index, 0, false);
                                 }
                             });
                             closeInputCard();
                             updateFooter();
-                        } else {
-                            showFloatingAlert('error', response.message || 'Failed to reset');
-                        }
+                        } else { showFloatingAlert('error', response.message || 'Failed to reset'); }
                     },
-                    error: function(xhr) {
-                        showFloatingAlert('error', xhr.responseJSON?.message ||
-                            'Failed to reset CA amounts');
-                    }
+                    error: function(xhr) { showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to reset CA amounts'); }
                 });
             });
         });
 
-        // ── UPDATE FOOTER ──
-        function updateFooter() {
-            let totalHargaJual = 0,
-                totalHPP = 0,
-                totalCA = 0;
-            mergedItems.forEach(function(item) {
-                totalHargaJual += parseFloat(item.hargajual_idr) || 0;
-                totalHPP += parseFloat(item.hpp_ops) || 0;
-                totalCA += parseFloat(item.nilai_kasbon) || 0;
-            });
-            $('#footerTotalHargaJual').text(formatNumber(totalHargaJual));
-            $('#footerTotalHPP').text(formatNumber(totalHPP));
-            $('#footerTotalCA').text(formatNumber(totalCA));
-        }
-
-        // ── JO ITEMS MODAL ──
-        function renderJoItemsModal(items) {
-            $('#joItemsModalLoading').hide();
-            if (!items || !items.length) {
-                $('#joItemsModalEmpty').show();
-                return;
-            }
-
-            let rows = '',
-                totalHpp = 0,
-                totalSell = 0;
-            items.forEach(function(item, idx) {
-                const hpp = parseFloat(item.hpp_ops || 0),
-                    sell = parseFloat(item.hargajual_idr || 0);
-                totalHpp += hpp;
-                totalSell += sell;
-                rows += `
-                    <tr>
-                        <td style="text-align:center;">${idx + 1}</td>
-                        <td style="font-weight:600;">${item.invoice_typ || item.id_jo_other_item}</td>
-                        <td>
-                            <span style="background:#d1fae5; color:#2c3e50; padding:3px 10px;
-                                border-radius:20px; font-size:.78rem; font-weight:600;">
-                                ${item.invoice_ctg || '—'}
-                            </span>
-                        </td>
-                        <td style="text-align:right; font-family:monospace;">${formatNumber(hpp)}</td>
-                        <td style="text-align:right; font-family:monospace;">${formatNumber(sell)}</td>
-                    </tr>`;
-            });
-            $('#joItemsModalBody').html(rows);
-            $('#joItemsTotalHpp').text(formatNumber(totalHpp));
-            $('#joItemsTotalSell').text(formatNumber(totalSell));
-            $('#joItemsModalCount').text(items.length + ' item' + (items.length !== 1 ? 's' : '') + ' found');
-            $('#joItemsModalContent').show();
-        }
-
-        // ── UPDATE HEADER ──
-        // ── UPDATE HEADER ──
         $('#btnSaveHeader').on('click', function() {
-            const idJoOther = $('#id_jo_other').val();
-            const idDep = $('#id_md_dep').val();
-            const idCabang = $('#id_md_cabang').val();
-            const idRelease = $('#id_md_release').val();
-            const tglKasbon = $('#tgl_kasbon').val();
-            const priority = $('#priority').val();
-            const dueDate = $('#due_date').val();
+            const idJoOther  = $('#id_jo_other').val();
+            const idDep      = $('#id_md_dep').val();
+            const idCabang   = $('#id_md_cabang').val();
+            const idRelease  = $('#id_md_release').val();
+            const tglKasbon  = $('#tgl_kasbon').val();
 
             if (!idJoOther || !idDep || !idCabang || !idRelease || !tglKasbon) {
                 showFloatingAlert('error', 'Please fill in all required fields');
                 return;
             }
-
             showFloatingAlert('saving', 'Updating header...');
             $('#btnSaveHeader').prop('disabled', true);
 
@@ -1776,18 +1316,18 @@
                 url: updateHeaderUrl,
                 method: 'POST',
                 data: {
-                    id_jo_other: idJoOther,
-                    id_md_dep: idDep,
-                    id_md_cabang: idCabang,
-                    id_md_release: idRelease,
-                    tgl_kasbon: tglKasbon,
-                    tgl_release: $('#tgl_release').val(),
-                    note: $('#note').val(),
-                    priority: priority,
-                    due_date: dueDate,
-                    ca_release_status: $('#ca_release_status').val(),
-                    ca_release_date: $('#ca_release_date').val(),
-                    _token: csrfToken,
+                    id_jo_other:        idJoOther,
+                    id_md_dep:          idDep,
+                    id_md_cabang:       idCabang,
+                    id_md_release:      idRelease,
+                    tgl_kasbon:         tglKasbon,
+                    tgl_release:        $('#tgl_release').val(),
+                    note:               $('#note').val(),
+                    priority:           $('#priority').val(),
+                    due_date:           $('#due_date').val(),
+                    ca_release_status:  $('#ca_release_status').val(),
+                    ca_release_date:    $('#ca_release_date').val(),
+                    _token:             csrfToken,
                 },
                 success: function(response) {
                     $('#btnSaveHeader').prop('disabled', false);
@@ -1797,9 +1337,7 @@
                             showFloatingAlert('saving', 'JO Other changed — reloading page...');
                             setTimeout(() => window.location.reload(), 1200);
                         }
-                    } else {
-                        showFloatingAlert('error', response.message || 'Failed to update header');
-                    }
+                    } else { showFloatingAlert('error', response.message || 'Failed to update header'); }
                 },
                 error: function(xhr) {
                     $('#btnSaveHeader').prop('disabled', false);
@@ -1808,69 +1346,85 @@
             });
         });
 
-        // ── INIT ──
-        $(document).ready(function() {
-            $('.select2-field').select2({
-                theme: 'bootstrap-5',
-                width: '100%'
+        function updateFooter() {
+            let totalHargaJual = 0, totalHPP = 0, totalCA = 0;
+            mergedItems.forEach(function(item) {
+                totalHargaJual += parseFloat(item.hargajual_idr) || 0;
+                totalHPP       += parseFloat(item.hpp_ops)       || 0;
+                totalCA        += parseFloat(item.nilai_kasbon)   || 0;
             });
+            $('#footerTotalHargaJual').text(formatNumber(totalHargaJual));
+            $('#footerTotalHPP').text(formatNumber(totalHPP));
+            $('#footerTotalCA').text(formatNumber(totalCA));
+        }
+
+        function renderJoItemsModal(items) {
+            $('#joItemsModalLoading').hide();
+            if (!items || !items.length) { $('#joItemsModalEmpty').show(); return; }
+            let rows = '', totalHpp = 0, totalSell = 0;
+            items.forEach(function(item, idx) {
+                const hpp = parseFloat(item.hpp_ops || 0), sell = parseFloat(item.hargajual_idr || 0);
+                totalHpp  += hpp;
+                totalSell += sell;
+                rows += `<tr>
+                    <td style="text-align:center;">${idx + 1}</td>
+                    <td style="font-weight:600;">${item.invoice_typ || item.id_jo_other_item}</td>
+                    <td><span style="background:#d1fae5; color:#2c3e50; padding:3px 10px;
+                        border-radius:20px; font-size:.78rem; font-weight:600;">${item.invoice_ctg || '—'}</span></td>
+                    <td style="text-align:right; font-family:monospace;">${formatNumber(hpp)}</td>
+                    <td style="text-align:right; font-family:monospace;">${formatNumber(sell)}</td>
+                </tr>`;
+            });
+            $('#joItemsModalBody').html(rows);
+            $('#joItemsTotalHpp').text(formatNumber(totalHpp));
+            $('#joItemsTotalSell').text(formatNumber(totalSell));
+            $('#joItemsModalCount').text(items.length + ' item' + (items.length !== 1 ? 's' : '') + ' found');
+            $('#joItemsModalContent').show();
+        }
+
+        $(document).ready(function() {
+            $('.select2-field').select2({ theme: 'bootstrap-5', width: '100%' });
 
             function formatDate(raw) {
                 if (!raw) return '—';
-                return new Date(raw).toLocaleDateString('id-ID', {
-                    day: '2-digit',
-                    month: 'short',
-                    year: 'numeric'
-                });
+                return new Date(raw).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
             }
 
-            // ── CA Release Status toggle ──
             function handleReleaseStatusChange() {
                 const status = $('#ca_release_status').val();
-                const $statusWrapper = $('#caReleaseStatusWrapper');
-                const $dateWrapper = $('#caReleaseDateWrapper');
                 if (status === 'release') {
-                    $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
-                    $dateWrapper.show();
+                    $('#caReleaseStatusWrapper').removeClass('col-md-12').addClass('col-md-6');
+                    $('#caReleaseDateWrapper').show();
                 } else {
-                    $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
-                    $dateWrapper.hide();
+                    $('#caReleaseStatusWrapper').removeClass('col-md-6').addClass('col-md-12');
+                    $('#caReleaseDateWrapper').hide();
                     $('#ca_release_date').val('');
                 }
             }
-            handleReleaseStatusChange(); // init on load
-            $('#ca_release_status').on('change', function() {
-                handleReleaseStatusChange();
-            });
+            handleReleaseStatusChange();
+            $('#ca_release_status').on('change', handleReleaseStatusChange);
 
             function populateJoSummary(idJoOther) {
                 if (!idJoOther) return;
                 const $opt = $('#id_jo_other').find(`option[value="${idJoOther}"]`);
-
                 $('#joSummaryNo').text($opt.data('no') || idJoOther);
                 $('#joSummaryNo2').text($opt.data('no') || idJoOther);
                 $('#joSummaryTitle').text($opt.data('title') || '—');
                 $('#joSummaryDate').text(formatDate($opt.data('tgl')));
                 $('#joSummaryCustomer').text($opt.data('customer') || '—');
                 $('#joSummaryNote').text($opt.data('note') || '—');
-                $('#joSummaryItemCount').html(
-                    '<i class="fas fa-circle-notch fa-spin" style="color:#10b981; font-size:.8rem;"></i>');
+                $('#joSummaryItemCount').html('<i class="fas fa-circle-notch fa-spin" style="color:#10b981; font-size:.8rem;"></i>');
                 $('#joSummaryWrapper').show();
-
                 $.ajax({
                     url: '{{ route('kasbon-other.jo-items.get') }}',
                     method: 'GET',
-                    data: {
-                        id_jo_other: idJoOther
-                    },
+                    data: { id_jo_other: idJoOther },
                     success: function(r) {
                         const n = r.success ? r.data.length : 0;
                         $('#joSummaryItemCount').text(n + ' item' + (n !== 1 ? 's' : ''));
                         if (r.success) joItemsCache = r.data;
                     },
-                    error: function() {
-                        $('#joSummaryItemCount').text('—');
-                    }
+                    error: function() { $('#joSummaryItemCount').text('—'); }
                 });
             }
 
@@ -1879,10 +1433,7 @@
             $('#id_jo_other').on('change', function() {
                 const id = $(this).val();
                 joItemsCache = [];
-                if (!id) {
-                    $('#joSummaryWrapper').hide();
-                    return;
-                }
+                if (!id) { $('#joSummaryWrapper').hide(); return; }
                 populateJoSummary(id);
             });
 
@@ -1890,29 +1441,20 @@
                 const id = $('#id_jo_other').val();
                 if (!id) return;
                 const $opt = $('#id_jo_other').find('option:selected');
-                $('#joItemsModalSubtitle').text(($opt.data('no') || id) + ' — ' + ($opt.data('title') ||
-                    ''));
+                $('#joItemsModalSubtitle').text(($opt.data('no') || id) + ' — ' + ($opt.data('title') || ''));
                 $('#joItemsModalLoading').show();
                 $('#joItemsModalContent').hide();
                 $('#joItemsModalEmpty').hide();
                 $('#joItemsModal').modal('show');
-
                 if (joItemsCache.length > 0) {
                     renderJoItemsModal(joItemsCache);
                 } else {
                     $.ajax({
                         url: '{{ route('kasbon-other.jo-items.get') }}',
                         method: 'GET',
-                        data: {
-                            id_jo_other: id
-                        },
-                        success: function(r) {
-                            joItemsCache = r.success ? r.data : [];
-                            renderJoItemsModal(joItemsCache);
-                        },
-                        error: function() {
-                            renderJoItemsModal([]);
-                        }
+                        data: { id_jo_other: id },
+                        success: function(r) { joItemsCache = r.success ? r.data : []; renderJoItemsModal(joItemsCache); },
+                        error: function() { renderJoItemsModal([]); }
                     });
                 }
             });
@@ -1921,4 +1463,25 @@
             renderTable();
         });
     </script>
+
+    {{-- CONFLICT MODAL --}}
+    <div class="confirm-modal-overlay" id="conflictModal" style="z-index:10500;">
+        <div class="confirm-modal-box" style="max-width:460px;">
+            <div class="modal-icon warning" style="background:#fef3c7; color:#d97706;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h5>Item Already Filled in Another CA</h5>
+            <p>
+                Cash Advance <strong id="conflictKasbonNo">—</strong> already has a CA amount for this item.<br>
+                <span id="conflictAmount" style="font-size:.85rem; color:#6b7280;"></span>
+            </p>
+            <p style="font-size:.82rem; color:#991b1b; background:#fee2e2; border-radius:8px; padding:10px 14px; margin-bottom:24px;">
+                If you proceed, the CA amount in <strong id="conflictKasbonNoInline">—</strong> will be <strong>removed and replaced</strong>.
+            </p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline-secondary" id="conflictModalCancel">Cancel</button>
+                <button type="button" class="btn btn-danger" id="conflictModalProceed">Yes, Replace It</button>
+            </div>
+        </div>
+    </div>
 @endpush

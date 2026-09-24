@@ -21,7 +21,7 @@ class KasbonOtherItem extends Model
         'nilai_hpp_other_item',
         'nilai_kasbon',
         'total_kasbon',
-        'origin_lpj_other',    // ← baru
+        'origin_lpj_other',    
     ];
 
     protected $casts = [
