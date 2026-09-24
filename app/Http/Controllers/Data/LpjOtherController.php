@@ -210,7 +210,7 @@ class LpjOtherController extends Controller
                         'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
                         'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
                         'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
-                        'origin_lpj_other'       => $kasbonItem->joOtherItem->origin_lpj_other ?? null,
+                        'origin_lpj_other' => $kasbonItem->origin_lpj_other ?? null,
                     ];
                 }
             }
