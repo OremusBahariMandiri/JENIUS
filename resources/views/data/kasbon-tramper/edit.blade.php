@@ -15,7 +15,7 @@
             'nilai_kasbon' => $i['nilai_kasbon'],
             'total_kasbon' => $i['total_kasbon'],
             'has_kasbon' => $i['has_kasbon'],
-            'has_kasbon' => $i['has_kasbon'],
+            'has_lpj_amount' => $i['has_lpj_amount'], // ← TAMBAH
             'origin_lpj_tram' => $i['origin_lpj_tram'] ?? null,
         ],
     );
@@ -795,6 +795,167 @@
             font-size: .8rem;
             color: #1e40af;
         }
+
+        /* CONFLICT MODAL */
+        .conflict-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, .55);
+            z-index: 10500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .conflict-modal-overlay.show {
+            display: flex;
+        }
+
+        .conflict-modal-box {
+            background: white;
+            border-radius: 16px;
+            max-width: 460px;
+            width: 92%;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, .25);
+            animation: conflictModalIn .28s cubic-bezier(.34, 1.56, .64, 1);
+            overflow: hidden;
+        }
+
+        @keyframes conflictModalIn {
+            from {
+                transform: scale(.88);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .conflict-modal-header {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            padding: 22px 24px 18px;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+
+        .conflict-modal-header .icon-wrap {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, .22);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.3rem;
+            color: white;
+        }
+
+        .conflict-modal-header .title-wrap h5 {
+            color: white;
+            font-weight: 700;
+            font-size: 1.05rem;
+            margin: 0 0 4px;
+        }
+
+        .conflict-modal-header .title-wrap p {
+            color: rgba(255, 255, 255, .88);
+            font-size: .82rem;
+            margin: 0;
+            line-height: 1.45;
+        }
+
+        .conflict-modal-body {
+            padding: 22px 24px 0;
+        }
+
+        .conflict-detail-card {
+            background: #fffbeb;
+            border: 1.5px solid #fde68a;
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+        }
+
+        .conflict-detail-card .label {
+            font-size: .72rem;
+            font-weight: 700;
+            color: #92400e;
+            text-transform: uppercase;
+            letter-spacing: .5px;
+            margin-bottom: 5px;
+        }
+
+        .conflict-detail-card .kasbon-no {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #b45309;
+            font-family: monospace;
+        }
+
+        .conflict-detail-card .amount {
+            font-size: .875rem;
+            color: #78350f;
+            margin-top: 3px;
+        }
+
+        .conflict-warning-text {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: .82rem;
+            color: #991b1b;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .conflict-warning-text i {
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .conflict-modal-footer {
+            padding: 0 24px 22px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .conflict-modal-footer .btn {
+            flex: 1;
+            padding: 11px;
+            font-weight: 600;
+            border-radius: 9px;
+        }
+
+        .btn-conflict-cancel {
+            background: white;
+            border: 1.5px solid #d1d5db;
+            color: #374151;
+        }
+
+        .btn-conflict-cancel:hover {
+            background: #f3f4f6;
+        }
+
+        .btn-conflict-proceed {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border: none;
+            color: white;
+            box-shadow: 0 4px 12px rgba(220, 38, 38, .35);
+        }
+
+        .btn-conflict-proceed:hover {
+            transform: translateY(-1px);
+            color: white;
+        }
+        
     </style>
 @endpush
 
@@ -1335,6 +1496,42 @@
         </div>
     </div>
 
+    {{-- CONFLICT MODAL --}}
+    <div class="conflict-modal-overlay" id="conflictModal">
+        <div class="conflict-modal-box">
+            <div class="conflict-modal-header">
+                <div class="icon-wrap"><i class="fas fa-triangle-exclamation"></i></div>
+                <div class="title-wrap">
+                    <h5>Item Already Filled in Another Cash Advance</h5>
+                    <p>This item has an existing CA amount in a different Cash Advance record.</p>
+                </div>
+            </div>
+            <div class="conflict-modal-body">
+                <div class="conflict-detail-card">
+                    <div class="label">Existing Cash Advance</div>
+                    <div class="kasbon-no" id="conflictKasbonNo">—</div>
+                    <div class="amount" id="conflictAmount">—</div>
+                </div>
+                <div class="conflict-warning-text">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>
+                        If you proceed, the CA amount in Cash Advance
+                        <strong id="conflictKasbonNoInline">—</strong>
+                        will be <strong>removed and replaced</strong> with the new amount you entered.
+                    </span>
+                </div>
+            </div>
+            <div class="conflict-modal-footer">
+                <button type="button" class="btn btn-conflict-cancel" id="conflictModalCancel">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </button>
+                <button type="button" class="btn btn-conflict-proceed" id="conflictModalProceed">
+                    <i class="fas fa-check me-1"></i> Yes, Replace It
+                </button>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('scripts')
@@ -1351,8 +1548,8 @@
         const currentKasbonTramStr = '{{ $kasbonTramper->id_kasbon_tram }}';
         const originalIdJoTram = '{{ $kasbonTramper->id_jo_tram }}';
         const bulkSaveUrl = '{{ route('kasbon-tramper.items.bulk-save', $kasbonTramper->id) }}';
-        const checkConflictUrl = '{{ route('kasbon-tramper.item.check-conflict') }}';
         const clearConflictUrl = '{{ route('kasbon-tramper.item.clear-conflict') }}';
+        const checkConflictUrl = '{{ route('kasbon-tramper.item.check-conflict') }}';
         const updateHeaderUrl = '/kasbon-tramper/header/update/{{ $kasbonTramper->id }}';
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
@@ -1360,6 +1557,33 @@
         let confirmCallback = null;
         let conflictProceedCb = null;
         let joItemsCache = [];
+
+        function showConflictModal(kasbonNo, nilaiKasbon, onProceed) {
+            $('#conflictKasbonNo').text(kasbonNo);
+            $('#conflictKasbonNoInline').text(kasbonNo);
+            $('#conflictAmount').text('Current CA Amount: IDR ' + formatNumber(nilaiKasbon));
+            conflictProceedCb = onProceed;
+            $('#conflictModal').addClass('show');
+        }
+        $('#conflictModal').on('click', function(e) {
+            if (e.target === this) closeConflictModal(false);
+        });
+        $('#conflictModalCancel').on('click', function() {
+            closeConflictModal(false);
+        });
+        $('#conflictModalProceed').on('click', function() {
+            closeConflictModal(true);
+        });
+
+        function closeConflictModal(proceed) {
+            $('#conflictModal').removeClass('show');
+            if (proceed && typeof conflictProceedCb === 'function') {
+                conflictProceedCb();
+            } else {
+                $('#btnSaveItemInput').prop('disabled', false);
+            }
+            conflictProceedCb = null;
+        }
 
         // ══════════════════════════════════════════════════════════
         // CONFIRM MODAL
@@ -1711,6 +1935,7 @@
             $('#activeHppValue').val('0');
             resetCaValidation();
             $('.item-row').removeClass('tr-active');
+            updateFooter(); // ← reset ke nilai aktual setelah cancel
         }
 
         // ══════════════════════════════════════════════════════════
@@ -1747,6 +1972,82 @@
                 error: function(xhr) {
                     $('#btnSaveItemInput').prop('disabled', false);
                     showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to save item');
+                }
+            });
+        }
+
+        function executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, hasConflict) {
+            showFloatingAlert('saving', hasConflict ? 'Removing previous CA amount...' : 'Saving...');
+            if (hasConflict) {
+                $.ajax({
+                    url: clearConflictUrl,
+                    method: 'POST',
+                    data: {
+                        id_jo_tram_item: joTramItemId,
+                        id_kasbon_tram: currentKasbonTramStr,
+                        _token: csrfToken
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            showFloatingAlert('saving', 'Saving new CA amount...');
+                            doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
+                        } else {
+                            $('#btnSaveItemInput').prop('disabled', false);
+                            showFloatingAlert('error', 'Failed to clear previous CA: ' + (res.message || ''));
+                        }
+                    },
+                    error: function() {
+                        showFloatingAlert('saving', 'Saving...');
+                        doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
+                    }
+                });
+            } else {
+                doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
+            }
+        }
+
+        function saveItemInput() {
+            const joTramItemId = $('#activeJoContItemId').val();
+            const rowIndex = parseInt($('#activeRowIndex').val());
+            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp = parseFloat($('#activeHppValue').val() || '0');
+
+            if (!joTramItemId) {
+                showFloatingAlert('error', 'No item selected');
+                return;
+            }
+            if (nilaiKasbon <= 0) {
+                showFloatingAlert('error', 'Please enter a CA Amount');
+                return;
+            }
+            if (hpp > 0 && nilaiKasbon > hpp) {
+                showFloatingAlert('error',
+                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
+                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
+                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                return;
+            }
+
+            $('#btnSaveItemInput').prop('disabled', true);
+
+            $.ajax({
+                url: checkConflictUrl,
+                method: 'GET',
+                data: {
+                    id_jo_tram_item: joTramItemId,
+                    id_kasbon_tram: currentKasbonTramStr
+                },
+                success: function(res) {
+                    if (res.success && res.has_conflict) {
+                        showConflictModal(res.conflict.id_kasbon_tram, res.conflict.nilai_kasbon, function() {
+                            executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, true);
+                        });
+                    } else {
+                        executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, false);
+                    }
+                },
+                error: function() {
+                    executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, false);
                 }
             });
         }
@@ -1837,10 +2138,96 @@
         $('#inputNilaiKasbon').on('input blur', validateCaInput);
 
         // ══════════════════════════════════════════════════════════
+        // REALTIME FOOTER PREVIEW saat mengetik nilai kasbon
+        // ══════════════════════════════════════════════════════════
+        $('#inputNilaiKasbon').on('input', function() {
+            const rowIndex = parseInt($('#activeRowIndex').val());
+            if (isNaN(rowIndex) || rowIndex < 0) return;
+
+            const newVal = parseRupiah($(this).val());
+            const oldVal = parseFloat(mergedItems[rowIndex].nilai_kasbon) || 0;
+
+            // Hitung preview total footer
+            let totalHargaJual = 0,
+                totalHPP = 0,
+                totalCA = 0;
+            mergedItems.forEach(function(item, idx) {
+                totalHargaJual += parseFloat(item.hargajual_idr) || 0;
+                totalHPP += parseFloat(item.hpp_ops) || 0;
+                // Pakai nilai baru untuk baris yang sedang diedit
+                totalCA += idx === rowIndex ? newVal : (parseFloat(item.nilai_kasbon) || 0);
+            });
+
+            $('#footerTotalHargaJual').text(formatNumber(totalHargaJual));
+            $('#footerTotalHPP').text(formatNumber(totalHPP));
+            $('#footerTotalCA').text(formatNumber(totalCA));
+        });
+
+        // ══════════════════════════════════════════════════════════
+        // CLEAR SINGLE ITEM
+        // ══════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
+        // BLOCKED CLEAR MODAL
+        // ══════════════════════════════════════════════════════════
+        function showBlockedClearModal(itemText) {
+            $('#blockedClearModal').remove();
+
+            const html = `
+    <div class="modal fade" id="blockedClearModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px 12px 0 0;border:none;">
+                    <h5 class="modal-title text-white fw-bold">
+                        <i class="fas fa-ban me-2"></i>Cannot Clear CA Amount
+                    </h5>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2">The following item cannot be cleared:</p>
+                    <div class="p-3 rounded mb-3" style="background:#fef3c7;border:1px solid #fcd34d;">
+                        <strong style="color:#92400e;">${itemText}</strong>
+                    </div>
+                    <div class="alert alert-warning d-flex gap-2 align-items-start mb-3" style="border-radius:8px;">
+                        <i class="fas fa-link mt-1" style="flex-shrink:0;"></i>
+                        <div>
+                            <strong>This item is still used in:</strong><br>
+                            <strong>1</strong> LPJ item(s)
+                        </div>
+                    </div>
+                    <div class="p-3 rounded" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:.875rem;">
+                        <i class="fas fa-info-circle me-2" style="color:#3b82f6;"></i>
+                        To clear this CA amount, first remove its related LPJ amount,
+                        then come back to clear it here.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+            $('body').append(html);
+            const modal = new bootstrap.Modal(document.getElementById('blockedClearModal'));
+            modal.show();
+            $('#blockedClearModal').on('hidden.bs.modal', function() {
+                $(this).remove();
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════
         // CLEAR SINGLE ITEM
         // ══════════════════════════════════════════════════════════
         function clearItem(index) {
             const item = mergedItems[index];
+
+            // ── Blokir jika dipakai di LPJ ──
+            if (item.has_lpj_amount) {
+                showBlockedClearModal(item.invoice_typ);
+                return;
+            }
+
             showConfirm({
                 title: 'Clear CA Amount?',
                 desc: `This will remove the CA amount for "${item.invoice_typ}".`,
@@ -1868,15 +2255,16 @@
                             showFloatingAlert('success', 'CA Amount cleared!');
                             mergedItems[index].nilai_kasbon = 0;
                             mergedItems[index].has_kasbon = false;
+                            mergedItems[index].has_lpj_amount = false;
                             refreshRowAfterSave(index, 0, false);
                             if (parseInt($('#activeRowIndex').val()) === index) closeInputCard();
                             updateFooter();
                         } else {
-                            showFloatingAlert('error', response.message || 'Failed to clear');
+                            showBlockedClearModal(item.invoice_typ);
                         }
                     },
                     error: function(xhr) {
-                        showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to clear item');
+                        showBlockedClearModal(item.invoice_typ);
                     }
                 });
             });

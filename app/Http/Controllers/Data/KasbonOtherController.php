@@ -763,6 +763,16 @@ class KasbonOtherController extends Controller
             $kasbonItem = $kasbonOther->items
                 ->firstWhere('id_jo_other_item', $joItem->id_jo_other_item);
 
+            // SESUDAH:
+            $hasLpjAmount = false;
+            $lpjCount = 0;
+            if ($kasbonItem) {
+                $lpjCount = \App\Models\Data\LpjOtherItem::where('id_kasbon_other_item', $kasbonItem->id_kasbon_other_item)
+                    ->where('amount_lpj', '>', 0)
+                    ->count();
+                $hasLpjAmount = $lpjCount > 0;
+            }
+
             return [
                 'id_jo_other_item'     => $joItem->id_jo_other_item,
                 'invoice_typ'          => $joItem->invoice->invoice_typ ?? $joItem->id_jo_other_item,
@@ -774,7 +784,9 @@ class KasbonOtherController extends Controller
                 'nilai_kasbon'         => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
                 'total_kasbon'         => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
                 'has_kasbon'           => $kasbonItem !== null,
-                'origin_lpj_other'     => $kasbonItem->origin_lpj_other ?? null,  // ← baru
+                'has_lpj_amount'       => $hasLpjAmount,   // ← TAMBAH
+                'lpj_count'            => $lpjCount,        // ← TAMBAH
+                'origin_lpj_other'     => $kasbonItem->origin_lpj_other ?? null,
             ];
         });
 
@@ -1148,11 +1160,11 @@ class KasbonOtherController extends Controller
                 } else {
                     if ($nilaiKasbon > 0) {
                         $maxId = DB::table('c06_kasbon_other_item')
-                            ->lockForUpdate()
                             ->selectRaw('MAX(CAST(id_kasbon_other_item AS UNSIGNED)) as max_id')
                             ->value('max_id');
+
                         KasbonOtherItem::create([
-                            'id_kasbon_other_item' => (string)(((int) $maxId) + 1),
+                            'id_kasbon_other_item' => (string) (((int) $maxId) + 1),
                             'id_kasbon_other'      => $kasbonOther->id_kasbon_other,
                             'id_jo_other_item'     => $itemData['id_jo_other_item'],
                             'nilai_hpp_other_item' => $nilaiHpp,
@@ -1161,6 +1173,31 @@ class KasbonOtherController extends Controller
                         ]);
                     }
                 }
+            }
+
+            // ── Recalculate LpjOther.amount untuk semua LPJ ──
+            // yang terhubung ke kasbon ini via d08_lpj_kasbon_other
+            $lpjLinks = \App\Models\Data\LpjKasbonOther::where(
+                'id_kasbon_other',
+                $kasbonOther->id_kasbon_other
+            )->get();
+
+            foreach ($lpjLinks as $lpjLink) {
+                $lpj = \App\Models\Data\LpjOther::with('kasbons')
+                    ->where('id_lpj_other', $lpjLink->id_lpj_other)->first();
+                if (!$lpj) continue;
+
+                $kasbonIds = $lpj->kasbons->pluck('id_kasbon_other');
+                $newAmount = $kasbonIds->isNotEmpty()
+                    ? KasbonOtherItem::whereIn('id_kasbon_other', $kasbonIds)->sum('nilai_kasbon')
+                    : 0;
+                $lpj->update(['amount' => $newAmount]);
+
+                Log::info('LpjOther amount recalculated after kasbon update', [
+                    'id_lpj_other'    => $lpjLink->id_lpj_other,
+                    'id_kasbon_other' => $kasbonOther->id_kasbon_other,
+                    'new_amount'      => $newAmount,
+                ]);
             }
 
             DB::commit();

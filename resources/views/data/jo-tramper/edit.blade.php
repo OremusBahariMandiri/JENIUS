@@ -906,6 +906,8 @@
         // GLOBAL VARIABLES
         // ========================================
         const currentJoTramperId = '{{ $joTramper->id_jo_tram }}';
+        const checkRelationsUrl = '{{ route('jo-tramper.item.check-relations', ':id') }}';
+        const destroyItemUrl = '/data/jo-tramper/item/destroy/:id';
         let globalItemNumber = {{ $joTramper->items->count() }};
 
         const invoicesByCategory = {
@@ -1489,41 +1491,263 @@
         // REMOVE ITEM (REALTIME DELETE)
         // ========================================
         function removeItem(button, itemId) {
-            if (!itemId) {
+            if (!itemId || itemId == 0) {
                 showFloatingAlert('error', 'Invalid item ID');
                 return;
             }
-            if (!confirm('Are you sure you want to delete this item?')) return;
 
-            showFloatingAlert('saving', 'Deleting item...');
+            const row = $(button).closest('tr');
+            const itemText = row.find('.item-text-cell .fw-semibold').text().trim() || 'this item';
+            const checkUrl = checkRelationsUrl.replace(':id', itemId);
+
+            showFloatingAlert('saving', 'Checking item relations...');
 
             $.ajax({
-                url: `/data/jo-tramper/item/destroy/${itemId}`,
+                url: checkUrl,
+                method: 'GET',
+                success: function(response) {
+                    hideFloatingAlert();
+                    if (!response.success) {
+                        showFloatingAlert('error', response.message || 'Failed to check relations');
+                        return;
+                    }
+                    if (response.has_relations) {
+                        showBlockedDeleteModal(itemText, response.kasbon_count, response.lpj_count);
+                    } else {
+                        showSimpleDeleteModal(button, itemId, itemText);
+                    }
+                },
+                error: function() {
+                    hideFloatingAlert();
+                    showSimpleDeleteModal(button, itemId, itemText);
+                }
+            });
+        }
+
+        function showBlockedDeleteModal(itemText, kasbonCount, lpjCount) {
+            $('#deleteItemModal').remove();
+
+            const relParts = [];
+            if (kasbonCount > 0) relParts.push(`<strong>${kasbonCount}</strong> Cash Advance item(s)`);
+            if (lpjCount > 0) relParts.push(`<strong>${lpjCount}</strong> LPJ item(s)`);
+
+            const html = `
+        <div class="modal fade" id="deleteItemModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                    <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px 12px 0 0;border:none;">
+                        <h5 class="modal-title text-white fw-bold">
+                            <i class="fas fa-ban me-2"></i>Cannot Delete Item
+                        </h5>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="mb-2">The following item cannot be deleted:</p>
+                        <div class="p-3 rounded mb-3" style="background:#fef3c7;border:1px solid #fcd34d;">
+                            <strong style="color:#92400e;">${itemText}</strong>
+                        </div>
+                        <div class="alert alert-warning d-flex gap-2 align-items-start mb-3" style="border-radius:8px;">
+                            <i class="fas fa-link mt-1" style="flex-shrink:0;"></i>
+                            <div>
+                                <strong>This item is still used in:</strong><br>
+                                ${relParts.join('<br>')}
+                            </div>
+                        </div>
+                        <div class="p-3 rounded" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:.875rem;">
+                            <i class="fas fa-info-circle me-2" style="color:#3b82f6;"></i>
+                            To delete this item, first remove its related Cash Advance and LPJ records,
+                            then come back to delete it here.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 px-4 pb-4">
+                        <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+            $('body').append(html);
+            const modal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
+            modal.show();
+            $('#deleteItemModal').on('hidden.bs.modal', function() {
+                $(this).remove();
+            });
+        }
+
+        function showSimpleDeleteModal(button, itemId, itemText) {
+            $('#deleteItemModal').remove();
+
+            const html = `
+        <div class="modal fade" id="deleteItemModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                    <div class="modal-header" style="background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:12px 12px 0 0;border:none;">
+                        <h5 class="modal-title text-white fw-bold">
+                            <i class="fas fa-trash-alt me-2"></i>Delete Item
+                        </h5>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="mb-2">You are about to delete:</p>
+                        <div class="p-3 rounded mb-3" style="background:#fee2e2;border:1px solid #fca5a5;">
+                            <strong style="color:#dc2626;">${itemText}</strong>
+                        </div>
+                        <p class="mb-0 text-muted" style="font-size:.875rem;">
+                            This item has no related Cash Advance or LPJ records. It is safe to delete.
+                        </p>
+                    </div>
+                    <div class="modal-footer border-0 px-4 pb-4 gap-2">
+                        <button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-danger flex-fill fw-bold" id="btnConfirmDelete">
+                            <i class="fas fa-trash me-1"></i> Yes, Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+            $('body').append(html);
+            const modal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
+            modal.show();
+
+            $('#btnConfirmDelete').on('click', function() {
+                modal.hide();
+                $('#deleteItemModal').on('hidden.bs.modal', function() {
+                    $(this).remove();
+                    executeDeleteItem(button, itemId);
+                });
+            });
+        }
+
+        // ─── Modal hapus dengan peringatan relasi (ada kasbon / lpj) ───
+        function showDeleteConfirmModal(button, itemId, itemText, kasbonCount, lpjCount) {
+            $('#deleteItemModal').remove();
+
+            const relInfo = [];
+            if (kasbonCount > 0) relInfo.push(`<strong>${kasbonCount}</strong> item Cash Advance (Kasbon)`);
+            if (lpjCount > 0) relInfo.push(`<strong>${lpjCount}</strong> item LPJ`);
+
+            const html = `
+        <div class="modal fade" id="deleteItemModal" tabindex="-1" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                    <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px 12px 0 0;border:none;">
+                        <h5 class="modal-title text-white fw-bold">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Peringatan — Item Memiliki Relasi
+                        </h5>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="mb-2">Anda akan menghapus item:</p>
+                        <div class="p-3 rounded mb-3" style="background:#fef3c7;border:1px solid #fcd34d;">
+                            <strong style="color:#92400e;">${itemText}</strong>
+                        </div>
+
+                        <div class="alert alert-warning d-flex gap-2 align-items-start mb-3" style="border-radius:8px;">
+                            <i class="fas fa-link mt-1" style="flex-shrink:0;"></i>
+                            <div>
+                                <strong>Item ini masih digunakan di:</strong><br>
+                                ${relInfo.join('<br>')}
+                            </div>
+                        </div>
+
+                        <div class="p-3 rounded" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;">
+                            <p class="mb-1 fw-bold" style="color:#991b1b;">
+                                <i class="fas fa-trash-alt me-1"></i>Jika Anda memilih <em>"Hapus Semua"</em>:
+                            </p>
+                            <ul class="mb-0 ps-3" style="color:#7f1d1d;font-size:0.9rem;">
+                                ${kasbonCount > 0 ? `<li>${kasbonCount} item Kasbon Tramper terkait akan ikut dihapus</li>` : ''}
+                                ${lpjCount    > 0 ? `<li>${lpjCount} item LPJ Tramper terkait akan ikut dihapus</li>` : ''}
+                                <li>Tindakan ini <strong>tidak dapat dibatalkan</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 px-4 pb-4 gap-2 flex-wrap">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="min-width:120px;">
+                            <i class="fas fa-times me-1"></i>Batal
+                        </button>
+                        <button type="button" class="btn fw-bold" id="btnConfirmCascadeDelete"
+                                style="background:linear-gradient(135deg,#ef4444,#dc2626);color:white;min-width:200px;">
+                            <i class="fas fa-trash-alt me-1"></i>Hapus Semua (JO + Kasbon + LPJ)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+            $('body').append(html);
+            const modal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
+            modal.show();
+
+            $('#btnConfirmCascadeDelete').on('click', function() {
+                modal.hide();
+                $('#deleteItemModal').on('hidden.bs.modal', function() {
+                    $(this).remove();
+                    executeDeleteItem(button, itemId, true);
+                });
+            });
+        }
+
+        // ─── Eksekusi hapus (dengan atau tanpa cascade) ───
+        function executeDeleteItem(button, itemId) {
+            showFloatingAlert('saving', 'Deleting item...');
+
+            const deleteUrl = destroyItemUrl.replace(':id', itemId);
+
+            $.ajax({
+                url: deleteUrl,
                 method: 'DELETE',
                 data: {
                     _token: $('meta[name="csrf-token"]').attr('content')
                 },
-                success: function(r) {
-                    if (!r.success) {
-                        showFloatingAlert('error', 'Failed to delete item');
-                        return;
-                    }
-                    showFloatingAlert('success', 'Item deleted successfully!');
+                success: function(response) {
+                    if (response.success) {
+                        showFloatingAlert('success', 'Item deleted successfully!');
 
-                    const row = $(button).closest('tr');
-                    const category = row.data('category');
-                    removeRowFromTable(row, category);
-                    renumberAllItems();
-                    updateGrandTotal();
-                    syncLpjNote();
+                        const row = $(button).closest('tr');
+                        const category = row.data('category');
+                        const catCell = row.find('.category-cell');
 
-                    if ($('#itemsTableBody tr.item-row').length === 0) {
-                        $('#itemsTableBody').html(emptyRowHtml());
+                        if (catCell.length > 0) {
+                            const rowspan = parseInt(catCell.attr('rowspan') || 1);
+                            if (rowspan > 1) {
+                                const nextRow = row.next(`.item-row[data-category="${category}"]`);
+                                if (nextRow.length > 0) {
+                                    nextRow.find('.item-text-cell').before(
+                                        `<td class="category-cell" rowspan="${rowspan - 1}">${category}</td>`
+                                    );
+                                }
+                            }
+                        } else {
+                            const prevRow = row.prevAll(`.item-row[data-category="${category}"]`).first();
+                            const prevCatCell = prevRow.find('.category-cell');
+                            if (prevCatCell.length > 0) {
+                                const cur = parseInt(prevCatCell.attr('rowspan') || 1);
+                                if (cur > 1) prevCatCell.attr('rowspan', cur - 1);
+                            }
+                        }
+
+                        row.remove();
+                        renumberAllItems();
+                        updateGrandTotal();
+                        if (typeof syncLpjNote === 'function') syncLpjNote();
+
+                        if ($('#itemsTableBody tr.item-row').length === 0) {
+                            $('#itemsTableBody').html(`
+                        <tr class="no-items-row">
+                            <td colspan="8">
+                                <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                <p class="mb-0 fw-bold">No data available</p>
+                                <small class="text-muted">Fill the form above and click "Add to Table"</small>
+                            </td>
+                        </tr>`);
+                        }
+                    } else {
+                        showFloatingAlert('error', response.message || 'Failed to delete item');
                     }
                 },
                 error: function(xhr) {
-                    const msg = xhr.responseJSON?.message || 'Failed to delete item';
-                    showFloatingAlert('error', msg);
+                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to delete item');
                 }
             });
         }

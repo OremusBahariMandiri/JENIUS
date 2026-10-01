@@ -41,7 +41,11 @@
                         @endif
 
                         {{-- Active Filter Badge --}}
-                        @if (!empty($currentFilters) && array_filter(array_intersect_key($currentFilters, array_flip(['no_jo','id_md_cust','id_md_vessel','id_md_port','title']))))
+                        @if (
+                            !empty($currentFilters) &&
+                                array_filter(array_intersect_key(
+                                        $currentFilters,
+                                        array_flip(['no_jo', 'id_md_cust', 'id_md_vessel', 'id_md_port', 'title']))))
                             <div class="alert alert-info alert-dismissible fade show" id="filterActiveAlert">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <strong>Active Filters:</strong>
@@ -49,13 +53,16 @@
                                     &nbsp;<span class="badge bg-primary">JO No: {{ $currentFilters['no_jo'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['id_md_cust']))
-                                    &nbsp;<span class="badge bg-primary">Customer: {{ $currentFilters['customer_label'] ?? $currentFilters['id_md_cust'] }}</span>
+                                    &nbsp;<span class="badge bg-primary">Customer:
+                                        {{ $currentFilters['customer_label'] ?? $currentFilters['id_md_cust'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['id_md_vessel']))
-                                    &nbsp;<span class="badge bg-primary">Vessel: {{ $currentFilters['vessel_label'] ?? $currentFilters['id_md_vessel'] }}</span>
+                                    &nbsp;<span class="badge bg-primary">Vessel:
+                                        {{ $currentFilters['vessel_label'] ?? $currentFilters['id_md_vessel'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['id_md_port']))
-                                    &nbsp;<span class="badge bg-primary">Port: {{ $currentFilters['port_label'] ?? $currentFilters['id_md_port'] }}</span>
+                                    &nbsp;<span class="badge bg-primary">Port:
+                                        {{ $currentFilters['port_label'] ?? $currentFilters['id_md_port'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['title']))
                                     &nbsp;<span class="badge bg-primary">Title: {{ $currentFilters['title'] }}</span>
@@ -179,8 +186,8 @@
                                     value="{{ request('no_jo', '') }}">
                             </div>
 
-                             {{-- Title --}}
-                             <div class="col-md-6">
+                            {{-- Title --}}
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Title</label>
                                 <input type="text" class="form-control" name="title"
                                     value="{{ request('title', '') }}">
@@ -189,10 +196,10 @@
                             {{-- Customer --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Customer</label>
-                                <select class="form-select select2-filter" name="id_md_cust"
-                                    id="filterCustomer" data-placeholder="-- Select Customers --">
+                                <select class="form-select select2-filter" name="id_md_cust" id="filterCustomer"
+                                    data-placeholder="-- Select Customers --">
                                     <option value=""></option>
-                                    @foreach($customers as $cust)
+                                    @foreach ($customers as $cust)
                                         <option value="{{ $cust->id_md_cust }}"
                                             {{ request('id_md_cust') == $cust->id_md_cust ? 'selected' : '' }}>
                                             {{ $cust->customer }}
@@ -204,10 +211,10 @@
                             {{-- Vessel --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Vessel</label>
-                                <select class="form-select select2-filter" name="id_md_vessel"
-                                    id="filterVessel" data-placeholder="-- Select Vessels --">
+                                <select class="form-select select2-filter" name="id_md_vessel" id="filterVessel"
+                                    data-placeholder="-- Select Vessels --">
                                     <option value=""></option>
-                                    @foreach($vessels as $vessel)
+                                    @foreach ($vessels as $vessel)
                                         <option value="{{ $vessel->id_md_vessel }}"
                                             {{ request('id_md_vessel') == $vessel->id_md_vessel ? 'selected' : '' }}>
                                             {{ $vessel->vessel_name }}
@@ -219,10 +226,10 @@
                             {{-- Port --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Port</label>
-                                <select class="form-select select2-filter" name="id_md_port"
-                                    id="filterPort" data-placeholder="-- Select Ports --">
+                                <select class="form-select select2-filter" name="id_md_port" id="filterPort"
+                                    data-placeholder="-- Select Ports --">
                                     <option value=""></option>
-                                    @foreach($ports as $port)
+                                    @foreach ($ports as $port)
                                         <option value="{{ $port->id_md_port }}"
                                             {{ request('id_md_port') == $port->id_md_port ? 'selected' : '' }}>
                                             {{ $port->name_port }}
@@ -261,10 +268,16 @@
                     <p>Choose the export format:</p>
 
                     @php
-                        $exportParams    = request()->only(['no_jo', 'id_md_cust', 'id_md_vessel', 'id_md_port', 'title']);
+                        $exportParams = request()->only(['no_jo', 'id_md_cust', 'id_md_vessel', 'id_md_port', 'title']);
                         $hasActiveFilters = array_filter($exportParams);
-                        $excelUrl = route('jo-tramper.export') . '?' . http_build_query(array_merge($exportParams, ['format' => 'excel']));
-                        $pdfUrl   = route('jo-tramper.export') . '?' . http_build_query(array_merge($exportParams, ['format' => 'pdf']));
+                        $excelUrl =
+                            route('jo-tramper.export') .
+                            '?' .
+                            http_build_query(array_merge($exportParams, ['format' => 'excel']));
+                        $pdfUrl =
+                            route('jo-tramper.export') .
+                            '?' .
+                            http_build_query(array_merge($exportParams, ['format' => 'pdf']));
                     @endphp
 
                     @if ($hasActiveFilters)
@@ -306,7 +319,8 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     {{-- Select2 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 
     <style>
         .joTramperPage .card {
@@ -420,7 +434,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
-        $(document).ready(function () {
+        $(document).ready(function() {
 
             // ===== DATATABLE =====
             var hasData = $('#joTramperTable tbody tr').length > 0 &&
@@ -434,13 +448,29 @@
                 var table = $('#joTramperTable').DataTable({
                     responsive: true,
                     pageLength: 10,
-                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
-                    order: [[1, 'desc']],
-                    columnDefs: [
-                        { orderable: false, targets: 0 },
-                        { orderable: false, targets: -1 },
-                        { responsivePriority: 1, targets: 11 },
-                        { responsivePriority: 2, targets: 0 },
+                    lengthMenu: [
+                        [10, 25, 50, -1],
+                        [10, 25, 50, 'All']
+                    ],
+                    order: [
+                        [1, 'desc']
+                    ],
+                    columnDefs: [{
+                            orderable: false,
+                            targets: 0
+                        },
+                        {
+                            orderable: false,
+                            targets: -1
+                        },
+                        {
+                            responsivePriority: 1,
+                            targets: 11
+                        },
+                        {
+                            responsivePriority: 2,
+                            targets: 0
+                        },
                     ],
                     language: {
                         search: 'Search:',
@@ -448,14 +478,21 @@
                         info: 'Showing _START_ to _END_ of _TOTAL_ entries',
                         infoEmpty: 'Showing 0 to 0 of 0 entries',
                         infoFiltered: '(filtered from _MAX_ total entries)',
-                        paginate: { first: 'First', last: 'Last', next: 'Next', previous: 'Previous' },
+                        paginate: {
+                            first: 'First',
+                            last: 'Last',
+                            next: 'Next',
+                            previous: 'Previous'
+                        },
                         emptyTable: 'No JO Tramper data available'
                     },
                     autoWidth: true,
-                    drawCallback: function (settings) {
-                        var api        = this.api();
+                    drawCallback: function(settings) {
+                        var api = this.api();
                         var startIndex = api.page.info().start;
-                        api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
+                        api.column(0, {
+                            page: 'current'
+                        }).nodes().each(function(cell, i) {
                             cell.innerHTML = startIndex + i + 1;
                         });
                         api.columns.adjust();
@@ -463,16 +500,16 @@
                 });
 
                 let resizeTimer;
-                $(window).on('resize', function () {
+                $(window).on('resize', function() {
                     clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(function () {
+                    resizeTimer = setTimeout(function() {
                         if ($.fn.DataTable.isDataTable('#joTramperTable')) {
                             $('#joTramperTable').DataTable().columns.adjust().responsive.recalc();
                         }
                     }, 300);
                 });
 
-                setTimeout(function () {
+                setTimeout(function() {
                     if ($.fn.DataTable.isDataTable('#joTramperTable')) {
                         $('#joTramperTable').DataTable().columns.adjust().responsive.recalc();
                     }
@@ -481,8 +518,8 @@
 
             // ===== SELECT2 (inisialisasi setelah modal ditampilkan) =====
             // Harus diinisialisasi di event modal shown agar dropdown muncul dengan benar di dalam modal
-            $('#filterModal').on('shown.bs.modal', function () {
-                $('.select2-filter').each(function () {
+            $('#filterModal').on('shown.bs.modal', function() {
+                $('.select2-filter').each(function() {
                     if (!$(this).hasClass('select2-hidden-accessible')) {
                         $(this).select2({
                             theme: 'bootstrap-5',
@@ -497,14 +534,16 @@
 
             // ===== TOOLTIPS =====
             var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
+            tooltipTriggerList.map(function(el) {
+                return new bootstrap.Tooltip(el);
+            });
 
             // ===== FILTER =====
-            $('#filterButton').on('click', function () {
+            $('#filterButton').on('click', function() {
                 $('#filterModal').modal('show');
             });
 
-            $('#resetFilter').on('click', function () {
+            $('#resetFilter').on('click', function() {
                 // Reset text inputs
                 $('#filterForm input[type="text"]').val('');
                 // Reset Select2 selects
@@ -512,51 +551,91 @@
             });
 
             // ===== EXPORT =====
-            $('#exportButton').on('click', function () {
+            $('#exportButton').on('click', function() {
                 $('#exportModal').modal('show');
             });
 
             // ===== DELETE =====
-            $(document).on('click', '.btn-delete', function (e) {
+            $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
 
                 const name = $(this).data('name');
-                const url  = $(this).data('url');
+                const url = $(this).data('url');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
                 Swal.fire({
                     title: 'Delete JO Tramper?',
-                    html: `
-                        <div class="text-start">
-                            <p>JO Tramper <strong>${name}</strong> will be permanently deleted.</p>
-                            <div class="alert alert-warning mt-3 mb-0">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Warning:</strong> All items related to this JO Tramper will also be deleted.
-                            </div>
-                        </div>
-                    `,
+                    html: `<div class="text-start">
+            <p>JO Tramper <strong>${name}</strong> will be permanently deleted.</p>
+            <div class="alert alert-warning mt-3 mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> All items within this JO Tramper will also be deleted.
+                Make sure no Cash Advance is referencing this JO before proceeding.
+            </div>
+        </div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete All!',
+                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
                     cancelButtonText: 'Cancel',
                     focusCancel: true,
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Deleting...',
-                            html: 'Please wait while we delete the JO Tramper and all related items.',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => { Swal.showLoading(); }
+                    if (!result.isConfirmed) return;
+
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading(),
+                    });
+
+                    fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: data.message ||
+                                        'JO Tramper deleted successfully.',
+                                    icon: 'success',
+                                    timer: 1800,
+                                    showConfirmButton: false,
+                                }).then(() => location.reload());
+                            } else {
+                                Swal.fire({
+                                    title: 'Cannot Delete',
+                                    html: `<div class="text-start">
+                        <p>${data.message}</p>
+                        <div class="alert alert-info mt-3 mb-0" style="font-size:.875rem;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Correct deletion order:</strong><br>
+                            <span style="color:#065f46;">LPJ Tramper &rarr; Cash Advance &rarr; JO Tramper</span>
+                        </div>
+                    </div>`,
+                                    icon: 'error',
+                                    confirmButtonColor: '#059669',
+                                    confirmButtonText: 'Understood',
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Something went wrong. Please try again.',
+                                'error');
                         });
-                        $('#deleteForm').attr('action', url).submit();
-                    }
                 });
             });
 
             // ===== AUTO HIDE ALERTS =====
-            setTimeout(function () {
+            setTimeout(function() {
                 $('.alert-success, .alert-danger').fadeOut('slow');
             }, 5000);
         });

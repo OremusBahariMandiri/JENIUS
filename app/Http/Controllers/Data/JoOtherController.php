@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Helpers\IdGenerator;
+use App\Models\Data\KasbonOther;
+use App\Models\Data\KasbonOtherItem;
+use App\Models\Data\LpjOther;
+use App\Models\Data\LpjOtherItem;
 
 class JoOtherController extends Controller
 {
@@ -716,6 +720,7 @@ class JoOtherController extends Controller
     /**
      * Remove the specified resource from storage.
      */
+
     public function destroy(Request $request, $id)
     {
         Log::info('=== Delete JO Other Request START ===', ['id' => $id]);
@@ -724,32 +729,46 @@ class JoOtherController extends Controller
         try {
             $joOther = JoOther::findOrFail($id);
 
-            $itemsCount = $joOther->items()->count();
+            // Blok jika masih ada KasbonOther atau LpjOther yang menggunakan JO ini
+            $kasbonCount = KasbonOther::where('id_jo_other', $joOther->id_jo_other)->count();
+            $lpjCount    = LpjOther::where('id_jo_other', $joOther->id_jo_other)->count();
 
-            Log::info('JO Other Found', [
-                'id'          => $joOther->id_jo_other,
-                'title'       => $joOther->title,
-                'items_count' => $itemsCount,
-            ]);
+            if ($kasbonCount > 0 || $lpjCount > 0) {
+                DB::rollBack();
 
-            if ($itemsCount > 0) {
-                foreach ($joOther->items as $item) {
-                    $item->delete();
+                $parts = [];
+                if ($kasbonCount > 0) $parts[] = "{$kasbonCount} Cash Advance record(s)";
+                if ($lpjCount > 0)    $parts[] = "{$lpjCount} LPJ record(s)";
+
+                $msg = "Cannot delete: this JO Other is still referenced by "
+                    . implode(' and ', $parts)
+                    . ". Please delete the related records first (LPJ Other → Cash Advance Other → JO Other).";
+
+                Log::warning('Delete JO Other blocked — has related records', [
+                    'id_jo_other'  => $joOther->id_jo_other,
+                    'kasbon_count' => $kasbonCount,
+                    'lpj_count'    => $lpjCount,
+                ]);
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
                 }
-                Log::info('All items deleted successfully');
+                return back()->with('error', $msg);
             }
 
+            $itemsCount = $joOther->items()->count();
+            foreach ($joOther->items as $item) {
+                $item->delete();
+            }
             $joOther->delete();
             DB::commit();
 
             Log::info('JO Other Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'JO Other successfully deleted']);
+                return response()->json(['success' => true, 'message' => 'JO Other deleted successfully']);
             }
-
             return redirect()->route('jo-other.index')
-                ->with('success', "JO Other deleted successfully along with {$itemsCount} item(s)");
+                ->with('success', "JO Other deleted successfully along with {$itemsCount} item(s).");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
             if ($request->expectsJson()) {
@@ -1139,18 +1158,60 @@ class JoOtherController extends Controller
         }
     }
 
-    // Tambah destroyItem()
-    public function destroyItem($id)
+    public function destroyItem(Request $request, $id)
     {
+        Log::info('=== JO Other Delete Item Request START ===', ['id' => $id]);
+
         try {
             DB::beginTransaction();
+
             $item = JoOtherItem::where('id_jo_other_item', (string) $id)->firstOrFail();
+
+            $kasbonCount = KasbonOtherItem::where('id_jo_other_item', (string) $id)
+                ->where('nilai_kasbon', '>', 0)
+                ->count();
+
+            $lpjCount = LpjOtherItem::where('id_jo_other_item', (string) $id)
+                ->where('amount_lpj', '>', 0)
+                ->count();
+
+            if ($kasbonCount > 0 || $lpjCount > 0) {
+                DB::rollBack();
+
+                $parts = [];
+                if ($kasbonCount > 0) $parts[] = "{$kasbonCount} Cash Advance item(s)";
+                if ($lpjCount > 0)    $parts[] = "{$lpjCount} LPJ item(s)";
+
+                $msg = "Cannot delete: this item is still referenced by "
+                    . implode(' and ', $parts)
+                    . ". Please remove the related records first before deleting this item.";
+
+                Log::warning('JO Other Delete Item blocked', [
+                    'id_jo_other_item' => $id,
+                    'kasbon_count'     => $kasbonCount,
+                    'lpj_count'        => $lpjCount,
+                ]);
+
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            // Hapus juga kasbon item placeholder kosong (nilai_kasbon = 0)
+            KasbonOtherItem::where('id_jo_other_item', (string) $id)->delete();
+
             $item->delete();
             DB::commit();
+
+            Log::info('JO Other Item Deleted', ['id' => $id]);
+
             return response()->json(['success' => true, 'message' => 'Item deleted successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            Log::error('JO Other Delete Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete item',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -1393,5 +1454,31 @@ class JoOtherController extends Controller
         }
 
         return $filters;
+    }
+
+    public function checkRelations($id)
+    {
+        try {
+            JoOtherItem::where('id_jo_other_item', (string) $id)->firstOrFail();
+
+            $kasbonCount = KasbonOtherItem::where('id_jo_other_item', (string) $id)
+                ->where('nilai_kasbon', '>', 0)
+                ->count();
+
+            $lpjCount = LpjOtherItem::where('id_jo_other_item', (string) $id)
+                ->where('amount_lpj', '>', 0)
+                ->count();
+
+            return response()->json([
+                'success'       => true,
+                'has_relations' => ($kasbonCount > 0 || $lpjCount > 0),
+                'kasbon_count'  => $kasbonCount,
+                'lpj_count'     => $lpjCount,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Item not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

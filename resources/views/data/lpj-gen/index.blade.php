@@ -1,24 +1,25 @@
 @extends('layouts.app')
 
-@section('title', 'LPJ Tramper Data')
+@section('title', 'LPJ General Data')
 
 @section('content')
-    <div class="container-fluid lpjTramperPage">
+    <div class="container-fluid lpjGenPage">
         <div class="row">
             <div class="col-md-12">
                 <div class="card shadow">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-file-invoice me-2"></i>LPJ Tramper Data</span>
+                        <span class="fw-bold"><i class="fas fa-file-invoice me-2"></i>LPJ General Data</span>
                         <div>
                             <button type="button" class="btn btn-light me-2" id="filterButton">
                                 <i class="fas fa-filter me-1"></i> Filter
                             </button>
+
                             <button type="button" class="btn btn-light me-2" id="exportButton">
                                 <i class="fas fa-download me-1"></i> Export
                             </button>
-                            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-tramper', 'tambah')))
-                                <a href="{{ route('lpj-tramper.create') }}" class="btn btn-light">
+                            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-gen', 'tambah')))
+                                <a href="{{ route('lpj-gen.create') }}" class="btn btn-light">
                                     <i class="fas fa-plus-circle me-1"></i> Add
                                 </a>
                             @endif
@@ -43,11 +44,8 @@
                         @if (array_filter($currentFilters))
                             <div class="alert alert-info alert-dismissible fade show">
                                 <i class="fas fa-info-circle me-2"></i><strong>Active Filters:</strong>
-                                @if (!empty($currentFilters['no_lpj_tram']))
-                                    <span class="badge bg-primary ms-1">No LPJ: {{ $currentFilters['no_lpj_tram'] }}</span>
-                                @endif
-                                @if (!empty($currentFilters['id_jo_tram']))
-                                    <span class="badge bg-primary ms-1">JO: {{ $currentFilters['id_jo_tram'] }}</span>
+                                @if (!empty($currentFilters['no_lpj_gen']))
+                                    <span class="badge bg-primary ms-1">No LPJ: {{ $currentFilters['no_lpj_gen'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['date_from']))
                                     <span class="badge bg-primary ms-1">From: {{ $currentFilters['date_from'] }}</span>
@@ -55,7 +53,7 @@
                                 @if (!empty($currentFilters['date_to']))
                                     <span class="badge bg-primary ms-1">To: {{ $currentFilters['date_to'] }}</span>
                                 @endif
-                                <a href="{{ route('lpj-tramper.index') }}" class="btn btn-sm btn-outline-secondary ms-2">
+                                <a href="{{ route('lpj-gen.index') }}" class="btn btn-sm btn-outline-secondary ms-2">
                                     <i class="fas fa-times me-1"></i> Reset
                                 </a>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -63,29 +61,27 @@
                         @endif
 
                         <div class="table-responsive">
-                            <table id="lpjTramperTable" class="table table-bordered table-striped">
+                            <table id="lpjGenTable" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
                                         <th width="4%">No</th>
                                         <th>No. LPJ</th>
                                         <th>Date</th>
-                                        <th>Job Order</th>
                                         <th class="text-center">Kasbon</th>
                                         <th class="text-center">Items</th>
-                                        <th class="text-end">Total Kasbon (IDR)</th>
+                                        <th class="text-end">Total CA (IDR)</th>
                                         <th class="text-end">Total LPJ (IDR)</th>
                                         <th class="text-center">Evidence</th>
-                                        <th class="text-center">LPJ PDF</th>
+                                        <th class="text-center">PDF</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($lpjTrampers as $lpj)
+                                    @forelse($lpjGens as $lpj)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td class="fw-semibold">{{ $lpj->no_lpj_tram ?? '-' }}</td>
+                                            <td class="fw-semibold">{{ $lpj->no_lpj_gen ?? '-' }}</td>
                                             <td>{{ $lpj->date ? $lpj->date->format('d/m/Y') : '-' }}</td>
-                                            <td>{{ $lpj->joTramper ? $lpj->joTramper->no_jo_tram : '-' }}</td>
                                             <td class="text-center">{{ $lpj->kasbons->count() }}</td>
                                             <td class="text-center">{{ $lpj->items->count() }}</td>
                                             <td class="text-end">{{ number_format($lpj->amount, 2, ',', '.') }}</td>
@@ -102,32 +98,32 @@
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-tramper', 'detail')))
-                                                    <a href="{{ route('lpj-tramper.export-pdf', $lpj->id) }}"
-                                                        target="_blank" class="btn btn-sm btn-outline-danger">
+                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-gen', 'detail')))
+                                                    <a href="{{ route('lpj-gen.export-pdf', $lpj->id) }}" target="_blank"
+                                                        class="btn btn-sm btn-outline-danger">
                                                         <i class="fas fa-file-pdf"></i>
                                                     </a>
                                                 @endif
                                             </td>
                                             <td class="text-center">
                                                 <div class="d-flex gap-1 justify-content-center">
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-tramper', 'detail')))
-                                                        <a href="{{ route('lpj-tramper.show', $lpj->id) }}"
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-gen', 'detail')))
+                                                        <a href="{{ route('lpj-gen.show', $lpj->id) }}"
                                                             class="btn btn-sm btn-info" title="Detail">
                                                             <i class="fas fa-eye"></i>
                                                         </a>
                                                     @endif
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-tramper', 'ubah')))
-                                                        <a href="{{ route('lpj-tramper.edit', $lpj->id) }}"
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-gen', 'ubah')))
+                                                        <a href="{{ route('lpj-gen.edit', $lpj->id) }}"
                                                             class="btn btn-sm btn-warning" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
                                                     @endif
-                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-tramper', 'hapus')))
+                                                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('lpj-gen', 'hapus')))
                                                         <button type="button" class="btn btn-sm btn-danger btn-delete"
                                                             data-id="{{ $lpj->id }}"
-                                                            data-name="{{ $lpj->no_lpj_tram }}"
-                                                            data-url="{{ route('lpj-tramper.destroy', $lpj->id) }}"
+                                                            data-name="{{ $lpj->no_lpj_gen }}"
+                                                            data-url="{{ route('lpj-gen.destroy', $lpj->id) }}"
                                                             title="Delete">
                                                             <i class="fas fa-trash"></i>
                                                         </button>
@@ -137,10 +133,10 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="11" class="text-center py-5">
+                                            <td colspan="10" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
-                                                <h5 class="text-muted">No LPJ Tramper Data</h5>
-                                                <p class="text-muted mb-0">Start by adding a new LPJ Tramper</p>
+                                                <h5 class="text-muted">No LPJ General Data</h5>
+                                                <p class="text-muted mb-0">Start by adding a new LPJ General</p>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -155,39 +151,26 @@
 
     {{-- FILTER MODAL --}}
     <div class="modal fade" id="filterModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header text-black" style="background-color: #d1fae5">
-                    <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filter LPJ Tramper</h5>
+                    <h5 class="modal-title"><i class="fas fa-filter me-2"></i>Filter LPJ General</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="filterForm" method="GET" action="{{ route('lpj-tramper.index') }}">
+                    <form id="filterForm" method="GET" action="{{ route('lpj-gen.index') }}">
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <label class="form-label fw-semibold">No. LPJ</label>
-                                <input type="text" class="form-control" name="no_lpj_tram"
-                                    value="{{ request('no_lpj_tram', '') }}">
+                                <input type="text" class="form-control" name="no_lpj_gen"
+                                    value="{{ request('no_lpj_gen', '') }}">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">Job Order</label>
-                                <select class="form-select select2-filter" name="id_jo_tram" id="filterJoTram"
-                                    data-placeholder="-- Select JO Tramper --">
-                                    <option value=""></option>
-                                    @foreach ($joTrampers as $jo)
-                                        <option value="{{ $jo->id_jo_tram }}"
-                                            {{ request('id_jo_tram') == $jo->id_jo_tram ? 'selected' : '' }}>
-                                            {{ $jo->no_jo_tram }} — {{ $jo->title }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3">
                                 <label class="form-label fw-semibold">Date From</label>
                                 <input type="date" class="form-control" name="date_from"
                                     value="{{ request('date_from', '') }}">
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Date To</label>
                                 <input type="date" class="form-control" name="date_to"
                                     value="{{ request('date_to', '') }}">
@@ -198,7 +181,7 @@
                             <button type="button" class="btn btn-outline-secondary" id="resetFilter">
                                 <i class="fas fa-redo me-1"></i> Reset
                             </button>
-                            <button type="submit" class="btn btn-success">
+                            <button type="submit" class="btn btn-primary">
                                 <i class="fas fa-search me-1"></i> Apply Filter
                             </button>
                         </div>
@@ -213,20 +196,20 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header text-black" style="background-color: #d1fae5">
-                    <h5 class="modal-title"><i class="fas fa-download me-2"></i>Export LPJ Tramper</h5>
+                    <h5 class="modal-title"><i class="fas fa-download me-2"></i>Export LPJ General</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <p>Choose the export format:</p>
                     @php
-                        $exportParams = request()->only(['id_jo_tram', 'no_lpj_tram', 'date_from', 'date_to']);
+                        $exportParams = request()->only(['no_lpj_gen', 'date_from', 'date_to']);
                         $hasActiveFilters = array_filter($exportParams);
                         $excelUrl =
-                            route('lpj-tramper.export') .
+                            route('lpj-gen.export') .
                             '?' .
                             http_build_query(array_merge($exportParams, ['format' => 'excel']));
                         $pdfUrl =
-                            route('lpj-tramper.export') .
+                            route('lpj-gen.export') .
                             '?' .
                             http_build_query(array_merge($exportParams, ['format' => 'pdf']));
                     @endphp
@@ -238,7 +221,7 @@
                     @else
                         <div class="alert alert-info py-2">
                             <i class="fas fa-info-circle me-1"></i>
-                            <small>Export will include <strong>all LPJ Tramper data</strong>.</small>
+                            <small>Export will include <strong>all LPJ General data</strong>.</small>
                         </div>
                     @endif
                     <div class="d-grid gap-2">
@@ -265,98 +248,27 @@
 @push('styles')
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <style>
-        .modal .select2-container {
-            width: 100% !important;
-        }
-
-        .modal .select2-container .select2-selection--single {
-            height: calc(1.5em + 0.75rem + 2px) !important;
-            padding: 0.375rem 0.75rem !important;
-            border: 1px solid #ced4da !important;
-            border-radius: 0.375rem !important;
-        }
-
-        .modal .select2-container .select2-selection--single .select2-selection__rendered {
-            line-height: 1.5 !important;
-            padding-left: 0 !important;
-            color: #212529;
-        }
-
-        .modal .select2-container .select2-selection--single .select2-selection__arrow {
-            height: 100% !important;
-        }
-
-        .lpjTramperPage .card {
+        .lpjGenPage .card {
             border: none;
             border-radius: 10px;
         }
 
-        .lpjTramperPage .card-header {
+        .lpjGenPage .card-header {
             border-radius: 10px 10px 0 0 !important;
             padding: 1rem 1.5rem;
         }
 
-        .lpjTramperPage .dataTables_wrapper {
-            width: 100%;
-            transition: all 0.3s ease;
-        }
-
-        .lpjTramperPage .dataTables_wrapper .dataTables_length,
-        .lpjTramperPage .dataTables_wrapper .dataTables_filter {
-            margin-bottom: 1rem !important;
-        }
-
-        .lpjTramperPage .dataTables_wrapper .dataTables_filter {
-            text-align: right !important;
-        }
-
-        .lpjTramperPage .dataTables_wrapper .dataTables_filter input {
-            margin-left: 5px !important;
-            border-radius: 4px !important;
-            border: 1px solid #ced4da !important;
-            padding: 0.375rem 0.75rem !important;
-        }
-
-        .lpjTramperPage .dataTables_wrapper .dataTables_length select {
-            border-radius: 4px !important;
-            border: 1px solid #ced4da !important;
-            padding: 0.375rem 2rem 0.375rem 0.75rem !important;
-        }
-
-        .lpjTramperPage #lpjTramperTable {
-            width: 100% !important;
-            transition: all 0.3s ease;
-        }
-
-        .lpjTramperPage #lpjTramperTable tbody tr {
-            transition: all 0.2s ease;
-        }
-
-        .lpjTramperPage #lpjTramperTable tbody tr:hover {
+        .lpjGenPage #lpjGenTable tbody tr:hover {
             background-color: #f8f9fa;
         }
 
-        .lpjTramperPage .btn-sm {
-            transition: transform 0.2s;
+        .lpjGenPage .btn-sm {
+            transition: transform .2s;
         }
 
-        .lpjTramperPage .btn-sm:hover {
+        .lpjGenPage .btn-sm:hover {
             transform: scale(1.1);
-        }
-
-        .lpjTramperPage .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .lpjTramperPage .badge {
-            font-weight: 500;
-            padding: 0.35rem 0.65rem;
         }
     </style>
 @endpush
@@ -367,17 +279,13 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
-            var hasData = $('#lpjTramperTable tbody tr').length > 0 &&
-                !$('#lpjTramperTable tbody tr td[colspan]').length;
+            var hasData = $('#lpjGenTable tbody tr').length > 0 &&
+                !$('#lpjGenTable tbody tr td[colspan]').length;
 
             if (hasData) {
-                if ($.fn.DataTable.isDataTable('#lpjTramperTable')) {
-                    $('#lpjTramperTable').DataTable().destroy();
-                }
-                var table = $('#lpjTramperTable').DataTable({
+                $('#lpjGenTable').DataTable({
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [
@@ -395,137 +303,53 @@
                             orderable: false,
                             targets: -1
                         },
-                        {
-                            responsivePriority: 1,
-                            targets: -1
-                        },
-                        {
-                            responsivePriority: 2,
-                            targets: 1
-                        },
-                        {
-                            responsivePriority: 3,
-                            targets: 2
-                        },
-                        {
-                            responsivePriority: 4,
-                            targets: 3
-                        },
-                        {
-                            responsivePriority: 10001,
-                            targets: 4
-                        },
-                        {
-                            responsivePriority: 10002,
-                            targets: 5
-                        },
-                        {
-                            responsivePriority: 10003,
-                            targets: 8
-                        },
                     ],
-                    language: {
-                        search: 'Search:',
-                        lengthMenu: 'Show _MENU_ entries per page',
-                        info: 'Showing _START_ to _END_ of _TOTAL_ entries',
-                        infoEmpty: 'Showing 0 to 0 of 0 entries',
-                        infoFiltered: '(filtered from _MAX_ total entries)',
-                        paginate: {
-                            first: 'First',
-                            last: 'Last',
-                            next: 'Next',
-                            previous: 'Previous'
-                        },
-                        emptyTable: 'No LPJ Tramper data available',
-                    },
-                    autoWidth: true,
                     drawCallback: function(settings) {
                         var api = this.api();
-                        var startIndex = api.page.info().start;
+                        var start = api.page.info().start;
                         api.column(0, {
                             page: 'current'
                         }).nodes().each(function(cell, i) {
-                            cell.innerHTML = startIndex + i + 1;
+                            cell.innerHTML = start + i + 1;
                         });
-                        api.columns.adjust();
                     }
                 });
-
-                let resizeTimer;
-                $(window).on('resize', function() {
-                    clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(function() {
-                        if ($.fn.DataTable.isDataTable('#lpjTramperTable')) {
-                            $('#lpjTramperTable').DataTable().columns.adjust().responsive.recalc();
-                        }
-                    }, 300);
-                });
-
-                setTimeout(function() {
-                    if ($.fn.DataTable.isDataTable('#lpjTramperTable')) {
-                        $('#lpjTramperTable').DataTable().columns.adjust().responsive.recalc();
-                    }
-                }, 100);
             }
-
-            $('#filterModal').on('shown.bs.modal', function() {
-                $('.select2-filter').each(function() {
-                    if (!$(this).hasClass('select2-hidden-accessible')) {
-                        $(this).select2({
-                            theme: 'bootstrap-5',
-                            dropdownParent: $('#filterModal'),
-                            placeholder: $(this).data('placeholder') || '-- Select --',
-                            allowClear: true,
-                            width: '100%',
-                        });
-                    }
-                });
-            });
 
             $('#filterButton').on('click', function() {
                 $('#filterModal').modal('show');
             });
+            $('#exportButton').on('click', function() {
+    $('#exportModal').modal('show');
+});
 
             $('#resetFilter').on('click', function() {
-                $('#filterForm input[type="text"], #filterForm input[type="date"]').val('');
-                $('.select2-filter').val('').trigger('change');
-            });
-
-            $('#exportButton').on('click', function() {
-                $('#exportModal').modal('show');
+                $('#filterForm input').val('');
             });
 
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
                 const name = $(this).data('name');
                 const url = $(this).data('url');
-
                 Swal.fire({
-                    title: 'Delete LPJ Tramper?',
-                    html: `<div class="text-start">
-                    <p>LPJ Tramper <strong>${name}</strong> will be permanently deleted.</p>
-                    <div class="alert alert-warning mt-3 mb-0">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> All items related to this LPJ Tramper will also be deleted.
-                    </div>
-                </div>`,
+                    title: 'Delete LPJ General?',
+                    html: `<p>LPJ <strong>${name}</strong> will be permanently deleted.</p>
+                    <div class="alert alert-warning mt-2 mb-0 text-start">
+                        <i class="fas fa-exclamation-triangle me-1"></i>
+                        Items added from this LPJ will also be removed from their Cash Advance.
+                    </div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#6c757d',
                     confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
                     cancelButtonText: 'Cancel',
-                    focusCancel: true,
                 }).then((result) => {
                     if (result.isConfirmed) {
                         Swal.fire({
                             title: 'Deleting...',
-                            html: 'Please wait...',
                             allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            },
+                            didOpen: () => Swal.showLoading()
                         });
                         $('#deleteForm').attr('action', url).submit();
                     }

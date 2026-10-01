@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Models\Data\LpjContractItem;
 
 class KasbonContractController extends Controller
 {
@@ -457,6 +458,7 @@ class KasbonContractController extends Controller
                 'total_kasbon'        => $totalKasbon,
             ]);
 
+
             $item->refresh();
             $item->load('joContractItem');
 
@@ -776,18 +778,26 @@ class KasbonContractController extends Controller
             $kasbonItem = $kasbonContract->items
                 ->firstWhere('id_jo_cont_item', $joItem->id_jo_cont_item);
 
+            // ── Cek LPJ ──
+            $hasLpjAmount = false;
+            if ($kasbonItem) {
+                $hasLpjAmount = LpjContractItem::where('id_kasbon_cont_item', $kasbonItem->id_kasbon_cont_item)
+                    ->where('amount_lpj', '>', 0)
+                    ->exists();
+            }
+
             return [
                 'id_jo_cont_item'     => $joItem->id_jo_cont_item,
                 'invoice_typ'         => $joItem->invoice->invoice_typ ?? $joItem->id_jo_cont_item,
                 'invoice_ctg'         => $joItem->invoice->invoice_ctg ?? '-',
                 'hargajual_idr'       => (float) $joItem->hargajual_idr,
                 'hpp_ops'             => (float) $joItem->hpp_ops,
-                // dari kasbon item (jika sudah ada)
-                'id_kasbon_cont_item' => $kasbonItem?->id ?? null,
+                'id_kasbon_cont_item' => $kasbonItem?->id_kasbon_cont_item ?? null,  // ← pakai id_kasbon_cont_item bukan id
                 'nilai_hpp_cont_item' => $kasbonItem ? (float) $kasbonItem->nilai_hpp_cont_item : (float) $joItem->hpp_ops,
                 'nilai_kasbon'        => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
                 'total_kasbon'        => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
-                'has_kasbon'          => $kasbonItem !== null,
+                'has_kasbon'          => $kasbonItem !== null && $kasbonItem->nilai_kasbon > 0,
+                'has_lpj_amount'      => $hasLpjAmount,   // ← TAMBAH
                 'origin_lpj_cont'     => $joItem->origin_lpj_cont ?? null,
             ];
         });
@@ -1147,10 +1157,31 @@ class KasbonContractController extends Controller
                 $nilaiKasbon = (float) $itemData['nilai_kasbon'];
                 $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
-                // Upsert: update jika sudah ada, insert jika belum
                 $existing = KasbonContractItem::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
                     ->where('id_jo_cont_item', $itemData['id_jo_cont_item'])
                     ->first();
+
+                // ── Cek LPJ sebelum clear (nilai_kasbon = 0) ──
+                if ($nilaiKasbon == 0 && $existing) {
+                    $lpjCount = \App\Models\Data\LpjContractItem::where(
+                        'id_kasbon_cont_item',
+                        $existing->id_kasbon_cont_item
+                    )
+                        ->where('amount_lpj', '>', 0)
+                        ->count();
+
+                    if ($lpjCount > 0) {
+                        DB::rollBack();
+
+                        $invoiceTyp = $joContItem?->invoice?->invoice_typ
+                            ?? $itemData['id_jo_cont_item'];
+
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Cannot clear CA amount for \"{$invoiceTyp}\" because it is still used in {$lpjCount} LPJ item(s). Please remove the LPJ amount first."
+                        ], 422);
+                    }
+                }
 
                 if ($existing) {
                     $existing->update([
@@ -1165,8 +1196,9 @@ class KasbonContractController extends Controller
                             ->lockForUpdate()
                             ->selectRaw('MAX(CAST(id_kasbon_cont_item AS UNSIGNED)) as max_id')
                             ->value('max_id');
+
                         KasbonContractItem::create([
-                            'id_kasbon_cont_item' => (string)(((int) $maxId) + 1),
+                            'id_kasbon_cont_item' => (string) (((int) $maxId) + 1),
                             'id_kasbon_cont'      => $kasbonContract->id_kasbon_cont,
                             'id_jo_cont_item'     => $itemData['id_jo_cont_item'],
                             'nilai_hpp_cont_item' => $nilaiHpp,
@@ -1177,9 +1209,23 @@ class KasbonContractController extends Controller
                 }
             }
 
+            // ── Recalculate LpjContract.amount untuk semua LPJ yang terhubung ke kasbon ini ──
+            $lpjLinks = \App\Models\Data\LpjKasbon::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)->get();
+            foreach ($lpjLinks as $lpjLink) {
+                $lpj = \App\Models\Data\LpjContract::with('kasbons')
+                    ->where('id_lpj_cont', $lpjLink->id_lpj_cont)
+                    ->first();
+                if (!$lpj) continue;
+
+                $kasbonIds = $lpj->kasbons->pluck('id_kasbon_cont');
+                $newAmount = $kasbonIds->isNotEmpty()
+                    ? KasbonContractItem::whereIn('id_kasbon_cont', $kasbonIds)->sum('nilai_kasbon')
+                    : 0;
+                $lpj->update(['amount' => $newAmount]);
+            }
+
             DB::commit();
 
-            // Hitung ulang total
             $totals = KasbonContractItem::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
                 ->selectRaw('SUM(nilai_hpp_cont_item) as total_hpp, SUM(nilai_kasbon) as total_kasbon, SUM(total_kasbon) as total_remaining')
                 ->first();
@@ -1191,7 +1237,7 @@ class KasbonContractController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('bulkSaveItems failed', ['error' => $e->getMessage()]);
+            Log::error('bulkSaveItems KasbonContract failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to save items: ' . $e->getMessage()

@@ -21,6 +21,7 @@
             'coa_no' => $i['coa_no'] ?? null,
             'coa_name' => $i['coa_name'] ?? null,
             'origin_lpj_cont' => $i['origin_lpj_cont'] ?? null,
+            'is_orphaned' => $i['is_orphaned'] ?? false, // ← TAMBAH INI
         ],
     );
 @endphp
@@ -1396,6 +1397,7 @@
         const updateHeaderUrl = '/lpj-contract/header/update/{{ $lpj->id }}';
         const refreshKasbonsUrl = '{{ route('lpj-contract.refresh-kasbons', $lpj->id) }}';
         const addKasbonsUrl = '{{ route('lpj-contract.add-kasbons', $lpj->id) }}';
+        const destroyOrphanUrl = '{{ url('/lpj-contract/kasbon-item') }}';
 
         let mergedItems = @json($mergedItemsJs);
         let confirmCallback = null;
@@ -1659,14 +1661,21 @@
                             `<span class="badge ms-1" style="background:#3b82f6;font-size:.65rem;">From LPJ</span>` :
                             '';
 
-                        const clearBtn = `
-                    <button type="button" class="btn btn-danger btn-sm btn-clear-row"
-                        onclick="clearItem(${gIdx})"
-                        ${!hasFilled
-                            ? 'disabled title="No LPJ amount to clear"'
-                            : 'title="Clear LPJ amount"'}>
-                        <i class="fas fa-trash"></i>
-                    </button>`;
+                        const isOrphaned = !!item.is_orphaned;
+
+                        const clearBtn = isOrphaned ?
+                            `<button type="button" class="btn btn-danger btn-sm"
+            onclick="deleteOrphanedItem(${gIdx})"
+            title="Item ini orphaned (JO item sudah dihapus). Klik untuk hapus.">
+            <i class="fas fa-trash me-1"></i>Hapus
+       </button>` :
+                            `<button type="button" class="btn btn-danger btn-sm btn-clear-row"
+            onclick="clearItem(${gIdx})"
+            ${!hasFilled
+                ? 'disabled title="No LPJ amount to clear"'
+                : 'title="Clear LPJ amount"'}>
+            <i class="fas fa-trash"></i>
+       </button>`;
 
                         // Kolom CA Number — hanya muncul di baris pertama setiap kasbon
                         const kasbonCell = isFirstKasbonRow ?
@@ -1702,16 +1711,18 @@
                         <td class="cell-right amount-lpj-cell">${formatNumber(item.amount_lpj)}</td>
                         <td class="coa-display-cell text-center">
     ${buildCoaDisplay(gIdx, item.id_md_chart_of_account)}
+</td><td class="cell-center">
+    <div class="d-flex gap-1 justify-content-center">
+        ${isOrphaned
+            ? clearBtn
+            : `<button type="button" class="btn btn-success btn-sm btn-edit-row"
+                               onclick="openEditItem(${gIdx})" title="Input LPJ amount">
+                               <i class="fas fa-edit"></i>
+                           </button>
+                           ${clearBtn}`
+        }
+    </div>
 </td>
-                        <td class="cell-center">
-                            <div class="d-flex gap-1 justify-content-center">
-                                <button type="button" class="btn btn-success btn-sm btn-edit-row"
-                                    onclick="openEditItem(${gIdx})" title="Input LPJ amount">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                ${clearBtn}
-                            </div>
-                        </td>
                     </tr>`);
 
                         isFirstKasbonRow = false;
@@ -1785,6 +1796,30 @@
         $('#inputAmountLpj').on('keydown', e => {
             if (e.key === 'Enter') saveItemInput();
         });
+
+        // ══════════════════════════════════════════════════════════
+        // REALTIME FOOTER PREVIEW saat mengetik LPJ amount
+        // ══════════════════════════════════════════════════════════
+        $('#inputAmountLpj').on('input', function() {
+            const rowIndex = parseInt($('#activeRowIndex').val());
+            if (isNaN(rowIndex) || rowIndex < 0) return;
+
+            const newVal = parseRupiah($(this).val());
+
+            let totalHpp = 0,
+                totalKasbon = 0,
+                totalLpj = 0;
+            mergedItems.forEach(function(item, idx) {
+                totalHpp += parseFloat(item.nilai_hpp_cont_item) || 0;
+                totalKasbon += parseFloat(item.nilai_kasbon) || 0;
+                totalLpj += idx === rowIndex ? newVal : (parseFloat(item.amount_lpj) || 0);
+            });
+
+            $('#footerTotalHpp').text(formatNumber(totalHpp));
+            $('#footerTotalKasbon').text(formatNumber(totalKasbon));
+            $('#footerTotalLpj').text(formatNumber(totalLpj));
+        });
+
 
         function saveItemInput() {
             const kasbonContItemId = $('#activeKasbonContItemId').val();
@@ -1884,6 +1919,42 @@
                         }
                     },
                     error: xhr => showFloatingAlert('error', xhr.responseJSON?.message || 'Failed')
+                });
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════
+        // DELETE ORPHANED KASBON ITEM
+        // ══════════════════════════════════════════════════════════
+        function deleteOrphanedItem(index) {
+            const item = mergedItems[index];
+            showConfirm({
+                title: 'Hapus Item Orphaned?',
+                desc: `Item ini referencing JO item yang sudah dihapus. Menghapus akan menghilangkan kasbon item ini beserta LPJ amount-nya secara permanen.`,
+                okLabel: 'Ya, Hapus',
+                okClass: 'btn-danger',
+                iconClass: 'danger'
+            }, () => {
+                showFloatingAlert('saving', 'Menghapus...');
+
+                $.ajax({
+                    url: destroyOrphanUrl + '/' + item.id_kasbon_cont_item + '/orphan',
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'X-HTTP-Method-Override': 'DELETE'
+                    },
+                    success: function(r) {
+                        if (r.success) {
+                            showFloatingAlert('success', 'Orphaned item berhasil dihapus!');
+                            mergedItems.splice(index, 1);
+                            renderTable();
+                            updateFooter();
+                        } else {
+                            showFloatingAlert('error', r.message || 'Gagal menghapus');
+                        }
+                    },
+                    error: xhr => showFloatingAlert('error', xhr.responseJSON?.message || 'Gagal menghapus')
                 });
             });
         }

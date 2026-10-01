@@ -1343,7 +1343,7 @@
                         @endif
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_general'))
                             <div class="submenu-item">
-                                <a class="nav-link" href="">
+                                <a class="nav-link" href="{{ route('lpj-gen.index') }}">
                                     <i class="fas fa-building"></i>
                                     <span>LPJ General</span>
                                 </a>

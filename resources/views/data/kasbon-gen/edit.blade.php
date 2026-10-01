@@ -94,6 +94,100 @@
             animation: slideOutRight 0.4s ease-in;
         }
 
+        /* ── LPJ BLOCKING MODAL ── */
+        .lpj-block-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.55);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+        .lpj-block-modal-overlay.show {
+            display: flex;
+        }
+
+        .lpj-block-modal-box {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            max-width: 460px;
+            width: 90%;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        .lpj-block-modal-header {
+            background: linear-gradient(135deg, #f97316, #ea580c);
+            color: white;
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .lpj-block-modal-header i {
+            font-size: 1.5rem;
+        }
+
+        .lpj-block-modal-header h5 {
+            margin: 0;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .lpj-block-modal-body {
+            padding: 24px;
+        }
+
+        .lpj-block-info-box {
+            background: #fefce8;
+            border: 1px solid #fde047;
+            border-left: 4px solid #f59e0b;
+            border-radius: 8px;
+            padding: 14px 16px;
+            margin-bottom: 12px;
+            font-size: 0.875rem;
+            color: #78350f;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .lpj-block-info-box i {
+            color: #d97706;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .lpj-block-modal-footer {
+            padding: 16px 24px;
+            background: #f9fafb;
+            text-align: right;
+        }
+
+        .btn-lpj-block-close {
+            background: linear-gradient(135deg, #9ca3af, #6b7280);
+            border: none;
+            color: white;
+            padding: 10px 28px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-lpj-block-close:hover {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        /* Release date wrapper */
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
+        }
+
         .confirm-modal-overlay {
             position: fixed;
             inset: 0;
@@ -159,7 +253,7 @@
             font-weight: 600;
         }
 
-        /* ADD ITEM FORM - default (green dashed) */
+        /* ADD ITEM FORM */
         .add-item-form-section {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border: 2px dashed #10b981;
@@ -294,6 +388,41 @@
             font-weight: 600;
         }
 
+        /* ── Rows added from LPJ — blue tint (sama persis dengan kasbon-contract) ── */
+        .table-items tbody tr.row-from-lpj td {
+            background: #eff6ff !important;
+        }
+
+        .table-items tbody tr.row-from-lpj:hover td {
+            background: #dbeafe !important;
+        }
+
+        .table-items tbody tr.row-from-lpj.tr-active td {
+            background: #bfdbfe !important;
+        }
+
+        .table-items tbody tr.row-from-lpj .category-cell {
+            background: #dbeafe !important;
+        }
+
+        .table-items tbody tr.row-from-lpj .cell-readonly {
+            background: #e0eeff !important;
+        }
+
+        /* ── LPJ origin note ── */
+        .lpj-origin-note {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 8px 14px;
+            background: #eff6ff;
+            border-radius: 8px;
+            border-left: 3px solid #3b82f6;
+            font-size: .8rem;
+            color: #1e40af;
+        }
+
         .table-footer {
             background: #2c3e50;
             color: white;
@@ -320,36 +449,6 @@
             font-weight: 700;
             min-width: 44px;
             text-align: center;
-        }
-
-        .footer-currency-wrap {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            /* ✅ IDR kiri, nominal kanan */
-            width: 100%;
-        }
-
-        .footer-currency-label {
-            background-color: rgba(255, 255, 255, 0.15);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 5px;
-            font-size: .78rem;
-            font-weight: 700;
-            min-width: 44px;
-            text-align: center;
-            flex-shrink: 0;
-            /* ✅ label tidak menyusut */
-        }
-
-        .footer-value {
-            color: #2C3E50;
-            font-weight: 700;
-            font-size: .95rem;
-            text-align: right;
-            flex: 1;
-            /* ✅ ambil sisa ruang */
         }
 
         .btn-edit-row {
@@ -532,22 +631,45 @@
                                         value="{{ $kasbonGen->tgl_release ? $kasbonGen->tgl_release->format('Y-m-d') : '' }}">
                                 </div>
 
-                                {{-- Priority --}}
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
                                         <option value="normal" {{ $kasbonGen->priority == 'normal' ? 'selected' : '' }}>
                                             Normal</option>
-                                        <option value="high" {{ $kasbonGen->priority == 'high' ? 'selected' : '' }}>High
-                                        </option>
+                                        <option value="high" {{ $kasbonGen->priority == 'high' ? 'selected' : '' }}>
+                                            High</option>
                                     </select>
                                 </div>
 
-                                {{-- Due Date --}}
                                 <div class="col-md-6">
                                     <label class="form-label">Due Date & Time</label>
                                     <input type="datetime-local" name="due_date" id="due_date" class="form-control"
                                         value="{{ $kasbonGen->due_date ? $kasbonGen->due_date->format('Y-m-d\TH:i') : '' }}">
+                                </div>
+
+                                @php
+                                    $releaseStatus = $kasbonGen->ca_release_status;
+                                    $releaseStatusColClass = $releaseStatus === 'release' ? 'col-md-6' : 'col-md-12';
+                                @endphp
+                                <div class="{{ $releaseStatusColClass }}" id="caReleaseStatusWrapper">
+                                    <label class="form-label">CA Release Status</label>
+                                    <select name="ca_release_status" id="ca_release_status" class="form-select">
+                                        <option value="" {{ !$releaseStatus ? 'selected' : '' }}>-- No Status
+                                            (Pending) --</option>
+                                        <option value="pending" {{ $releaseStatus === 'pending' ? 'selected' : '' }}>
+                                            Pending</option>
+                                        <option value="release" {{ $releaseStatus === 'release' ? 'selected' : '' }}>
+                                            Release</option>
+                                    </select>
+                                </div>
+
+                                {{-- CA Release Date --}}
+                                <div class="col-md-6" id="caReleaseDateWrapper"
+                                    style="{{ $releaseStatus === 'release' ? '' : 'display:none;' }}">
+                                    <label class="form-label">CA Release Date</label>
+                                    <input type="date" name="ca_release_date" id="ca_release_date"
+                                        class="form-control"
+                                        value="{{ $kasbonGen->ca_release_date ? $kasbonGen->ca_release_date->format('Y-m-d') : '' }}">
                                 </div>
 
                                 <div class="col-md-12">
@@ -573,7 +695,6 @@
                                 <span class="items-count-badge"
                                     id="itemsCountBadge">{{ $kasbonGen->items->count() }}</span>
                             </h6>
-
                         </div>
                         <div class="card-body p-4">
 
@@ -645,10 +766,14 @@
                                             @endphp
                                             @foreach ($groupedItems as $category => $items)
                                                 @foreach ($items as $index => $item)
-                                                    <tr class="item-row" id="row_item_{{ $item->id_kasbon_gen_item }}"
+                                                    @php $isFromLpj = !empty($item->origin_lpj_gen); @endphp
+                                                    <tr class="item-row {{ $isFromLpj ? 'row-from-lpj' : '' }}"
+                                                        id="row_item_{{ $item->id_kasbon_gen_item }}"
                                                         data-item-id="{{ $item->id_kasbon_gen_item }}"
                                                         data-invoice-id="{{ $item->id_md_invoice }}"
-                                                        data-category="{{ $category }}">
+                                                        data-category="{{ $category }}"
+                                                        data-from-lpj="{{ $isFromLpj ? '1' : '0' }}"
+                                                        data-lpj-id="{{ $item->origin_lpj_gen ?? '' }}">
                                                         <td class="text-center fw-bold text-muted">{{ $globalIndex++ }}
                                                         </td>
                                                         @if ($index === 0)
@@ -658,9 +783,16 @@
                                                             </td>
                                                         @endif
                                                         <td class="text-start item-type-cell">
-                                                            {{ $item->invoice->invoice_typ ?? '-' }}</td>
+                                                            {{ $item->invoice->invoice_typ ?? '-' }}
+                                                            @if ($isFromLpj)
+                                                                <span class="badge ms-1"
+                                                                    style="background:#3b82f6; font-size:.65rem;">From
+                                                                    LPJ</span>
+                                                            @endif
+                                                        </td>
                                                         <td class="text-end nilai-kasbon-cell">
-                                                            {{ number_format($item->nilai_kasbon, 2, ',', '.') }}</td>
+                                                            {{ number_format($item->nilai_kasbon, 2, ',', '.') }}
+                                                        </td>
                                                         <td class="text-center">
                                                             <div class="d-flex gap-1 justify-content-center">
                                                                 <button type="button"
@@ -669,10 +801,11 @@
                                                                     title="Edit">
                                                                     <i class="fas fa-edit"></i>
                                                                 </button>
+                                                                {{-- Item dari LPJ bisa dihapus dengan cascade ke LPJ --}}
                                                                 <button type="button"
                                                                     class="btn btn-danger btn-sm btn-remove-row"
-                                                                    onclick="removeItem(this,'{{ $item->id_kasbon_gen_item }}')"
-                                                                    title="Delete">
+                                                                    onclick="removeItem(this,'{{ $item->id_kasbon_gen_item }}','{{ $isFromLpj ? '1' : '0' }}')"
+                                                                    title="{{ $isFromLpj ? 'Delete (will also remove from LPJ)' : 'Delete' }}">
                                                                     <i class="fas fa-trash"></i>
                                                                 </button>
                                                             </div>
@@ -705,6 +838,16 @@
                                         </tr>
                                     </tfoot>
                                 </table>
+
+                                {{-- Origin note — sama persis dengan kasbon-contract --}}
+                                @if ($kasbonGen->items->where('origin_lpj_gen', '!=', null)->count() > 0)
+                                    <div class="lpj-origin-note mt-2">
+                                        <i class="fas fa-info-circle" style="color:#3b82f6; flex-shrink:0;"></i>
+                                        <span>Rows highlighted in <strong>blue</strong> are items that were added from an
+                                            LPJ page.</span>
+                                    </div>
+                                @endif
+
                                 <div class="d-flex justify-content-end mt-2">
                                     <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
                                         style="border-radius:8px;">
@@ -723,6 +866,43 @@
                         </a>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- LPJ BLOCKING MODAL --}}
+    <div class="lpj-block-modal-overlay" id="lpjBlockModal">
+        <div class="lpj-block-modal-box">
+            <div class="lpj-block-modal-header">
+                <i class="fas fa-lock"></i>
+                <h5>Cannot Delete — Item Used in LPJ</h5>
+            </div>
+            <div class="lpj-block-modal-body">
+                <div class="lpj-block-info-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        This kasbon item is currently being used in an <strong>LPJ General</strong>.
+                        It cannot be deleted while it is still linked to an LPJ entry.
+                    </div>
+                </div>
+                <div class="lpj-block-info-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        To delete this item, please open the linked LPJ and remove this item from there first,
+                        or ask the LPJ administrator to unlink it.
+                    </div>
+                </div>
+                <div class="lpj-block-info-box" id="lpjBlockModalLpjInfo" style="display:none;">
+                    <i class="fas fa-file-alt"></i>
+                    <div>
+                        Linked LPJ: <strong id="lpjBlockModalLpjId">-</strong>
+                    </div>
+                </div>
+            </div>
+            <div class="lpj-block-modal-footer">
+                <button type="button" class="btn-lpj-block-close" id="btnCloseLpjBlockModal">
+                    <i class="fas fa-times me-1"></i> Close
+                </button>
             </div>
         </div>
     </div>
@@ -754,7 +934,7 @@
             @endforeach
         };
 
-        // CONFIRM MODAL
+        // ── CONFIRM MODAL ──
         function showConfirm({
             title,
             desc,
@@ -779,7 +959,7 @@
             confirmCallback = null;
         });
 
-        // FLOATING ALERT
+        // ── FLOATING ALERT ──
         function showFloatingAlert(type, message) {
             const $alert = $('#floatingBadgeAlert'),
                 $icon = $('#alertIcon');
@@ -804,7 +984,7 @@
             setTimeout(() => $('#floatingBadgeAlert').removeClass('show hiding'), 400);
         }
 
-        // UTILS
+        // ── UTILS ──
         function formatNumber(amount) {
             return parseFloat(amount || 0).toLocaleString('id-ID', {
                 minimumFractionDigits: 2,
@@ -850,6 +1030,20 @@
             });
         }
 
+        function handleReleaseStatusChange() {
+            const status = $('#ca_release_status').val();
+            const $statusWrapper = $('#caReleaseStatusWrapper');
+            const $dateWrapper = $('#caReleaseDateWrapper');
+            if (status === 'release') {
+                $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
+                $dateWrapper.show();
+            } else {
+                $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
+                $dateWrapper.hide();
+                $('#ca_release_date').val('');
+            }
+        }
+
         $(document).ready(function() {
             setupRupiahInput(document.getElementById('input_nilai_kasbon'));
             $('.select2-field').select2({
@@ -862,7 +1056,6 @@
             });
             updateGrandTotal();
 
-            // Category change
             $('#input_category').on('change', function() {
                 const category = $(this).val();
                 if (!category) {
@@ -877,24 +1070,27 @@
                 });
                 $('#input_item').prop('disabled', false).html(opts).trigger('change');
             });
+
+            $('#ca_release_status').on('change', function() {
+                handleReleaseStatusChange();
+            });
         });
 
-        // UPDATE HEADER
+        // ── UPDATE HEADER ──
         $('#btnSaveHeader').on('click', function() {
-            const idDep = $('#id_md_dep').val();
-            const idCabang = $('#id_md_cabang').val();
-            const idRelease = $('#id_md_release').val();
-            const tglKasbon = $('#tgl_kasbon').val();
-            const priority = $('#priority').val();
-            const dueDate = $('#due_date').val();
+            const idDep = $('#id_md_dep').val(),
+                idCabang = $('#id_md_cabang').val(),
+                idRelease = $('#id_md_release').val(),
+                tglKasbon = $('#tgl_kasbon').val(),
+                priority = $('#priority').val(),
+                dueDate = $('#due_date').val();
 
             if (!idDep || !idCabang || !idRelease || !tglKasbon) {
                 showFloatingAlert('error', 'Please fill in all required fields');
                 return;
             }
-
             showFloatingAlert('saving', 'Updating header...');
-            $('#btnSaveHeader').prop('disabled', true);
+            $(this).prop('disabled', true);
 
             $.ajax({
                 url: updateHeaderUrl,
@@ -908,15 +1104,14 @@
                     note: $('#note').val(),
                     priority: priority,
                     due_date: dueDate,
-                    _token: csrfToken,
+                    ca_release_status: $('#ca_release_status').val(),
+                    ca_release_date: $('#ca_release_date').val(),
+                    _token: csrfToken
                 },
                 success: function(r) {
                     $('#btnSaveHeader').prop('disabled', false);
-                    if (r.success) {
-                        showFloatingAlert('success', 'Header updated successfully!');
-                    } else {
-                        showFloatingAlert('error', r.message || 'Failed to update header');
-                    }
+                    if (r.success) showFloatingAlert('success', 'Header updated successfully!');
+                    else showFloatingAlert('error', r.message || 'Failed to update header');
                 },
                 error: function(xhr) {
                     $('#btnSaveHeader').prop('disabled', false);
@@ -925,7 +1120,7 @@
             });
         });
 
-        // ADD / UPDATE ITEM
+        // ── ADD / UPDATE ITEM ──
         $('#btnAddToTable').on('click', function() {
             const editingId = $('#editing_item_id').val();
             const category = $('#input_category').val();
@@ -946,11 +1141,8 @@
                 return;
             }
 
-            if (editingId) {
-                updateItemToDatabase(editingId, itemId, category, itemText, nilaiKasbon);
-            } else {
-                storeItemToDatabase(itemId, category, itemText, nilaiKasbon);
-            }
+            if (editingId) updateItemToDatabase(editingId, itemId, category, itemText, nilaiKasbon);
+            else storeItemToDatabase(itemId, category, itemText, nilaiKasbon);
         });
 
         function storeItemToDatabase(invoiceId, category, itemText, nilaiKasbon) {
@@ -970,19 +1162,22 @@
                         $('.no-items-row').remove();
                         globalItemNumber++;
                         $('#itemsTableBody').append(`
-                <tr class="item-row" id="row_item_${r.data.id_kasbon_gen_item}"
-                    data-item-id="${r.data.id_kasbon_gen_item}" data-invoice-id="${invoiceId}" data-category="${category}">
-                    <td class="text-center fw-bold text-muted">${globalItemNumber}</td>
-                    <td class="category-cell text-start">${category}</td>
-                    <td class="text-start item-type-cell">${itemText}</td>
-                    <td class="text-end nilai-kasbon-cell">${formatNumber(r.data.nilai_kasbon)}</td>
-                    <td class="text-center">
-                        <div class="d-flex gap-1 justify-content-center">
-                            <button type="button" class="btn btn-primary btn-sm btn-edit-row" onclick="editItem('${r.data.id_kasbon_gen_item}')"><i class="fas fa-edit"></i></button>
-                            <button type="button" class="btn btn-danger btn-sm btn-remove-row" onclick="removeItem(this,'${r.data.id_kasbon_gen_item}')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>`);
+                            <tr class="item-row" id="row_item_${r.data.id_kasbon_gen_item}"
+                                data-item-id="${r.data.id_kasbon_gen_item}" data-invoice-id="${invoiceId}"
+                                data-category="${category}" data-from-lpj="0">
+                                <td class="text-center fw-bold text-muted">${globalItemNumber}</td>
+                                <td class="category-cell text-start">${category}</td>
+                                <td class="text-start item-type-cell">${itemText}</td>
+                                <td class="text-end nilai-kasbon-cell">${formatNumber(r.data.nilai_kasbon)}</td>
+                                <td class="text-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                                            onclick="editItem('${r.data.id_kasbon_gen_item}')"><i class="fas fa-edit"></i></button>
+                                        <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                                            onclick="removeItem(this,'${r.data.id_kasbon_gen_item}')" title="Delete"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                            </tr>`);
                         $('#itemsCountBadge').text($('.item-row').length);
                         updateGrandTotal();
                         clearItemForm();
@@ -1012,6 +1207,12 @@
                         const $row = $(`#row_item_${itemId}`);
                         $row.find('.category-cell').text(category);
                         $row.find('.item-type-cell').text(itemText);
+                        // Pertahankan badge From LPJ jika ada
+                        if ($row.data('from-lpj') == '1') {
+                            $row.find('.item-type-cell').append(
+                                ` <span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>`
+                            );
+                        }
                         $row.find('.nilai-kasbon-cell').text(formatNumber(r.data.nilai_kasbon));
                         $row.attr('data-invoice-id', invoiceId).attr('data-category', category);
                         $row.removeClass('tr-active');
@@ -1027,7 +1228,7 @@
             });
         }
 
-        // EDIT ITEM — load to form
+        // ── EDIT ITEM ──
         function editItem(itemId) {
             showFloatingAlert('saving', 'Loading item data...');
             $.ajax({
@@ -1045,20 +1246,15 @@
                     $('#addItemFormSection').addClass('edit-mode');
                     $('#btnAddToTable').html('<i class="fas fa-save me-1"></i> Update Item');
                     $('#btnCancelEdit').show();
-
                     $('#input_category').val(item.invoice_ctg).trigger('change');
                     setTimeout(() => {
                         $('#input_item').val(item.id_md_invoice).trigger('change.select2');
-                        $('#input_nilai_kasbon').val(formatNumber(item.nilai_kasbon).replace(/\./g, ',')
-                            .replace(/,(\d{2})$/, ',$1'));
-                        // Re-format properly
                         const n = parseFloat(item.nilai_kasbon) || 0;
                         $('#input_nilai_kasbon').val(n.toLocaleString('id-ID', {
                             minimumFractionDigits: 2,
                             maximumFractionDigits: 2
-                        }).replace(/\./g, '.').replace(',', ','));
+                        }));
                     }, 300);
-
                     $(`#row_item_${itemId}`).addClass('tr-active');
                     $('html, body').animate({
                         scrollTop: $('#addItemFormSection').offset().top - 120
@@ -1069,13 +1265,33 @@
                 }
             });
         }
-
         $('#btnCancelEdit').on('click', function() {
             clearItemForm();
         });
 
-        // REMOVE ITEM
-        function removeItem(button, itemId) {
+        // ── LPJ BLOCKING MODAL ──
+        $('#btnCloseLpjBlockModal, #lpjBlockModal').on('click', function(e) {
+            if (e.target === this) $('#lpjBlockModal').removeClass('show');
+        });
+
+        // ── REMOVE ITEM ──
+        function removeItem(button, itemId, isFromLpj) {
+            const fromLpj = isFromLpj == '1' || isFromLpj === true;
+
+            // Jika item digunakan di LPJ → BLOCK, tampilkan info modal
+            if (fromLpj) {
+                const lpjId = $(button).closest('tr').data('lpj-id') || '';
+                if (lpjId) {
+                    $('#lpjBlockModalLpjId').text(lpjId);
+                    $('#lpjBlockModalLpjInfo').show();
+                } else {
+                    $('#lpjBlockModalLpjInfo').hide();
+                }
+                $('#lpjBlockModal').addClass('show');
+                return;
+            }
+
+            // Item biasa → confirm delete
             showConfirm({
                 title: 'Delete Item?',
                 desc: 'This item will be permanently deleted.',
@@ -1093,7 +1309,6 @@
                         if (r.success) {
                             showFloatingAlert('success', 'Item deleted!');
                             $(`#row_item_${itemId}`).remove();
-                            globalItemNumber--;
                             renumberAllItems();
                             updateGrandTotal();
                             $('#itemsCountBadge').text($('.item-row').length);
@@ -1115,47 +1330,82 @@
             });
         }
 
-        // RESET ALL
+        // ── RESET ALL (hapus semua item termasuk From LPJ, pakai bulk endpoint) ──
         $('#btnResetAllItems').on('click', function() {
-            const count = $('.item-row').length;
+            const allRows = $('.item-row');
+            const count = allRows.length;
             if (count === 0) {
                 showFloatingAlert('error', 'No items to delete');
                 return;
             }
+
+            const lpjCount = allRows.filter(function() {
+                return $(this).data('from-lpj') == '1';
+            }).length;
+            const desc = skippedLpj > 0 ?
+                `${ids.length} item(s) will be deleted. ${skippedLpj} item(s) linked to LPJ will be skipped.` :
+                (lpjCount > 0 ?
+                    `All ${count} item(s) will be deleted, including ${lpjCount} item(s) linked to LPJ.` :
+                    `All ${count} item(s) will be permanently deleted.`);
+
             showConfirm({
                 title: 'Reset All Items?',
-                desc: `All ${count} item(s) will be permanently deleted.`,
+                desc: desc,
                 okLabel: 'Yes, reset all',
                 okClass: 'btn-danger'
             }, function() {
                 showFloatingAlert('saving', 'Deleting all items...');
+
                 const ids = [];
-                $('.item-row').each(function() {
+                let skippedLpj = 0;
+                allRows.each(function() {
+                    if ($(this).data('from-lpj') == '1') {
+                        skippedLpj++;
+                        return;
+                    }
                     ids.push($(this).data('item-id'));
                 });
-                Promise.all(ids.map(id => $.ajax({
-                        url: `/kasbon-gen/item/destroy/${id}`,
-                        method: 'DELETE',
-                        data: {
-                            _token: csrfToken
+
+                if (ids.length === 0) {
+                    showFloatingAlert('error',
+                        'All items are linked to LPJ and cannot be deleted from here');
+                    return;
+                }
+
+                $.ajax({
+                    url: '{{ route('kasbon-gen.items.bulk-destroy') }}',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    data: JSON.stringify({
+                        ids: ids
+                    }),
+                    success: function(r) {
+                        if (r.success) {
+                            showFloatingAlert('success', r.message || 'All items deleted!');
+                            allRows.remove();
+                            renumberAllItems();
+                            updateGrandTotal();
+                            $('#itemsCountBadge').text(0);
+                            $('#itemsTableBody').html(
+                                `<tr class="no-items-row"><td colspan="5"><i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i><p class="mb-0 fw-bold">No items yet</p></td></tr>`
+                            );
+                            clearItemForm();
+                        } else {
+                            showFloatingAlert('error', r.message || 'Failed to delete items');
                         }
-                    })))
-                    .then(() => {
-                        showFloatingAlert('success', 'All items deleted!');
-                        $('#itemsTableBody').html(
-                            `<tr class="no-items-row"><td colspan="5"><i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i><p class="mb-0 fw-bold">No items yet</p></td></tr>`
-                        );
-                        globalItemNumber = 0;
-                        $('#itemsCountBadge').text(0);
-                        updateGrandTotal();
-                        clearItemForm();
-                    }).catch(() => {
-                        showFloatingAlert('error', 'Some items could not be deleted');
-                    });
+                    },
+                    error: function(xhr) {
+                        showFloatingAlert('error', xhr.responseJSON?.message ||
+                            'Failed to delete items');
+                    }
+                });
             });
         });
 
-        // UTILS
+        // ── UTILS ──
         function clearItemForm() {
             $('#editing_item_id').val('');
             $('#formSectionTitle').html('<i class="fas fa-plus-square"></i> Add New Item');

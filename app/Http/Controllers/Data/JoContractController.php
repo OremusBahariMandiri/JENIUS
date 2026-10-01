@@ -437,23 +437,65 @@ class JoContractController extends Controller
         }
     }
 
-    public function destroyItem($id)
+    public function destroyItem(Request $request, $id)
     {
-        Log::info('=== Delete Item Request START ===', ['id' => $id]);
+        Log::info('=== Delete JO Contract Item START ===', ['id' => $id]);
 
         try {
             DB::beginTransaction();
+
             $item = JoContractItem::findOrFail($id);
+
+            // Hanya hitung record aktif (nilai > 0), sama seperti tramper
+            $kasbonCount = KasbonContractItem::where('id_jo_cont_item', (string) $id)
+                ->where('nilai_kasbon', '>', 0)
+                ->count();
+
+            // LPJ via kasbon item
+            $kasbonItemIds = KasbonContractItem::where('id_jo_cont_item', (string) $id)
+                ->pluck('id_kasbon_cont_item')
+                ->toArray();
+
+            $lpjCount = LpjContractItem::whereIn('id_kasbon_cont_item', $kasbonItemIds)
+                ->where('amount_lpj', '>', 0)
+                ->count();
+
+            if ($kasbonCount > 0 || $lpjCount > 0) {
+                DB::rollBack();
+
+                $parts = [];
+                if ($kasbonCount > 0) $parts[] = "{$kasbonCount} Cash Advance item(s)";
+                if ($lpjCount > 0)    $parts[] = "{$lpjCount} LPJ item(s)";
+
+                $msg = "Cannot delete: this item is still referenced by "
+                    . implode(' and ', $parts)
+                    . ". Please remove the related records first before deleting this item.";
+
+                Log::warning('JO Contract Delete Item blocked', [
+                    'id_jo_cont_item' => $id,
+                    'kasbon_count'    => $kasbonCount,
+                    'lpj_count'       => $lpjCount,
+                ]);
+
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            // Hapus kasbon item kosong (nilai_kasbon = 0) yang terkait
+            KasbonContractItem::where('id_jo_cont_item', (string) $id)->delete();
+
             $item->delete();
             DB::commit();
 
-            Log::info('Item Deleted Successfully', ['id' => $id]);
+            Log::info('JO Contract Item Deleted', ['id' => $id]);
 
-            return response()->json(['success' => true, 'message' => 'Item deleted successfully'], 200);
+            return response()->json(['success' => true, 'message' => 'Item deleted successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error('Delete Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Failed to delete item', 'error' => $e->getMessage()], 500);
+            Log::error('Delete JO Contract Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete item: ' . $e->getMessage()
+            ], 500);
         }
     }
 
@@ -1136,5 +1178,40 @@ class JoContractController extends Controller
         // Fallback jika tabel tidak ada di peta di atas
         return 'Cannot delete this JO Contract because it is still being used by other related data. '
             . 'Please remove all related records first before deleting this JO Contract.';
+    }
+
+    public function checkItemRelations($id)
+    {
+        try {
+            $item = JoContractItem::findOrFail($id);
+
+            $kasbonCount = KasbonContractItem::where('id_jo_cont_item', (string) $id)
+                ->where('nilai_kasbon', '>', 0)
+                ->count();
+
+            $kasbonItemIds = KasbonContractItem::where('id_jo_cont_item', (string) $id)
+                ->pluck('id_kasbon_cont_item')
+                ->toArray();
+
+            $lpjCount = LpjContractItem::whereIn('id_kasbon_cont_item', $kasbonItemIds)
+                ->where('amount_lpj', '>', 0)
+                ->count();
+
+            return response()->json([
+                'success'       => true,
+                'has_relations' => ($kasbonCount > 0 || $lpjCount > 0),
+                'kasbon_count'  => $kasbonCount,
+                'lpj_count'     => $lpjCount,
+                'item_info'     => [
+                    'id'           => $item->id_jo_cont_item,
+                    'invoice_type' => $item->invoice ? $item->invoice->invoice_typ : '-',
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Item not found'], 404);
+        } catch (\Exception $e) {
+            Log::error('checkItemRelations contract failed', ['id' => $id, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

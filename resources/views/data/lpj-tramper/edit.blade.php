@@ -1550,7 +1550,7 @@
             $('#inputAmountLpj').val(item.has_lpj && item.amount_lpj > 0 ?
                 formatRupiah(item.amount_lpj.toFixed(2).replace('.', ',')) : '');
             $('#inputAmountLpjHint').text('');
-            $('#inputCoa').val(item.id_md_chart_of_account || '');
+            $('#inputCoa').val(item.id_md_chart_of_account || '').trigger('change');
             $('#activeKasbonTramItemId').val(item.id_kasbon_tram_item);
             $('#activeJoTramItemId').val(item.id_jo_tram_item);
             $('#activeRowIndex').val(index);
@@ -1571,7 +1571,7 @@
             $('#inputItemCard').removeClass('active');
             $('#inputAmountLpj').val('');
             $('#inputAmountLpjHint').text('');
-            $('#inputCoa').val('');
+            $('#inputCoa').val('').trigger('change');
             $('#activeKasbonTramItemId, #activeJoTramItemId, #activeRowIndex').val('');
             $('#activeHpp').val('0');
             $('#activeNilaiKasbon').val('0');
