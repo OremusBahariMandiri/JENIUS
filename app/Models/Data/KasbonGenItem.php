@@ -21,6 +21,7 @@ class KasbonGenItem extends Model
         'id_kasbon_gen',
         'id_md_invoice',
         'nilai_kasbon',
+        'origin_lpj_gen',
     ];
 
     protected $casts = [

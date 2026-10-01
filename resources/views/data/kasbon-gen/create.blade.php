@@ -169,12 +169,6 @@
             background-color: #f8f9fa;
         }
 
-        .table-items .category-cell {
-            background: #e8f5e9 !important;
-            color: #2c3e50;
-            font-weight: 600;
-        }
-
         .table-footer {
             background: #2c3e50;
             color: white;
@@ -228,6 +222,7 @@
 
         .btn-remove-row:hover {
             transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
         }
 
         .btn-add-to-table {
@@ -244,6 +239,7 @@
 
         .btn-add-to-table:hover {
             transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
             color: white;
         }
 
@@ -266,6 +262,7 @@
             border-radius: 12px;
             font-weight: 700;
             font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(27, 27, 27, 0.4);
             transition: all 0.3s;
         }
 
@@ -293,6 +290,11 @@
             font-size: 1.1rem;
             font-weight: 600;
             z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        #caReleaseDateWrapper {
+            transition: all 0.25s ease;
         }
     </style>
 @endpush
@@ -340,8 +342,9 @@
                                 <div class="col-md-6">
                                     <label class="form-label">Cash Advance No.</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-success text-white"><i
-                                                class="fas fa-file-alt"></i></span>
+                                        <span class="input-group-text bg-success text-white">
+                                            <i class="fas fa-file-alt"></i>
+                                        </span>
                                         <input type="text" class="form-control fw-bold" value="{{ $previewNoKasbon }}"
                                             readonly style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
                                     </div>
@@ -355,7 +358,7 @@
                                         value="{{ date('Y-m-d') }}" required>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label required-field">Department</label>
                                     <select name="id_md_dep" id="id_md_dep" class="form-select select2-field" required>
                                         <option value="">-- Select Department --</option>
@@ -365,7 +368,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label required-field">Branch</label>
                                     <select name="id_md_cabang" id="id_md_cabang" class="form-select select2-field"
                                         required>
@@ -376,7 +379,7 @@
                                     </select>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
                                     <label class="form-label required-field">Release To</label>
                                     <select name="id_md_release" id="id_md_release" class="form-select select2-field"
                                         required>
@@ -393,7 +396,6 @@
                                     <input type="date" name="tgl_release" id="tgl_release" class="form-control">
                                 </div>
 
-                                {{-- Priority --}}
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
@@ -402,10 +404,26 @@
                                     </select>
                                 </div>
 
-                                {{-- Due Date --}}
                                 <div class="col-md-6">
                                     <label class="form-label">Due Date & Time</label>
                                     <input type="datetime-local" name="due_date" id="due_date" class="form-control">
+                                </div>
+
+                                {{-- CA Release Status --}}
+                                <div class="col-md-12" id="caReleaseStatusWrapper">
+                                    <label class="form-label">CA Release Status</label>
+                                    <select name="ca_release_status" id="ca_release_status" class="form-select">
+                                        <option value="" selected>-- No Status (Pending) --</option>
+                                        <option value="pending">Pending</option>
+                                        <option value="release">Release</option>
+                                    </select>
+                                </div>
+
+                                {{-- CA Release Date (hidden until status = release) --}}
+                                <div class="col-md-6" id="caReleaseDateWrapper" style="display:none;">
+                                    <label class="form-label">CA Release Date</label>
+                                    <input type="date" name="ca_release_date" id="ca_release_date"
+                                        class="form-control">
                                 </div>
 
                                 <div class="col-md-12">
@@ -434,7 +452,6 @@
                                 <h6><i class="fas fa-plus-square"></i> Add New Item</h6>
                                 <div class="row g-3">
 
-                                    {{-- Category --}}
                                     <div class="col-md-6">
                                         <label class="form-label required-field">Category</label>
                                         <select id="input_category" class="form-select select2-item"
@@ -446,7 +463,6 @@
                                         </select>
                                     </div>
 
-                                    {{-- Item --}}
                                     <div class="col-md-6">
                                         <label class="form-label required-field">Item</label>
                                         <select id="input_item" class="form-select select2-item" disabled
@@ -455,7 +471,6 @@
                                         </select>
                                     </div>
 
-                                    {{-- Nominal Kasbon --}}
                                     <div class="col-md-6">
                                         <label class="form-label required-field">CA Amount (IDR)</label>
                                         <div class="currency-group">
@@ -465,7 +480,6 @@
                                         </div>
                                     </div>
 
-                                    {{-- Add Button --}}
                                     <div class="col-md-6 d-flex align-items-end">
                                         <button type="button" class="btn btn-add-to-table w-100" id="btnAddToTable">
                                             <i class="fas fa-arrow-down me-1"></i> Add to Table
@@ -537,7 +551,6 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-        // Invoice data by category
         const invoicesByCategory = {
             @foreach ($invoices->groupBy('invoice_ctg') as $category => $invoiceGroup)
                 '{{ $category }}': [
@@ -624,8 +637,26 @@
             });
         }
 
+        // =============================================
+        // CA RELEASE STATUS TOGGLE
+        // =============================================
+        function handleReleaseStatusChange() {
+            const status = $('#ca_release_status').val();
+            const $statusWrapper = $('#caReleaseStatusWrapper');
+            const $dateWrapper = $('#caReleaseDateWrapper');
+            if (status === 'release') {
+                $statusWrapper.removeClass('col-md-12').addClass('col-md-6');
+                $dateWrapper.show();
+            } else {
+                $statusWrapper.removeClass('col-md-6').addClass('col-md-12');
+                $dateWrapper.hide();
+                $('#ca_release_date').val('');
+            }
+        }
+
         $(document).ready(function() {
             setupRupiahInput(document.getElementById('input_nilai_kasbon'));
+
             $('.select2-field').select2({
                 theme: 'bootstrap-5',
                 width: '100%'
@@ -635,6 +666,14 @@
                 width: '100%'
             });
             $('#itemsCard').addClass('items-card-disabled');
+
+            // Init release status toggle on load
+            handleReleaseStatusChange();
+
+            // CA Release Status change handler
+            $('#ca_release_status').on('change', function() {
+                handleReleaseStatusChange();
+            });
 
             // Category change → load items
             $('#input_category').on('change', function() {
@@ -653,7 +692,9 @@
             });
         });
 
-        // Save Header
+        // =============================================
+        // SAVE HEADER
+        // =============================================
         $('#btnSaveHeader').on('click', function() {
             const idDep = $('#id_md_dep').val();
             const idCabang = $('#id_md_cabang').val();
@@ -682,6 +723,8 @@
                     note: $('#note').val(),
                     priority: priority,
                     due_date: dueDate,
+                    ca_release_status: $('#ca_release_status').val(),
+                    ca_release_date: $('#ca_release_date').val(),
                     _token: $('input[name="_token"]').val(),
                 },
                 success: function(r) {
@@ -704,7 +747,9 @@
             });
         });
 
-        // Add Item
+        // =============================================
+        // ADD ITEM
+        // =============================================
         $('#btnAddToTable').on('click', function() {
             if (!isHeaderSaved) {
                 showFloatingAlert('error', 'Please save the header first');
@@ -714,6 +759,7 @@
                 itemId = $('#input_item').val(),
                 itemText = $('#input_item option:selected').text(),
                 nilaiKasbon = parseRupiah($('#input_nilai_kasbon').val());
+
             if (!category) {
                 showFloatingAlert('error', 'Please select a category');
                 return;
@@ -726,6 +772,7 @@
                 showFloatingAlert('error', 'Please enter CA Amount');
                 return;
             }
+
             showFloatingAlert('saving', 'Adding item...');
             $.ajax({
                 url: '{{ route('kasbon-gen.item.store') }}',
@@ -756,18 +803,18 @@
             $('.no-items-row').remove();
             globalItemNumber++;
             $('#itemsTableBody').append(`
-    <tr class="item-row" data-item-id="${d.id_kasbon_gen_item}" data-category="${category}">
-        <td class="fw-bold text-muted">${globalItemNumber}</td>
-        <td class="text-start" style="background:#e8f5e9; font-weight:600;">${category}</td>
-        <td class="text-start">${itemText}</td>
-        <td class="text-end">${formatNumber(d.nilai_kasbon)}</td>
-        <td class="text-center">
-            <button type="button" class="btn btn-danger btn-sm btn-remove-row"
-                onclick="removeItem(this,'${d.id_kasbon_gen_item}')">
-                <i class="fas fa-trash"></i>
-            </button>
-        </td>
-    </tr>`);
+                <tr class="item-row" data-item-id="${d.id_kasbon_gen_item}" data-category="${category}">
+                    <td class="fw-bold text-muted">${globalItemNumber}</td>
+                    <td class="text-start" style="background:#e8f5e9; font-weight:600;">${category}</td>
+                    <td class="text-start">${itemText}</td>
+                    <td class="text-end">${formatNumber(d.nilai_kasbon)}</td>
+                    <td class="text-center">
+                        <button type="button" class="btn btn-danger btn-sm btn-remove-row"
+                            onclick="removeItem(this,'${d.id_kasbon_gen_item}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>`);
         }
 
         function clearItemForm() {
@@ -816,22 +863,21 @@
             }
             showFloatingAlert('saving', 'Deleting all items...');
             Promise.all(ids.map(id => $.ajax({
-                    url: `/kasbon-gen/item/destroy/${id}`,
-                    method: 'DELETE',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content')
-                    }
-                })))
-                .then(() => {
-                    showFloatingAlert('success', 'All items deleted!');
-                    $('#itemsTableBody').html(
-                        `<tr class="no-items-row"><td colspan="5"><i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i><p class="mb-0 fw-bold">No items yet</p></td></tr>`
-                    );
-                    globalItemNumber = 0;
-                    updateGrandTotal();
-                }).catch(() => {
-                    showFloatingAlert('error', 'Some items could not be deleted');
-                });
+                url: `/kasbon-gen/item/destroy/${id}`,
+                method: 'DELETE',
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                }
+            }))).then(() => {
+                showFloatingAlert('success', 'All items deleted!');
+                $('#itemsTableBody').html(
+                    `<tr class="no-items-row"><td colspan="5"><i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i><p class="mb-0 fw-bold">No items yet</p></td></tr>`
+                );
+                globalItemNumber = 0;
+                updateGrandTotal();
+            }).catch(() => {
+                showFloatingAlert('error', 'Some items could not be deleted');
+            });
         });
 
         function renumberAllItems() {

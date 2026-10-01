@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\Data\LpjContractExport;
 
 class LpjContractController extends Controller
 {
@@ -215,6 +216,7 @@ class LpjContractController extends Controller
                         'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
                         'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
                         'origin_lpj_cont'        => $kasbonItem->joContractItem->origin_lpj_cont ?? null,
+                        'is_orphaned'            => $kasbonItem->joContractItem === null,  // ← TAMBAH INI
                     ];
                 }
             }
@@ -827,5 +829,80 @@ class LpjContractController extends Controller
 
         return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun'
             . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
+    }
+
+    // ========================================
+    // DESTROY ORPHANED KASBON ITEM
+    // (kasbon item yang jo_cont_item-nya sudah dihapus)
+    // ========================================
+
+    public function destroyOrphanedKasbonItem(Request $request, $kasbonContItemId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $kasbonItem = KasbonContractItem::findOrFail($kasbonContItemId);
+
+            // Pastikan memang orphaned (jo_cont_item sudah tidak ada)
+            $joItemExists = JoContractItem::where('id_jo_cont_item', $kasbonItem->id_jo_cont_item)->exists();
+            if ($joItemExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This item is not orphaned — its JO item still exists.',
+                ], 422);
+            }
+
+            // Hapus LPJ items yang referencing kasbon item ini
+            LpjContractItem::where('id_kasbon_cont_item', $kasbonContItemId)->delete();
+
+            // Hapus kasbon item
+            $kasbonItem->delete();
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Orphaned item deleted successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('destroyOrphanedKasbonItem failed', ['id' => $kasbonContItemId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            $query = LpjContract::with(['joContract', 'kasbons', 'items']);
+
+            if ($request->filled('id_jo_cont'))  $query->where('id_jo_cont', $request->id_jo_cont);
+            if ($request->filled('no_lpj_cont')) $query->where('no_lpj_cont', 'like', '%' . $request->no_lpj_cont . '%');
+            if ($request->filled('date_from'))   $query->where('date', '>=', $request->date_from);
+            if ($request->filled('date_to'))     $query->where('date', '<=', $request->date_to);
+
+            $lpjContracts = $query->orderBy('date', 'desc')->get();
+
+            $format = $request->get('format', 'excel');
+
+            if ($format === 'pdf') {
+                $filters = [
+                    'no_lpj_cont' => $request->get('no_lpj_cont', ''),
+                    'id_jo_cont'  => $request->get('id_jo_cont', ''),
+                    'date_from'   => $request->get('date_from', ''),
+                    'date_to'     => $request->get('date_to', ''),
+                ];
+
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'data.lpj-contract.export_pdf',
+                    compact('lpjContracts', 'filters')
+                )->setPaper('a4', 'landscape');
+
+                return $pdf->stream('lpj_contract_' . date('Ymd_His') . '.pdf');
+            }
+
+            // Default: Excel
+            return (new LpjContractExport($lpjContracts))->download();
+        } catch (\Exception $e) {
+            Log::error('LPJ Contract Export Failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
     }
 }

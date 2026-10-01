@@ -15,6 +15,7 @@
             'nilai_kasbon' => $i['nilai_kasbon'],
             'total_kasbon' => $i['total_kasbon'],
             'has_kasbon' => $i['has_kasbon'],
+            'has_lpj_amount' => $i['has_lpj_amount'], // ← TAMBAH
             'origin_lpj_cont' => $i['origin_lpj_cont'] ?? null,
         ],
     );
@@ -1709,6 +1710,7 @@
             $('#activeHppValue').val('0');
             resetCaValidation();
             $('.item-row').removeClass('tr-active');
+            updateFooter(); // ← reset ke nilai aktual setelah cancel
         }
 
         // ══════════════════════════════════════════════════════════
@@ -1850,10 +1852,93 @@
         $('#inputNilaiKasbon').on('input blur', validateCaInput);
 
         // ══════════════════════════════════════════════════════════
+        // REALTIME FOOTER PREVIEW saat mengetik nilai kasbon
+        // ══════════════════════════════════════════════════════════
+        $('#inputNilaiKasbon').on('input', function() {
+            const rowIndex = parseInt($('#activeRowIndex').val());
+            if (isNaN(rowIndex) || rowIndex < 0) return;
+
+            const newVal = parseRupiah($(this).val());
+
+            let totalHargaJual = 0,
+                totalHPP = 0,
+                totalCA = 0;
+            mergedItems.forEach(function(item, idx) {
+                totalHargaJual += parseFloat(item.hargajual_idr) || 0;
+                totalHPP += parseFloat(item.hpp_ops) || 0;
+                totalCA += idx === rowIndex ? newVal : (parseFloat(item.nilai_kasbon) || 0);
+            });
+
+            $('#footerTotalHargaJual').text(formatNumber(totalHargaJual));
+            $('#footerTotalHPP').text(formatNumber(totalHPP));
+            $('#footerTotalCA').text(formatNumber(totalCA));
+        });
+
+        // ══════════════════════════════════════════════════════════
+        // CLEAR SINGLE ITEM
+        // ══════════════════════════════════════════════════════════
+        // ══════════════════════════════════════════════════════════
+        // BLOCKED CLEAR MODAL (seperti jo-tramper showBlockedDeleteModal)
+        // ══════════════════════════════════════════════════════════
+        function showBlockedClearModal(itemText) {
+            $('#blockedClearModal').remove();
+
+            const html = `
+    <div class="modal fade" id="blockedClearModal" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px 12px 0 0;border:none;">
+                    <h5 class="modal-title text-white fw-bold">
+                        <i class="fas fa-ban me-2"></i>Cannot Clear CA Amount
+                    </h5>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="mb-2">The following item cannot be cleared:</p>
+                    <div class="p-3 rounded mb-3" style="background:#fef3c7;border:1px solid #fcd34d;">
+                        <strong style="color:#92400e;">${itemText}</strong>
+                    </div>
+                    <div class="alert alert-warning d-flex gap-2 align-items-start mb-3" style="border-radius:8px;">
+                        <i class="fas fa-link mt-1" style="flex-shrink:0;"></i>
+                        <div>
+                            <strong>This item is still used in:</strong><br>
+                            <strong>1</strong> LPJ item(s)
+                        </div>
+                    </div>
+                    <div class="p-3 rounded" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:.875rem;">
+                        <i class="fas fa-info-circle me-2" style="color:#3b82f6;"></i>
+                        To clear this CA amount, first remove its related LPJ amount,
+                        then come back to clear it here.
+                    </div>
+                </div>
+                <div class="modal-footer border-0 px-4 pb-4">
+                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+            $('body').append(html);
+            const modal = new bootstrap.Modal(document.getElementById('blockedClearModal'));
+            modal.show();
+            $('#blockedClearModal').on('hidden.bs.modal', function() {
+                $(this).remove();
+            });
+        }
+
+        // ══════════════════════════════════════════════════════════
         // CLEAR SINGLE ITEM
         // ══════════════════════════════════════════════════════════
         function clearItem(index) {
             const item = mergedItems[index];
+
+            // ── Pre-check: blokir langsung jika has_lpj_amount ──
+            if (item.has_lpj_amount) {
+                showBlockedClearModal(item.invoice_typ);
+                return;
+            }
+
             showConfirm({
                 title: 'Clear CA Amount?',
                 desc: `This will remove the CA amount for "${item.invoice_typ}".`,
@@ -1881,15 +1966,17 @@
                             showFloatingAlert('success', 'CA Amount cleared!');
                             mergedItems[index].nilai_kasbon = 0;
                             mergedItems[index].has_kasbon = false;
+                            mergedItems[index].has_lpj_amount = false;
                             refreshRowAfterSave(index, 0, false);
                             if (parseInt($('#activeRowIndex').val()) === index) closeInputCard();
                             updateFooter();
                         } else {
-                            showFloatingAlert('error', response.message || 'Failed to clear');
+                            // Server-side block (fallback jika flag tidak update)
+                            showBlockedClearModal(item.invoice_typ);
                         }
                     },
                     error: function(xhr) {
-                        showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to clear item');
+                        showBlockedClearModal(item.invoice_typ);
                     }
                 });
             });

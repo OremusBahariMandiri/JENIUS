@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Models\Data\LpjKasbonTramper;
+use App\Models\Data\LpjTramper;
 
 class KasbonTramperController extends Controller
 {
@@ -324,7 +326,6 @@ class KasbonTramperController extends Controller
             ]);
 
             if ($validator->fails()) {
-                Log::error('KasbonTramper Item Validation Failed', ['errors' => $validator->errors()->toArray()]);
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation failed',
@@ -334,79 +335,149 @@ class KasbonTramperController extends Controller
 
             DB::beginTransaction();
 
-            try {
-                $maxId = DB::table('c04_kasbon_tram_item')
-                    ->lockForUpdate()
-                    ->max('id_kasbon_tram_item');
+            // ── FIX: CAST ke UNSIGNED agar MAX numerik, bukan lexicographic ──
+            $maxId = DB::table('c04_kasbon_tram_item')
+                ->lockForUpdate()
+                ->selectRaw('MAX(CAST(id_kasbon_tram_item AS UNSIGNED)) as max_id')
+                ->value('max_id');
 
-                $newIdKasbonTramItem = $maxId ? (string)((int)$maxId + 1) : '1';
+            $newIdKasbonTramItem = (string) (((int) $maxId) + 1);
 
-                // Ambil nilai HPP dari JO Tramper Item
-                $joTramItem = JoTramperItem::find($request->id_jo_tram_item);
-                $nilaiHpp   = $joTramItem ? (float)$joTramItem->hpp_ops : 0;
+            $joTramItem = JoTramperItem::find($request->id_jo_tram_item);
+            $nilaiHpp   = $joTramItem ? (float) $joTramItem->hpp_ops : 0;
 
-                $nilaiKasbon = (float)$request->nilai_kasbon;
-                $totalKasbon = $nilaiHpp - $nilaiKasbon;
+            $nilaiKasbon = (float) $request->nilai_kasbon;
+            $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
-                $item = KasbonTramperItem::create([
-                    'id_kasbon_tram_item' => $newIdKasbonTramItem,
-                    'id_kasbon_tram'      => $request->id_kasbon_tram,
-                    'id_jo_tram_item'     => $request->id_jo_tram_item,
-                    'nilai_hpp_tram_item' => $nilaiHpp,
-                    'nilai_kasbon'        => $nilaiKasbon,
-                    'total_kasbon'        => $totalKasbon,
-                ]);
-
-                $item->load('joTramperItem');
-
-                DB::commit();
-
-                Log::info('KasbonTramper Item Created', ['id' => $item->id, 'id_kasbon_tram_item' => $item->id_kasbon_tram_item]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Item added successfully',
-                    'data'    => [
-                        'id'                  => $item->id,
-                        'id_kasbon_tram_item' => $item->id_kasbon_tram_item,
-                        'id_kasbon_tram'      => $item->id_kasbon_tram,
-                        'id_jo_tram_item'     => $item->id_jo_tram_item,
-                        'nilai_hpp_tram_item' => (float)$item->nilai_hpp_tram_item,
-                        'nilai_kasbon'        => (float)$item->nilai_kasbon,
-                        'total_kasbon'        => (float)$item->total_kasbon,
-                        'jo_tram_item'        => $item->joTramperItem,
-                    ]
-                ], 201);
-            } catch (\Illuminate\Database\QueryException $e) {
-                DB::rollBack();
-
-                if ($e->getCode() === '23000' && strpos($e->getMessage(), 'Duplicate entry') !== false) {
-                    Log::error('Duplicate Key - Retrying...', ['error' => $e->getMessage()]);
-                    sleep(1);
-                    if (!$request->has('_retry')) {
-                        $request->merge(['_retry' => true]);
-                        return $this->storeItem($request);
-                    }
-                }
-
-                throw $e;
-            }
-        } catch (\Exception $e) {
-            if (DB::transactionLevel() > 0) {
-                DB::rollBack();
-            }
-
-            Log::error('KasbonTramper Store Item Failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'line'  => $e->getLine(),
-                'file'  => $e->getFile(),
+            $item = KasbonTramperItem::create([
+                'id_kasbon_tram_item' => $newIdKasbonTramItem,
+                'id_kasbon_tram'      => $request->id_kasbon_tram,
+                'id_jo_tram_item'     => $request->id_jo_tram_item,
+                'nilai_hpp_tram_item' => $nilaiHpp,
+                'nilai_kasbon'        => $nilaiKasbon,
+                'total_kasbon'        => $totalKasbon,
             ]);
 
+            $item->load('joTramperItem');
+
+            DB::commit();
+
+            Log::info('KasbonTramper Item Created', ['id' => $item->id, 'id_kasbon_tram_item' => $item->id_kasbon_tram_item]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Item added successfully',
+                'data'    => [
+                    'id'                  => $item->id,
+                    'id_kasbon_tram_item' => $item->id_kasbon_tram_item,
+                    'id_kasbon_tram'      => $item->id_kasbon_tram,
+                    'id_jo_tram_item'     => $item->id_jo_tram_item,
+                    'nilai_hpp_tram_item' => (float) $item->nilai_hpp_tram_item,
+                    'nilai_kasbon'        => (float) $item->nilai_kasbon,
+                    'total_kasbon'        => (float) $item->total_kasbon,
+                    'jo_tram_item'        => $item->joTramperItem,
+                ]
+            ], 201);
+        } catch (\Exception $e) {
+            if (DB::transactionLevel() > 0) DB::rollBack();
+            Log::error('KasbonTramper Store Item Failed', ['error' => $e->getMessage()]);
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to add item',
                 'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    // ── METHOD 2: bulkSaveItems ──────────────────────────────────
+
+    public function bulkSaveItems(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'items'                   => 'required|array',
+            'items.*.id_jo_tram_item' => 'required|exists:b04_jo_tram_item,id_jo_tram_item',
+            'items.*.nilai_kasbon'    => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $kasbonTramper = KasbonTramper::findOrFail($id);
+
+            DB::beginTransaction();
+
+            foreach ($request->items as $itemData) {
+                $joTramItem  = JoTramperItem::find($itemData['id_jo_tram_item']);
+                $nilaiHpp    = $joTramItem ? (float) $joTramItem->hpp_ops : 0;
+                $nilaiKasbon = (float) $itemData['nilai_kasbon'];
+                $totalKasbon = $nilaiHpp - $nilaiKasbon;
+
+                $existing = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
+                    ->where('id_jo_tram_item', $itemData['id_jo_tram_item'])
+                    ->first();
+
+                if ($existing) {
+                    $existing->update([
+                        'nilai_hpp_tram_item' => $nilaiHpp,
+                        'nilai_kasbon'        => $nilaiKasbon,
+                        'total_kasbon'        => $totalKasbon,
+                    ]);
+                } else {
+                    if ($nilaiKasbon > 0) {
+                        // ── FIX: CAST ke UNSIGNED ──
+                        $maxId = DB::table('c04_kasbon_tram_item')
+                            ->selectRaw('MAX(CAST(id_kasbon_tram_item AS UNSIGNED)) as max_id')
+                            ->value('max_id');
+
+                        KasbonTramperItem::create([
+                            'id_kasbon_tram_item' => (string) (((int) $maxId) + 1),
+                            'id_kasbon_tram'      => $kasbonTramper->id_kasbon_tram,
+                            'id_jo_tram_item'     => $itemData['id_jo_tram_item'],
+                            'nilai_hpp_tram_item' => $nilaiHpp,
+                            'nilai_kasbon'        => $nilaiKasbon,
+                            'total_kasbon'        => $totalKasbon,
+                        ]);
+                    }
+                }
+            }
+
+            // Recalculate LpjTramper.amount untuk semua LPJ yang terhubung ke kasbon ini
+            $lpjLinks = LpjKasbonTramper::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)->get();
+            foreach ($lpjLinks as $lpjLink) {
+                $lpj = LpjTramper::with('kasbons')->where('id_lpj_tram', $lpjLink->id_lpj_tram)->first();
+                if (!$lpj) continue;
+
+                $kasbonIds = $lpj->kasbons->pluck('id_kasbon_tram');
+                $newAmount = $kasbonIds->isNotEmpty()
+                    ? KasbonTramperItem::whereIn('id_kasbon_tram', $kasbonIds)->sum('nilai_kasbon')
+                    : 0;
+                $lpj->update(['amount' => $newAmount]);
+            }
+
+            DB::commit();
+
+            $totals = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
+                ->selectRaw('SUM(nilai_hpp_tram_item) as total_hpp, SUM(nilai_kasbon) as total_kasbon, SUM(total_kasbon) as total_remaining')
+                ->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Items saved successfully',
+                'totals'  => $totals,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('bulkSaveItems KasbonTramper failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save items: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -482,38 +553,6 @@ class KasbonTramperController extends Controller
         }
     }
 
-    // ========================================
-    // DESTROY ITEM (Realtime AJAX)
-    // ========================================
-
-    public function destroyItem($id)
-    {
-        Log::info('=== KasbonTramper Delete Item START ===', ['id' => $id]);
-
-        try {
-            DB::beginTransaction();
-
-            $item = KasbonTramperItem::findOrFail($id);
-            $item->delete();
-
-            DB::commit();
-
-            Log::info('KasbonTramper Item Deleted', ['id' => $id]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Item deleted successfully'
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('KasbonTramper Delete Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to delete item',
-                'error'   => $e->getMessage()
-            ], 500);
-        }
-    }
 
     // ========================================
     // GET ITEMS (Load existing data)
@@ -768,17 +807,26 @@ class KasbonTramperController extends Controller
             $kasbonItem = $kasbonTramper->items
                 ->firstWhere('id_jo_tram_item', $joItem->id_jo_tram_item);
 
+            // Cek LPJ
+            $hasLpjAmount = false;
+            if ($kasbonItem) {
+                $hasLpjAmount = \App\Models\Data\LpjTramperItem::where('id_kasbon_tram_item', $kasbonItem->id_kasbon_tram_item)
+                    ->where('amount_lpj', '>', 0)
+                    ->exists();
+            }
+
             return [
                 'id_jo_tram_item'     => $joItem->id_jo_tram_item,
                 'invoice_typ'         => $joItem->invoice->invoice_typ ?? $joItem->id_jo_tram_item,
                 'invoice_ctg'         => $joItem->invoice->invoice_ctg ?? '-',
                 'hargajual_idr'       => (float) $joItem->hargajual_idr,
                 'hpp_ops'             => (float) $joItem->hpp_ops,
-                'id_kasbon_tram_item' => $kasbonItem?->id ?? null,
+                'id_kasbon_tram_item' => $kasbonItem?->id_kasbon_tram_item ?? null,
                 'nilai_hpp_tram_item' => $kasbonItem ? (float) $kasbonItem->nilai_hpp_tram_item : (float) $joItem->hpp_ops,
                 'nilai_kasbon'        => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
                 'total_kasbon'        => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
                 'has_kasbon'          => $kasbonItem ? $kasbonItem->nilai_kasbon > 0 : false,
+                'has_lpj_amount'      => $hasLpjAmount,   // ← TAMBAH
                 'origin_lpj_tram'     => $kasbonItem?->joTramperItem?->origin_lpj_tram ?? null,
             ];
         });
@@ -908,41 +956,44 @@ class KasbonTramperController extends Controller
         DB::beginTransaction();
         try {
             $kasbonTramper = KasbonTramper::findOrFail($id);
-            $itemsCount    = $kasbonTramper->items()->count();
 
+            $lpjCount = LpjKasbonTramper::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)->count();
+            if ($lpjCount > 0) {
+                DB::rollBack();
+                $msg = "Cannot delete: this Cash Advance is still referenced by {$lpjCount} LPJ record(s). Please delete the related LPJ(s) first.";
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                return back()->with('error', $msg);
+            }
+
+            $itemsCount = $kasbonTramper->items()->count();
             foreach ($kasbonTramper->items as $item) {
                 $item->delete();
             }
-
             $kasbonTramper->delete();
-
             DB::commit();
 
             Log::info('KasbonTramper Deleted', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
             if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Kasbon Tramper and all related items successfully deleted'
-                ]);
+                return response()->json(['success' => true, 'message' => 'Cash Advance deleted successfully']);
             }
-
-            return redirect()
-                ->route('kasbon-tramper.index')
-                ->with('success', "Kasbon Tramper deleted successfully along with {$itemsCount} item(s)");
+            return redirect()->route('kasbon-tramper.index')
+                ->with('success', "Cash Advance deleted successfully along with {$itemsCount} item(s).");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Kasbon Tramper not found'], 404);
+                return response()->json(['success' => false, 'message' => 'Cash Advance not found'], 404);
             }
-            return back()->with('error', 'Kasbon Tramper not found');
+            return back()->with('error', 'Cash Advance not found');
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('KasbonTramper Delete Failed', ['id' => $id, 'error' => $e->getMessage()]);
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => 'Error deleting Kasbon Tramper: ' . $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Error deleting Cash Advance: ' . $e->getMessage()], 500);
             }
-            return back()->with('error', 'Error deleting Kasbon Tramper: ' . $e->getMessage());
+            return back()->with('error', 'Error deleting Cash Advance: ' . $e->getMessage());
         }
     }
 
@@ -1045,83 +1096,6 @@ class KasbonTramperController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => 'Error deleting kasbon trampers: ' . $e->getMessage()], 500);
-        }
-    }
-
-    // ========================================
-    // BULK SAVE ITEMS
-    // ========================================
-
-    public function bulkSaveItems(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'items'                   => 'required|array',
-            'items.*.id_jo_tram_item' => 'required|exists:b04_jo_tram_item,id_jo_tram_item',
-            'items.*.nilai_kasbon'    => 'required|numeric|min:0',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Validation failed',
-                'errors'  => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $kasbonTramper = KasbonTramper::findOrFail($id);
-
-            DB::beginTransaction();
-
-            foreach ($request->items as $itemData) {
-                $joTramItem  = JoTramperItem::find($itemData['id_jo_tram_item']);
-                $nilaiHpp    = $joTramItem ? (float)$joTramItem->hpp_ops : 0;
-                $nilaiKasbon = (float)$itemData['nilai_kasbon'];
-                $totalKasbon = $nilaiHpp - $nilaiKasbon;
-
-                $existing = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
-                    ->where('id_jo_tram_item', $itemData['id_jo_tram_item'])
-                    ->first();
-
-                if ($existing) {
-                    $existing->update([
-                        'nilai_hpp_tram_item' => $nilaiHpp,
-                        'nilai_kasbon'        => $nilaiKasbon,
-                        'total_kasbon'        => $totalKasbon,
-                    ]);
-                } else {
-                    if ($nilaiKasbon > 0) {
-                        $maxId = DB::table('c04_kasbon_tram_item')->max('id_kasbon_tram_item');
-                        KasbonTramperItem::create([
-                            'id_kasbon_tram_item' => $maxId ? (string)((int)$maxId + 1) : '1',
-                            'id_kasbon_tram'      => $kasbonTramper->id_kasbon_tram,
-                            'id_jo_tram_item'     => $itemData['id_jo_tram_item'],
-                            'nilai_hpp_tram_item' => $nilaiHpp,
-                            'nilai_kasbon'        => $nilaiKasbon,
-                            'total_kasbon'        => $totalKasbon,
-                        ]);
-                    }
-                }
-            }
-
-            DB::commit();
-
-            $totals = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
-                ->selectRaw('SUM(nilai_hpp_tram_item) as total_hpp, SUM(nilai_kasbon) as total_kasbon, SUM(total_kasbon) as total_remaining')
-                ->first();
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Items saved successfully',
-                'totals'  => $totals,
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('bulkSaveItems KasbonTramper failed', ['error' => $e->getMessage()]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to save items: ' . $e->getMessage()
-            ], 500);
         }
     }
 
@@ -1294,5 +1268,77 @@ class KasbonTramperController extends Controller
         if ($request->filled('tgl_kasbon_to'))   $filters['tgl_kasbon_to']   = $request->tgl_kasbon_to;
 
         return $filters;
+    }
+
+    // ========================================
+    // CHECK ITEM CONFLICT
+    // ========================================
+    public function checkItemConflict(Request $request)
+    {
+        try {
+            $idJoTramItem = $request->get('id_jo_tram_item');
+            $idKasbonTram = $request->get('id_kasbon_tram');
+
+            if (!$idJoTramItem) {
+                return response()->json(['success' => false, 'message' => 'id_jo_tram_item is required'], 422);
+            }
+
+            $conflict = KasbonTramperItem::where('id_jo_tram_item', $idJoTramItem)
+                ->where('id_kasbon_tram', '!=', $idKasbonTram)
+                ->where('nilai_kasbon', '>', 0)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($conflict) {
+                return response()->json([
+                    'success'      => true,
+                    'has_conflict' => true,
+                    'conflict'     => [
+                        'id_kasbon_tram'      => $conflict->id_kasbon_tram,
+                        'nilai_kasbon'        => (float) $conflict->nilai_kasbon,
+                        'id_kasbon_tram_item' => $conflict->id_kasbon_tram_item,
+                    ]
+                ]);
+            }
+
+            return response()->json(['success' => true, 'has_conflict' => false]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
+    // CLEAR CONFLICT ITEM
+    // ========================================
+    public function clearConflictItem(Request $request)
+    {
+        try {
+            $idJoTramItem = $request->get('id_jo_tram_item');
+            $idKasbonTram = $request->get('id_kasbon_tram');
+
+            if (!$idJoTramItem) {
+                return response()->json(['success' => false, 'message' => 'id_jo_tram_item is required'], 422);
+            }
+
+            DB::beginTransaction();
+
+            KasbonTramperItem::where('id_jo_tram_item', $idJoTramItem)
+                ->where('id_kasbon_tram', '!=', $idKasbonTram)
+                ->where('nilai_kasbon', '>', 0)
+                ->each(function ($item) {
+                    $item->update([
+                        'nilai_kasbon' => 0,
+                        'total_kasbon' => $item->nilai_hpp_tram_item,
+                    ]);
+                });
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Conflict cleared successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('clearConflictItem KasbonTramper failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

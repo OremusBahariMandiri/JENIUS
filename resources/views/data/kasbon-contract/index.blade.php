@@ -747,20 +747,23 @@
             });
 
             // Delete
+            // Delete
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
                 const name = $(this).data('name');
                 const url = $(this).data('url');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
                 Swal.fire({
-                    title: 'Delete Kasbon Contract?',
+                    title: 'Delete Cash Advance Contract?',
                     html: `<div class="text-start">
-                        <p>Kasbon Contract <strong>${name}</strong> will be permanently deleted.</p>
-                        <div class="alert alert-warning mt-3 mb-0">
-                            <i class="fas fa-exclamation-triangle me-2"></i>
-                            <strong>Warning:</strong> All items related to this Kasbon Contract will also be deleted.
-                        </div>
-                    </div>`,
+            <p>Cash Advance <strong>${name}</strong> will be permanently deleted.</p>
+            <div class="alert alert-warning mt-3 mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> All items related to this Cash Advance will also be deleted.
+                Make sure no LPJ is referencing this CA before proceeding.
+            </div>
+        </div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -769,18 +772,56 @@
                     cancelButtonText: 'Cancel',
                     focusCancel: true,
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Deleting...',
-                            html: 'Please wait...',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
+                    if (!result.isConfirmed) return;
+
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading(),
+                    });
+
+                    fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
                             },
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: data.message ||
+                                        'Cash Advance deleted successfully.',
+                                    icon: 'success',
+                                    timer: 1800,
+                                    showConfirmButton: false,
+                                }).then(() => location.reload());
+                            } else {
+                                Swal.fire({
+                                    title: 'Cannot Delete',
+                                    html: `<div class="text-start">
+                        <p>${data.message}</p>
+                        <div class="alert alert-info mt-3 mb-0" style="font-size:.875rem;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Correct deletion order:</strong><br>
+                            <span style="color:#065f46;">LPJ Contract &rarr; Cash Advance &rarr; JO Contract</span>
+                        </div>
+                    </div>`,
+                                    icon: 'error',
+                                    confirmButtonColor: '#059669',
+                                    confirmButtonText: 'Understood',
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Something went wrong. Please try again.',
+                                'error');
                         });
-                        $('#deleteForm').attr('action', url).submit();
-                    }
                 });
             });
 

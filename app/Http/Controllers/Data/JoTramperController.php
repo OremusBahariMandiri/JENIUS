@@ -10,6 +10,7 @@ use App\Models\Master\Port;
 use App\Models\Master\Invoice;
 use App\Helpers\IdGenerator;
 use App\Models\Data\KasbonTramperItem;
+use App\Models\Data\LpjTramper;
 use App\Models\Data\LpjTramperItem;
 use App\Models\Master\Vessel;
 use Illuminate\Http\Request;
@@ -485,7 +486,7 @@ class JoTramperController extends Controller
     /**
      * Delete JO Tramper Item (Realtime Auto-delete via AJAX)
      */
-    public function destroyItem($id)
+    public function destroyItem(Request $request, $id)
     {
         Log::info('=== JO Tramper Delete Item Request START ===', ['id' => $id]);
 
@@ -493,15 +494,54 @@ class JoTramperController extends Controller
             DB::beginTransaction();
 
             $item = JoTramperItem::where('id_jo_tram_item', (string) $id)->firstOrFail();
-            $item->delete();
 
+            // Cek kasbon item dengan nilai > 0 saja
+            $kasbonCount = KasbonTramperItem::where('id_jo_tram_item', (string) $id)
+                ->where('nilai_kasbon', '>', 0)
+                ->count();
+
+            // Cek lpj item dengan amount > 0 saja
+            $lpjCount = LpjTramperItem::where('id_jo_tram_item', (string) $id)
+                ->where('amount_lpj', '>', 0)
+                ->count();
+
+            if ($kasbonCount > 0 || $lpjCount > 0) {
+                DB::rollBack();
+
+                $parts = [];
+                if ($kasbonCount > 0) $parts[] = "{$kasbonCount} Cash Advance item(s)";
+                if ($lpjCount > 0)    $parts[] = "{$lpjCount} LPJ item(s)";
+
+                $msg = "Cannot delete: this item is still referenced by "
+                    . implode(' and ', $parts)
+                    . ". Please remove the related records first before deleting this item.";
+
+                Log::warning('JO Tramper Delete Item blocked', [
+                    'id_jo_tram_item' => $id,
+                    'kasbon_count'    => $kasbonCount,
+                    'lpj_count'       => $lpjCount,
+                ]);
+
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+
+            // Hapus juga kasbon item yang nilai_kasbon = 0 (placeholder kosong)
+            KasbonTramperItem::where('id_jo_tram_item', (string) $id)->delete();
+
+            $item->delete();
             DB::commit();
+
+            Log::info('JO Tramper Item Deleted', ['id' => $id]);
 
             return response()->json(['success' => true, 'message' => 'Item deleted successfully']);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('JO Tramper Delete Item Failed', ['id' => $id, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => 'Failed to delete item', 'error' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete item',
+                'error'   => $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -847,32 +887,30 @@ class JoTramperController extends Controller
         try {
             $joTramper = JoTramper::where('id_jo_tram', (string) $id)->firstOrFail();
 
-            $itemsCount = $joTramper->items()->count();
-
-            Log::info('JO Tramper Found', [
-                'id'          => $joTramper->id_jo_tram,
-                'title'       => $joTramper->title,
-                'items_count' => $itemsCount,
-            ]);
-
-            if ($itemsCount > 0) {
-                foreach ($joTramper->items as $item) {
-                    $item->delete();
+            $kasbonCount = \App\Models\Data\KasbonTramper::where('id_jo_tram', $joTramper->id_jo_tram)->count();
+            if ($kasbonCount > 0) {
+                DB::rollBack();
+                $msg = "Cannot delete: this JO Tramper is still referenced by {$kasbonCount} Cash Advance record(s). Please delete the related Cash Advance(s) first.";
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
                 }
-                Log::info('All items deleted successfully');
+                return back()->with('error', $msg);
             }
 
+            $itemsCount = $joTramper->items()->count();
+            foreach ($joTramper->items as $item) {
+                $item->delete();
+            }
             $joTramper->delete();
             DB::commit();
 
             Log::info('JO Tramper Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'message' => 'JO Tramper successfully deleted']);
+                return response()->json(['success' => true, 'message' => 'JO Tramper deleted successfully']);
             }
-
             return redirect()->route('jo-tramper.index')
-                ->with('success', "JO Tramper deleted successfully along with {$itemsCount} item(s)");
+                ->with('success', "JO Tramper deleted successfully along with {$itemsCount} item(s).");
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             DB::rollBack();
             if ($request->expectsJson()) {
@@ -1182,5 +1220,34 @@ class JoTramperController extends Controller
         }
 
         return $filters;
+    }
+
+    public function checkRelations($id)
+    {
+        try {
+            JoTramperItem::where('id_jo_tram_item', (string) $id)->firstOrFail();
+
+            // Hanya hitung kasbon item yang BENAR-BENAR terisi (nilai_kasbon > 0)
+            // Record dengan nilai_kasbon = 0 dianggap sudah dikosongkan / tidak aktif
+            $kasbonCount = KasbonTramperItem::where('id_jo_tram_item', (string) $id)
+                ->where('nilai_kasbon', '>', 0)
+                ->count();
+
+            // Hanya hitung lpj item yang BENAR-BENAR terisi (amount_lpj > 0)
+            $lpjCount = LpjTramperItem::where('id_jo_tram_item', (string) $id)
+                ->where('amount_lpj', '>', 0)
+                ->count();
+
+            return response()->json([
+                'success'       => true,
+                'has_relations' => ($kasbonCount > 0 || $lpjCount > 0),
+                'kasbon_count'  => $kasbonCount,
+                'lpj_count'     => $lpjCount,
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['success' => false, 'message' => 'Item not found'], 404);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 }

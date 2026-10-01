@@ -131,13 +131,27 @@
         }
 
         @keyframes slideInRight {
-            from { transform: translateX(400px); opacity: 0; }
-            to   { transform: translateX(0);     opacity: 1; }
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         @keyframes slideOutRight {
-            from { transform: translateX(0);     opacity: 1; }
-            to   { transform: translateX(400px); opacity: 0; }
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
         }
 
         .floating-badge-alert.hiding {
@@ -192,10 +206,18 @@
             gap: 10px;
         }
 
-        .add-item-form-section.edit-mode h6 { color: #1e40af; }
+        .add-item-form-section.edit-mode h6 {
+            color: #1e40af;
+        }
 
-        .add-item-form-section h6 i          { color: var(--primary-green); font-size: 1.2rem; }
-        .add-item-form-section.edit-mode h6 i { color: #3b82f6; }
+        .add-item-form-section h6 i {
+            color: var(--primary-green);
+            font-size: 1.2rem;
+        }
+
+        .add-item-form-section.edit-mode h6 i {
+            color: #3b82f6;
+        }
 
         .add-item-form-section .form-label {
             font-weight: 600;
@@ -305,12 +327,19 @@
             text-align: center;
         }
 
-        .table-items tbody td.num-cell      { text-align: right; }
+        .table-items tbody td.num-cell {
+            text-align: right;
+        }
+
         .table-items tbody td.item-text-cell,
         .table-items tbody td.category-cell,
-        .table-items tbody td.item-number-cell { text-align: left; }
+        .table-items tbody td.item-number-cell {
+            text-align: left;
+        }
 
-        .table-items tbody tr:hover { background-color: #f8f9fa; }
+        .table-items tbody tr:hover {
+            background-color: #f8f9fa;
+        }
 
         .table-items .item-number-cell {
             font-weight: 600;
@@ -324,7 +353,8 @@
             font-weight: 600;
         }
 
-        .btn-remove-row, .btn-edit-row {
+        .btn-remove-row,
+        .btn-edit-row {
             padding: 0.4rem 0.6rem;
             font-size: 0.875rem;
             border-radius: 6px;
@@ -348,8 +378,16 @@
             box-shadow: 0 2px 8px rgba(220, 53, 69, 0.4);
         }
 
-        .table-footer { background: #2c3e50; color: white; font-weight: 700; }
-        .table-footer td { padding: 15px 10px; font-size: 0.95rem; }
+        .table-footer {
+            background: #2c3e50;
+            color: white;
+            font-weight: 700;
+        }
+
+        .table-footer td {
+            padding: 15px 10px;
+            font-size: 0.95rem;
+        }
 
         .currency-group-footer {
             display: flex;
@@ -589,14 +627,14 @@
                                     <div>
                                         <label class="form-label mb-1">Kurs Date</label>
                                         @php
-                                            $firstItem  = $joOther->items->first();
-                                            $defaultDate = $firstItem && $firstItem->tgl_kurs_usd
-                                                ? $firstItem->tgl_kurs_usd->format('Y-m-d\TH:i')
-                                                : '';
+                                            $firstItem = $joOther->items->first();
+                                            $defaultDate =
+                                                $firstItem && $firstItem->tgl_kurs_usd
+                                                    ? $firstItem->tgl_kurs_usd->format('Y-m-d\TH:i')
+                                                    : '';
                                         @endphp
                                         <input type="datetime-local" id="global_tgl_kurs_usd"
-                                            class="form-control form-control-sm"
-                                            value="{{ $defaultDate }}"
+                                            class="form-control form-control-sm" value="{{ $defaultDate }}"
                                             style="min-width: 190px;">
                                     </div>
                                     <div>
@@ -640,8 +678,7 @@
                                     </div>
                                     <div class="col-md-12 mb-3">
                                         <label class="form-label">Note (Optional)</label>
-                                        <textarea id="input_note" class="form-control" rows="3"
-                                            placeholder="Add notes for this item..."></textarea>
+                                        <textarea id="input_note" class="form-control" rows="3" placeholder="Add notes for this item..."></textarea>
                                     </div>
                                     <div class="col-md-3 mb-3">
                                         <label class="form-label">Income (IDR)</label>
@@ -709,7 +746,7 @@
                                                     fn($i) => $i->invoice->invoice_ctg,
                                                 );
                                                 $globalIndex = 1;
-                                                $hasLpjItems = false; 
+                                                $hasLpjItems = false;
                                             @endphp
 
                                             @foreach ($groupedItems as $category => $items)
@@ -731,8 +768,7 @@
                                                         <td class="item-number-cell">{{ $globalIndex }}</td>
 
                                                         @if ($index === 0)
-                                                            <td class="category-cell"
-                                                                rowspan="{{ $items->count() }}">
+                                                            <td class="category-cell" rowspan="{{ $items->count() }}">
                                                                 {{ $category }}
                                                             </td>
                                                         @endif
@@ -859,6 +895,8 @@
 @push('scripts')
     <script>
         const currentJoOtherId = '{{ $joOther->id_jo_other }}';
+        const checkRelationsUrl = '{{ route('jo-other.item.check-relations', ':id') }}';
+        const destroyItemUrl = '/data/jo-other/item/destroy/:id';
         let globalItemNumber = {{ $joOther->items->count() }};
         let _skipNoteUpdate = false;
 
@@ -930,15 +968,19 @@
                 this.value = formatRupiah(this.value);
                 if (!before.includes(',')) {
                     const digits = before.replace(/\D/g, '').length;
-                    let pos = 0, cnt = 0;
+                    let pos = 0,
+                        cnt = 0;
                     for (let i = 0; i < this.value.length; i++) {
-                        if (/\d/.test(this.value[i]) && ++cnt === digits) { pos = i + 1; break; }
+                        if (/\d/.test(this.value[i]) && ++cnt === digits) {
+                            pos = i + 1;
+                            break;
+                        }
                     }
                     this.setSelectionRange(pos, pos);
                 } else {
-                    const cp  = this.value.indexOf(',');
+                    const cp = this.value.indexOf(',');
                     const dec = (before.split(',')[1] || '').length;
-                    const np  = cp + 1 + Math.min(dec, 2);
+                    const np = cp + 1 + Math.min(dec, 2);
                     this.setSelectionRange(np, np);
                 }
             });
@@ -947,8 +989,8 @@
                 if (!this.value.includes(',')) this.value += ',00';
                 else {
                     const p = this.value.split(',');
-                    if (!p[1] || !p[1].length)      this.value = p[0] + ',00';
-                    else if (p[1].length < 2)        this.value = p[0] + ',' + p[1].padEnd(2, '0');
+                    if (!p[1] || !p[1].length) this.value = p[0] + ',00';
+                    else if (p[1].length < 2) this.value = p[0] + ',' + p[1].padEnd(2, '0');
                 }
             });
         }
@@ -958,15 +1000,52 @@
             if (el) setupRupiahInput(el);
         });
 
-        // ── Selling Price ────────────────────────────────────────────
         function calculateHargaJual() {
             const kurs = parseRupiah($('#global_kurs_usd_display').val());
-            const idr  = parseRupiah($('#input_pendapatan_idr').val());
-            const usd  = parseRupiah($('#input_pendapatan_usd').val());
+            const idr = parseRupiah($('#input_pendapatan_idr').val());
+            const usd = parseRupiah($('#input_pendapatan_usd').val());
             let hj = 0;
-            if (idr > 0)             hj = idr;
+            if (idr > 0) hj = idr;
             else if (usd > 0 && kurs > 0) hj = usd * kurs;
             $('#input_harga_jual').val(formatRupiah(hj.toFixed(2).replace('.', ',')));
+            validateHPP(); // ← TAMBAH INI
+        }
+
+        function validateHPP(clamp = false) {
+            const hargaJual = parseRupiah($('#input_harga_jual').val());
+            const hpp = parseRupiah($('#input_hpp').val());
+            const hppInput = document.getElementById('input_hpp');
+
+            if (hargaJual <= 0) return;
+
+            if (hpp > hargaJual) {
+                hppInput.style.borderColor = '#dc3545';
+                hppInput.style.boxShadow = '0 0 0 0.2rem rgba(220,53,69,0.25)';
+
+                if (!document.getElementById('hpp-warning')) {
+                    const warning = document.createElement('small');
+                    warning.id = 'hpp-warning';
+                    warning.style.color = '#dc3545';
+                    warning.style.fontWeight = '600';
+                    warning.innerHTML =
+                        '<i class="fas fa-exclamation-triangle me-1"></i>HPP tidak boleh melebihi Selling Price (' +
+                        $('#input_harga_jual').val() + ')';
+                    hppInput.closest('.currency-group').after(warning);
+                }
+
+                if (clamp) {
+                    $('#input_hpp').val($('#input_harga_jual').val());
+                    hppInput.style.borderColor = '';
+                    hppInput.style.boxShadow = '';
+                    const warn = document.getElementById('hpp-warning');
+                    if (warn) warn.remove();
+                }
+            } else {
+                hppInput.style.borderColor = '';
+                hppInput.style.boxShadow = '';
+                const warn = document.getElementById('hpp-warning');
+                if (warn) warn.remove();
+            }
         }
 
         $('#input_pendapatan_idr').on('input', function() {
@@ -982,9 +1061,17 @@
             calculateHargaJual();
         });
 
+        $('#input_hpp').on('input', function() {
+            validateHPP();
+        });
+
+        $('#input_hpp').on('blur', function() {
+            validateHPP(true);
+        });
+
         // ── Category dropdown ────────────────────────────────────────
         $('#input_category').on('change', function() {
-            const category  = $(this).val();
+            const category = $(this).val();
             const itemSelect = $('#input_item');
             if (!category) {
                 itemSelect.prop('disabled', true).html('<option value="">Select category first</option>');
@@ -1006,12 +1093,12 @@
 
         // ── Update Header ────────────────────────────────────────────
         $('#btnSaveHeader').on('click', function() {
-            const custId  = $('#id_md_cust').val();
+            const custId = $('#id_md_cust').val();
             const otherId = $('#id_md_other').val();
-            const portId  = $('#id_md_port').val();
-            const title   = $('#title').val();
-            const ds      = $('#date_start').val();
-            const de      = $('#date_end').val();
+            const portId = $('#id_md_port').val();
+            const title = $('#title').val();
+            const ds = $('#date_start').val();
+            const de = $('#date_end').val();
 
             if (!custId || !otherId || !portId || !title || !ds || !de) {
                 showFloatingAlert('error', 'Please fill all required fields');
@@ -1024,20 +1111,20 @@
                 url: `/data/jo-other/header/update/${currentJoOtherId}`,
                 method: 'POST',
                 data: {
-                    id_md_cust:   custId,
-                    id_md_other:  otherId,
-                    id_md_port:   portId,
+                    id_md_cust: custId,
+                    id_md_other: otherId,
+                    id_md_port: portId,
                     id_md_vessel: $('#id_md_vessel').val(),
                     tgl_jo_other: $('#tgl_jo_other').val(),
-                    date_start:   ds,
-                    date_end:     de,
-                    title:        title,
-                    note:         $('#note').val(),
-                    _token:       $('meta[name="csrf-token"]').attr('content')
+                    date_start: ds,
+                    date_end: de,
+                    title: title,
+                    note: $('#note').val(),
+                    _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(r) {
                     if (r.success) showFloatingAlert('success', 'Header updated successfully!');
-                    else           showFloatingAlert('error', r.message || 'Failed to update header');
+                    else showFloatingAlert('error', r.message || 'Failed to update header');
                 },
                 error: function(xhr) {
                     showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to update header');
@@ -1048,22 +1135,22 @@
         // ── syncLpjNote ──────────────────────────────────────────────
         function syncLpjNote() {
             if ($('.item-row.row-from-lpj').length > 0) $('#lpjOriginNote').show();
-            else                                         $('#lpjOriginNote').hide();
+            else $('#lpjOriginNote').hide();
         }
 
         // ── Add / Update Item ────────────────────────────────────────
         $('#btnAddToTable').on('click', function() {
-            const editingId     = $('#editing_item_id').val();
-            const category      = $('#input_category').val();
-            const itemId        = $('#input_item').val();
-            const itemText      = $('#input_item option:selected').text();
-            const note          = $('#input_note').val();
+            const editingId = $('#editing_item_id').val();
+            const category = $('#input_category').val();
+            const itemId = $('#input_item').val();
+            const itemText = $('#input_item option:selected').text();
+            const note = $('#input_note').val();
             const pendapatanIDR = parseRupiah($('#input_pendapatan_idr').val());
             const pendapatanUSD = parseRupiah($('#input_pendapatan_usd').val());
-            const hpp           = parseRupiah($('#input_hpp').val());
-            const hargaJual     = parseRupiah($('#input_harga_jual').val());
-            const kursRate      = parseRupiah($('#global_kurs_usd_display').val()) || 0;
-            const kursDate      = $('#global_tgl_kurs_usd').val() || null;
+            const hpp = parseRupiah($('#input_hpp').val());
+            const hargaJual = parseRupiah($('#input_harga_jual').val());
+            const kursRate = parseRupiah($('#global_kurs_usd_display').val()) || 0;
+            const kursDate = $('#global_tgl_kurs_usd').val() || null;
 
             if (!category || !itemId) {
                 showFloatingAlert('error', 'Please select category and item');
@@ -1071,6 +1158,12 @@
             }
             if (pendapatanUSD > 0 && (!kursDate || kursRate <= 0)) {
                 showFloatingAlert('error', 'Kurs rate and date are required when USD is filled');
+                return;
+            }
+
+            if (hargaJual > 0 && hpp > hargaJual) {
+                showFloatingAlert('error', 'HPP tidak boleh melebihi Selling Price');
+                $('#input_hpp').focus();
                 return;
             }
 
@@ -1086,19 +1179,22 @@
                 url: '/data/jo-other/item/store',
                 method: 'POST',
                 data: {
-                    id_jo_other:     currentJoOtherId,
-                    id_md_invoice:   itemId,
-                    invoice_ctg:     category,
-                    pendapatan_idr:  pendapatanIDR,
-                    pendapatan_usd:  pendapatanUSD,
-                    hpp_ops:         hpp,
-                    kurs_usd:        kursRate,
-                    tgl_kurs_usd:    kursDate,
-                    note:            note,
-                    _token:          $('meta[name="csrf-token"]').attr('content')
+                    id_jo_other: currentJoOtherId,
+                    id_md_invoice: itemId,
+                    invoice_ctg: category,
+                    pendapatan_idr: pendapatanIDR,
+                    pendapatan_usd: pendapatanUSD,
+                    hpp_ops: hpp,
+                    kurs_usd: kursRate,
+                    tgl_kurs_usd: kursDate,
+                    note: note,
+                    _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(r) {
-                    if (!r.success) { showFloatingAlert('error', 'Failed to add item'); return; }
+                    if (!r.success) {
+                        showFloatingAlert('error', 'Failed to add item');
+                        return;
+                    }
                     showFloatingAlert('success', 'Item added successfully!');
                     $('.no-items-row').remove();
                     const newItemId = r.data.id_jo_other_item || r.data.id;
@@ -1121,7 +1217,8 @@
         // ── Insert Row ───────────────────────────────────────────────
         function insertRowWithCategoryGrouping(itemId, category, itemText, data, isFromLpj = false) {
             globalItemNumber++;
-            let categoryExists = false, insertAfterRow = null;
+            let categoryExists = false,
+                insertAfterRow = null;
 
             $('#itemsTableBody tr.item-row').each(function() {
                 if ($(this).data('category') === category) {
@@ -1138,9 +1235,9 @@
                 <button type="button" class="btn btn-danger btn-sm btn-remove-row"
                     onclick="removeItem(this,'${itemId}')"><i class="fas fa-trash"></i></button>`;
 
-            const lpjBadge = isFromLpj
-                ? `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>`
-                : '';
+            const lpjBadge = isFromLpj ?
+                `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` :
+                '';
             const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
 
             let newRow;
@@ -1185,14 +1282,20 @@
 
         // ── Edit Item ────────────────────────────────────────────────
         function editItem(itemId) {
-            if (!itemId) { showFloatingAlert('error', 'Invalid item ID'); return; }
+            if (!itemId) {
+                showFloatingAlert('error', 'Invalid item ID');
+                return;
+            }
             showFloatingAlert('saving', 'Loading item data...');
 
             $.ajax({
                 url: `/data/jo-other/item/show/${itemId}`,
                 method: 'GET',
                 success: function(r) {
-                    if (!r.success) { showFloatingAlert('error', 'Failed to load item data'); return; }
+                    if (!r.success) {
+                        showFloatingAlert('error', 'Failed to load item data');
+                        return;
+                    }
                     hideFloatingAlert();
 
                     const item = r.data;
@@ -1208,18 +1311,21 @@
                         _skipNoteUpdate = true;
                         $('#input_item').val(item.id_md_invoice).trigger('change.select2');
 
-                        const idr  = parseFloat(item.pendapatan_idr) || 0;
-                        const usd  = parseFloat(item.pendapatan_usd) || 0;
-                        const hpp  = parseFloat(item.hpp_ops)        || 0;
-                        const kurs = parseFloat(item.kurs_usd)       || 0;
+                        const idr = parseFloat(item.pendapatan_idr) || 0;
+                        const usd = parseFloat(item.pendapatan_usd) || 0;
+                        const hpp = parseFloat(item.hpp_ops) || 0;
+                        const kurs = parseFloat(item.kurs_usd) || 0;
 
-                        $('#input_pendapatan_idr').val(idr > 0 ? formatRupiah(idr.toFixed(2).replace('.', ',')) : '');
-                        $('#input_pendapatan_usd').val(usd > 0 ? formatRupiah(usd.toFixed(2).replace('.', ',')) : '');
+                        $('#input_pendapatan_idr').val(idr > 0 ? formatRupiah(idr.toFixed(2).replace(
+                            '.', ',')) : '');
+                        $('#input_pendapatan_usd').val(usd > 0 ? formatRupiah(usd.toFixed(2).replace(
+                            '.', ',')) : '');
                         $('#input_hpp').val(formatRupiah(hpp.toFixed(2).replace('.', ',')));
                         $('#input_note').val(item.note || '');
 
                         if (usd > 0 && kurs > 0) {
-                            $('#global_kurs_usd_display').val(formatRupiah(kurs.toFixed(2).replace('.', ',')));
+                            $('#global_kurs_usd_display').val(formatRupiah(kurs.toFixed(2).replace('.',
+                                ',')));
                             $('#global_kurs_usd').val(kurs);
                         }
                         if (item.tgl_kurs_usd) {
@@ -1231,7 +1337,9 @@
                         calculateHargaJual();
                     }, 300);
 
-                    $('html, body').animate({ scrollTop: $('#addItemFormSection').offset().top - 100 }, 500);
+                    $('html, body').animate({
+                        scrollTop: $('#addItemFormSection').offset().top - 100
+                    }, 500);
                 },
                 error: function(xhr) {
                     showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to load item data');
@@ -1241,7 +1349,9 @@
 
         $('#btnCancelEdit').on('click', function() {
             clearItemForm();
-            $('html, body').animate({ scrollTop: $('#itemsTableBody').offset().top - 200 }, 500);
+            $('html, body').animate({
+                scrollTop: $('#itemsTableBody').offset().top - 200
+            }, 500);
         });
 
         // ── Update Item ──────────────────────────────────────────────
@@ -1254,22 +1364,25 @@
                 url: `/data/jo-other/item/update/${itemId}`,
                 method: 'PUT',
                 data: {
-                    id_jo_other:    currentJoOtherId,
-                    id_md_invoice:  invoiceId,
-                    invoice_ctg:    category,
+                    id_jo_other: currentJoOtherId,
+                    id_md_invoice: invoiceId,
+                    invoice_ctg: category,
                     pendapatan_idr: pendapatanIDR,
                     pendapatan_usd: pendapatanUSD,
-                    hpp_ops:        hpp,
-                    kurs_usd:       kursRate,
-                    tgl_kurs_usd:   kursDate,
-                    note:           note,
-                    _token:         $('meta[name="csrf-token"]').attr('content')
+                    hpp_ops: hpp,
+                    kurs_usd: kursRate,
+                    tgl_kurs_usd: kursDate,
+                    note: note,
+                    _token: $('meta[name="csrf-token"]').attr('content')
                 },
                 success: function(r) {
-                    if (!r.success) { showFloatingAlert('error', 'Failed to update item'); return; }
+                    if (!r.success) {
+                        showFloatingAlert('error', 'Failed to update item');
+                        return;
+                    }
                     showFloatingAlert('success', 'Item updated successfully!');
 
-                    const row    = $(`.item-row[data-item-id="${itemId}"]`);
+                    const row = $(`.item-row[data-item-id="${itemId}"]`);
                     const oldCat = row.data('category');
 
                     if (oldCat !== category) {
@@ -1282,7 +1395,7 @@
                         row.attr('data-item-text', itemText);
                         row.find('.item-text-cell').find('span.fw-semibold').text(itemText);
                         const hasCat = row.find('.category-cell').length > 0;
-                        const off    = hasCat ? 0 : -1;
+                        const off = hasCat ? 0 : -1;
                         row.find('td').eq(3 + off).text(formatNumber(r.data.pendapatan_idr));
                         row.find('td').eq(4 + off).text(formatNumber(r.data.pendapatan_usd));
                         row.find('td').eq(5 + off).text(formatNumber(r.data.hargajual_idr));
@@ -1296,9 +1409,9 @@
                     }, 500);
                 },
                 error: function(xhr) {
-                    const errors = xhr.responseJSON?.errors
-                        ? Object.values(xhr.responseJSON.errors).flat().join(', ')
-                        : xhr.responseJSON?.message || 'Failed to update item';
+                    const errors = xhr.responseJSON?.errors ?
+                        Object.values(xhr.responseJSON.errors).flat().join(', ') :
+                        xhr.responseJSON?.message || 'Failed to update item';
                     showFloatingAlert('error', errors);
                 }
             });
@@ -1306,26 +1419,193 @@
 
         // ── Remove Item ──────────────────────────────────────────────
         function removeItem(button, itemId) {
-            if (!itemId) { showFloatingAlert('error', 'Invalid item ID'); return; }
-            if (!confirm('Are you sure you want to delete this item?')) return;
+            if (!itemId || itemId == 0) {
+                showFloatingAlert('error', 'Invalid item ID');
+                return;
+            }
 
-            showFloatingAlert('saving', 'Deleting item...');
+            const row = $(button).closest('tr');
+            const itemText = row.find('.item-text-cell .fw-semibold').text().trim() ||
+                row.find('.item-text-cell').text().trim() ||
+                'this item';
+            const checkUrl = checkRelationsUrl.replace(':id', itemId);
+
+            showFloatingAlert('saving', 'Checking item relations...');
 
             $.ajax({
-                url: `/data/jo-other/item/destroy/${itemId}`,
+                url: checkUrl,
+                method: 'GET',
+                success: function(response) {
+                    hideFloatingAlert();
+                    if (!response.success) {
+                        showFloatingAlert('error', response.message || 'Failed to check relations');
+                        return;
+                    }
+                    if (response.has_relations) {
+                        showBlockedDeleteModal(itemText, response.kasbon_count, response.lpj_count);
+                    } else {
+                        showSimpleDeleteModal(button, itemId, itemText);
+                    }
+                },
+                error: function() {
+                    hideFloatingAlert();
+                    showSimpleDeleteModal(button, itemId, itemText);
+                }
+            });
+        }
+
+        function showBlockedDeleteModal(itemText, kasbonCount, lpjCount) {
+            $('#deleteItemModal').remove();
+
+            const relParts = [];
+            if (kasbonCount > 0) relParts.push(`<strong>${kasbonCount}</strong> Cash Advance item(s)`);
+            if (lpjCount > 0) relParts.push(`<strong>${lpjCount}</strong> LPJ item(s)`);
+
+            const html = `
+            <div class="modal fade" id="deleteItemModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                        <div class="modal-header" style="background:linear-gradient(135deg,#f59e0b,#d97706);border-radius:12px 12px 0 0;border:none;">
+                            <h5 class="modal-title text-white fw-bold">
+                                <i class="fas fa-ban me-2"></i>Cannot Delete Item
+                            </h5>
+                        </div>
+                        <div class="modal-body p-4">
+                            <p class="mb-2">The following item cannot be deleted:</p>
+                            <div class="p-3 rounded mb-3" style="background:#fef3c7;border:1px solid #fcd34d;">
+                                <strong style="color:#92400e;">${itemText}</strong>
+                            </div>
+                            <div class="alert alert-warning d-flex gap-2 align-items-start mb-3" style="border-radius:8px;">
+                                <i class="fas fa-link mt-1" style="flex-shrink:0;"></i>
+                                <div>
+                                    <strong>This item is still used in:</strong><br>
+                                    ${relParts.join('<br>')}
+                                </div>
+                            </div>
+                            <div class="p-3 rounded" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;font-size:.875rem;">
+                                <i class="fas fa-info-circle me-2" style="color:#3b82f6;"></i>
+                                To delete this item, first remove its related Cash Advance and LPJ records,
+                                then come back to delete it here.
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 px-4 pb-4">
+                            <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i> Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            $('body').append(html);
+            const modal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
+            modal.show();
+            $('#deleteItemModal').on('hidden.bs.modal', function() {
+                $(this).remove();
+            });
+        }
+
+        function showSimpleDeleteModal(button, itemId, itemText) {
+            $('#deleteItemModal').remove();
+
+            const html = `
+            <div class="modal fade" id="deleteItemModal" tabindex="-1" data-bs-backdrop="static">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content" style="border-radius:12px;border:none;box-shadow:0 10px 40px rgba(0,0,0,0.15);">
+                        <div class="modal-header" style="background:linear-gradient(135deg,#ef4444,#dc2626);border-radius:12px 12px 0 0;border:none;">
+                            <h5 class="modal-title text-white fw-bold">
+                                <i class="fas fa-trash-alt me-2"></i>Delete Item
+                            </h5>
+                        </div>
+                        <div class="modal-body p-4">
+                            <p class="mb-2">You are about to delete:</p>
+                            <div class="p-3 rounded mb-3" style="background:#fee2e2;border:1px solid #fca5a5;">
+                                <strong style="color:#dc2626;">${itemText}</strong>
+                            </div>
+                            <p class="mb-0 text-muted" style="font-size:.875rem;">
+                                This item has no related Cash Advance or LPJ records. It is safe to delete.
+                            </p>
+                        </div>
+                        <div class="modal-footer border-0 px-4 pb-4 gap-2">
+                            <button type="button" class="btn btn-outline-secondary flex-fill" data-bs-dismiss="modal">
+                                <i class="fas fa-times me-1"></i> Cancel
+                            </button>
+                            <button type="button" class="btn btn-danger flex-fill fw-bold" id="btnConfirmDelete">
+                                <i class="fas fa-trash me-1"></i> Yes, Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+            $('body').append(html);
+            const modal = new bootstrap.Modal(document.getElementById('deleteItemModal'));
+            modal.show();
+
+            $('#btnConfirmDelete').on('click', function() {
+                modal.hide();
+                $('#deleteItemModal').on('hidden.bs.modal', function() {
+                    $(this).remove();
+                    executeDeleteItem(button, itemId);
+                });
+            });
+        }
+
+        function executeDeleteItem(button, itemId) {
+            showFloatingAlert('saving', 'Deleting item...');
+
+            const deleteUrl = destroyItemUrl.replace(':id', itemId);
+
+            $.ajax({
+                url: deleteUrl,
                 method: 'DELETE',
-                data: { _token: $('meta[name="csrf-token"]').attr('content') },
-                success: function(r) {
-                    if (!r.success) { showFloatingAlert('error', 'Failed to delete item'); return; }
-                    showFloatingAlert('success', 'Item deleted successfully!');
-                    const row      = $(button).closest('tr');
-                    const category = row.data('category');
-                    removeRowFromTable(row, category);
-                    renumberAllItems();
-                    updateGrandTotal();
-                    syncLpjNote();
-                    if ($('#itemsTableBody tr.item-row').length === 0) {
-                        $('#itemsTableBody').html(emptyRowHtml());
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                },
+                success: function(response) {
+                    if (response.success) {
+                        showFloatingAlert('success', 'Item deleted successfully!');
+
+                        const row = $(button).closest('tr');
+                        const category = row.data('category');
+                        const catCell = row.find('.category-cell');
+
+                        if (catCell.length > 0) {
+                            const rowspan = parseInt(catCell.attr('rowspan') || 1);
+                            if (rowspan > 1) {
+                                const nextRow = row.next(`.item-row[data-category="${category}"]`);
+                                if (nextRow.length > 0) {
+                                    nextRow.find('.item-text-cell').before(
+                                        `<td class="category-cell" rowspan="${rowspan - 1}">${category}</td>`
+                                    );
+                                }
+                            }
+                        } else {
+                            const prevRow = row.prevAll(`.item-row[data-category="${category}"]`).first();
+                            const prevCatCell = prevRow.find('.category-cell');
+                            if (prevCatCell.length > 0) {
+                                const cur = parseInt(prevCatCell.attr('rowspan') || 1);
+                                if (cur > 1) prevCatCell.attr('rowspan', cur - 1);
+                            }
+                        }
+
+                        row.remove();
+                        renumberAllItems();
+                        updateGrandTotal();
+                        if (typeof syncLpjNote === 'function') syncLpjNote();
+
+                        if ($('#itemsTableBody tr.item-row').length === 0) {
+                            $('#itemsTableBody').html(`
+                            <tr class="no-items-row">
+                                <td colspan="8">
+                                    <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                    <p class="mb-0 fw-bold">No data available</p>
+                                    <small class="text-muted">Fill the form above and click "Add to Table"</small>
+                                </td>
+                            </tr>`);
+                        }
+                    } else {
+                        showFloatingAlert('error', response.message || 'Failed to delete item');
                     }
                 },
                 error: function(xhr) {
@@ -1345,7 +1625,7 @@
                     );
                 }
             } else {
-                const prev    = row.prevAll(`.item-row[data-category="${category}"]`).first();
+                const prev = row.prevAll(`.item-row[data-category="${category}"]`).first();
                 const prevCat = prev.find('.category-cell');
                 if (prevCat.length) {
                     const s = parseInt(prevCat.attr('rowspan') || 1);
@@ -1357,7 +1637,8 @@
 
         // ── Reset All ────────────────────────────────────────────────
         $('#resetAllBtn').on('click', function() {
-            if (!confirm('Are you sure you want to remove ALL items? This will delete them from the database.')) return;
+            if (!confirm('Are you sure you want to remove ALL items? This will delete them from the database.'))
+                return;
 
             const ids = [];
             $('.item-row').each(function() {
@@ -1365,14 +1646,19 @@
                 if (id) ids.push(id);
             });
 
-            if (!ids.length) { showFloatingAlert('error', 'No items to delete'); return; }
+            if (!ids.length) {
+                showFloatingAlert('error', 'No items to delete');
+                return;
+            }
 
             showFloatingAlert('saving', 'Deleting all items...');
 
             Promise.all(ids.map(id => $.ajax({
                 url: `/data/jo-other/item/destroy/${id}`,
                 method: 'DELETE',
-                data: { _token: $('meta[name="csrf-token"]').attr('content') }
+                data: {
+                    _token: $('meta[name="csrf-token"]').attr('content')
+                }
             }))).then(() => {
                 showFloatingAlert('success', 'All items deleted successfully!');
                 $('#itemsTableBody').html(emptyRowHtml());
@@ -1396,7 +1682,7 @@
             $('#input_item').prop('disabled', true).html('<option value="">Select category first</option>');
             $('#input_note').val('');
             ['input_pendapatan_idr', 'input_pendapatan_usd', 'input_hpp', 'input_harga_jual']
-                .forEach(id => $('#' + id).val(''));
+            .forEach(id => $('#' + id).val(''));
         }
 
         function renumberAllItems() {
@@ -1408,14 +1694,17 @@
         }
 
         function updateGrandTotal() {
-            let idr = 0, usd = 0, hpp = 0, sell = 0;
+            let idr = 0,
+                usd = 0,
+                hpp = 0,
+                sell = 0;
             $('.item-row').each(function() {
                 const hasCat = $(this).find('.category-cell').length > 0;
-                const off    = hasCat ? 0 : -1;
-                idr  += parseRupiah($(this).find('td').eq(3 + off).text());
-                usd  += parseRupiah($(this).find('td').eq(4 + off).text());
+                const off = hasCat ? 0 : -1;
+                idr += parseRupiah($(this).find('td').eq(3 + off).text());
+                usd += parseRupiah($(this).find('td').eq(4 + off).text());
                 sell += parseRupiah($(this).find('td').eq(6 + off).text());
-                hpp  += parseRupiah($(this).find('td').eq(5 + off).text());
+                hpp += parseRupiah($(this).find('td').eq(5 + off).text());
             });
             $('#footerTotalIDR').text(formatNumber(idr));
             $('#footerTotalUSD').text(formatNumber(usd));

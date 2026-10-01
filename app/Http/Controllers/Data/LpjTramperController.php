@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\Data\LpjTramperExport;
 
 class LpjTramperController extends Controller
 {
@@ -785,5 +786,42 @@ class LpjTramperController extends Controller
         if ($number < 1_000_000_000_000) return $this->toTerbilang((int) ($number / 1_000_000_000)) . ' Miliar' . ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
 
         return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun' . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            $query = LpjTramper::with(['joTramper', 'kasbons', 'items']);
+
+            if ($request->filled('id_jo_tram'))  $query->where('id_jo_tram', $request->id_jo_tram);
+            if ($request->filled('no_lpj_tram')) $query->where('no_lpj_tram', 'like', '%' . $request->no_lpj_tram . '%');
+            if ($request->filled('date_from'))   $query->where('date', '>=', $request->date_from);
+            if ($request->filled('date_to'))     $query->where('date', '<=', $request->date_to);
+
+            $lpjTrampers = $query->orderBy('date', 'desc')->get();
+
+            $format = $request->get('format', 'excel');
+
+            if ($format === 'pdf') {
+                $filters = [
+                    'no_lpj_tram' => $request->get('no_lpj_tram', ''),
+                    'id_jo_tram'  => $request->get('id_jo_tram', ''),
+                    'date_from'   => $request->get('date_from', ''),
+                    'date_to'     => $request->get('date_to', ''),
+                ];
+
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'data.lpj-tramper.export_pdf',
+                    compact('lpjTrampers', 'filters')
+                )->setPaper('a4', 'landscape');
+
+                return $pdf->stream('lpj_tramper_' . date('Ymd_His') . '.pdf');
+            }
+
+            return (new LpjTramperExport($lpjTrampers))->download();
+        } catch (\Exception $e) {
+            Log::error('LPJ Tramper Export Failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
     }
 }

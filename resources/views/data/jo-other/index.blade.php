@@ -460,13 +460,12 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    {{-- Select2 --}}
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script>
         $(document).ready(function() {
 
-            // ===== DATATABLE =====
+            // ── DATATABLE ──────────────────────────────────────────────
             var hasData = $('#joOtherTable tbody tr').length > 0 &&
                 !$('#joOtherTable tbody tr td[colspan]').length;
 
@@ -526,7 +525,7 @@
                             next: 'Next',
                             previous: 'Previous'
                         },
-                        emptyTable: 'No JO Other data available'
+                        emptyTable: 'No JO Other data available',
                     },
                     autoWidth: true,
                     drawCallback: function(settings) {
@@ -558,7 +557,7 @@
                 }, 100);
             }
 
-            // ===== SELECT2 — inisialisasi saat modal ditampilkan =====
+            // ── SELECT2 ────────────────────────────────────────────────
             $('#filterModal').on('shown.bs.modal', function() {
                 $('.select2-filter').each(function() {
                     if (!$(this).hasClass('select2-hidden-accessible')) {
@@ -573,15 +572,16 @@
                 });
             });
 
-            // ===== TOOLTIPS =====
-            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-            tooltipTriggerList.map(function(el) {
-                return new bootstrap.Tooltip(el);
-            });
+            // ── TOOLTIPS ───────────────────────────────────────────────
+            [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+                .forEach(el => new bootstrap.Tooltip(el));
 
-            // ===== FILTER =====
+            // ── FILTER ─────────────────────────────────────────────────
             $('#filterButton').on('click', function() {
                 $('#filterModal').modal('show');
+            });
+            $('#exportButton').on('click', function() {
+                $('#exportModal').modal('show');
             });
 
             $('#resetFilter').on('click', function() {
@@ -589,52 +589,86 @@
                 $('.select2-filter').val('').trigger('change');
             });
 
-            // ===== EXPORT =====
-            $('#exportButton').on('click', function() {
-                $('#exportModal').modal('show');
-            });
-
-            // ===== DELETE =====
+            // ── DELETE (AJAX) ──────────────────────────────────────────
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
+
                 const name = $(this).data('name');
                 const url = $(this).data('url');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
                 Swal.fire({
                     title: 'Delete JO Other?',
-                    html: `
-                        <div class="text-start">
-                            <p>JO Other <strong>${name}</strong> will be permanently deleted.</p>
-                            <div class="alert alert-warning mt-3 mb-0">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Warning:</strong> All items related to this JO Other will also be deleted.
-                            </div>
+                    html: `<div class="text-start">
+                        <p>JO Other <strong>${name}</strong> will be permanently deleted.</p>
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> All items within this JO Other will also be deleted.
+                            Make sure no Cash Advance is referencing this JO before proceeding.
                         </div>
-                    `,
+                    </div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete All!',
+                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
                     cancelButtonText: 'Cancel',
                     focusCancel: true,
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Deleting...',
-                            html: 'Please wait while we delete the JO Other and all related items.',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
+                    if (!result.isConfirmed) return;
+
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading(),
+                    });
+
+                    fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: data.message ||
+                                        'JO Other deleted successfully.',
+                                    icon: 'success',
+                                    timer: 1800,
+                                    showConfirmButton: false,
+                                }).then(() => location.reload());
+                            } else {
+                                Swal.fire({
+                                    title: 'Cannot Delete',
+                                    html: `<div class="text-start">
+                                    <p>${data.message}</p>
+                                    <div class="alert alert-info mt-3 mb-0" style="font-size:.875rem;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Correct deletion order:</strong><br>
+                                        <span style="color:#065f46;">LPJ Other &rarr; Cash Advance Other &rarr; JO Other</span>
+                                    </div>
+                                </div>`,
+                                    icon: 'error',
+                                    confirmButtonColor: '#059669',
+                                    confirmButtonText: 'Understood',
+                                });
                             }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Something went wrong. Please try again.',
+                                'error');
                         });
-                        $('#deleteForm').attr('action', url).submit();
-                    }
                 });
             });
 
-            // ===== AUTO HIDE ALERTS =====
+            // ── AUTO HIDE ALERTS ───────────────────────────────────────
             setTimeout(function() {
                 $('.alert-success, .alert-danger').fadeOut('slow');
             }, 5000);

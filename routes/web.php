@@ -15,6 +15,7 @@ use App\Http\Controllers\Data\KasbonContractController;
 use App\Http\Controllers\Data\KasbonGenController;
 use App\Http\Controllers\Data\KasbonOtherController;
 use App\Http\Controllers\Data\KasbonTramperController;
+use App\Http\Controllers\Data\LpjGenController;
 use App\Http\Controllers\Data\LpjOtherController;
 use App\Http\Controllers\Data\LpjTramperController;
 use App\Http\Controllers\Master\BranchController;
@@ -227,6 +228,10 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('data')->group(function () {
 
         //================= JO TRAMPER ROUTE GROUP =================//
+        Route::get(
+            'jo-tramper/item/check-relations/{id}',
+            [JoTramperController::class, 'checkRelations']
+        )->name('jo-tramper.item.check-relations');
         Route::post('jo-tramper/header/store', [JoTramperController::class, 'storeHeader'])
             ->name('jo-tramper.header.store');
         Route::post('jo-tramper/header/update/{id}', [JoTramperController::class, 'updateHeader'])
@@ -259,6 +264,10 @@ Route::middleware(['auth'])->group(function () {
         //================= END JO TRAMPER ROUTE GROUP =================//
 
         //================= JO OTHER ROUTE GROUP =================//
+        Route::get(
+            'jo-other/item/check-relations/{id}',
+            [JoOtherController::class, 'checkRelations']
+        )->name('jo-other.item.check-relations');
         Route::post('jo-other/header/store', [JoOtherController::class, 'storeHeader'])
             ->name('jo-other.header.store');
         Route::post('jo-other/header/update/{id}', [JoOtherController::class, 'updateHeader'])
@@ -285,8 +294,12 @@ Route::middleware(['auth'])->group(function () {
         //================= END JO OTHER ROUTE GROUP =================//
 
         //================= JO CONTRACT ROUTE GROUP =================//
+        Route::get('/jo-contract/item/check-relations/{id}', [JoContractController::class, 'checkItemRelations'])
+            ->name('jo-contract.item.check-relations');
         Route::get('/jo-contract/export', [JoContractController::class, 'export'])
             ->name('jo-contract.export');
+        Route::get('jo-contract/item/check-relations/{id}', [JoContractController::class, 'checkItemRelations'])
+            ->name('jo-contract.item.check-relations');
         Route::resource('jo-contract', JoContractController::class);
         Route::get('jo-contract/{id}/export-pdf', [JoContractController::class, 'exportPdf'])
             ->name('jo-contract.export-pdf');
@@ -355,6 +368,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-tramper.export-pdf');
     Route::get('/data/kasbon-tramper/export', [KasbonTramperController::class, 'export'])
         ->name('kasbon-tramper.export');
+    Route::get('kasbon-tramper/item/check-conflict',  [KasbonTramperController::class, 'checkItemConflict'])->name('kasbon-tramper.item.check-conflict');
+    Route::post('kasbon-tramper/item/clear-conflict', [KasbonTramperController::class, 'clearConflictItem'])->name('kasbon-tramper.item.clear-conflict');
     Route::post('kasbon-tramper/header/store', [KasbonTramperController::class, 'storeHeader'])
         ->name('kasbon-tramper.header.store');
     Route::post('kasbon-tramper/header/update/{id}', [KasbonTramperController::class, 'updateHeader'])
@@ -419,6 +434,11 @@ Route::middleware(['auth'])->group(function () {
     //================= END KASBON OTHER ROUTE GROUP =================//
 
     //================= KASBON GENERAL ROUTE GROUP =================//
+    Route::delete('kasbon-gen/item/destroy-from-lpj/{id}', [KasbonGenController::class, 'destroyItemFromLpj'])
+        ->name('kasbon-gen.item.destroy-from-lpj');
+
+    Route::post('kasbon-gen/items/bulk-destroy', [KasbonGenController::class, 'bulkDestroyItems'])
+        ->name('kasbon-gen.items.bulk-destroy');
     Route::get('/data/kasbon-gen/{id}/export-pdf', [KasbonGenController::class, 'exportPdf'])
         ->name('kasbon-gen.export-pdf');
     Route::get('/data/kasbon-gen/export', [KasbonGenController::class, 'export'])
@@ -445,6 +465,8 @@ Route::middleware(['auth'])->group(function () {
     //================= END KASBON GENERAL ROUTE GROUP =================//
 
     //================= LPJ CONTRACT ROUTE GROUP =================//
+    Route::delete('/lpj-contract/kasbon-item/{kasbonContItemId}/orphan', [LpjContractController::class, 'destroyOrphanedKasbonItem'])
+        ->name('lpj-contract.kasbon-item.destroy-orphan');
     Route::get('lpj-contract/{id}/export-pdf', [LpjContractController::class, 'exportPdf'])
         ->name('lpj-contract.export-pdf');
     Route::get('lpj-contract/{id}/refresh-kasbons', [LpjContractController::class, 'refreshKasbons'])
@@ -463,6 +485,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('lpj-contract.kasbons-by-jo');
     Route::get('lpj-contract/api/jo-kurs', [LpjContractController::class, 'getJoKurs'])
         ->name('lpj-contract.jo-kurs');
+    Route::get('lpj-contract/export', [LpjContractController::class, 'export'])
+        ->name('lpj-contract.export');
     Route::resource('lpj-contract', LpjContractController::class)
         ->only(['index', 'create', 'show', 'edit', 'destroy']);
     //================= END LPJ CONTRACT ROUTE GROUP =================//
@@ -486,6 +510,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('lpj-tramper.kasbons-by-jo');
     Route::get('lpj-tramper/api/jo-kurs', [LpjTramperController::class, 'getJoKurs'])
         ->name('lpj-tramper.jo-kurs');
+    Route::get('lpj-tramper/export', [LpjTramperController::class, 'export'])
+        ->name('lpj-tramper.export');
     Route::resource('lpj-tramper', LpjTramperController::class)
         ->only(['index', 'create', 'show', 'edit', 'destroy']);
     //================= END LPJ TRAMPER ROUTE GROUP =================//
@@ -510,7 +536,44 @@ Route::middleware(['auth'])->group(function () {
         ->name('lpj-other.kasbons-by-jo');
     Route::get('lpj-other/api/jo-kurs',          [LpjOtherController::class, 'getJoKurs'])
         ->name('lpj-other.jo-kurs');
+    Route::get('lpj-other/export', [LpjOtherController::class, 'export'])
+        ->name('lpj-other.export');
     Route::resource('lpj-other', LpjOtherController::class)
         ->only(['index', 'create', 'show', 'edit', 'destroy']);
     //================= END LPJ OTHER ROUTE GROUP =================//
+
+    // ================= LPJ GENERAL ROUTE GROUP =================
+    // Tambahkan di dalam Route::middleware(['auth'])->group(function () { ... })
+
+    Route::get('lpj-gen/{id}/export-pdf',       [LpjGenController::class, 'exportPdf'])
+        ->name('lpj-gen.export-pdf');
+
+    Route::get('lpj-gen/{id}/refresh-kasbons',  [LpjGenController::class, 'refreshKasbons'])
+        ->name('lpj-gen.refresh-kasbons');
+
+    Route::post('lpj-gen/{id}/add-kasbons',     [LpjGenController::class, 'addKasbons'])
+        ->name('lpj-gen.add-kasbons');
+
+    Route::post('lpj-gen/header/store',         [LpjGenController::class, 'storeHeader'])
+        ->name('lpj-gen.header.store');
+
+    Route::post('lpj-gen/header/update/{id}',   [LpjGenController::class, 'updateHeader'])
+        ->name('lpj-gen.header.update');
+
+    Route::post('lpj-gen/{id}/items/bulk-save', [LpjGenController::class, 'bulkSaveItems'])
+        ->name('lpj-gen.items.bulk-save');
+
+    Route::post('lpj-gen/{id}/item/store-new',  [LpjGenController::class, 'storeNewItem'])
+        ->name('lpj-gen.item.store-new');
+
+    Route::get('lpj-gen/api/kasbons',           [LpjGenController::class, 'getKasbons'])
+        ->name('lpj-gen.kasbons');
+
+    Route::get('lpj-gen/export', [LpjGenController::class, 'export'])
+        ->name('lpj-gen.export');
+
+    Route::resource('lpj-gen', LpjGenController::class)
+        ->only(['index', 'create', 'show', 'edit', 'destroy']);
+
+    // ================= END LPJ GENERAL ROUTE GROUP =================
 });

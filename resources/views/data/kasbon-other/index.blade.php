@@ -520,8 +520,11 @@
     <script src="https://cdn.datatables.net/responsive/2.5.0/js/responsive.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
     <script>
         $(document).ready(function() {
+
+            // ── DATATABLE ──────────────────────────────────────────────
             var hasData = $('#kasbonOtherTable tbody tr').length > 0 &&
                 !$('#kasbonOtherTable tbody tr td[colspan]').length;
 
@@ -597,6 +600,7 @@
                 });
             }
 
+            // ── SELECT2 ────────────────────────────────────────────────
             $('#filterModal').on('shown.bs.modal', function() {
                 $('.select2-filter').each(function() {
                     if (!$(this).hasClass('select2-hidden-accessible')) {
@@ -611,6 +615,7 @@
                 });
             });
 
+            // ── FILTER / EXPORT ────────────────────────────────────────
             $('#filterButton').on('click', function() {
                 $('#filterModal').modal('show');
             });
@@ -623,15 +628,24 @@
                 $('.select2-filter').val('').trigger('change');
             });
 
+            // ── DELETE (AJAX) ──────────────────────────────────────────
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
+
                 const name = $(this).data('name');
                 const url = $(this).data('url');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
                 Swal.fire({
-                    title: 'Delete Kasbon Other?',
-                    html: `<div class="text-start"><p>Kasbon Other <strong>${name}</strong> will be permanently deleted.</p>
-                        <div class="alert alert-warning mt-3 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> All related items will also be deleted.</div></div>`,
+                    title: 'Delete Cash Advance Other?',
+                    html: `<div class="text-start">
+                        <p>Cash Advance Other <strong>${name}</strong> will be permanently deleted.</p>
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> All items within this Cash Advance will also be deleted.
+                            Make sure no LPJ is referencing this Cash Advance before proceeding.
+                        </div>
+                    </div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -640,21 +654,60 @@
                     cancelButtonText: 'Cancel',
                     focusCancel: true,
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Deleting...',
-                            html: 'Please wait...',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
+                    if (!result.isConfirmed) return;
+
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading(),
+                    });
+
+                    fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
                             },
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: data.message ||
+                                        'Cash Advance Other deleted successfully.',
+                                    icon: 'success',
+                                    timer: 1800,
+                                    showConfirmButton: false,
+                                }).then(() => location.reload());
+                            } else {
+                                Swal.fire({
+                                    title: 'Cannot Delete',
+                                    html: `<div class="text-start">
+                                    <p>${data.message}</p>
+                                    <div class="alert alert-info mt-3 mb-0" style="font-size:.875rem;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Correct deletion order:</strong><br>
+                                        <span style="color:#065f46;">LPJ Other &rarr; Cash Advance Other &rarr; JO Other</span>
+                                    </div>
+                                </div>`,
+                                    icon: 'error',
+                                    confirmButtonColor: '#059669',
+                                    confirmButtonText: 'Understood',
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Something went wrong. Please try again.',
+                                'error');
                         });
-                        $('#deleteForm').attr('action', url).submit();
-                    }
                 });
             });
 
+            // ── AUTO HIDE ALERTS ───────────────────────────────────────
             setTimeout(function() {
                 $('.alert-success, .alert-danger').fadeOut('slow');
             }, 5000);

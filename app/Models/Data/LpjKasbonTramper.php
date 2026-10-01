@@ -7,7 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class LpjKasbonTramper extends Model
 {
-    use SoftDeletes;
 
     protected $table = 'd05_lpj_kasbon_tram';
     protected $primaryKey = 'id';

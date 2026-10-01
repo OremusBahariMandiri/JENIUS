@@ -49,16 +49,20 @@
                                     &nbsp;<span class="badge bg-primary">JO No: {{ $currentFilters['no_jo'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['no_contract']))
-                                    &nbsp;<span class="badge bg-primary">Contract No: {{ $currentFilters['no_contract'] }}</span>
+                                    &nbsp;<span class="badge bg-primary">Contract No:
+                                        {{ $currentFilters['no_contract'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['contract_name']))
-                                    &nbsp;<span class="badge bg-primary">Contract: {{ $currentFilters['contract_name'] }}</span>
+                                    &nbsp;<span class="badge bg-primary">Contract:
+                                        {{ $currentFilters['contract_name'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['id_md_cust']))
-                                    &nbsp;<span class="badge bg-primary">Customer: {{ $currentFilters['customer_label'] ?? $currentFilters['id_md_cust'] }}</span>
+                                    &nbsp;<span class="badge bg-primary">Customer:
+                                        {{ $currentFilters['customer_label'] ?? $currentFilters['id_md_cust'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['id_md_area']))
-                                    &nbsp;<span class="badge bg-primary">Area: {{ $currentFilters['area_label'] ?? $currentFilters['id_md_area'] }}</span>
+                                    &nbsp;<span class="badge bg-primary">Area:
+                                        {{ $currentFilters['area_label'] ?? $currentFilters['id_md_area'] }}</span>
                                 @endif
                                 @if (!empty($currentFilters['title']))
                                     &nbsp;<span class="badge bg-primary">Title: {{ $currentFilters['title'] }}</span>
@@ -117,13 +121,10 @@
                                             </td>
                                             <td class="text-center">
                                                 @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
-                                                <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
-                                                    class="btn btn-sm btn-danger"
-                                                    title="Export PDF"
-                                                    target="_blank">
-                                                    <i class="fas fa-file-pdf"></i>
-                                                </a>
-
+                                                    <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
+                                                        class="btn btn-sm btn-danger" title="Export PDF" target="_blank">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
                                                 @endif
                                             </td>
                                             <td class="text-center">
@@ -202,8 +203,8 @@
                                     value="{{ request('contract_name', '') }}">
                             </div>
 
-                             {{-- Title --}}
-                             <div class="col-md-6">
+                            {{-- Title --}}
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold">Title</label>
                                 <input type="text" class="form-control" name="title"
                                     value="{{ request('title', '') }}">
@@ -212,10 +213,10 @@
                             {{-- Customer (select2) --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Customer</label>
-                                <select class="form-select select2-filter" name="id_md_cust"
-                                    id="filterCustomer" data-placeholder="-- Select Customers --">
+                                <select class="form-select select2-filter" name="id_md_cust" id="filterCustomer"
+                                    data-placeholder="-- Select Customers --">
                                     <option value=""></option>
-                                    @foreach($customers as $cust)
+                                    @foreach ($customers as $cust)
                                         <option value="{{ $cust->id_md_cust }}"
                                             {{ request('id_md_cust') == $cust->id_md_cust ? 'selected' : '' }}>
                                             {{ $cust->customer }}
@@ -227,10 +228,10 @@
                             {{-- Area (select2) --}}
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Area</label>
-                                <select class="form-select select2-filter" name="id_md_area"
-                                    id="filterArea" data-placeholder="-- Select Areas --">
+                                <select class="form-select select2-filter" name="id_md_area" id="filterArea"
+                                    data-placeholder="-- Select Areas --">
                                     <option value=""></option>
-                                    @foreach($areas as $area)
+                                    @foreach ($areas as $area)
                                         <option value="{{ $area->id_md_area }}"
                                             {{ request('id_md_area') == $area->id_md_area ? 'selected' : '' }}>
                                             {{ $area->area }}
@@ -270,13 +271,23 @@
 
                     @php
                         $exportParams = request()->only([
-                            'no_jo', 'no_contract', 'contract_name',
-                            'id_md_cust', 'id_md_area', 'title'
+                            'no_jo',
+                            'no_contract',
+                            'contract_name',
+                            'id_md_cust',
+                            'id_md_area',
+                            'title',
                         ]);
                         $hasActiveFilters = array_filter($exportParams);
 
-                        $excelUrl = route('jo-contract.export') . '?' . http_build_query(array_merge($exportParams, ['format' => 'excel']));
-                        $pdfUrl   = route('jo-contract.export') . '?' . http_build_query(array_merge($exportParams, ['format' => 'pdf']));
+                        $excelUrl =
+                            route('jo-contract.export') .
+                            '?' .
+                            http_build_query(array_merge($exportParams, ['format' => 'excel']));
+                        $pdfUrl =
+                            route('jo-contract.export') .
+                            '?' .
+                            http_build_query(array_merge($exportParams, ['format' => 'pdf']));
                     @endphp
 
                     @if ($hasActiveFilters)
@@ -318,21 +329,31 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.bootstrap5.min.css">
     {{-- Select2 --}}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
 
     <style>
         /* Select2 di dalam modal */
-        .modal .select2-container { width: 100% !important; }
+        .modal .select2-container {
+            width: 100% !important;
+        }
+
         .modal .select2-container .select2-selection--single {
             height: calc(1.5em + 0.75rem + 2px) !important;
             padding: 0.375rem 0.75rem !important;
             border: 1px solid #ced4da !important;
             border-radius: 0.375rem !important;
         }
+
         .modal .select2-container .select2-selection--single .select2-selection__rendered {
-            line-height: 1.5 !important; padding-left: 0 !important; color: #212529;
+            line-height: 1.5 !important;
+            padding-left: 0 !important;
+            color: #212529;
         }
-        .modal .select2-container .select2-selection--single .select2-selection__arrow { height: 100% !important; }
+
+        .modal .select2-container .select2-selection--single .select2-selection__arrow {
+            height: 100% !important;
+        }
 
         .joContractPage .card {
             border: none;
@@ -524,8 +545,8 @@
             });
 
             // ===== SELECT2 — inisialisasi saat modal ditampilkan =====
-            $('#filterModal').on('shown.bs.modal', function () {
-                $('.select2-filter').each(function () {
+            $('#filterModal').on('shown.bs.modal', function() {
+                $('.select2-filter').each(function() {
                     if (!$(this).hasClass('select2-hidden-accessible')) {
                         $(this).select2({
                             theme: 'bootstrap-5',
@@ -554,47 +575,82 @@
             });
 
             // ===== DELETE =====
+            // ===== DELETE =====
             $(document).on('click', '.btn-delete', function(e) {
                 e.stopPropagation();
 
                 const name = $(this).data('name');
                 const url = $(this).data('url');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
 
                 Swal.fire({
                     title: 'Delete JO Contract?',
-                    html: `
-                        <div class="text-start">
-                            <p>JO Contract <strong>${name}</strong> will be permanently deleted.</p>
-                            <div class="alert alert-warning mt-3 mb-0">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Warning:</strong> All items related to this JO Contract will also be deleted.
-                            </div>
-                        </div>
-                    `,
+                    html: `<div class="text-start">
+            <p>JO Contract <strong>${name}</strong> will be permanently deleted.</p>
+            <div class="alert alert-warning mt-3 mb-0">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Warning:</strong> All items within this JO Contract will also be deleted.
+                Make sure no Cash Advance or LPJ is referencing this JO before proceeding.
+            </div>
+        </div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
                     cancelButtonColor: '#6c757d',
-                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete All!',
+                    confirmButtonText: '<i class="fas fa-trash me-1"></i> Yes, Delete!',
                     cancelButtonText: 'Cancel',
                     focusCancel: true,
-                    customClass: {
-                        htmlContainer: 'text-start'
-                    }
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Deleting...',
-                            html: 'Please wait while we delete the JO Contract and all related items.',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
+                    if (!result.isConfirmed) return;
 
-                        $('#deleteForm').attr('action', url).submit();
-                    }
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading(),
+                    });
+
+                    fetch(url, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                            },
+                        })
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Deleted!',
+                                    text: data.message ||
+                                        'JO Contract deleted successfully.',
+                                    icon: 'success',
+                                    timer: 1800,
+                                    showConfirmButton: false,
+                                }).then(() => location.reload());
+                            } else {
+                                Swal.fire({
+                                    title: 'Cannot Delete',
+                                    html: `<div class="text-start">
+                        <p>${data.message}</p>
+                        <div class="alert alert-info mt-3 mb-0" style="font-size:.875rem;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Correct deletion order:</strong><br>
+                            <span style="color:#065f46;">LPJ Contract &rarr; Cash Advance &rarr; JO Contract</span>
+                        </div>
+                    </div>`,
+                                    icon: 'error',
+                                    confirmButtonColor: '#059669',
+                                    confirmButtonText: 'Understood',
+                                });
+                            }
+                        })
+                        .catch(() => {
+                            Swal.fire('Error', 'Something went wrong. Please try again.',
+                                'error');
+                        });
                 });
             });
 

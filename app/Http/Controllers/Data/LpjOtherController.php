@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\Data\LpjOtherExport;
 
 class LpjOtherController extends Controller
 {
@@ -185,14 +186,20 @@ class LpjOtherController extends Controller
                 ->select('kurs_usd', 'tgl_kurs_usd')
                 ->first();
 
+            // sesudah — tambah deduplicate by id_jo_other_item
             $lpjItemsMap = $lpj->items->keyBy('id_kasbon_other_item');
-            $mergedItems = [];
+            $mergedItems   = [];
+            $seenJoItems   = [];   // ← tambah ini
 
             foreach ($lpj->kasbons as $lpjKasbon) {
                 $kasbon = $lpjKasbon->kasbonOther;
                 if (!$kasbon) continue;
 
                 foreach ($kasbon->items as $kasbonItem) {
+                    // Skip jika id_jo_other_item sudah masuk dari kasbon lain
+                    if (in_array($kasbonItem->id_jo_other_item, $seenJoItems)) continue;
+                    $seenJoItems[] = $kasbonItem->id_jo_other_item;   // ← tandai sudah dilihat
+
                     $lpjItem       = $lpjItemsMap->get($kasbonItem->id_kasbon_other_item);
                     $mergedItems[] = [
                         'id_kasbon_other_item'   => $kasbonItem->id_kasbon_other_item,
@@ -210,7 +217,7 @@ class LpjOtherController extends Controller
                         'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
                         'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
                         'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
-                        'origin_lpj_other' => $kasbonItem->origin_lpj_other ?? null,
+                        'origin_lpj_other'       => $kasbonItem->origin_lpj_other ?? null,
                     ];
                 }
             }
@@ -682,21 +689,21 @@ class LpjOtherController extends Controller
     {
         DB::beginTransaction();
         try {
-            $lpj      = LpjOther::findOrFail($id);
-            $lpjItems = LpjOtherItem::where('id_lpj_other', $lpj->id_lpj_other)->get();
+            $lpj = LpjOther::findOrFail($id);
 
-            foreach ($lpjItems as $lpjItem) {
-                $kasbonItem = KasbonOtherItem::find($lpjItem->id_kasbon_other_item);
-                if ($kasbonItem) {
-                    JoOtherItem::where('id_jo_other_item', $kasbonItem->id_jo_other_item)
-                        ->where('origin_lpj_other', $lpj->id_lpj_other)->delete();
-                    $kasbonItem->delete();
-                }
-                $lpjItem->delete();
+            // 1. Hapus LPJ items (d09_lpj_other_item) — tidak ada SoftDeletes
+            LpjOtherItem::where('id_lpj_other', $lpj->id_lpj_other)->delete();
+
+            // 2. Hapus pivot LPJ-Kasbon (d08_lpj_kasbon_other)
+            //    LpjKasbonOther TIDAK lagi pakai SoftDeletes → ->delete() = hard delete ✓
+            LpjKasbonOther::where('id_lpj_other', $lpj->id_lpj_other)->delete();
+
+            // 3. Hapus file evidence
+            if ($lpj->evidence) {
+                Storage::disk('public')->delete($lpj->evidence);
             }
 
-            LpjKasbonOther::where('id_lpj_other', $lpj->id_lpj_other)->delete();
-            if ($lpj->evidence) Storage::disk('public')->delete($lpj->evidence);
+            // 4. Hapus header LPJ — aman karena child records sudah dihapus
             $lpj->delete();
 
             DB::commit();
@@ -709,7 +716,7 @@ class LpjOtherController extends Controller
             DB::rollBack();
             Log::error('LpjOther Destroy Failed', ['id' => $id, 'error' => $e->getMessage()]);
             if ($request->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Error deleting LPJ: ' . $e->getMessage()], 500);
             }
             return back()->with('error', 'Error deleting LPJ: ' . $e->getMessage());
         }
@@ -760,6 +767,43 @@ class LpjOtherController extends Controller
                 return response()->json(['success' => false, 'message' => 'Failed to export PDF: ' . $e->getMessage()], 500);
             }
             return back()->with('error', 'Failed to export PDF: ' . $e->getMessage());
+        }
+    }
+
+    public function export(Request $request)
+    {
+        try {
+            $query = LpjOther::with(['joOther', 'kasbons', 'items']);
+
+            if ($request->filled('id_jo_other'))  $query->where('id_jo_other', $request->id_jo_other);
+            if ($request->filled('no_lpj_other')) $query->where('no_lpj_other', 'like', '%' . $request->no_lpj_other . '%');
+            if ($request->filled('date_from'))    $query->where('date', '>=', $request->date_from);
+            if ($request->filled('date_to'))      $query->where('date', '<=', $request->date_to);
+
+            $lpjOthers = $query->orderBy('date', 'desc')->get();
+
+            $format = $request->get('format', 'excel');
+
+            if ($format === 'pdf') {
+                $filters = [
+                    'no_lpj_other' => $request->get('no_lpj_other', ''),
+                    'id_jo_other'  => $request->get('id_jo_other', ''),
+                    'date_from'    => $request->get('date_from', ''),
+                    'date_to'      => $request->get('date_to', ''),
+                ];
+
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'data.lpj-other.export_pdf',
+                    compact('lpjOthers', 'filters')
+                )->setPaper('a4', 'landscape');
+
+                return $pdf->stream('lpj_other_' . date('Ymd_His') . '.pdf');
+            }
+
+            return (new LpjOtherExport($lpjOthers))->download();
+        } catch (\Exception $e) {
+            Log::error('LPJ Other Export Failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
         }
     }
 

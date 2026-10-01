@@ -40,7 +40,7 @@
                         @endif
 
                         @if (!empty($currentFilters) && array_filter($currentFilters))
-                            <div class="alert alert-info alert-dismissible fade show">
+                            <div class="alert alert-info alert-dismissible fade show" id="filterActiveAlert">
                                 <i class="fas fa-info-circle me-2"></i>
                                 <strong>Active Filters:</strong>
                                 @if (!empty($currentFilters['id_md_dep']))
@@ -62,14 +62,17 @@
                             </div>
                         @endif
 
-                        {{-- ── PRIORITY SUMMARY CARDS ── --}}
+                        {{-- ── SUMMARY CARDS ── --}}
                         @php
-                            $countHigh   = $kasbonGens->where('priority', 'high')->count();
-                            $countNormal = $kasbonGens->where('priority', 'normal')->count();
+                            $countHigh     = $kasbonGens->where('priority', 'high')->count();
+                            $countNormal   = $kasbonGens->where('priority', 'normal')->count();
+                            $countReleased = $kasbonGens->where('ca_release_status', 'release')->count();
+                            $countPending  = $kasbonGens->where('ca_release_status', '!=', 'release')->count();
                         @endphp
 
                         <div class="row g-3 mb-4">
-                            <div class="col-6">
+                            {{-- High --}}
+                            <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#fff1f2; border-color:#f87171 !important;">
                                     <div style="width:42px;height:42px;background:#fee2e2;border-radius:10px;
@@ -77,19 +80,15 @@
                                         <i class="fas fa-arrow-up" style="color:#dc2626;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            High
-                                        </div>
-                                        <div style="font-size:1.6rem;font-weight:700;color:#b91c1c;line-height:1.1;">
-                                            {{ $countHigh }}
-                                        </div>
-                                        <div style="font-size:.72rem;color:#dc2626;">
-                                            document{{ $countHigh !== 1 ? 's' : '' }}
-                                        </div>
+                                        <div style="font-size:.75rem;color:#7f1d1d;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">High</div>
+                                        <div style="font-size:1.6rem;font-weight:700;color:#b91c1c;line-height:1.1;">{{ $countHigh }}</div>
+                                        <div style="font-size:.72rem;color:#dc2626;">document{{ $countHigh !== 1 ? 's' : '' }}</div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-6">
+
+                            {{-- Normal --}}
+                            <div class="col-6 col-md-3">
                                 <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
                                     style="background:#f9fafb; border-color:#d1d5db !important;">
                                     <div style="width:42px;height:42px;background:#f3f4f6;border-radius:10px;
@@ -97,15 +96,41 @@
                                         <i class="fas fa-minus" style="color:#6b7280;font-size:1.1rem;"></i>
                                     </div>
                                     <div>
-                                        <div style="font-size:.75rem;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">
-                                            Normal
-                                        </div>
-                                        <div style="font-size:1.6rem;font-weight:700;color:#374151;line-height:1.1;">
-                                            {{ $countNormal }}
-                                        </div>
-                                        <div style="font-size:.72rem;color:#6b7280;">
-                                            document{{ $countNormal !== 1 ? 's' : '' }}
-                                        </div>
+                                        <div style="font-size:.75rem;color:#374151;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Normal</div>
+                                        <div style="font-size:1.6rem;font-weight:700;color:#374151;line-height:1.1;">{{ $countNormal }}</div>
+                                        <div style="font-size:.72rem;color:#6b7280;">document{{ $countNormal !== 1 ? 's' : '' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Released --}}
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
+                                    style="background:#d1fae5; border-color:#6ee7b7 !important;">
+                                    <div style="width:42px;height:42px;background:#a7f3d0;border-radius:10px;
+                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fas fa-check-circle" style="color:#059669;font-size:1.1rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:.75rem;color:#065f46;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Released</div>
+                                        <div style="font-size:1.6rem;font-weight:700;color:#059669;line-height:1.1;">{{ $countReleased }}</div>
+                                        <div style="font-size:.72rem;color:#10b981;">document{{ $countReleased !== 1 ? 's' : '' }}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Pending --}}
+                            <div class="col-6 col-md-3">
+                                <div class="d-flex align-items-center gap-3 p-3 rounded-3 border"
+                                    style="background:#fffbeb; border-color:#fcd34d !important;">
+                                    <div style="width:42px;height:42px;background:#fef3c7;border-radius:10px;
+                                        display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                        <i class="fas fa-clock" style="color:#d97706;font-size:1.1rem;"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size:.75rem;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:.5px;">Pending</div>
+                                        <div style="font-size:1.6rem;font-weight:700;color:#d97706;line-height:1.1;">{{ $countPending }}</div>
+                                        <div style="font-size:.72rem;color:#f59e0b;">document{{ $countPending !== 1 ? 's' : '' }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -123,15 +148,17 @@
                                         <th>Release To</th>
                                         <th class="text-center">Items</th>
                                         <th class="text-end">Total CA</th>
-                                        <th class="text-center">Invoice</th>
+                                        <th class="text-center">CA PDF</th>
                                         <th class="text-center">Priority</th>
-                                        <th class="text-center" width="12%">Action</th>
+                                        <th class="text-center">Status</th>
+                                        <th class="text-center" width="10%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($kasbonGens as $kasbon)
                                         @php
-                                            $rowClass = $kasbon->priority === 'high' ? 'row-high' : '';
+                                            $isReleased = $kasbon->ca_release_status === 'release';
+                                            $rowClass   = !$isReleased && $kasbon->priority === 'high' ? 'row-high' : '';
                                         @endphp
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $loop->iteration }}</td>
@@ -145,7 +172,7 @@
                                                 {{ number_format($kasbon->items->sum('nilai_kasbon'), 2, ',', '.') }}
                                             </td>
 
-                                            {{-- Invoice / PDF --}}
+                                            {{-- CA PDF --}}
                                             <td class="text-center">
                                                 @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('kasbon-gen', 'detail')))
                                                     <a href="{{ route('kasbon-gen.export-pdf', $kasbon->id) }}"
@@ -165,6 +192,26 @@
                                                 @else
                                                     <span class="badge bg-secondary" style="font-size:.75rem;">
                                                         Normal
+                                                    </span>
+                                                @endif
+                                            </td>
+
+                                            {{-- Release Status --}}
+                                            <td class="text-center">
+                                                @if ($kasbon->ca_release_status === 'release')
+                                                    <span class="badge"
+                                                        style="background:#d1fae5; color:#065f46; border:1px solid #6ee7b7; font-size:.75rem;">
+                                                        <i class="fas fa-check-circle me-1"></i>Released
+                                                    </span>
+                                                    @if ($kasbon->ca_release_date)
+                                                        <div style="font-size:.7rem; color:#6b7280; margin-top:3px;">
+                                                            {{ $kasbon->ca_release_date->format('d/m/Y') }}
+                                                        </div>
+                                                    @endif
+                                                @else
+                                                    <span class="badge"
+                                                        style="background:#fef3c7; color:#92400e; border:1px solid #fcd34d; font-size:.75rem;">
+                                                        <i class="fas fa-clock me-1"></i>Pending
                                                     </span>
                                                 @endif
                                             </td>
@@ -198,7 +245,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="11" class="text-center py-5">
+                                            <td colspan="12" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No Kasbon General Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new Kasbon General</p>
@@ -214,7 +261,7 @@
                                     <span style="display:inline-block;width:16px;height:16px;border-radius:4px;
                                         background:#fee2e2;border:1px solid #fca5a5;flex-shrink:0;"></span>
                                     <span style="color:#6b7280;">
-                                        <span style="font-weight:600;color:#b91c1c;">Red</span> — High priority document
+                                        <span style="font-weight:600;color:#b91c1c;">Red</span> — High priority, not yet released
                                     </span>
                                 </div>
                                 <div class="d-flex align-items-center gap-2">
@@ -313,10 +360,17 @@
                         $pdfUrl = route('kasbon-gen.export') . '?' .
                             http_build_query(array_merge($exportParams, ['format' => 'pdf']));
                     @endphp
-                    <div class="alert alert-info py-2">
-                        <i class="fas fa-info-circle me-1"></i>
-                        <small>Export will include <strong>{{ $hasActiveFilters ? 'filtered' : 'all' }} Kasbon General data</strong>.</small>
-                    </div>
+                    @if ($hasActiveFilters)
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <small>Export will use <strong>active filters</strong>.</small>
+                        </div>
+                    @else
+                        <div class="alert alert-info py-2">
+                            <i class="fas fa-info-circle me-1"></i>
+                            <small>Export will include <strong>all Kasbon General data</strong>.</small>
+                        </div>
+                    @endif
                     <div class="d-grid gap-2">
                         <a href="{{ $excelUrl }}" class="btn btn-outline-success">
                             <i class="fas fa-file-excel me-2"></i> Export to Excel (.xlsx)
@@ -332,11 +386,6 @@
             </div>
         </div>
     </div>
-
-    <form id="deleteForm" method="POST" style="display:none;">
-        @csrf
-        @method('DELETE')
-    </form>
 @endsection
 
 @push('styles')
@@ -362,7 +411,7 @@
         .kasbonGenPage .btn-sm { transition: transform 0.2s; }
         .kasbonGenPage .btn-sm:hover { transform: scale(1.1); }
 
-        /* High priority row = red */
+        /* High priority, belum released = merah */
         .kasbonGenPage table tbody tr.row-high td {
             background-color: #fc4d4d !important;
         }
@@ -381,6 +430,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function () {
+
+            // ── DATATABLE ──────────────────────────────────────────────
             var hasData = $('#kasbonGenTable tbody tr').length > 0 &&
                 !$('#kasbonGenTable tbody tr td[colspan]').length;
 
@@ -393,6 +444,14 @@
                     columnDefs: [
                         { orderable: false, targets: 0 },
                         { orderable: false, targets: -1 },
+                        { responsivePriority: 1, targets: -1 },  // Action
+                        { responsivePriority: 2, targets: 1 },   // CA No
+                        { responsivePriority: 3, targets: 10 },  // Status
+                        { responsivePriority: 4, targets: 9 },   // Priority
+                        { responsivePriority: 5, targets: 2 },   // CA Date
+                        { responsivePriority: 10001, targets: 3 }, // Dep
+                        { responsivePriority: 10002, targets: 4 }, // Branch
+                        { responsivePriority: 10003, targets: 5 }, // Release To
                     ],
                     language: {
                         search: 'Search:',
@@ -408,6 +467,7 @@
                 });
             }
 
+            // ── SELECT2 ────────────────────────────────────────────────
             $('#filterModal').on('shown.bs.modal', function () {
                 $('.select2-filter').each(function () {
                     if (!$(this).hasClass('select2-hidden-accessible')) {
@@ -422,6 +482,7 @@
                 });
             });
 
+            // ── FILTER / EXPORT ────────────────────────────────────────
             $('#filterButton').on('click', function () { $('#filterModal').modal('show'); });
             $('#exportButton').on('click', function () { $('#exportModal').modal('show'); });
 
@@ -430,15 +491,23 @@
                 $('.select2-filter').val('').trigger('change');
             });
 
+            // ── DELETE (AJAX) ──────────────────────────────────────────
             $(document).on('click', '.btn-delete', function (e) {
                 e.stopPropagation();
-                const name = $(this).data('name');
-                const url  = $(this).data('url');
+                const name      = $(this).data('name');
+                const url       = $(this).data('url');
+                const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+
                 Swal.fire({
-                    title: 'Delete Kasbon General?',
-                    html: `<div class="text-start"><p>Kasbon General <strong>${name}</strong> will be permanently deleted.</p>
-                        <div class="alert alert-warning mt-3 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>
-                        <strong>Warning:</strong> All related items will also be deleted.</div></div>`,
+                    title: 'Delete Cash Advance?',
+                    html: `<div class="text-start">
+                        <p>Cash Advance <strong>${name}</strong> will be permanently deleted.</p>
+                        <div class="alert alert-warning mt-3 mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> All items within this Cash Advance will also be deleted.
+                            Make sure no LPJ is referencing this Cash Advance before proceeding.
+                        </div>
+                    </div>`,
                     icon: 'warning',
                     showCancelButton: true,
                     confirmButtonColor: '#d33',
@@ -447,19 +516,58 @@
                     cancelButtonText: 'Cancel',
                     focusCancel: true,
                 }).then((result) => {
-                    if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Deleting...',
-                            html: 'Please wait...',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => { Swal.showLoading(); },
-                        });
-                        $('#deleteForm').attr('action', url).submit();
-                    }
+                    if (!result.isConfirmed) return;
+
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait...',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        didOpen: () => Swal.showLoading(),
+                    });
+
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        if (data.success) {
+                            Swal.fire({
+                                title: 'Deleted!',
+                                text: data.message || 'Cash Advance deleted successfully.',
+                                icon: 'success',
+                                timer: 1800,
+                                showConfirmButton: false,
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire({
+                                title: 'Cannot Delete',
+                                html: `<div class="text-start">
+                                    <p>${data.message}</p>
+                                    <div class="alert alert-info mt-3 mb-0" style="font-size:.875rem;">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        <strong>Correct deletion order:</strong><br>
+                                        <span style="color:#065f46;">LPJ General &rarr; Cash Advance &rarr; Data</span>
+                                    </div>
+                                </div>`,
+                                icon: 'error',
+                                confirmButtonColor: '#059669',
+                                confirmButtonText: 'Understood',
+                            });
+                        }
+                    })
+                    .catch(() => {
+                        Swal.fire('Error', 'Something went wrong. Please try again.', 'error');
+                    });
                 });
             });
 
+            // ── AUTO HIDE ALERTS ───────────────────────────────────────
             setTimeout(function () {
                 $('.alert-success, .alert-danger').fadeOut('slow');
             }, 5000);
