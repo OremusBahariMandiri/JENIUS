@@ -198,25 +198,28 @@ class LpjContractController extends Controller
                 if (!$kasbon) continue;
 
                 foreach ($kasbon->items as $kasbonItem) {
-                    $lpjItem       = $lpjItemsMap->get($kasbonItem->id_kasbon_cont_item);
+                    $joContItem = $kasbonItem->joContractItem;
+                    $lpjItem    = $lpjItemsMap->get($kasbonItem->id_kasbon_cont_item);
+
                     $mergedItems[] = [
                         'id_kasbon_cont_item'    => $kasbonItem->id_kasbon_cont_item,
                         'id_kasbon_cont'         => $kasbonItem->id_kasbon_cont,
                         'id_jo_cont_item'        => $kasbonItem->id_jo_cont_item,
-                        'id_kasbon_cont_no'      => $kasbon->id_kasbon_cont,
-                        'invoice_typ'            => $kasbonItem->joContractItem->invoice->invoice_typ ?? '-',
-                        'invoice_ctg'            => $kasbonItem->joContractItem->invoice->invoice_ctg ?? '-',
+                        'id_kasbon_cont_no'      => $kasbon->id_kasbon_cont,   // nomor kasbon (string)
+                        'invoice_typ'            => $joContItem?->invoice?->invoice_typ ?? '-',
+                        'invoice_ctg'            => $joContItem?->invoice?->invoice_ctg ?? '-',
                         'nilai_hpp_cont_item'    => (float) $kasbonItem->nilai_hpp_cont_item,
+                        // ← nilai_kasbon = nominal yang dikasbon di kasbon INI (bisa cicilan)
                         'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
                         'total_kasbon'           => (float) $kasbonItem->total_kasbon,
                         'id_lpj_cont_item'       => $lpjItem?->id ?? null,
-                        'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
+                        'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
                         'has_lpj'                => $lpjItem !== null,
                         'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
-                        'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
-                        'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
-                        'origin_lpj_cont'        => $kasbonItem->joContractItem->origin_lpj_cont ?? null,
-                        'is_orphaned'            => $kasbonItem->joContractItem === null,  // ← TAMBAH INI
+                        'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
+                        'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
+                        'origin_lpj_cont'        => $joContItem?->origin_lpj_cont ?? null,
+                        'is_orphaned'            => $joContItem === null,
                     ];
                 }
             }
@@ -243,10 +246,9 @@ class LpjContractController extends Controller
     {
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_cont' => 'required|exists:b01_jo_cont,id_jo_cont',
-                'date'       => 'required|date',
-                'note'       => 'nullable|string',
-                'evidence'   => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
+                'date'     => 'required|date',
+                'note'     => 'nullable|string',
+                'evidence' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
             ]);
 
             if ($validator->fails()) {
@@ -285,16 +287,17 @@ class LpjContractController extends Controller
 
     // ========================================
     // BULK SAVE ITEMS
+    // Validasi: amount_lpj tidak boleh melebihi nilai_kasbon item tersebut
     // ========================================
 
     public function bulkSaveItems(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'items'                            => 'required|array',
-            'items.*.id_kasbon_cont_item'      => 'required',
-            'items.*.id_jo_cont_item'          => 'required',
-            'items.*.amount_lpj'               => 'required|numeric|min:0',
-            'items.*.id_md_chart_of_account'   => 'nullable|exists:a13_md_chart_of_account,id_md_chart_of_account',
+            'items'                          => 'required|array',
+            'items.*.id_kasbon_cont_item'    => 'required',
+            'items.*.id_jo_cont_item'        => 'required',
+            'items.*.amount_lpj'             => 'required|numeric|min:0',
+            'items.*.id_md_chart_of_account' => 'nullable|exists:a13_md_chart_of_account,id_md_chart_of_account',
         ]);
 
         if ($validator->fails()) {
@@ -306,11 +309,29 @@ class LpjContractController extends Controller
             DB::beginTransaction();
 
             foreach ($request->items as $itemData) {
-                $existing  = LpjContractItem::where('id_lpj_cont', $lpj->id_lpj_cont)
-                    ->where('id_kasbon_cont_item', $itemData['id_kasbon_cont_item'])
-                    ->first();
                 $amountLpj = (float) $itemData['amount_lpj'];
                 $coa       = $itemData['id_md_chart_of_account'] ?? null;
+
+                // ── Validasi: amount_lpj tidak boleh melebihi nilai_kasbon pada kasbon item ini ──
+                if ($amountLpj > 0) {
+                    $kasbonItem = KasbonContractItem::where('id_kasbon_cont_item', $itemData['id_kasbon_cont_item'])->first();
+                    if ($kasbonItem) {
+                        $nilaiKasbon = (float) $kasbonItem->nilai_kasbon;
+                        if ($amountLpj > $nilaiKasbon) {
+                            DB::rollBack();
+                            return response()->json([
+                                'success' => false,
+                                'message' => 'LPJ amount (' . number_format($amountLpj, 2, ',', '.') . ') '
+                                    . 'melebihi nilai kasbon item (' . number_format($nilaiKasbon, 2, ',', '.') . ').',
+                                'item_id' => $itemData['id_kasbon_cont_item'],
+                            ], 422);
+                        }
+                    }
+                }
+
+                $existing = LpjContractItem::where('id_lpj_cont', $lpj->id_lpj_cont)
+                    ->where('id_kasbon_cont_item', $itemData['id_kasbon_cont_item'])
+                    ->first();
 
                 if ($existing) {
                     if ($amountLpj > 0) {
@@ -372,6 +393,16 @@ class LpjContractController extends Controller
             return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         }
 
+        // Validasi: amount_lpj tidak boleh melebihi nilai_kasbon
+        $nilaiKasbon = (float) $request->nilai_kasbon;
+        $amountLpj   = (float) $request->amount_lpj;
+        if ($amountLpj > $nilaiKasbon) {
+            return response()->json([
+                'success' => false,
+                'message' => 'LPJ amount tidak boleh melebihi nilai kasbon (' . number_format($nilaiKasbon, 2, ',', '.') . ').',
+            ], 422);
+        }
+
         try {
             $lpj = LpjContract::findOrFail($id);
             DB::beginTransaction();
@@ -385,8 +416,8 @@ class LpjContractController extends Controller
                 ->orderBy('created_at', 'asc')
                 ->first();
 
-            $kursUSD    = $joKursItem ? (float) $joKursItem->kurs_usd : 0;
-            $tglKursUSD = $joKursItem ? $joKursItem->tgl_kurs_usd : null;
+            $kursUSD      = $joKursItem ? (float) $joKursItem->kurs_usd : 0;
+            $tglKursUSD   = $joKursItem ? $joKursItem->tgl_kurs_usd : null;
             $hargajualIDR = $pendapatanIDR > 0 ? $pendapatanIDR : ($pendapatanUSD * $kursUSD);
 
             // 1. b02_jo_cont_item
@@ -416,7 +447,6 @@ class LpjContractController extends Controller
                 ->selectRaw('MAX(CAST(id_kasbon_cont_item AS UNSIGNED)) as max_id')
                 ->value('max_id');
             $newKasbonItemId = (string)(((int) $maxKasbonItemId) + 1);
-            $nilaiKasbon     = (float) $request->nilai_kasbon;
             $totalKasbon     = $hppOps - $nilaiKasbon;
 
             KasbonContractItem::create([
@@ -435,11 +465,11 @@ class LpjContractController extends Controller
                 'id_lpj_cont'            => $lpj->id_lpj_cont,
                 'id_kasbon_cont_item'    => $newKasbonItemId,
                 'id_jo_cont_item'        => $newJoItemId,
-                'amount_lpj'             => (float) $request->amount_lpj,
+                'amount_lpj'             => $amountLpj,
                 'id_md_chart_of_account' => $request->id_md_chart_of_account ?? null,
             ]);
 
-            // Recompute amount dari kasbon yang terkait LPJ ini
+            // Recompute amount
             $kasbonIds = $lpj->kasbons->pluck('id_kasbon_cont');
             $amount    = KasbonContractItem::whereIn('id_kasbon_cont', $kasbonIds)->sum('nilai_kasbon');
             $lpj->update(['amount' => $amount]);
@@ -454,12 +484,12 @@ class LpjContractController extends Controller
                     'id_lpj_cont_item'       => $lpjItem->id,
                     'id_kasbon_cont_item'     => $newKasbonItemId,
                     'id_jo_cont_item'         => $newJoItemId,
-                    'invoice_typ'             => $joItem->invoice->invoice_typ ?? '-',
+                    'invoice_typ'             => $joItem->invoice?->invoice_typ ?? '-',
                     'invoice_ctg'             => $request->invoice_ctg,
                     'nilai_hpp_cont_item'     => $hppOps,
                     'nilai_kasbon'            => $nilaiKasbon,
                     'total_kasbon'            => $totalKasbon,
-                    'amount_lpj'              => (float) $request->amount_lpj,
+                    'amount_lpj'              => $amountLpj,
                     'id_kasbon_cont_no'       => $request->id_kasbon_cont,
                     'has_lpj'                 => true,
                     'hargajual_idr'           => $hargajualIDR,
@@ -468,6 +498,7 @@ class LpjContractController extends Controller
                     'coa_no'                  => null,
                     'coa_name'                => null,
                     'origin_lpj_cont'         => $lpj->id_lpj_cont,
+                    'is_orphaned'             => false,
                 ],
             ], 201);
         } catch (\Exception $e) {
@@ -496,11 +527,7 @@ class LpjContractController extends Controller
                 ->first();
 
             if (!$kursItem) {
-                return response()->json([
-                    'success'  => true,
-                    'has_kurs' => false,
-                    'kurs_usd' => 0,
-                ]);
+                return response()->json(['success' => true, 'has_kurs' => false, 'kurs_usd' => 0]);
             }
 
             return response()->json([
@@ -516,7 +543,6 @@ class LpjContractController extends Controller
 
     // ========================================
     // GET KASBONS BY JO
-    // Support parameter detail_kasbon untuk info items per kasbon
     // ========================================
 
     public function getKasbonsByJo(Request $request)
@@ -543,7 +569,6 @@ class LpjContractController extends Controller
                 'total_amount' => $kasbons->sum('total_kasbon'),
             ];
 
-            // Detail items untuk satu kasbon (dipakai modal info di create view)
             $detailKasbonId = $request->get('detail_kasbon');
             if ($detailKasbonId) {
                 $kasbon = KasbonContract::where('id_kasbon_cont', $detailKasbonId)
@@ -573,7 +598,7 @@ class LpjContractController extends Controller
     }
 
     // ========================================
-    // REFRESH KASBONS (cek kasbon baru dari JO yang belum masuk LPJ)
+    // REFRESH KASBONS
     // ========================================
 
     public function refreshKasbons(Request $request, $id)
@@ -581,9 +606,9 @@ class LpjContractController extends Controller
         try {
             $lpj = LpjContract::with('kasbons')->findOrFail($id);
 
-            $allKasbons      = KasbonContract::where('id_jo_cont', $lpj->id_jo_cont)
+            $allKasbons  = KasbonContract::where('id_jo_cont', $lpj->id_jo_cont)
                 ->with(['items'])->get();
-            $existingIds     = $lpj->kasbons->pluck('id_kasbon_cont')->toArray();
+            $existingIds = $lpj->kasbons->pluck('id_kasbon_cont')->toArray();
 
             $newKasbons = $allKasbons
                 ->filter(fn($k) => !in_array($k->id_kasbon_cont, $existingIds))
@@ -639,7 +664,6 @@ class LpjContractController extends Controller
                 }
             }
 
-            // Recompute amount
             $lpj->load('kasbons');
             $kasbonIds = $lpj->kasbons->pluck('id_kasbon_cont');
             $amount    = KasbonContractItem::whereIn('id_kasbon_cont', $kasbonIds)->sum('nilai_kasbon');
@@ -734,6 +758,10 @@ class LpjContractController extends Controller
         }
     }
 
+    // ========================================
+    // EXPORT PDF (single LPJ)
+    // ========================================
+
     public function exportPdf($id)
     {
         try {
@@ -745,14 +773,11 @@ class LpjContractController extends Controller
                 'items.chartOfAccount',
             ])->findOrFail($id);
 
-            // Hitung total LPJ (sum amount_lpj dari semua item yang sudah diisi)
-            $totalLpj = $lpj->items->sum('amount_lpj');
-
-            // Terbilang dari total LPJ
+            $totalLpj  = $lpj->items->sum('amount_lpj');
             $terbilang = $this->toTerbilang((int) round($totalLpj)) . ' Rupiah';
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
-                'data.lpj-contract.pdf',   // resources/views/data/lpj-contract/pdf.blade.php
+                'data.lpj-contract.pdf',
                 compact('lpj', 'terbilang')
             )
                 ->setPaper('a4', 'portrait')
@@ -783,28 +808,86 @@ class LpjContractController extends Controller
     }
 
     // ========================================
+    // EXPORT LIST (excel / pdf)
+    // ========================================
+
+    public function export(Request $request)
+    {
+        try {
+            $query = LpjContract::with(['joContract', 'kasbons', 'items']);
+
+            if ($request->filled('id_jo_cont'))  $query->where('id_jo_cont', $request->id_jo_cont);
+            if ($request->filled('no_lpj_cont')) $query->where('no_lpj_cont', 'like', '%' . $request->no_lpj_cont . '%');
+            if ($request->filled('date_from'))   $query->where('date', '>=', $request->date_from);
+            if ($request->filled('date_to'))     $query->where('date', '<=', $request->date_to);
+
+            $lpjContracts = $query->orderBy('date', 'desc')->get();
+            $format       = $request->get('format', 'excel');
+
+            if ($format === 'pdf') {
+                $filters = [
+                    'no_lpj_cont' => $request->get('no_lpj_cont', ''),
+                    'id_jo_cont'  => $request->get('id_jo_cont', ''),
+                    'date_from'   => $request->get('date_from', ''),
+                    'date_to'     => $request->get('date_to', ''),
+                ];
+
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+                    'data.lpj-contract.export_pdf',
+                    compact('lpjContracts', 'filters')
+                )->setPaper('a4', 'landscape');
+
+                return $pdf->stream('lpj_contract_' . date('Ymd_His') . '.pdf');
+            }
+
+            return (new LpjContractExport($lpjContracts))->download();
+        } catch (\Exception $e) {
+            Log::error('LPJ Contract Export Failed', ['error' => $e->getMessage()]);
+            return back()->with('error', 'Export failed: ' . $e->getMessage());
+        }
+    }
+
+    // ========================================
+    // DESTROY ORPHANED KASBON ITEM
+    // ========================================
+
+    public function destroyOrphanedKasbonItem(Request $request, $kasbonContItemId)
+    {
+        try {
+            DB::beginTransaction();
+
+            $kasbonItem  = KasbonContractItem::findOrFail($kasbonContItemId);
+            $joItemExists = JoContractItem::where('id_jo_cont_item', $kasbonItem->id_jo_cont_item)->exists();
+
+            if ($joItemExists) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This item is not orphaned — its JO item still exists.',
+                ], 422);
+            }
+
+            LpjContractItem::where('id_kasbon_cont_item', $kasbonContItemId)->delete();
+            $kasbonItem->delete();
+
+            DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Orphaned item deleted successfully']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('destroyOrphanedKasbonItem failed', ['id' => $kasbonContItemId, 'error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
     // TERBILANG — Indonesian number-to-words helper
-    // (sama persis dengan KasbonContractController)
     // ========================================
 
     private function toTerbilang(int $number): string
     {
         if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
 
-        $words = [
-            '',
-            'Satu',
-            'Dua',
-            'Tiga',
-            'Empat',
-            'Lima',
-            'Enam',
-            'Tujuh',
-            'Delapan',
-            'Sembilan',
-            'Sepuluh',
-            'Sebelas',
-        ];
+        $words = ['', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima', 'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas'];
 
         if ($number === 0)  return 'Nol';
         if ($number < 12)   return $words[$number];
@@ -829,80 +912,5 @@ class LpjContractController extends Controller
 
         return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun'
             . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
-    }
-
-    // ========================================
-    // DESTROY ORPHANED KASBON ITEM
-    // (kasbon item yang jo_cont_item-nya sudah dihapus)
-    // ========================================
-
-    public function destroyOrphanedKasbonItem(Request $request, $kasbonContItemId)
-    {
-        try {
-            DB::beginTransaction();
-
-            $kasbonItem = KasbonContractItem::findOrFail($kasbonContItemId);
-
-            // Pastikan memang orphaned (jo_cont_item sudah tidak ada)
-            $joItemExists = JoContractItem::where('id_jo_cont_item', $kasbonItem->id_jo_cont_item)->exists();
-            if ($joItemExists) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'This item is not orphaned — its JO item still exists.',
-                ], 422);
-            }
-
-            // Hapus LPJ items yang referencing kasbon item ini
-            LpjContractItem::where('id_kasbon_cont_item', $kasbonContItemId)->delete();
-
-            // Hapus kasbon item
-            $kasbonItem->delete();
-
-            DB::commit();
-
-            return response()->json(['success' => true, 'message' => 'Orphaned item deleted successfully']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('destroyOrphanedKasbonItem failed', ['id' => $kasbonContItemId, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function export(Request $request)
-    {
-        try {
-            $query = LpjContract::with(['joContract', 'kasbons', 'items']);
-
-            if ($request->filled('id_jo_cont'))  $query->where('id_jo_cont', $request->id_jo_cont);
-            if ($request->filled('no_lpj_cont')) $query->where('no_lpj_cont', 'like', '%' . $request->no_lpj_cont . '%');
-            if ($request->filled('date_from'))   $query->where('date', '>=', $request->date_from);
-            if ($request->filled('date_to'))     $query->where('date', '<=', $request->date_to);
-
-            $lpjContracts = $query->orderBy('date', 'desc')->get();
-
-            $format = $request->get('format', 'excel');
-
-            if ($format === 'pdf') {
-                $filters = [
-                    'no_lpj_cont' => $request->get('no_lpj_cont', ''),
-                    'id_jo_cont'  => $request->get('id_jo_cont', ''),
-                    'date_from'   => $request->get('date_from', ''),
-                    'date_to'     => $request->get('date_to', ''),
-                ];
-
-                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
-                    'data.lpj-contract.export_pdf',
-                    compact('lpjContracts', 'filters')
-                )->setPaper('a4', 'landscape');
-
-                return $pdf->stream('lpj_contract_' . date('Ymd_His') . '.pdf');
-            }
-
-            // Default: Excel
-            return (new LpjContractExport($lpjContracts))->download();
-        } catch (\Exception $e) {
-            Log::error('LPJ Contract Export Failed', ['error' => $e->getMessage()]);
-            return back()->with('error', 'Export failed: ' . $e->getMessage());
-        }
     }
 }
