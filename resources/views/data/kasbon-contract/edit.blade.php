@@ -15,8 +15,10 @@
             'nilai_kasbon' => $i['nilai_kasbon'],
             'total_kasbon' => $i['total_kasbon'],
             'has_kasbon' => $i['has_kasbon'],
-            'has_lpj_amount' => $i['has_lpj_amount'], // ← TAMBAH
+            'has_lpj_amount' => $i['has_lpj_amount'],
             'origin_lpj_cont' => $i['origin_lpj_cont'] ?? null,
+            'total_paid_other_kasbons' => $i['total_paid_other_kasbons'], // ← BARU
+            'max_allowed' => $i['max_allowed'], // ← BARU
         ],
     );
 @endphp
@@ -913,10 +915,29 @@
                                             <div class="info-value" id="infoHargaJual">—</div>
                                         </div>
                                     </div>
+                                    <!-- BARU -->
                                     <div class="col-md-6">
                                         <div class="info-field">
-                                            <div class="info-label">Total CA / HPP (IDR)</div>
-                                            <div class="info-value" id="infoTotalKasbon">—</div>
+                                            <div class="info-label">HPP (IDR)</div>
+                                            <div class="info-value" id="infoHpp">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-field">
+                                            <div class="info-label">Paid in Other CAs (IDR)</div>
+                                            <div class="info-value" id="infoPaidOther" style="color:#d97706;">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-field">
+                                            <div class="info-label">Max Allowed for This CA (IDR)</div>
+                                            <div class="info-value" id="infoMaxAllowed" style="color:#059669;">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-field">
+                                            <div class="info-label">Already in This CA (IDR)</div>
+                                            <div class="info-value" id="infoCurrentKasbon">—</div>
                                         </div>
                                     </div>
                                 </div>
@@ -948,6 +969,7 @@
                                 <input type="hidden" id="activeJoContItemId" value="">
                                 <input type="hidden" id="activeRowIndex" value="">
                                 <input type="hidden" id="activeHppValue" value="0">
+                                <input type="hidden" id="activeMaxAllowed" value="0"> <!-- ← BARU -->
                             </div>
 
                             {{-- ===== TABLE ===== --}}
@@ -1295,44 +1317,6 @@
         }
     </style>
 
-    {{-- ===== CONFLICT WARNING MODAL HTML ===== --}}
-    <div class="conflict-modal-overlay" id="conflictModal">
-        <div class="conflict-modal-box">
-            <div class="conflict-modal-header">
-                <div class="icon-wrap">
-                    <i class="fas fa-triangle-exclamation"></i>
-                </div>
-                <div class="title-wrap">
-                    <h5>Item Already Filled in Another Cash Advance</h5>
-                    <p>This item has an existing CA amount in a different Cash Advance record.</p>
-                </div>
-            </div>
-            <div class="conflict-modal-body">
-                <div class="conflict-detail-card">
-                    <div class="label">Existing Cash Advance</div>
-                    <div class="kasbon-no" id="conflictKasbonNo">—</div>
-                    <div class="amount" id="conflictAmount">—</div>
-                </div>
-                <div class="conflict-warning-text">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <span>
-                        If you proceed, the CA amount in Cash Advance
-                        <strong id="conflictKasbonNoInline">—</strong>
-                        will be <strong>removed and replaced</strong> with the new amount you entered.
-                    </span>
-                </div>
-            </div>
-            <div class="conflict-modal-footer">
-                <button type="button" class="btn btn-conflict-cancel" id="conflictModalCancel">
-                    <i class="fas fa-times me-1"></i> Cancel
-                </button>
-                <button type="button" class="btn btn-conflict-proceed" id="conflictModalProceed">
-                    <i class="fas fa-check me-1"></i> Yes, Replace It
-                </button>
-            </div>
-        </div>
-    </div>
-
     <script>
         // ══════════════════════════════════════════════════════════
         // CONSTANTS
@@ -1341,14 +1325,11 @@
         const currentKasbonContStr = '{{ $kasbonContract->id_kasbon_cont }}';
         const originalIdJoCont = '{{ $kasbonContract->id_jo_cont }}';
         const bulkSaveUrl = '{{ route('kasbon-contract.items.bulk-save', $kasbonContract->id) }}';
-        const checkConflictUrl = '{{ route('kasbon-contract.item.check-conflict') }}';
-        const clearConflictUrl = '{{ route('kasbon-contract.item.clear-conflict') }}';
         const updateHeaderUrl = '/kasbon-contract/header/update/{{ $kasbonContract->id }}';
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
         let mergedItems = @json($mergedItemsJs);
         let confirmCallback = null;
-        let conflictProceedCb = null;
         let joItemsCache = [];
 
         // ══════════════════════════════════════════════════════════
@@ -1529,20 +1510,31 @@
 
         function validateCaInput() {
             const ca = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
+            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
             const $input = $('#inputNilaiKasbon');
             const $hint = $('#caValidationHint');
 
-            if (ca <= 0 || hpp <= 0) {
+            if (ca <= 0) {
                 $input.removeClass('input-invalid input-valid');
                 setHint($hint, null, '', '');
                 return;
             }
-            if (ca > hpp) {
+            if (maxAllowed <= 0) {
                 setHint($hint, $input,
-                    `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
+                    `⚠ HPP for this item is fully covered by other Cash Advances. Cannot add more.`, 'danger');
+                return;
+            }
+            if (ca > maxAllowed) {
+                setHint($hint, $input,
+                    `⚠ Exceeds remaining budget. Max allowed for this CA: IDR ${formatNumber(maxAllowed)}.`, 'danger');
             } else {
-                setHint($hint, $input, '', '');
+                const remaining = maxAllowed - ca;
+                if (remaining > 0) {
+                    setHint($hint, $input,
+                        `✓ Remaining budget after this CA: IDR ${formatNumber(remaining)}`, 'ok');
+                } else {
+                    setHint($hint, $input, '✓ Fully covers the remaining budget.', 'ok');
+                }
             }
         }
 
@@ -1669,15 +1661,28 @@
         // ══════════════════════════════════════════════════════════
         // OPEN EDIT ITEM
         // ══════════════════════════════════════════════════════════
+        // BARU
         function openEditItem(index) {
             const item = mergedItems[index];
 
             $('#infoInvoiceTyp').text(item.invoice_typ);
             $('#infoInvoiceCtg').text(item.invoice_ctg);
             $('#infoHargaJual').text(formatNumber(item.hargajual_idr));
-            $('#infoTotalKasbon').text(formatNumber(item.hpp_ops));
+            $('#infoHpp').text(formatNumber(item.hpp_ops));
+            $('#infoPaidOther').text(
+                item.total_paid_other_kasbons > 0 ?
+                formatNumber(item.total_paid_other_kasbons) :
+                '0,00'
+            );
+            $('#infoMaxAllowed').text(formatNumber(item.max_allowed));
+            $('#infoCurrentKasbon').text(
+                item.has_kasbon && item.nilai_kasbon > 0 ?
+                formatNumber(item.nilai_kasbon) :
+                '0,00'
+            );
 
             $('#activeHppValue').val(item.hpp_ops || 0);
+            $('#activeMaxAllowed').val(item.max_allowed || 0); // ← BARU
             $('#activeJoContItemId').val(item.id_jo_cont_item);
             $('#activeRowIndex').val(index);
 
@@ -1687,8 +1692,17 @@
                 $('#inputNilaiKasbon').val('');
             }
 
-            resetCaValidation();
-            validateCaInput();
+            // Disable input jika sudah tidak ada budget tersisa (dari kasbon lain)
+            const noRemainingBudget = item.max_allowed <= 0;
+            $('#inputNilaiKasbon').prop('disabled', noRemainingBudget);
+            $('#btnSaveItemInput').prop('disabled', noRemainingBudget);
+            if (noRemainingBudget) {
+                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
+                    '⚠ HPP fully covered by other Cash Advances.', 'danger');
+            } else {
+                resetCaValidation();
+                validateCaInput();
+            }
 
             $('.item-row').removeClass('tr-active');
             $(`#row_${index}`).addClass('tr-active');
@@ -1697,7 +1711,7 @@
             $('html, body').animate({
                 scrollTop: $('#inputItemCard').offset().top - 120
             }, 400);
-            setTimeout(() => $('#inputNilaiKasbon').focus(), 450);
+            if (!noRemainingBudget) setTimeout(() => $('#inputNilaiKasbon').focus(), 450);
         }
 
         $('#btnCancelItemInput').on('click', closeInputCard);
@@ -1716,7 +1730,6 @@
         // ══════════════════════════════════════════════════════════
         // SAVE ITEM — CORE (dipanggil setelah conflict check lolos)
         // ══════════════════════════════════════════════════════════
-        // ── Inti simpan ke DB (dipanggil setelah conflict dibereskan) ──
         function doSaveItem(joContItemId, rowIndex, nilaiKasbon) {
             $.ajax({
                 url: bulkSaveUrl,
@@ -1736,8 +1749,14 @@
                     $('#btnSaveItemInput').prop('disabled', false);
                     if (response.success) {
                         showFloatingAlert('success', 'CA Amount saved successfully!');
+
+                        // Update local data
+                        const oldVal = mergedItems[rowIndex].nilai_kasbon || 0;
                         mergedItems[rowIndex].nilai_kasbon = nilaiKasbon;
                         mergedItems[rowIndex].has_kasbon = true;
+                        // max_allowed tidak berubah (hanya berubah jika kasbon LAIN berubah)
+                        // Tapi update total_paid_other tidak diperlukan di sisi ini
+
                         refreshRowAfterSave(rowIndex, nilaiKasbon, true);
                         updateFooter();
                         closeInputCard();
@@ -1747,44 +1766,13 @@
                 },
                 error: function(xhr) {
                     $('#btnSaveItemInput').prop('disabled', false);
-                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to save item');
+                    const msg = xhr.responseJSON?.message || 'Failed to save item';
+                    showFloatingAlert('error', msg);
                 }
             });
         }
 
-        // ── Eksekusi save: jika ada conflict, clear dulu lalu save ──
-        function executeSaveItem(joContItemId, rowIndex, nilaiKasbon, hasConflict) {
-            showFloatingAlert('saving', hasConflict ? 'Removing previous CA amount...' : 'Saving...');
 
-            if (hasConflict) {
-                $.ajax({
-                    url: clearConflictUrl,
-                    method: 'POST',
-                    data: {
-                        id_jo_cont_item: joContItemId,
-                        id_kasbon_cont: currentKasbonContStr,
-                        _token: csrfToken
-                    },
-                    success: function(res) {
-                        if (res.success) {
-                            showFloatingAlert('saving', 'Saving new CA amount...');
-                            doSaveItem(joContItemId, rowIndex, nilaiKasbon);
-                        } else {
-                            $('#btnSaveItemInput').prop('disabled', false);
-                            showFloatingAlert('error', 'Failed to clear previous CA amount: ' + (res.message ||
-                                ''));
-                        }
-                    },
-                    error: function(xhr) {
-                        // Tetap lanjut simpan walau clear gagal
-                        showFloatingAlert('saving', 'Saving...');
-                        doSaveItem(joContItemId, rowIndex, nilaiKasbon);
-                    }
-                });
-            } else {
-                doSaveItem(joContItemId, rowIndex, nilaiKasbon);
-            }
-        }
 
         // ══════════════════════════════════════════════════════════
         // SAVE ITEM — MAIN (dengan conflict check)
@@ -1793,9 +1781,8 @@
             const joContItemId = $('#activeJoContItemId').val();
             const rowIndex = parseInt($('#activeRowIndex').val());
             const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
+            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
 
-            // ── Validasi lokal ──
             if (!joContItemId) {
                 showFloatingAlert('error', 'No item selected');
                 return;
@@ -1804,44 +1791,15 @@
                 showFloatingAlert('error', 'Please enter a CA Amount');
                 return;
             }
-            if (hpp > 0 && nilaiKasbon > hpp) {
+            if (nilaiKasbon > maxAllowed) {
                 showFloatingAlert('error',
-                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
-                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
-                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                    `CA Amount exceeds remaining budget. Max: IDR ${formatNumber(maxAllowed)}`);
                 return;
             }
 
             $('#btnSaveItemInput').prop('disabled', true);
-
-            // ── Cek konflik di kasbon lain ──
-            $.ajax({
-                url: checkConflictUrl,
-                method: 'GET',
-                data: {
-                    id_jo_cont_item: joContItemId,
-                    id_kasbon_cont: currentKasbonContStr
-                },
-                success: function(res) {
-                    if (res.success && res.has_conflict) {
-                        // Ada conflict — tampilkan modal, pass hasConflict=true saat proceed
-                        showConflictModal(
-                            res.conflict.id_kasbon_cont,
-                            res.conflict.nilai_kasbon,
-                            function() {
-                                executeSaveItem(joContItemId, rowIndex, nilaiKasbon, true);
-                            }
-                        );
-                    } else {
-                        // Tidak ada conflict — langsung simpan
-                        executeSaveItem(joContItemId, rowIndex, nilaiKasbon, false);
-                    }
-                },
-                error: function() {
-                    // Check gagal — tetap simpan tanpa clear
-                    executeSaveItem(joContItemId, rowIndex, nilaiKasbon, false);
-                }
-            });
+            showFloatingAlert('saving', 'Saving...');
+            doSaveItem(joContItemId, rowIndex, nilaiKasbon);
         }
 
         // Bind tombol & Enter

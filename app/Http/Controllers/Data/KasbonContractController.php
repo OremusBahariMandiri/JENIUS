@@ -108,9 +108,9 @@ class KasbonContractController extends Controller
         $joContracts = JoContract::with(['contract', 'area'])
             ->orderBy('no_jo_cont')
             ->get();
-        $departemens = Departemen::orderBy('nama_dep')->get();
-        $cabangs     = Branch::orderBy('nama_branch')->get();
-        $releases    = ReleaseTo::orderBy('id_md_release')->get();
+        $departemens     = Departemen::orderBy('nama_dep')->get();
+        $cabangs         = Branch::orderBy('nama_branch')->get();
+        $releases        = ReleaseTo::orderBy('id_md_release')->get();
         $previewNoKasbon = IdGenerator::generateCaNo('c01_kasbon_cont', 'id_kasbon_cont');
 
         return view('data.kasbon-contract.create', compact(
@@ -132,17 +132,17 @@ class KasbonContractController extends Controller
 
         try {
             $validator = Validator::make($request->all(), [
-                'id_jo_cont'       => 'required|exists:b01_jo_cont,id_jo_cont',
-                'id_md_dep'        => 'required|exists:a08_md_dep,id_md_dep',
-                'id_md_cabang'     => 'required|exists:a09_md_branch,id_md_branch',
-                'id_md_release'    => 'required|exists:a10_md_release_to,id_md_release',
-                'tgl_kasbon'       => 'required|date',
-                'tgl_release'      => 'nullable|date',
-                'note'             => 'nullable|string',
-                'priority'         => 'required|in:high,normal',
-                'due_date'         => 'nullable|date_format:Y-m-d\TH:i',
+                'id_jo_cont'        => 'required|exists:b01_jo_cont,id_jo_cont',
+                'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
+                'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
+                'tgl_kasbon'        => 'required|date',
+                'tgl_release'       => 'nullable|date',
+                'note'              => 'nullable|string',
+                'priority'          => 'required|in:high,normal',
+                'due_date'          => 'nullable|date_format:Y-m-d\TH:i',
                 'ca_release_status' => 'nullable|in:pending,release',
-                'ca_release_date'  => 'nullable|date',
+                'ca_release_date'   => 'nullable|date',
             ], [
                 'id_jo_cont.required'    => 'Job Order is required',
                 'id_jo_cont.exists'      => 'Selected Job Order does not exist',
@@ -164,7 +164,6 @@ class KasbonContractController extends Controller
 
             DB::beginTransaction();
 
-            // Samakan dengan JoContract: pakai generateDocNo
             $idKasbonCont = IdGenerator::generateCaNo('c01_kasbon_cont', 'id_kasbon_cont');
 
             $lastKasbon = KasbonContract::orderBy('id', 'desc')->first();
@@ -268,8 +267,7 @@ class KasbonContractController extends Controller
 
             DB::beginTransaction();
 
-            $kasbonContract = KasbonContract::findOrFail($id);
-
+            $kasbonContract  = KasbonContract::findOrFail($id);
             $caReleaseStatus = $request->ca_release_status ?: 'pending';
 
             $kasbonContract->update([
@@ -339,20 +337,37 @@ class KasbonContractController extends Controller
             DB::beginTransaction();
 
             try {
-                // Generate ID dengan locking untuk mencegah race condition
-                $maxId = DB::table('c02_kasbon_cont_item')
+                $maxId               = DB::table('c02_kasbon_cont_item')
                     ->lockForUpdate()
                     ->selectRaw('MAX(CAST(id_kasbon_cont_item AS UNSIGNED)) as max_id')
                     ->value('max_id');
                 $newIdKasbonContItem = (string)(((int) $maxId) + 1);
 
-                // Ambil nilai HPP dari JO Contract Item
-                $joContItem = JoContractItem::find($request->id_jo_cont_item);
-                $nilaiHpp   = $joContItem ? (float)$joContItem->hpp_ops : 0;
+                $joContItem  = JoContractItem::find($request->id_jo_cont_item);
+                $nilaiHpp    = $joContItem ? (float)$joContItem->hpp_ops : 0;
+                $nilaiKasbon = (float)$request->nilai_kasbon;
 
-                $nilaiKasbon  = (float)$request->nilai_kasbon;
+                // ── Validasi budget: total semua kasbon untuk item ini ≤ HPP ──
+                $totalPaidOther = KasbonContractItem::where('id_jo_cont_item', $request->id_jo_cont_item)
+                    ->where('id_kasbon_cont', '!=', $request->id_kasbon_cont)
+                    ->whereNull('deleted_at')
+                    ->sum('nilai_kasbon');
 
-                // Total kasbon: nilai HPP dikurangi nilai kasbon (advance)
+                $maxAllowed = $nilaiHpp - (float)$totalPaidOther;
+
+                if ($nilaiKasbon > $maxAllowed) {
+                    DB::rollBack();
+                    $invoiceTyp = $joContItem?->invoice?->invoice_typ ?? $request->id_jo_cont_item;
+                    return response()->json([
+                        'success'          => false,
+                        'message'          => "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                            . "Paid in other CAs: IDR " . number_format((float)$totalPaidOther, 2, ',', '.')
+                            . ". Max allowed: IDR " . number_format($maxAllowed, 2, ',', '.'),
+                        'max_allowed'      => $maxAllowed,
+                        'total_paid_other' => (float)$totalPaidOther,
+                    ], 422);
+                }
+
                 $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
                 $item = KasbonContractItem::create([
@@ -442,13 +457,32 @@ class KasbonContractController extends Controller
 
             DB::beginTransaction();
 
-            $item = KasbonContractItem::findOrFail($id);
-
-            // Ambil nilai HPP dari JO Contract Item (bisa saja berubah)
+            $item       = KasbonContractItem::findOrFail($id);
             $joContItem = JoContractItem::find($request->id_jo_cont_item);
             $nilaiHpp   = $joContItem ? (float)$joContItem->hpp_ops : (float)$item->nilai_hpp_cont_item;
 
             $nilaiKasbon = (float)$request->nilai_kasbon;
+
+            // ── Validasi budget ──
+            $totalPaidOther = KasbonContractItem::where('id_jo_cont_item', $request->id_jo_cont_item)
+                ->where('id_kasbon_cont', '!=', $item->id_kasbon_cont)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            $maxAllowed = $nilaiHpp - (float)$totalPaidOther;
+
+            if ($nilaiKasbon > $maxAllowed) {
+                DB::rollBack();
+                $invoiceTyp = $joContItem?->invoice?->invoice_typ ?? $request->id_jo_cont_item;
+                return response()->json([
+                    'success'          => false,
+                    'message'          => "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                        . "Max allowed: IDR " . number_format($maxAllowed, 2, ',', '.'),
+                    'max_allowed'      => $maxAllowed,
+                    'total_paid_other' => (float)$totalPaidOther,
+                ], 422);
+            }
+
             $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
             $item->update([
@@ -457,7 +491,6 @@ class KasbonContractController extends Controller
                 'nilai_kasbon'        => $nilaiKasbon,
                 'total_kasbon'        => $totalKasbon,
             ]);
-
 
             $item->refresh();
             $item->load('joContractItem');
@@ -660,19 +693,36 @@ class KasbonContractController extends Controller
                 'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
-            foreach ($request->items as $index => $itemData) {
-                $joContItem = JoContractItem::find($itemData['id_jo_cont_item']);
-                $nilaiHpp   = $joContItem ? (float)$joContItem->hpp_ops : 0;
-
+            foreach ($request->items as $itemData) {
+                $joContItem  = JoContractItem::find($itemData['id_jo_cont_item']);
+                $nilaiHpp    = $joContItem ? (float)$joContItem->hpp_ops : 0;
                 $nilaiKasbon = (float)$itemData['nilai_kasbon'];
-                $totalKasbon = $nilaiHpp - $nilaiKasbon;
+
+                // ── Validasi budget ──
+                $totalPaidOther = KasbonContractItem::where('id_jo_cont_item', $itemData['id_jo_cont_item'])
+                    ->where('id_kasbon_cont', '!=', $idKasbonCont)
+                    ->whereNull('deleted_at')
+                    ->sum('nilai_kasbon');
+
+                $maxAllowed = $nilaiHpp - (float)$totalPaidOther;
+
+                if ($nilaiKasbon > $maxAllowed) {
+                    DB::rollBack();
+                    $invoiceTyp = $joContItem?->invoice?->invoice_typ ?? $itemData['id_jo_cont_item'];
+                    $msg        = "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                        . "Max allowed: IDR " . number_format($maxAllowed, 2, ',', '.');
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => $msg], 422);
+                    }
+                    return back()->withInput()->with('error', $msg);
+                }
 
                 KasbonContractItem::create([
                     'id_kasbon_cont'      => $idKasbonCont,
                     'id_jo_cont_item'     => $itemData['id_jo_cont_item'],
                     'nilai_hpp_cont_item' => $nilaiHpp,
                     'nilai_kasbon'        => $nilaiKasbon,
-                    'total_kasbon'        => $totalKasbon,
+                    'total_kasbon'        => $nilaiHpp - $nilaiKasbon,
                 ]);
             }
 
@@ -773,7 +823,6 @@ class KasbonContractController extends Controller
             ->with('invoice')
             ->get();
 
-        // Map: gabungkan jo_cont_item dengan kasbon_item yang sudah ada
         $mergedItems = $joContractItems->map(function ($joItem) use ($kasbonContract) {
             $kasbonItem = $kasbonContract->items
                 ->firstWhere('id_jo_cont_item', $joItem->id_jo_cont_item);
@@ -786,19 +835,32 @@ class KasbonContractController extends Controller
                     ->exists();
             }
 
+            $hpp = (float) $joItem->hpp_ops;
+
+            // ── Total yang sudah dibayar di kasbon LAIN untuk item ini ──
+            $totalPaidOther = (float) KasbonContractItem::where('id_jo_cont_item', $joItem->id_jo_cont_item)
+                ->where('id_kasbon_cont', '!=', $kasbonContract->id_kasbon_cont)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            // ── Sisa yang boleh diisi di kasbon INI ──
+            $maxAllowed = max(0.0, $hpp - $totalPaidOther);
+
             return [
-                'id_jo_cont_item'     => $joItem->id_jo_cont_item,
-                'invoice_typ'         => $joItem->invoice->invoice_typ ?? $joItem->id_jo_cont_item,
-                'invoice_ctg'         => $joItem->invoice->invoice_ctg ?? '-',
-                'hargajual_idr'       => (float) $joItem->hargajual_idr,
-                'hpp_ops'             => (float) $joItem->hpp_ops,
-                'id_kasbon_cont_item' => $kasbonItem?->id_kasbon_cont_item ?? null,  // ← pakai id_kasbon_cont_item bukan id
-                'nilai_hpp_cont_item' => $kasbonItem ? (float) $kasbonItem->nilai_hpp_cont_item : (float) $joItem->hpp_ops,
-                'nilai_kasbon'        => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
-                'total_kasbon'        => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
-                'has_kasbon'          => $kasbonItem !== null && $kasbonItem->nilai_kasbon > 0,
-                'has_lpj_amount'      => $hasLpjAmount,   // ← TAMBAH
-                'origin_lpj_cont'     => $joItem->origin_lpj_cont ?? null,
+                'id_jo_cont_item'          => $joItem->id_jo_cont_item,
+                'invoice_typ'              => $joItem->invoice->invoice_typ ?? $joItem->id_jo_cont_item,
+                'invoice_ctg'              => $joItem->invoice->invoice_ctg ?? '-',
+                'hargajual_idr'            => (float) $joItem->hargajual_idr,
+                'hpp_ops'                  => $hpp,
+                'id_kasbon_cont_item'      => $kasbonItem?->id_kasbon_cont_item ?? null,
+                'nilai_hpp_cont_item'      => $kasbonItem ? (float) $kasbonItem->nilai_hpp_cont_item : $hpp,
+                'nilai_kasbon'             => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
+                'total_kasbon'             => $kasbonItem ? (float) $kasbonItem->total_kasbon : $hpp,
+                'has_kasbon'               => $kasbonItem !== null && $kasbonItem->nilai_kasbon > 0,
+                'has_lpj_amount'           => $hasLpjAmount,
+                'origin_lpj_cont'          => $joItem->origin_lpj_cont ?? null,
+                'total_paid_other_kasbons' => $totalPaidOther,
+                'max_allowed'              => $maxAllowed,
             ];
         });
 
@@ -866,25 +928,42 @@ class KasbonContractController extends Controller
                 'ca_release_date'   => $caReleaseStatus === 'release' ? $request->ca_release_date : null,
             ]);
 
-            // Hapus item lama (soft delete)
+            // Hapus item lama
             foreach ($kasbonContract->items as $oldItem) {
                 $oldItem->delete();
             }
 
             // Buat item baru
             foreach ($request->items as $itemData) {
-                $joContItem = JoContractItem::find($itemData['id_jo_cont_item']);
-                $nilaiHpp   = $joContItem ? (float)$joContItem->hpp_ops : 0;
-
+                $joContItem  = JoContractItem::find($itemData['id_jo_cont_item']);
+                $nilaiHpp    = $joContItem ? (float)$joContItem->hpp_ops : 0;
                 $nilaiKasbon = (float)$itemData['nilai_kasbon'];
-                $totalKasbon = $nilaiHpp - $nilaiKasbon;
+
+                // ── Validasi budget ──
+                $totalPaidOther = KasbonContractItem::where('id_jo_cont_item', $itemData['id_jo_cont_item'])
+                    ->where('id_kasbon_cont', '!=', $kasbonContract->id_kasbon_cont)
+                    ->whereNull('deleted_at')
+                    ->sum('nilai_kasbon');
+
+                $maxAllowed = $nilaiHpp - (float)$totalPaidOther;
+
+                if ($nilaiKasbon > $maxAllowed) {
+                    DB::rollBack();
+                    $invoiceTyp = $joContItem?->invoice?->invoice_typ ?? $itemData['id_jo_cont_item'];
+                    $msg        = "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                        . "Max allowed: IDR " . number_format($maxAllowed, 2, ',', '.');
+                    if ($request->expectsJson()) {
+                        return response()->json(['success' => false, 'message' => $msg], 422);
+                    }
+                    return back()->withInput()->with('error', $msg);
+                }
 
                 KasbonContractItem::create([
                     'id_kasbon_cont'      => $kasbonContract->id_kasbon_cont,
                     'id_jo_cont_item'     => $itemData['id_jo_cont_item'],
                     'nilai_hpp_cont_item' => $nilaiHpp,
                     'nilai_kasbon'        => $nilaiKasbon,
-                    'total_kasbon'        => $totalKasbon,
+                    'total_kasbon'        => $nilaiHpp - $nilaiKasbon,
                 ]);
             }
 
@@ -930,14 +1009,13 @@ class KasbonContractController extends Controller
         try {
             $kasbonContract = KasbonContract::findOrFail($id);
 
-            // ── Cek apakah kasbon ini sudah dipakai di LPJ ──────────────
+            // ── Cek apakah kasbon ini sudah dipakai di LPJ ──
             $usedInLpj = \App\Models\Data\LpjKasbon::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
                 ->exists();
 
             if ($usedInLpj) {
                 DB::rollBack();
 
-                // Ambil nomor LPJ yang memakai kasbon ini untuk pesan yang lebih informatif
                 $lpjNumbers = \App\Models\Data\LpjKasbon::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
                     ->with('lpjContract:id,id_lpj_cont,no_lpj_cont')
                     ->get()
@@ -955,7 +1033,7 @@ class KasbonContractController extends Controller
                 return back()->with('error', $message);
             }
 
-            // ── Cek apakah ada kasbon item yang origin-nya dari LPJ ─────
+            // ── Cek apakah ada kasbon item yang origin-nya dari LPJ ──
             $hasLpjOriginItems = $kasbonContract->items()
                 ->whereNotNull('origin_lpj_cont')
                 ->exists();
@@ -972,7 +1050,7 @@ class KasbonContractController extends Controller
                 return back()->with('error', $message);
             }
 
-            // ── Aman untuk dihapus ───────────────────────────────────────
+            // ── Aman untuk dihapus ──
             $itemsCount = $kasbonContract->items()->count();
 
             foreach ($kasbonContract->items as $item) {
@@ -1096,6 +1174,58 @@ class KasbonContractController extends Controller
     }
 
     // ========================================
+    // GET JO ITEM BUDGET INFO (API — untuk edit page)
+    // Mengembalikan sisa budget suatu JO item untuk kasbon tertentu
+    // ========================================
+
+    public function getJoItemBudget(Request $request)
+    {
+        try {
+            $idJoContItem = $request->get('id_jo_cont_item');
+            $idKasbonCont = $request->get('id_kasbon_cont'); // kasbon yang sedang diedit
+
+            if (!$idJoContItem) {
+                return response()->json(['success' => false, 'message' => 'id_jo_cont_item is required'], 422);
+            }
+
+            $joContItem = JoContractItem::with('invoice')->find($idJoContItem);
+            if (!$joContItem) {
+                return response()->json(['success' => false, 'message' => 'JO Contract Item not found'], 404);
+            }
+
+            $hpp = (float) $joContItem->hpp_ops;
+
+            // Total sudah dibayar di kasbon LAIN
+            $totalPaidOther = (float) KasbonContractItem::where('id_jo_cont_item', $idJoContItem)
+                ->when($idKasbonCont, fn($q) => $q->where('id_kasbon_cont', '!=', $idKasbonCont))
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            // Nilai kasbon di kasbon INI (jika ada)
+            $currentKasbonItem = $idKasbonCont
+                ? KasbonContractItem::where('id_jo_cont_item', $idJoContItem)
+                    ->where('id_kasbon_cont', $idKasbonCont)
+                    ->whereNull('deleted_at')
+                    ->first()
+                : null;
+
+            $nilaiKasbonThis = $currentKasbonItem ? (float) $currentKasbonItem->nilai_kasbon : 0;
+            $maxAllowed      = max(0.0, $hpp - $totalPaidOther);
+
+            return response()->json([
+                'success'          => true,
+                'hpp'              => $hpp,
+                'total_paid_other' => $totalPaidOther,
+                'nilai_kasbon_this'=> $nilaiKasbonThis,
+                'max_allowed'      => $maxAllowed,
+                'invoice_typ'      => $joContItem->invoice?->invoice_typ ?? $idJoContItem,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
     // BULK DELETE
     // ========================================
 
@@ -1130,6 +1260,12 @@ class KasbonContractController extends Controller
         }
     }
 
+    // ========================================
+    // BULK SAVE ITEMS
+    // Mendukung cicilan bertahap:
+    // Total nilai_kasbon semua kasbon untuk 1 item ≤ HPP item tersebut
+    // ========================================
+
     public function bulkSaveItems(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
@@ -1161,7 +1297,31 @@ class KasbonContractController extends Controller
                     ->where('id_jo_cont_item', $itemData['id_jo_cont_item'])
                     ->first();
 
-                // ── Cek LPJ sebelum clear (nilai_kasbon = 0) ──
+                // ── Validasi budget kumulatif ──
+                // Total yg sudah dibayar di kasbon LAIN untuk item ini
+                $totalPaidOther = (float) KasbonContractItem::where('id_jo_cont_item', $itemData['id_jo_cont_item'])
+                    ->where('id_kasbon_cont', '!=', $kasbonContract->id_kasbon_cont)
+                    ->whereNull('deleted_at')
+                    ->sum('nilai_kasbon');
+
+                $maxAllowed = $nilaiHpp - $totalPaidOther;
+
+                if ($nilaiKasbon > 0 && $nilaiKasbon > $maxAllowed) {
+                    DB::rollBack();
+
+                    $invoiceTyp = $joContItem?->invoice?->invoice_typ ?? $itemData['id_jo_cont_item'];
+
+                    return response()->json([
+                        'success'          => false,
+                        'message'          => "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                            . "Paid in other CAs: IDR " . number_format($totalPaidOther, 2, ',', '.')
+                            . ". Max allowed for this CA: IDR " . number_format($maxAllowed, 2, ',', '.'),
+                        'max_allowed'      => $maxAllowed,
+                        'total_paid_other' => $totalPaidOther,
+                    ], 422);
+                }
+
+                // ── Blokir clear jika item masih dipakai LPJ ──
                 if ($nilaiKasbon == 0 && $existing) {
                     $lpjCount = \App\Models\Data\LpjContractItem::where(
                         'id_kasbon_cont_item',
@@ -1173,8 +1333,7 @@ class KasbonContractController extends Controller
                     if ($lpjCount > 0) {
                         DB::rollBack();
 
-                        $invoiceTyp = $joContItem?->invoice?->invoice_typ
-                            ?? $itemData['id_jo_cont_item'];
+                        $invoiceTyp = $joContItem?->invoice?->invoice_typ ?? $itemData['id_jo_cont_item'];
 
                         return response()->json([
                             'success' => false,
@@ -1209,7 +1368,7 @@ class KasbonContractController extends Controller
                 }
             }
 
-            // ── Recalculate LpjContract.amount untuk semua LPJ yang terhubung ke kasbon ini ──
+            // ── Recalculate LpjContract.amount untuk semua LPJ yang terhubung ──
             $lpjLinks = \App\Models\Data\LpjKasbon::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)->get();
             foreach ($lpjLinks as $lpjLink) {
                 $lpj = \App\Models\Data\LpjContract::with('kasbons')
@@ -1245,20 +1404,22 @@ class KasbonContractController extends Controller
         }
     }
 
+    // ========================================
+    // EXPORT PDF (single record)
+    // ========================================
+
     public function exportPdf($id)
     {
         try {
             $kasbonContract = KasbonContract::with([
                 'joContract.area',
-                'joContract.items.invoice',   // seluruh JO items (sumber baris tabel)
+                'joContract.items.invoice',
                 'departemen',
                 'cabang',
                 'release',
-                'items',                      // kasbon items (lookup nilai_kasbon)
+                'items',
             ])->findOrFail($id);
 
-            // Hitung total CA persis seperti footerTotalCA di edit view:
-            // iterasi joContract->items, join ke kasbonLookup by id_jo_cont_item
             $kasbonLookup = $kasbonContract->items->keyBy('id_jo_cont_item');
             $joItems      = $kasbonContract->joContract
                 ? $kasbonContract->joContract->items
@@ -1272,7 +1433,7 @@ class KasbonContractController extends Controller
             $terbilang = $this->toTerbilang((int) round($totalCA)) . ' Rupiah';
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
-                'data.kasbon-contract.pdf',   // resources/views/data/kasbon-contract/pdf.blade.php
+                'data.kasbon-contract.pdf',
                 compact('kasbonContract', 'terbilang')
             )
                 ->setPaper('a4', 'portrait')
@@ -1302,52 +1463,9 @@ class KasbonContractController extends Controller
         }
     }
 
-    /**
-     * Simple Indonesian number-to-words (terbilang) helper.
-     */
-    private function toTerbilang(int $number): string
-    {
-        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
-
-        $words = [
-            '',
-            'Satu',
-            'Dua',
-            'Tiga',
-            'Empat',
-            'Lima',
-            'Enam',
-            'Tujuh',
-            'Delapan',
-            'Sembilan',
-            'Sepuluh',
-            'Sebelas',
-        ];
-
-        if ($number === 0)  return 'Nol';
-        if ($number < 12)   return $words[$number];
-        if ($number < 20)   return $this->toTerbilang($number - 10) . ' Belas';
-        if ($number < 100)  return $words[(int) ($number / 10)] . ' Puluh'
-            . ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
-        if ($number < 200)  return 'Seratus'
-            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
-        if ($number < 1000) return $words[(int) ($number / 100)] . ' Ratus'
-            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
-        if ($number < 2000) return 'Seribu'
-            . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
-        if ($number < 1_000_000)
-            return $this->toTerbilang((int) ($number / 1000)) . ' Ribu'
-                . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
-        if ($number < 1_000_000_000)
-            return $this->toTerbilang((int) ($number / 1_000_000)) . ' Juta'
-                . ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
-        if ($number < 1_000_000_000_000)
-            return $this->toTerbilang((int) ($number / 1_000_000_000)) . ' Miliar'
-                . ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
-
-        return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun'
-            . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
-    }
+    // ========================================
+    // EXPORT (list — Excel / PDF)
+    // ========================================
 
     public function export(Request $request)
     {
@@ -1379,6 +1497,10 @@ class KasbonContractController extends Controller
 
         return (new \App\Exports\Data\KasbonContractExport($kasbonContracts))->download();
     }
+
+    // ========================================
+    // PRIVATE HELPERS
+    // ========================================
 
     private function buildExportQuery(Request $request)
     {
@@ -1415,85 +1537,6 @@ class KasbonContractController extends Controller
         return $filters;
     }
 
-    // ========================================
-    // CHECK ITEM CONFLICT (dipakai sebelum bulk save)
-    // ========================================
-    public function checkItemConflict(Request $request)
-    {
-        try {
-            $idJoContItem = $request->get('id_jo_cont_item');
-            $idKasbonCont = $request->get('id_kasbon_cont'); // kasbon yang sedang diedit (exclude ini)
-
-            if (!$idJoContItem) {
-                return response()->json(['success' => false, 'message' => 'id_jo_cont_item is required'], 422);
-            }
-
-            // Cari kasbon item lain yang punya jo_cont_item ini,
-            // bukan dari kasbon yang sedang diedit, dan nilai_kasbon > 0
-            $conflict = KasbonContractItem::where('id_jo_cont_item', $idJoContItem)
-                ->where('id_kasbon_cont', '!=', $idKasbonCont)
-                ->where('nilai_kasbon', '>', 0)
-                ->whereNull('deleted_at')
-                ->with('kasbonContract')
-                ->first();
-
-            if ($conflict) {
-                return response()->json([
-                    'success'      => true,
-                    'has_conflict' => true,
-                    'conflict'     => [
-                        'id_kasbon_cont'      => $conflict->id_kasbon_cont,
-                        'nilai_kasbon'        => (float) $conflict->nilai_kasbon,
-                        'id_kasbon_cont_item' => $conflict->id_kasbon_cont_item,
-                    ]
-                ]);
-            }
-
-            return response()->json([
-                'success'      => true,
-                'has_conflict' => false,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    // ========================================
-    // CLEAR CONFLICT ITEM (hapus nilai kasbon di kasbon lain)
-    // ========================================
-    public function clearConflictItem(Request $request)
-    {
-        try {
-            $idJoContItem = $request->get('id_jo_cont_item');
-            $idKasbonCont = $request->get('id_kasbon_cont'); // kasbon yang sedang diedit (exclude)
-
-            if (!$idJoContItem) {
-                return response()->json(['success' => false, 'message' => 'id_jo_cont_item is required'], 422);
-            }
-
-            DB::beginTransaction();
-
-            // Nol-kan nilai kasbon di semua kasbon LAIN yang punya item ini
-            KasbonContractItem::where('id_jo_cont_item', $idJoContItem)
-                ->where('id_kasbon_cont', '!=', $idKasbonCont)
-                ->where('nilai_kasbon', '>', 0)
-                ->each(function ($item) {
-                    $item->update([
-                        'nilai_kasbon' => 0,
-                        'total_kasbon' => $item->nilai_hpp_cont_item, // total = hpp - 0 = hpp
-                    ]);
-                });
-
-            DB::commit();
-
-            return response()->json(['success' => true, 'message' => 'Conflict cleared successfully']);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('clearConflictItem failed', ['error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
     private function resolveFkDeleteMessage(string $rawError): string
     {
         $map = [
@@ -1512,5 +1555,42 @@ class KasbonContractController extends Controller
 
         return 'Cannot delete this Cash Advance because it is still being used by other related data. '
             . 'Please remove all related records first before deleting.';
+    }
+
+    /**
+     * Indonesian number-to-words (terbilang) helper.
+     */
+    private function toTerbilang(int $number): string
+    {
+        if ($number < 0) return 'minus ' . $this->toTerbilang(abs($number));
+
+        $words = [
+            '', 'Satu', 'Dua', 'Tiga', 'Empat', 'Lima',
+            'Enam', 'Tujuh', 'Delapan', 'Sembilan', 'Sepuluh', 'Sebelas',
+        ];
+
+        if ($number === 0)  return 'Nol';
+        if ($number < 12)   return $words[$number];
+        if ($number < 20)   return $this->toTerbilang($number - 10) . ' Belas';
+        if ($number < 100)  return $words[(int) ($number / 10)] . ' Puluh'
+            . ($number % 10 ? ' ' . $this->toTerbilang($number % 10) : '');
+        if ($number < 200)  return 'Seratus'
+            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 1000) return $words[(int) ($number / 100)] . ' Ratus'
+            . ($number % 100 ? ' ' . $this->toTerbilang($number % 100) : '');
+        if ($number < 2000) return 'Seribu'
+            . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000)
+            return $this->toTerbilang((int) ($number / 1000)) . ' Ribu'
+                . ($number % 1000 ? ' ' . $this->toTerbilang($number % 1000) : '');
+        if ($number < 1_000_000_000)
+            return $this->toTerbilang((int) ($number / 1_000_000)) . ' Juta'
+                . ($number % 1_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000) : '');
+        if ($number < 1_000_000_000_000)
+            return $this->toTerbilang((int) ($number / 1_000_000_000)) . ' Miliar'
+                . ($number % 1_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000) : '');
+
+        return $this->toTerbilang((int) ($number / 1_000_000_000_000)) . ' Triliun'
+            . ($number % 1_000_000_000_000 ? ' ' . $this->toTerbilang($number % 1_000_000_000_000) : '');
     }
 }

@@ -18,6 +18,7 @@ use App\Http\Controllers\Data\KasbonTramperController;
 use App\Http\Controllers\Data\LpjGenController;
 use App\Http\Controllers\Data\LpjOtherController;
 use App\Http\Controllers\Data\LpjTramperController;
+use App\Http\Controllers\Data\MutasiPembayaranController;
 use App\Http\Controllers\Master\BranchController;
 use App\Http\Controllers\Master\ChartOfAccountController;
 use App\Http\Controllers\Master\CostTypeController;
@@ -576,4 +577,51 @@ Route::middleware(['auth'])->group(function () {
         ->only(['index', 'create', 'show', 'edit', 'destroy']);
 
     // ================= END LPJ GENERAL ROUTE GROUP =================
+
+    Route::prefix('data')->name('mutasi-pembayaran.')->middleware(['auth'])->group(function () {
+
+        // ---- DROPDOWN OPTIONS (harus di atas route {id}) ----
+
+        Route::get('mutasi-pembayaran/jo-options',      [MutasiPembayaranController::class, 'joOptions'])->name('jo.options');
+        Route::get('mutasi-pembayaran/kasbon-options',  [MutasiPembayaranController::class, 'kasbonOptions'])->name('kasbon.options');
+        Route::get('mutasi-pembayaran/kasbon-info',     [MutasiPembayaranController::class, 'kasbonInfo'])->name('kasbon.info');
+        Route::get('/mutasi-pembayaran/jo-kasbon-summary', [MutasiPembayaranController::class, 'joKasbonSummary'])
+            ->name('mutasi-pembayaran.jo-kasbon-summary');
+        Route::get('mutasi-pembayaran/next-voucher-no', [MutasiPembayaranController::class, 'nextVoucherNo'])->name('next-voucher-no');
+
+        // ---- VOUCHER (harus di atas route {id}) ----
+        Route::get(
+            'mutasi-pembayaran/voucher/{voucherId}/details',
+            [MutasiPembayaranController::class, 'voucherDetails']
+        )
+            ->name('mutasi-pembayaran.voucher.details');
+
+        Route::get(
+            'mutasi-pembayaran/jo-kasbon-summary',
+            [MutasiPembayaranController::class, 'joKasbonSummary']
+        )
+            ->name('mutasi-pembayaran.jo-kasbon-summary');
+        Route::post('mutasi-pembayaran/voucher/store',        [MutasiPembayaranController::class, 'storeVoucher'])->name('voucher.store');
+        Route::put('mutasi-pembayaran/voucher/update/{id}',  [MutasiPembayaranController::class, 'updateVoucher'])->name('voucher.update');
+        Route::delete('mutasi-pembayaran/voucher/destroy/{id}', [MutasiPembayaranController::class, 'destroyVoucher'])->name('voucher.destroy');
+        Route::get('mutasi-pembayaran/voucher/{id}/pdf', [MutasiPembayaranController::class, 'exportVoucherPdf'])->name('voucher.pdf');
+
+        // ---- DETAIL (harus di atas route {id}) ----
+        Route::post('mutasi-pembayaran/detail/store',          [MutasiPembayaranController::class, 'storeDetail'])->name('detail.store');
+        Route::get('mutasi-pembayaran/detail/show/{id}',      [MutasiPembayaranController::class, 'showDetail'])->name('detail.show');
+        Route::put('mutasi-pembayaran/detail/update/{id}',    [MutasiPembayaranController::class, 'updateDetail'])->name('detail.update');
+        Route::delete('mutasi-pembayaran/detail/destroy/{id}',   [MutasiPembayaranController::class, 'destroyDetail'])->name('detail.destroy');
+
+        // ---- HEADER UPDATE (harus di atas route {id}) ----
+        Route::put('mutasi-pembayaran/header/update/{id}', [MutasiPembayaranController::class, 'update'])->name('header.update');
+
+        // ---- CRUD Standard (parameterized routes paling bawah) ----
+        Route::get('mutasi-pembayaran',          [MutasiPembayaranController::class, 'index'])->name('index');
+        Route::get('mutasi-pembayaran/create',   [MutasiPembayaranController::class, 'create'])->name('create');
+        Route::post('mutasi-pembayaran',          [MutasiPembayaranController::class, 'store'])->name('store');
+        Route::get('mutasi-pembayaran/{id}/edit', [MutasiPembayaranController::class, 'edit'])->name('edit');
+        Route::put('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'update'])->name('update');
+        Route::delete('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'destroy'])->name('destroy');
+        Route::get('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'show'])->name('show');
+    });
 });

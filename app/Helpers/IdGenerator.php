@@ -148,4 +148,84 @@ class IdGenerator
 
         return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Generate Nomor Voucher Mutasi Pembayaran dengan format: PV/[YYYY]/[NNNNN]
+     * Sequence increment dari tabel e02_mutasi_pembayaran_voucher
+     * Contoh: PV/2026/00001, PV/2026/00002, dst
+     */
+    public static function generateVoucherNo()
+    {
+        $year   = date('Y');
+        $prefix = "PV/{$year}/";
+
+        $tables = [
+            'e02_mutasi_pembayaran_voucher' => 'nomor_voucher',
+            // tambah tabel voucher lainnya di sini jika ada
+        ];
+
+        $lastNumber = 0;
+
+        foreach ($tables as $tbl => $col) {
+            try {
+                $last = DB::table($tbl)
+                    ->where($col, 'LIKE', $prefix . '%')
+                    ->orderByRaw("CAST(RIGHT({$col}, 5) AS UNSIGNED) DESC")
+                    ->value($col);
+
+                if ($last) {
+                    $num = (int) substr($last, -5);
+                    if ($num > $lastNumber) {
+                        $lastNumber = $num;
+                    }
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        $newNumber = $lastNumber + 1;
+
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate Nomor Dokumen Mutasi Pembayaran dengan format: MP/[YYYY]/[NNNNN]
+     * Sequence increment lintas semua tabel Mutasi Pembayaran
+     * Contoh: MP/2026/00001, MP/2026/00002, dst
+     */
+    public static function generateMutasiNo()
+    {
+        $year   = date('Y');
+        $prefix = "MP/{$year}/";
+
+        $tables = [
+            'e01_mutasi_pembayaran' => 'nomor',
+            // tambah tabel Mutasi lainnya di sini jika ada (tramper, other, dst)
+        ];
+
+        $lastNumber = 0;
+
+        foreach ($tables as $tbl => $col) {
+            try {
+                $last = DB::table($tbl)
+                    ->where($col, 'LIKE', $prefix . '%')
+                    ->orderByRaw("CAST(RIGHT({$col}, 5) AS UNSIGNED) DESC")
+                    ->value($col);
+
+                if ($last) {
+                    $num = (int) substr($last, -5);
+                    if ($num > $lastNumber) {
+                        $lastNumber = $num;
+                    }
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        $newNumber = $lastNumber + 1;
+
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
 }

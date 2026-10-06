@@ -1353,16 +1353,39 @@
                 </div>
             @endif
 
-            {{-- LPJ --}}
-            {{-- @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_contract')))
-                <div class="nav-item" data-tooltip="LPJ Contract">
-                    <a href="{{ route('lpj-contract.index') }}"
-                        class="nav-link {{ request()->routeIs('lpj-contract.*') ? 'active' : '' }}">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <span>LPJ Contract</span>
+            {{-- MUTASI --}}
+            @if (auth()->check() &&
+                    (auth()->user()->is_admin ||
+                        auth()->user()->hasAccessToMenu('mutasi_pembayaran') ||
+                        auth()->user()->hasAccessToMenu('mutasi_penerimaan')))
+                <div class="nav-item has-submenu" data-tooltip="Cash Advance">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenMutasi">
+                        <i class="fas fa-exchange-alt""></i>
+                        <span>Mutation</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
                     </a>
+                    <div class="sidebar-submenu {{ request()->routeIs('lpj-contract.*') || request()->routeIs('lpj-tramper.*') || request()->routeIs('lpj-other.*') || request()->routeIs('lpj-gen.*') ? 'show' : '' }}"
+                        id="manajemenMutasi">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_pembayaran'))
+                            <div class="submenu-item">
+                                <a class="nav-link" href="{{ route('mutasi-pembayaran.index') }}">
+                                    <i class="fas fa-money-bill-transfer"></i>
+                                    <span>Multi-Payment Transaction</span>
+                                </a>
+                            </div>
+                        @endif
+
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_penerimaan'))
+                            <div class="submenu-item">
+                                <a class="nav-link" href="">
+                                    <i class="fas fa-hand-holding-dollar"></i>
+                                    <span>Multi-Receipt Transaction</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
                 </div>
-            @endif --}}
+            @endif
 
         </nav>
 
@@ -1478,23 +1501,8 @@
                                         });
                                 }
                             } else {
-                                document.querySelectorAll('.sidebar-submenu.show').forEach(menu => {
-                                    if (menu !== submenu) {
-                                        menu.classList.remove('show');
-                                        menu.querySelectorAll('.sidebar-nested-submenu.show')
-                                            .forEach(nested => {
-                                                nested.classList.remove('show');
-                                                const nestedToggle = document.querySelector(
-                                                    `[data-menu="${nested.id}"]`);
-                                                if (nestedToggle) nestedToggle.classList
-                                                    .remove('menu-open');
-                                            });
-                                        const otherToggle = document.querySelector(
-                                            `[data-menu="${menu.id}"]`);
-                                        if (otherToggle) otherToggle.classList.remove(
-                                            'menu-open');
-                                    }
-                                });
+                                if (!submenu.classList.contains('sidebar-nested-submenu')) {
+                                }
                             }
 
                             if (isOpen) {
