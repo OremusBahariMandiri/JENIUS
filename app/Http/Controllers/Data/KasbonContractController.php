@@ -815,8 +815,7 @@ class KasbonContractController extends Controller
     public function edit($id)
     {
         $kasbonContract = KasbonContract::with([
-            'items.joContractItem.invoice',
-            'pajakItems'
+            'items.joContractItem.invoice'
         ])->findOrFail($id);
 
         // Ambil semua JO Contract Items berdasarkan JO yang dipilih
@@ -865,22 +864,37 @@ class KasbonContractController extends Controller
             ];
         });
 
-        // ── Load JO Pajak items and merge with existing kasbon pajak amounts ──
+        // ── Append JO Pajak/Tax rows into mergedItems ──
         $joPajakItems = \App\Models\Data\JoContractPajak::where('id_jo_cont', $kasbonContract->id_jo_cont)->get();
-        $mergedPajakItems = $joPajakItems->map(function ($pajak) use ($kasbonContract) {
-            $kasbonPajak = $kasbonContract->pajakItems
-                ->firstWhere('id_jo_cont_pajak', $pajak->id_jo_cont_pajak);
+        $pajakRows = $joPajakItems->map(function ($pajak) use ($kasbonContract) {
+            $kasbonItem = KasbonContractItem::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
+                ->where('id_jo_cont_pajak', $pajak->id_jo_cont_pajak)
+                ->whereNull('deleted_at')
+                ->first();
+
+            $nominal = (float) ($pajak->nominal_pajak ?? 0);
+
             return [
-                'id_jo_cont_pajak'    => $pajak->id_jo_cont_pajak,
-                'nama_pajak'          => $pajak->nama_pajak,
-                'persentase'          => (float) $pajak->persentase,
-                'nominal_pajak'       => (float) $pajak->nominal_pajak,
-                'include_selling'     => (bool) $pajak->include_selling,
-                'include_hpp'         => (bool) $pajak->include_hpp,
-                'id_kasbon_cont_pajak' => $kasbonPajak?->id_kasbon_cont_pajak ?? null,
-                'nilai_kasbon_pajak'  => $kasbonPajak ? (float) $kasbonPajak->nilai_kasbon_pajak : 0,
+                'id_jo_cont_item'          => null,
+                'id_jo_cont_pajak'         => $pajak->id_jo_cont_pajak,
+                'item_type'                => 'tax',
+                'invoice_typ'              => $pajak->nama_pajak,
+                'invoice_ctg'              => 'Tax',
+                'hargajual_idr'            => $nominal,
+                'hpp_ops'                  => $nominal,
+                'id_kasbon_cont_item'      => $kasbonItem?->id_kasbon_cont_item ?? null,
+                'nilai_hpp_cont_item'      => $nominal,
+                'nilai_kasbon'             => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
+                'total_kasbon'             => $kasbonItem ? (float) $kasbonItem->total_kasbon : $nominal,
+                'has_kasbon'               => $kasbonItem !== null && $kasbonItem->nilai_kasbon > 0,
+                'has_lpj_amount'           => false,
+                'origin_lpj_cont'          => null,
+                'total_paid_other_kasbons' => 0,
+                'max_allowed'              => $nominal,
             ];
         });
+
+        $mergedItems = $mergedItems->concat($pajakRows);
 
         $joContracts = JoContract::orderBy('no_jo_cont')->get();
         $departemens = Departemen::orderBy('nama_dep')->get();
@@ -893,8 +907,7 @@ class KasbonContractController extends Controller
             'departemens',
             'cabangs',
             'releases',
-            'mergedItems',
-            'mergedPajakItems'
+            'mergedItems'
         ));
     }
 
@@ -1400,9 +1413,11 @@ class KasbonContractController extends Controller
     public function bulkSaveItems(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'items'                   => 'required|array',
-            'items.*.id_jo_cont_item' => 'required|exists:b02_jo_cont_item,id_jo_cont_item',
-            'items.*.nilai_kasbon'    => 'required|numeric|min:0',
+            'items'                    => 'required|array',
+            'items.*.id_jo_cont_item'  => 'nullable|exists:b02_jo_cont_item,id_jo_cont_item',
+            'items.*.id_jo_cont_pajak' => 'nullable|exists:b07_jo_cont_pajak,id_jo_cont_pajak',
+            'items.*.item_type'        => 'nullable|in:item,tax',
+            'items.*.nilai_kasbon'     => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -1419,9 +1434,51 @@ class KasbonContractController extends Controller
             DB::beginTransaction();
 
             foreach ($request->items as $itemData) {
+                $isTaxRow    = ($itemData['item_type'] ?? 'item') === 'tax';
+                $nilaiKasbon = (float) $itemData['nilai_kasbon'];
+
+                if ($isTaxRow) {
+                    // ── Tax / Pajak row ──
+                    $joPajak     = \App\Models\Data\JoContractPajak::find($itemData['id_jo_cont_pajak']);
+                    $nilaiHpp    = $joPajak ? (float) $joPajak->nominal_pajak : 0;
+                    $totalKasbon = $nilaiHpp - $nilaiKasbon;
+
+                    $existing = KasbonContractItem::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
+                        ->where('id_jo_cont_pajak', $itemData['id_jo_cont_pajak'])
+                        ->whereNull('deleted_at')
+                        ->first();
+
+                    if ($existing) {
+                        $existing->update([
+                            'nilai_hpp_cont_item' => $nilaiHpp,
+                            'nilai_kasbon'        => $nilaiKasbon,
+                            'total_kasbon'        => $totalKasbon,
+                        ]);
+                    } else {
+                        if ($nilaiKasbon > 0) {
+                            $maxId = DB::table('c02_kasbon_cont_item')
+                                ->lockForUpdate()
+                                ->selectRaw('MAX(CAST(id_kasbon_cont_item AS UNSIGNED)) as max_id')
+                                ->value('max_id');
+
+                            KasbonContractItem::create([
+                                'id_kasbon_cont_item' => (string) (((int) $maxId) + 1),
+                                'id_kasbon_cont'      => $kasbonContract->id_kasbon_cont,
+                                'id_jo_cont_item'     => null,
+                                'id_jo_cont_pajak'    => $itemData['id_jo_cont_pajak'],
+                                'item_type'           => 'tax',
+                                'nilai_hpp_cont_item' => $nilaiHpp,
+                                'nilai_kasbon'        => $nilaiKasbon,
+                                'total_kasbon'        => $totalKasbon,
+                            ]);
+                        }
+                    }
+                    continue; // skip budget & LPJ checks for tax rows
+                }
+
+                // ── Regular item row ──
                 $joContItem  = JoContractItem::find($itemData['id_jo_cont_item']);
                 $nilaiHpp    = $joContItem ? (float) $joContItem->hpp_ops : 0;
-                $nilaiKasbon = (float) $itemData['nilai_kasbon'];
                 $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
                 $existing = KasbonContractItem::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
