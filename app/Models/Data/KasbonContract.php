@@ -70,4 +70,9 @@ class KasbonContract extends Model
     {
         return $this->hasMany(KasbonContractItem::class, 'id_kasbon_cont', 'id_kasbon_cont');
     }
+
+    public function pajakItems()
+    {
+        return $this->hasMany(KasbonContractPajak::class, 'id_kasbon_cont', 'id_kasbon_cont');
+    }
 }

@@ -21,6 +21,18 @@
             'max_allowed' => $i['max_allowed'], // ← BARU
         ],
     );
+    $mergedPajakItemsJs = collect($mergedPajakItems ?? [])->map(
+        fn($i) => [
+            'id_jo_cont_pajak'     => $i['id_jo_cont_pajak'],
+            'nama_pajak'           => $i['nama_pajak'],
+            'persentase'           => $i['persentase'],
+            'nominal_pajak'        => $i['nominal_pajak'],
+            'include_selling'      => $i['include_selling'],
+            'include_hpp'          => $i['include_hpp'],
+            'id_kasbon_cont_pajak' => $i['id_kasbon_cont_pajak'],
+            'nilai_kasbon_pajak'   => $i['nilai_kasbon_pajak'],
+        ],
+    );
 @endphp
 
 @push('styles')
@@ -1030,6 +1042,55 @@
                         </div>
                     </div>
 
+                    {{-- ===== PAJAK / TAX TABLE ===== --}}
+                    @if(isset($mergedPajakItems) && count($mergedPajakItems) > 0)
+                    <div class="card mt-3">
+                        <div class="card-header d-flex justify-content-between align-items-center"
+                             style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%); color:#fff; border-radius:10px 10px 0 0;">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-percent me-2"></i>Tax / PPN Items</h6>
+                            <button type="button" class="btn btn-sm btn-light fw-semibold"
+                                    id="btnSavePajak" onclick="savePajakItems()">
+                                <i class="fas fa-save me-1"></i> Save Tax CA
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered mb-0" id="kasbonPajakTable">
+                                    <thead style="background:#f3f4f6;">
+                                        <tr>
+                                            <th style="width:4%;">No</th>
+                                            <th style="width:25%;">Tax Name</th>
+                                            <th style="width:12%;">Rate (%)</th>
+                                            <th style="width:20%;">Tax Amount (IDR)</th>
+                                            <th style="width:20%;">CA Amount (IDR)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="kasbonPajakBody">
+                                        {{-- filled by JS --}}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-center"><strong>TOTAL TAX CA</strong></td>
+                                            <td>
+                                                <div class="footer-currency-wrap">
+                                                    <span class="footer-currency-label">IDR</span>
+                                                    <span class="footer-value" id="footerTotalNominalPajak">0,00</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="footer-currency-wrap">
+                                                    <span class="footer-currency-label">IDR</span>
+                                                    <span class="footer-value" id="footerTotalCAPajak">0,00</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
                 </form>
 
                 <div class="final-save-section">
@@ -1329,6 +1390,7 @@
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
 
         let mergedItems = @json($mergedItemsJs);
+        let mergedPajakItems = @json($mergedPajakItemsJs ?? []);
         let confirmCallback = null;
         let joItemsCache = [];
 
@@ -2016,6 +2078,91 @@
             $('#footerTotalCA').text(formatNumber(totalCA));
         }
 
+        function updatePajakFooter() {
+            let totalNominal = 0, totalCA = 0;
+            mergedPajakItems.forEach(function(item) {
+                totalNominal += parseFloat(item.nominal_pajak) || 0;
+                totalCA      += parseFloat(item.nilai_kasbon_pajak) || 0;
+            });
+            $('#footerTotalNominalPajak').text(formatNumber(totalNominal));
+            $('#footerTotalCAPajak').text(formatNumber(totalCA));
+        }
+
+        function renderPajakTable() {
+            var tbody = $('#kasbonPajakBody');
+            tbody.empty();
+            if (!mergedPajakItems || mergedPajakItems.length === 0) return;
+            mergedPajakItems.forEach(function(item, idx) {
+                var row = '<tr data-id="' + item.id_jo_cont_pajak + '">' +
+                    '<td class="text-center">' + (idx + 1) + '</td>' +
+                    '<td>' + (item.nama_pajak || '-') + '</td>' +
+                    '<td class="text-center">' + parseFloat(item.persentase || 0).toFixed(2) + '%</td>' +
+                    '<td class="text-end">IDR&nbsp;' + formatNumber(item.nominal_pajak || 0) + '</td>' +
+                    '<td>' +
+                        '<div class="input-group input-group-sm">' +
+                            '<span class="input-group-text">IDR</span>' +
+                            '<input type="text" class="form-control text-end pajak-ca-input rupiah-input" ' +
+                                   'data-idx="' + idx + '" ' +
+                                   'value="' + formatNumber(item.nilai_kasbon_pajak || 0) + '" ' +
+                                   'style="min-width:140px;">' +
+                        '</div>' +
+                    '</td>' +
+                    '</tr>';
+                tbody.append(row);
+            });
+
+            // Setup rupiah input on new fields
+            tbody.find('.rupiah-input').each(function() {
+                setupRupiahInput(this);
+            });
+
+            // On change: update mergedPajakItems array
+            tbody.off('input.pajak').on('input.pajak', '.pajak-ca-input', function() {
+                var idx = parseInt($(this).data('idx'));
+                var raw = $(this).val().replace(/\./g, '').replace(',', '.');
+                mergedPajakItems[idx].nilai_kasbon_pajak = parseFloat(raw) || 0;
+                updatePajakFooter();
+            });
+
+            updatePajakFooter();
+        }
+
+        function savePajakItems() {
+            var pajakPayload = mergedPajakItems.map(function(item) {
+                return {
+                    id_jo_cont_pajak:   item.id_jo_cont_pajak,
+                    nilai_kasbon_pajak: item.nilai_kasbon_pajak || 0,
+                };
+            });
+
+            $('#btnSavePajak').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+
+            $.ajax({
+                url: '{{ route("kasbon-contract.pajak.bulk-save") }}',
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id_kasbon_cont: currentKasbonContStr,
+                    pajak_items: pajakPayload,
+                }),
+                success: function(res) {
+                    if (res.success) {
+                        Swal.fire({ icon: 'success', title: 'Saved', text: res.message, timer: 1500, showConfirmButton: false });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: res.message });
+                    }
+                },
+                error: function(xhr) {
+                    var msg = xhr.responseJSON?.message || 'Failed to save tax CA amounts.';
+                    Swal.fire({ icon: 'error', title: 'Error', text: msg });
+                },
+                complete: function() {
+                    $('#btnSavePajak').prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Tax CA');
+                }
+            });
+        }
+
         // ══════════════════════════════════════════════════════════
         // JO ITEMS MODAL
         // ══════════════════════════════════════════════════════════
@@ -2237,6 +2384,9 @@
 
             // ── Render tabel ──
             renderTable();
+
+            // ── Render pajak table ──
+            renderPajakTable();
         });
     </script>
 @endpush

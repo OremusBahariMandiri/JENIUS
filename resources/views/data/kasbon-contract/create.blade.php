@@ -814,6 +814,57 @@
                         </div>
                     </div>
 
+                    {{-- ===== PAJAK / TAX TABLE ===== --}}
+                    <div class="card mt-3" id="pajakSection" style="display:none;">
+                        <div class="card-header d-flex justify-content-between align-items-center"
+                             style="background:linear-gradient(135deg,#6366f1 0%,#8b5cf6 100%); color:#fff; border-radius:10px 10px 0 0;">
+                            <h6 class="mb-0 fw-bold"><i class="fas fa-percent me-2"></i>Tax / PPN Items</h6>
+                            <button type="button" class="btn btn-sm btn-light fw-semibold"
+                                    id="btnSavePajak" onclick="savePajakItems()" disabled>
+                                <i class="fas fa-save me-1"></i> Save Tax CA
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-bordered mb-0">
+                                    <thead style="background:#f3f4f6;">
+                                        <tr>
+                                            <th style="width:4%;">No</th>
+                                            <th style="width:25%;">Tax Name</th>
+                                            <th style="width:12%;">Rate (%)</th>
+                                            <th style="width:20%;">Tax Amount (IDR)</th>
+                                            <th style="width:20%;">CA Amount (IDR)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="pajakTableBody">
+                                        <tr id="pajakEmptyRow">
+                                            <td colspan="5" class="text-center text-muted py-3">
+                                                Save the header first to load tax items.
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" class="text-center"><strong>TOTAL TAX CA</strong></td>
+                                            <td>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">IDR</span>
+                                                    <span class="value-footer" id="footerTotalNominalPajak">0,00</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">IDR</span>
+                                                    <span class="value-footer" id="footerTotalCAPajak">0,00</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                 </form>
 
                 {{-- FINAL BACK SECTION --}}
@@ -1214,6 +1265,8 @@
         // =============================================
         // LOAD JO CONTRACT ITEMS (for the CA item dropdown)
         // =============================================
+        let joPajakItems = [];
+
         function loadJoContractItems(idJoCont) {
             $.ajax({
                 url: '{{ route('kasbon-contract.jo-items.get') }}',
@@ -1243,6 +1296,123 @@
                 error: function() {
                     showFloatingAlert('error', 'Failed to load JO Contract items');
                     $('#joSummaryItemCount').text('—');
+                }
+            });
+        }
+
+        function loadJoPajakItems(idJoCont) {
+            $.ajax({
+                url: '{{ route('kasbon-contract.jo-pajak.get') }}',
+                method: 'GET',
+                data: { id_jo_cont: idJoCont },
+                success: function(response) {
+                    if (response.success && response.data.length > 0) {
+                        joPajakItems = response.data.map(function(item) {
+                            return Object.assign({}, item, { nilai_kasbon_pajak: 0 });
+                        });
+                        renderPajakTableCreate();
+                        $('#pajakSection').show();
+                    } else {
+                        joPajakItems = [];
+                        $('#pajakSection').hide();
+                    }
+                },
+                error: function() {
+                    joPajakItems = [];
+                    $('#pajakSection').hide();
+                }
+            });
+        }
+
+        function renderPajakTableCreate() {
+            var tbody = $('#pajakTableBody');
+            tbody.empty();
+            if (!joPajakItems || joPajakItems.length === 0) {
+                tbody.append('<tr id="pajakEmptyRow"><td colspan="5" class="text-center text-muted py-3">No tax items found.</td></tr>');
+                updatePajakFooterCreate();
+                return;
+            }
+            joPajakItems.forEach(function(item, idx) {
+                var row = '<tr data-id="' + item.id_jo_cont_pajak + '">' +
+                    '<td class="text-center">' + (idx + 1) + '</td>' +
+                    '<td>' + (item.nama_pajak || '-') + '</td>' +
+                    '<td class="text-center">' + parseFloat(item.persentase || 0).toFixed(2) + '%</td>' +
+                    '<td class="text-end">IDR&nbsp;' + formatNumber(item.nominal_pajak || 0) + '</td>' +
+                    '<td>' +
+                        '<div class="input-group input-group-sm">' +
+                            '<span class="input-group-text">IDR</span>' +
+                            '<input type="text" class="form-control text-end pajak-ca-input" ' +
+                                   'data-idx="' + idx + '" ' +
+                                   'value="0,00" ' +
+                                   'style="min-width:140px;" disabled>' +
+                        '</div>' +
+                    '</td>' +
+                    '</tr>';
+                tbody.append(row);
+            });
+            updatePajakFooterCreate();
+        }
+
+        function enablePajakInputs() {
+            $('#pajakTableBody .pajak-ca-input').prop('disabled', false);
+            $('#pajakTableBody .pajak-ca-input').each(function() {
+                setupRupiahInput(this);
+            });
+            $('#pajakTableBody').off('input.pajak').on('input.pajak', '.pajak-ca-input', function() {
+                var idx = parseInt($(this).data('idx'));
+                var raw = $(this).val().replace(/\./g, '').replace(',', '.');
+                joPajakItems[idx].nilai_kasbon_pajak = parseFloat(raw) || 0;
+                updatePajakFooterCreate();
+            });
+            $('#btnSavePajak').prop('disabled', false);
+        }
+
+        function updatePajakFooterCreate() {
+            let totalNominal = 0, totalCA = 0;
+            joPajakItems.forEach(function(item) {
+                totalNominal += parseFloat(item.nominal_pajak) || 0;
+                totalCA      += parseFloat(item.nilai_kasbon_pajak) || 0;
+            });
+            $('#footerTotalNominalPajak').text(formatNumber(totalNominal));
+            $('#footerTotalCAPajak').text(formatNumber(totalCA));
+        }
+
+        function savePajakItems() {
+            if (!currentKasbonContStr) {
+                showFloatingAlert('error', 'Please save the header first.');
+                return;
+            }
+            var pajakPayload = joPajakItems.map(function(item) {
+                return {
+                    id_jo_cont_pajak:   item.id_jo_cont_pajak,
+                    nilai_kasbon_pajak: item.nilai_kasbon_pajak || 0,
+                };
+            });
+
+            $('#btnSavePajak').prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Saving...');
+
+            $.ajax({
+                url: '{{ route("kasbon-contract.pajak.bulk-save") }}',
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    id_kasbon_cont: currentKasbonContStr,
+                    pajak_items: pajakPayload,
+                }),
+                success: function(res) {
+                    if (res.success) {
+                        showFloatingAlert('success', res.message || 'Tax CA saved successfully.');
+                    } else {
+                        showFloatingAlert('error', res.message || 'Failed to save tax CA amounts.');
+                    }
+                },
+                error: function(xhr) {
+                    var msg = xhr.responseJSON?.message || 'Failed to save tax CA amounts.';
+                    showFloatingAlert('error', msg);
+                },
+                complete: function() {
+                    $('#btnSavePajak').prop('disabled', false).html('<i class="fas fa-save me-1"></i> Save Tax CA');
                 }
             });
         }

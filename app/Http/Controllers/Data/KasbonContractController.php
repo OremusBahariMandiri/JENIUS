@@ -815,7 +815,8 @@ class KasbonContractController extends Controller
     public function edit($id)
     {
         $kasbonContract = KasbonContract::with([
-            'items.joContractItem.invoice'
+            'items.joContractItem.invoice',
+            'pajakItems'
         ])->findOrFail($id);
 
         // Ambil semua JO Contract Items berdasarkan JO yang dipilih
@@ -864,6 +865,23 @@ class KasbonContractController extends Controller
             ];
         });
 
+        // ── Load JO Pajak items and merge with existing kasbon pajak amounts ──
+        $joPajakItems = \App\Models\Data\JoContractPajak::where('id_jo_cont', $kasbonContract->id_jo_cont)->get();
+        $mergedPajakItems = $joPajakItems->map(function ($pajak) use ($kasbonContract) {
+            $kasbonPajak = $kasbonContract->pajakItems
+                ->firstWhere('id_jo_cont_pajak', $pajak->id_jo_cont_pajak);
+            return [
+                'id_jo_cont_pajak'    => $pajak->id_jo_cont_pajak,
+                'nama_pajak'          => $pajak->nama_pajak,
+                'persentase'          => (float) $pajak->persentase,
+                'nominal_pajak'       => (float) $pajak->nominal_pajak,
+                'include_selling'     => (bool) $pajak->include_selling,
+                'include_hpp'         => (bool) $pajak->include_hpp,
+                'id_kasbon_cont_pajak' => $kasbonPajak?->id_kasbon_cont_pajak ?? null,
+                'nilai_kasbon_pajak'  => $kasbonPajak ? (float) $kasbonPajak->nilai_kasbon_pajak : 0,
+            ];
+        });
+
         $joContracts = JoContract::orderBy('no_jo_cont')->get();
         $departemens = Departemen::orderBy('nama_dep')->get();
         $cabangs     = Branch::orderBy('nama_branch')->get();
@@ -875,7 +893,8 @@ class KasbonContractController extends Controller
             'departemens',
             'cabangs',
             'releases',
-            'mergedItems'
+            'mergedItems',
+            'mergedPajakItems'
         ));
     }
 
@@ -1170,6 +1189,118 @@ class KasbonContractController extends Controller
             return response()->json(['success' => true, 'data' => $items]);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error retrieving JO contract items: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
+    // GET JO PAJAK ITEMS (API — untuk create page)
+    // ========================================
+
+    public function getJoPajakItems(Request $request)
+    {
+        try {
+            $idJoCont = $request->get('id_jo_cont');
+
+            if (!$idJoCont) {
+                return response()->json(['success' => false, 'message' => 'id_jo_cont is required'], 422);
+            }
+
+            $items = \App\Models\Data\JoContractPajak::where('id_jo_cont', $idJoCont)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id_jo_cont_pajak' => $item->id_jo_cont_pajak,
+                        'nama_pajak'       => $item->nama_pajak,
+                        'persentase'       => (float) $item->persentase,
+                        'nominal_pajak'    => (float) $item->nominal_pajak,
+                        'include_selling'  => (bool) $item->include_selling,
+                        'include_hpp'      => (bool) $item->include_hpp,
+                    ];
+                });
+
+            return response()->json(['success' => true, 'data' => $items]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error retrieving JO pajak items: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
+    // BULK SAVE PAJAK ITEMS (API)
+    // ========================================
+
+    public function bulkSavePajakItems(Request $request, $id = null)
+    {
+        // Accept id from route or from request body
+        $idKasbonCont = $id ?? $request->get('id_kasbon_cont');
+
+        $validator = Validator::make($request->all(), [
+            'pajak_items'                        => 'required|array',
+            'pajak_items.*.id_jo_cont_pajak'     => 'required|exists:b07_jo_cont_pajak,id_jo_cont_pajak',
+            'pajak_items.*.nilai_kasbon_pajak'   => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors'  => $validator->errors()
+            ], 422);
+        }
+
+        try {
+            $kasbonContract = KasbonContract::where('id_kasbon_cont', $idKasbonCont)->firstOrFail();
+
+            DB::beginTransaction();
+
+            foreach ($request->pajak_items as $itemData) {
+                $joPajak      = \App\Models\Data\JoContractPajak::find($itemData['id_jo_cont_pajak']);
+                $nilaiKasbon  = (float) $itemData['nilai_kasbon_pajak'];
+
+                $existing = \App\Models\Data\KasbonContractPajak::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
+                    ->where('id_jo_cont_pajak', $itemData['id_jo_cont_pajak'])
+                    ->first();
+
+                if ($existing) {
+                    $existing->update(['nilai_kasbon_pajak' => $nilaiKasbon]);
+                } else {
+                    if ($nilaiKasbon > 0) {
+                        $maxId = DB::table('c03_kasbon_cont_pajak')
+                            ->lockForUpdate()
+                            ->selectRaw('MAX(CAST(id_kasbon_cont_pajak AS UNSIGNED)) as max_id')
+                            ->value('max_id');
+
+                        \App\Models\Data\KasbonContractPajak::create([
+                            'id_kasbon_cont_pajak' => (string) (((int) $maxId) + 1),
+                            'id_kasbon_cont'        => $kasbonContract->id_kasbon_cont,
+                            'id_jo_cont_pajak'      => $itemData['id_jo_cont_pajak'],
+                            'nama_pajak'            => $joPajak?->nama_pajak,
+                            'persentase'            => $joPajak?->persentase ?? 0,
+                            'nominal_pajak'         => $joPajak?->nominal_pajak ?? 0,
+                            'include_selling'       => $joPajak?->include_selling ?? true,
+                            'include_hpp'           => $joPajak?->include_hpp ?? false,
+                            'nilai_kasbon_pajak'    => $nilaiKasbon,
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+
+            $totalPajak = \App\Models\Data\KasbonContractPajak::where('id_kasbon_cont', $kasbonContract->id_kasbon_cont)
+                ->sum('nilai_kasbon_pajak');
+
+            return response()->json([
+                'success'     => true,
+                'message'     => 'Pajak items saved successfully',
+                'total_pajak' => $totalPajak,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('bulkSavePajakItems KasbonContract failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save pajak items: ' . $e->getMessage()
+            ], 500);
         }
     }
 
