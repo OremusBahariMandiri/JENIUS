@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
@@ -105,7 +104,6 @@ class UserController extends Controller
             'position' => 'required|string|max:255',
             'work_location' => 'required|string|max:255',
             'password' => 'required|string|min:6|confirmed',
-            'is_admin' => 'nullable|boolean',
         ], [
             'employee_id_number.required' => 'Employee ID wajib diisi',
             'employee_id_number.unique' => 'Employee ID sudah terdaftar',
@@ -140,7 +138,7 @@ class UserController extends Controller
                 'department' => $request->department,
                 'position' => $request->position,
                 'work_location' => $request->work_location,
-                'password' => Hash::make($request->password),
+                'password' => $request->password,
                 'is_admin' => $request->has('is_admin') ? true : false,
                 'created_by' => auth()->user()->employee_code ?? null,
             ]);
@@ -241,7 +239,6 @@ class UserController extends Controller
             'position' => 'required|string|max:255',
             'work_location' => 'required|string|max:255',
             'password' => 'nullable|string|min:6|confirmed',
-            'is_admin' => 'nullable|boolean',
         ], [
             'employee_id_number.required' => 'Employee ID wajib diisi',
             'employee_id_number.unique' => 'Employee ID sudah terdaftar',
@@ -282,7 +279,7 @@ class UserController extends Controller
 
             // Only update password if provided
             if ($request->filled('password')) {
-                $updateData['password'] = Hash::make($request->password);
+                $updateData['password'] = $request->password;
             }
 
             $user->update($updateData);
