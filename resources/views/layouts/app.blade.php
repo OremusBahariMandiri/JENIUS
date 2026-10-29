@@ -1060,7 +1060,7 @@
             {{-- User Management --}}
             @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
                 <div class="nav-item has-submenu" data-tooltip="User Management">
-                    <a class="nav-link {{ request()->routeIs('user.*') ? 'menu-open' : '' }}" href="javascript:void(0)" onclick="toggleSubmenu('userManagement', this)">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="userManagement">
                         <i class="fas fa-users"></i>
                         <span>User Management</span>
                         <i class="fas fa-chevron-down submenu-indicator"></i>
