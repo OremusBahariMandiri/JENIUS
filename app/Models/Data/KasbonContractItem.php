@@ -18,6 +18,8 @@ class KasbonContractItem extends Model
         'id_kasbon_cont_item',
         'id_kasbon_cont',
         'id_jo_cont_item',
+        'id_jo_cont_pajak',
+        'item_type',
         'nilai_hpp_cont_item',
         'nilai_kasbon',
         'total_kasbon',
@@ -42,5 +44,10 @@ class KasbonContractItem extends Model
     public function joContractItem()
     {
         return $this->belongsTo(JoContractItem::class, 'id_jo_cont_item', 'id_jo_cont_item');
+    }
+
+    public function joContractPajak()
+    {
+        return $this->belongsTo(JoContractPajak::class, 'id_jo_cont_pajak', 'id_jo_cont_pajak');
     }
 }

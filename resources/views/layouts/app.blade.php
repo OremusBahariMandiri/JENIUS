@@ -1071,6 +1071,7 @@
                         auth()->user()->hasAccessToMenu('branch') ||
                         auth()->user()->hasAccessToMenu('release_to') ||
                         auth()->user()->hasAccessToMenu('cost_type') ||
+                        auth()->user()->hasAccessToMenu('pajak') ||
                         auth()->user()->hasAccessToMenu('parent_coa') ||
                         auth()->user()->hasAccessToMenu('chart_of_account')))
                 <div class="nav-item has-submenu" data-tooltip="Data Master">
@@ -1176,6 +1177,15 @@
                                     href="{{ route('cost-type.index') }}">
                                     <i class="fas fa-tags"></i>
                                     <span>Cost Type</span>
+                                </a>
+                            </div>
+                        @endif
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('pajak'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('pajak.*') ? 'active' : '' }}"
+                                    href="{{ route('pajak.index') }}">
+                                    <i class="fas fa-percent"></i>
+                                    <span>Tax</span>
                                 </a>
                             </div>
                         @endif
@@ -1377,7 +1387,7 @@
 
                         @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_penerimaan'))
                             <div class="submenu-item">
-                                <a class="nav-link" href="">
+                                <a class="nav-link" href="{{ route('mutasi-penerimaan.index') }}">
                                     <i class="fas fa-hand-holding-dollar"></i>
                                     <span>Multi-Receipt Transaction</span>
                                 </a>
@@ -1385,6 +1395,79 @@
                         @endif
                     </div>
                 </div>
+
+            {{-- Invoice List --}}
+            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract')))
+                <div class="nav-item has-submenu" data-tooltip="Invoice">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenInvoiceList">
+                        <i class="fas fa-file-invoice"></i>
+                        <span>Invoice</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
+                    </a>
+                    <div class="sidebar-submenu {{ request()->routeIs('invoice-contract*') ? 'show' : '' }}"
+                        id="manajemenInvoiceList">
+                        <div class="submenu-item">
+                            <a class="nav-link {{ request()->routeIs('invoice-contract*') ? 'active' : '' }}"
+                                href="{{ route('invoice-contract.index') }}">
+                                <i class="fas fa-file-contract"></i>
+                                <span>Contract</span>
+                            </a>
+                        </div>
+                        <div class="submenu-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-truck-moving"></i>
+                                <span>Tramper</span>
+                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
+                            </a>
+                        </div>
+                        <div class="submenu-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-ellipsis-h"></i>
+                                <span>Other</span>
+                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- Customer Receivables Recap --}}
+            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract')))
+                <div class="nav-item has-submenu" data-tooltip="Customer Receivables">
+                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenRekapPiutang">
+                        <i class="fas fa-file-invoice-dollar"></i>
+                        <span>Customer Receivables</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
+                    </a>
+                    <div class="sidebar-submenu {{ request()->routeIs('rekap-piutang-contract*') ? 'show' : '' }}"
+                        id="manajemenRekapPiutang">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract'))
+                            <div class="submenu-item">
+                                <a class="nav-link {{ request()->routeIs('rekap-piutang-contract*') ? 'active' : '' }}"
+                                    href="{{ route('rekap-piutang-contract.index') }}">
+                                    <i class="fas fa-file-contract"></i>
+                                    <span>Contract</span>
+                                </a>
+                            </div>
+                        @endif
+                        <div class="submenu-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-truck-moving"></i>
+                                <span>Tramper</span>
+                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
+                            </a>
+                        </div>
+                        <div class="submenu-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-ellipsis-h"></i>
+                                <span>Other</span>
+                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             @endif
 
         </nav>
@@ -1501,8 +1584,7 @@
                                         });
                                 }
                             } else {
-                                if (!submenu.classList.contains('sidebar-nested-submenu')) {
-                                }
+                                if (!submenu.classList.contains('sidebar-nested-submenu')) {}
                             }
 
                             if (isOpen) {

@@ -87,7 +87,6 @@
                                     <th width="10%">No. Account</th>
                                     <th>Account Name</th>
                                     <th width="12%">Tipe Akun</th>
-                                    <th width="10%">Type</th>
                                     <th width="10%">Payment Type</th>
                                     <th class="text-end" width="11%">Opening Balance</th>
                                     <th class="text-end" width="11%">Current Balance</th>
@@ -129,23 +128,6 @@
                                         @endif
                                     </td>
                                     <td>{{ $account->parentAccount?->costType?->name ?? '-' }}</td>
-                                    <td>
-                                        @if($account->type)
-                                        @php
-                                            $typeColor = match($account->type) {
-                                                'Asset'     => 'primary',
-                                                'Revenue'   => 'success',
-                                                'Expense'   => 'danger',
-                                                'Liability' => 'warning',
-                                                'Equity'    => 'secondary',
-                                                default     => 'secondary',
-                                            };
-                                        @endphp
-                                        <span class="badge bg-{{ $typeColor }}">{{ $account->type }}</span>
-                                        @else
-                                        -
-                                        @endif
-                                    </td>
                                     <td>{{ $account->payment_type ?? '-' }}</td>
                                     <td class="text-end">{{ number_format($account->opening_balance, 2) }}</td>
                                     <td class="text-end">{{ number_format($account->current_balance, 2) }}</td>

@@ -44,4 +44,9 @@ class JoContract extends Model
     {
         return $this->hasMany(JoContractItem::class, 'id_jo_cont', 'id_jo_cont');
     }
+
+    public function pajakItems()
+    {
+        return $this->hasMany(JoContractPajak::class, 'id_jo_cont', 'id_jo_cont');
+    }
 }

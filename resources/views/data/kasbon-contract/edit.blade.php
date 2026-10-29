@@ -17,8 +17,10 @@
             'has_kasbon' => $i['has_kasbon'],
             'has_lpj_amount' => $i['has_lpj_amount'],
             'origin_lpj_cont' => $i['origin_lpj_cont'] ?? null,
-            'total_paid_other_kasbons' => $i['total_paid_other_kasbons'], // ← BARU
-            'max_allowed' => $i['max_allowed'], // ← BARU
+            'total_paid_other_kasbons' => $i['total_paid_other_kasbons'],
+            'max_allowed' => $i['max_allowed'],
+            'item_type' => $i['item_type'] ?? 'item',
+            'id_jo_cont_pajak' => $i['id_jo_cont_pajak'] ?? null,
         ],
     );
 @endphp
@@ -969,7 +971,9 @@
                                 <input type="hidden" id="activeJoContItemId" value="">
                                 <input type="hidden" id="activeRowIndex" value="">
                                 <input type="hidden" id="activeHppValue" value="0">
-                                <input type="hidden" id="activeMaxAllowed" value="0"> <!-- ← BARU -->
+                                <input type="hidden" id="activeMaxAllowed" value="0">
+                                <input type="hidden" id="activeItemType" value="item">
+                                <input type="hidden" id="activeJoContPajakId" value="">
                             </div>
 
                             {{-- ===== TABLE ===== --}}
@@ -1029,6 +1033,7 @@
 
                         </div>
                     </div>
+
 
                 </form>
 
@@ -1553,14 +1558,19 @@
                 const cat = item.invoice_ctg || 'Uncategorized';
                 if (!groups[cat]) {
                     groups[cat] = [];
-                    order.push(cat);
+                    // Tax rows always go last
+                    if (cat !== 'Tax') order.unshift(cat);
+                    else order.push(cat);
                 }
                 groups[cat].push(item);
             });
-            return {
-                groups,
-                order
-            };
+            // Ensure Tax is last
+            const taxIdx = order.indexOf('Tax');
+            if (taxIdx > -1 && taxIdx < order.length - 1) {
+                order.splice(taxIdx, 1);
+                order.push('Tax');
+            }
+            return { groups, order };
         }
 
         // ══════════════════════════════════════════════════════════
@@ -1599,50 +1609,86 @@
                 items.forEach(function(item, catIndex) {
                     const globalIndex = mergedItems.indexOf(item);
                     const hasFilled = item.has_kasbon && item.nilai_kasbon > 0;
-                    const isFromLpj = !!item.origin_lpj_cont;
-                    if (isFromLpj) hasOriginItems = true;
-
-                    const lpjBadge = isFromLpj ?
-                        `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` :
-                        '';
-
-                    const clearBtn = `
-                        <button type="button" class="btn btn-danger btn-sm btn-clear-row"
-                            onclick="clearItem(${globalIndex})"
-                            ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
-                            <i class="fas fa-trash"></i>
-                        </button>`;
+                    const isTaxRow = item.item_type === 'tax';
 
                     const categoryCell = catIndex === 0 ?
                         `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
                         '';
 
-                    const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
+                    if (isTaxRow) {
+                        // ── Tax row: sama persis seperti item biasa (edit button → modal) ──
+                        const clearBtnTax = `
+                            <button type="button" class="btn btn-danger btn-sm btn-clear-row"
+                                onclick="clearItem(${globalIndex})"
+                                ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
+                                <i class="fas fa-trash"></i>
+                            </button>`;
 
-                    $tbody.append(`
-                        <tr class="${rowClass}" id="row_${globalIndex}"
-                            data-index="${globalIndex}"
-                            data-jo-item="${item.id_jo_cont_item}"
-                            data-category="${category}">
-                            <td class="cell-center fw-bold text-muted">${rowNo++}</td>
-                            ${categoryCell}
-                            <td class="text-start">
-                                <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
-                                ${lpjBadge}
-                            </td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                            <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
-                            <td class="cell-center">
-                                <div class="d-flex gap-1 justify-content-center">
-                                    <button type="button" class="btn btn-primary btn-sm btn-edit-row"
-                                        onclick="openEditItem(${globalIndex})" title="Edit CA amount">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    ${clearBtn}
-                                </div>
-                            </td>
-                        </tr>`);
+                        $tbody.append(`
+                            <tr class="item-row item-row-tax" id="row_${globalIndex}"
+                                data-index="${globalIndex}"
+                                data-jo-cont-pajak="${item.id_jo_cont_pajak}"
+                                data-category="Tax">
+                                <td class="cell-center fw-bold text-muted">${rowNo++}</td>
+                                ${categoryCell}
+                                <td class="text-start">
+                                    <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
+                                </td>
+                                <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
+                                <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
+                                <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                                <td class="cell-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                                            onclick="openEditItem(${globalIndex})" title="Edit CA amount">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        ${clearBtnTax}
+                                    </div>
+                                </td>
+                            </tr>`);
+                    } else {
+                        // ── Regular item row ──
+                        const isFromLpj = !!item.origin_lpj_cont;
+                        if (isFromLpj) hasOriginItems = true;
+
+                        const lpjBadge = isFromLpj ?
+                            `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` : '';
+
+                        const clearBtn = `
+                            <button type="button" class="btn btn-danger btn-sm btn-clear-row"
+                                onclick="clearItem(${globalIndex})"
+                                ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
+                                <i class="fas fa-trash"></i>
+                            </button>`;
+
+                        const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
+
+                        $tbody.append(`
+                            <tr class="${rowClass}" id="row_${globalIndex}"
+                                data-index="${globalIndex}"
+                                data-jo-item="${item.id_jo_cont_item}"
+                                data-category="${category}">
+                                <td class="cell-center fw-bold text-muted">${rowNo++}</td>
+                                ${categoryCell}
+                                <td class="text-start">
+                                    <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
+                                    ${lpjBadge}
+                                </td>
+                                <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
+                                <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
+                                <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                                <td class="cell-center">
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                                            onclick="openEditItem(${globalIndex})" title="Edit CA amount">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        ${clearBtn}
+                                    </div>
+                                </td>
+                            </tr>`);
+                    }
                 });
             });
 
@@ -1682,8 +1728,10 @@
             );
 
             $('#activeHppValue').val(item.hpp_ops || 0);
-            $('#activeMaxAllowed').val(item.max_allowed || 0); // ← BARU
-            $('#activeJoContItemId').val(item.id_jo_cont_item);
+            $('#activeMaxAllowed').val(item.max_allowed || 0);
+            $('#activeJoContItemId').val(item.id_jo_cont_item || '');
+            $('#activeItemType').val(item.item_type || 'item');
+            $('#activeJoContPajakId').val(item.id_jo_cont_pajak || '');
             $('#activeRowIndex').val(index);
 
             if (item.has_kasbon && item.nilai_kasbon > 0) {
@@ -1720,6 +1768,8 @@
             $('#inputItemCard').removeClass('active');
             $('#inputNilaiKasbon').val('');
             $('#activeJoContItemId').val('');
+            $('#activeItemType').val('item');
+            $('#activeJoContPajakId').val('');
             $('#activeRowIndex').val('');
             $('#activeHppValue').val('0');
             resetCaValidation();
@@ -1730,6 +1780,41 @@
         // ══════════════════════════════════════════════════════════
         // SAVE ITEM — CORE (dipanggil setelah conflict check lolos)
         // ══════════════════════════════════════════════════════════
+        function doSaveTaxItem(index, nilaiKasbon) {
+            const item = mergedItems[index];
+            $.ajax({
+                url: bulkSaveUrl,
+                method: 'POST',
+                contentType: 'application/json',
+                headers: { 'X-CSRF-TOKEN': csrfToken },
+                data: JSON.stringify({
+                    items: [{
+                        id_jo_cont_item:  null,
+                        id_jo_cont_pajak: item.id_jo_cont_pajak,
+                        item_type:        'tax',
+                        nilai_kasbon:     nilaiKasbon,
+                    }],
+                }),
+                success: function(response) {
+                    $('#btnSaveItemInput').prop('disabled', false);
+                    if (response.success) {
+                        mergedItems[index].nilai_kasbon = nilaiKasbon;
+                        mergedItems[index].has_kasbon   = nilaiKasbon > 0;
+                        refreshRowAfterSave(index, nilaiKasbon, nilaiKasbon > 0);
+                        updateFooter();
+                        closeInputCard();
+                        showFloatingAlert('success', 'Tax CA saved!');
+                    } else {
+                        showFloatingAlert('error', response.message || 'Failed to save');
+                    }
+                },
+                error: function(xhr) {
+                    $('#btnSaveItemInput').prop('disabled', false);
+                    showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to save tax CA');
+                }
+            });
+        }
+
         function doSaveItem(joContItemId, rowIndex, nilaiKasbon) {
             $.ajax({
                 url: bulkSaveUrl,
@@ -1741,7 +1826,8 @@
                 data: JSON.stringify({
                     items: [{
                         id_jo_cont_item: joContItemId,
-                        nilai_kasbon: nilaiKasbon
+                        item_type:       'item',
+                        nilai_kasbon:    nilaiKasbon
                     }],
                     _token: csrfToken
                 }),
@@ -1779,12 +1865,18 @@
         // ══════════════════════════════════════════════════════════
         function saveItemInput() {
             const joContItemId = $('#activeJoContItemId').val();
-            const rowIndex = parseInt($('#activeRowIndex').val());
-            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
+            const itemType     = $('#activeItemType').val() || 'item';
+            const pajakId      = $('#activeJoContPajakId').val();
+            const rowIndex     = parseInt($('#activeRowIndex').val());
+            const nilaiKasbon  = parseRupiah($('#inputNilaiKasbon').val());
+            const maxAllowed   = parseFloat($('#activeMaxAllowed').val() || '0');
 
-            if (!joContItemId) {
+            if (itemType !== 'tax' && !joContItemId) {
                 showFloatingAlert('error', 'No item selected');
+                return;
+            }
+            if (itemType === 'tax' && !pajakId) {
+                showFloatingAlert('error', 'No tax item selected');
                 return;
             }
             if (nilaiKasbon <= 0) {
@@ -1799,7 +1891,12 @@
 
             $('#btnSaveItemInput').prop('disabled', true);
             showFloatingAlert('saving', 'Saving...');
-            doSaveItem(joContItemId, rowIndex, nilaiKasbon);
+
+            if (itemType === 'tax') {
+                doSaveTaxItem(rowIndex, nilaiKasbon);
+            } else {
+                doSaveItem(joContItemId, rowIndex, nilaiKasbon);
+            }
         }
 
         // Bind tombol & Enter
@@ -1914,8 +2011,10 @@
                     },
                     data: JSON.stringify({
                         items: [{
-                            id_jo_cont_item: item.id_jo_cont_item,
-                            nilai_kasbon: 0
+                            id_jo_cont_item:  item.id_jo_cont_item || null,
+                            id_jo_cont_pajak: item.id_jo_cont_pajak || null,
+                            item_type:        item.item_type || 'item',
+                            nilai_kasbon:     0
                         }],
                         _token: csrfToken
                     }),
@@ -2237,6 +2336,7 @@
 
             // ── Render tabel ──
             renderTable();
+
         });
     </script>
 @endpush

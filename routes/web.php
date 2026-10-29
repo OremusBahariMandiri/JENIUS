@@ -19,6 +19,7 @@ use App\Http\Controllers\Data\LpjGenController;
 use App\Http\Controllers\Data\LpjOtherController;
 use App\Http\Controllers\Data\LpjTramperController;
 use App\Http\Controllers\Data\MutasiPembayaranController;
+use App\Http\Controllers\Data\MutasiPenerimaanController;
 use App\Http\Controllers\Master\BranchController;
 use App\Http\Controllers\Master\ChartOfAccountController;
 use App\Http\Controllers\Master\CostTypeController;
@@ -27,6 +28,9 @@ use App\Http\Controllers\Master\OtherController;
 use App\Http\Controllers\Master\ParentChartOfAccountController;
 use App\Http\Controllers\Master\PortController;
 use App\Http\Controllers\Master\ReleaseToController;
+use App\Http\Controllers\Rekap\RekapPiutangContractController;
+use App\Http\Controllers\Rekap\InvoicePembayaranContractController;
+use App\Http\Controllers\Master\PajakController;
 use App\Http\Controllers\Master\VesselController;
 use App\Http\Controllers\ThemeController;
 use Illuminate\Support\Facades\Route;
@@ -316,7 +320,7 @@ Route::middleware(['auth'])->group(function () {
     });
 
     // ── JO Contract realtime routes ───────────────────────────
-    Route::prefix('jo-contract')->name('jo-contract.')->group(function () {
+    Route::middleware(['auth'])->prefix('jo-contract')->name('jo-contract.')->group(function () {
         Route::post('/header/store', [JoContractController::class, 'storeHeader'])->name('header.store');
         Route::post('/header/update/{id}', [JoContractController::class, 'updateHeader'])->name('header.update');
         Route::get('/item/show/{id}', [JoContractController::class, 'showItem'])->name('item.show');
@@ -328,6 +332,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/save-all/{id}', [JoContractController::class, 'saveAllChanges'])->name('save-all');
         Route::get('/for-select', [JoContractController::class, 'getForSelect'])->name('for-select');
         Route::post('/bulk-delete', [JoContractController::class, 'bulkDelete'])->name('bulk-delete');
+        // Pajak routes
+        Route::post('/pajak/store', [JoContractController::class, 'storePajak'])->name('pajak.store');
+        Route::delete('/pajak/destroy/{id}', [JoContractController::class, 'destroyPajak'])->name('pajak.destroy');
+        Route::post('/pajak/recalc/{joContId}', [JoContractController::class, 'recalcPajak'])->name('pajak.recalc');
     });
 
     //================= KASBON CONTRACT ROUTE GROUP =================//
@@ -357,6 +365,10 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-contract.items.get');
     Route::get('kasbon-contract/jo-items', [KasbonContractController::class, 'getJoContractItems'])
         ->name('kasbon-contract.jo-items.get');
+    Route::get('kasbon-contract/jo-pajak', [KasbonContractController::class, 'getJoPajakItems'])
+        ->name('kasbon-contract.jo-pajak.get');
+    Route::post('kasbon-contract/pajak/bulk-save', [KasbonContractController::class, 'bulkSavePajakItems'])
+        ->name('kasbon-contract.pajak.bulk-save');
     Route::resource('kasbon-contract', KasbonContractController::class);
     Route::get('kasbon-contract-select', [KasbonContractController::class, 'getForSelect'])
         ->name('kasbon-contract.select');
@@ -624,4 +636,79 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'destroy'])->name('destroy');
         Route::get('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'show'])->name('show');
     });
+
+    Route::prefix('data')->name('mutasi-penerimaan.')->middleware(['auth'])->group(function () {
+
+    // ---- DROPDOWN OPTIONS (harus di atas route {id}) ----
+    Route::get('mutasi-penerimaan/jo-options',     [MutasiPenerimaanController::class, 'joOptions'])->name('jo.options');
+    Route::get('mutasi-penerimaan/jo-info',        [MutasiPenerimaanController::class, 'joInfo'])->name('jo.info');
+    Route::get('mutasi-penerimaan/kasbon-options', [MutasiPenerimaanController::class, 'kasbonOptions'])->name('kasbon.options');
+    Route::get('mutasi-penerimaan/kasbon-info',    [MutasiPenerimaanController::class, 'kasbonInfo'])->name('kasbon.info');
+    Route::get('mutasi-penerimaan/next-voucher-no',[MutasiPenerimaanController::class, 'nextVoucherNo'])->name('next-voucher-no');
+
+    // ---- VOUCHER (harus di atas route {id}) ----
+    Route::get(
+        'mutasi-penerimaan/voucher/{voucherId}/details',
+        [MutasiPenerimaanController::class, 'voucherDetails']
+    )->name('voucher.details');
+
+    Route::post('mutasi-penerimaan/voucher/store',           [MutasiPenerimaanController::class, 'storeVoucher'])->name('voucher.store');
+    Route::put('mutasi-penerimaan/voucher/update/{id}',      [MutasiPenerimaanController::class, 'updateVoucher'])->name('voucher.update');
+    Route::delete('mutasi-penerimaan/voucher/destroy/{id}',  [MutasiPenerimaanController::class, 'destroyVoucher'])->name('voucher.destroy');
+
+    // ---- DETAIL (harus di atas route {id}) ----
+    Route::post('mutasi-penerimaan/detail/store',           [MutasiPenerimaanController::class, 'storeDetail'])->name('detail.store');
+    Route::get('mutasi-penerimaan/detail/show/{id}',        [MutasiPenerimaanController::class, 'showDetail'])->name('detail.show');
+    Route::put('mutasi-penerimaan/detail/update/{id}',      [MutasiPenerimaanController::class, 'updateDetail'])->name('detail.update');
+    Route::delete('mutasi-penerimaan/detail/destroy/{id}',  [MutasiPenerimaanController::class, 'destroyDetail'])->name('detail.destroy');
+
+    // ---- HEADER UPDATE (harus di atas route {id}) ----
+    Route::put('mutasi-penerimaan/header/update/{id}', [MutasiPenerimaanController::class, 'update'])->name('header.update');
+
+    // ---- CRUD Standard (parameterized routes paling bawah) ----
+    Route::get('mutasi-penerimaan',           [MutasiPenerimaanController::class, 'index'])->name('index');
+    Route::get('mutasi-penerimaan/create',    [MutasiPenerimaanController::class, 'create'])->name('create');
+    Route::post('mutasi-penerimaan',          [MutasiPenerimaanController::class, 'store'])->name('store');
+    Route::get('mutasi-penerimaan/{id}/edit', [MutasiPenerimaanController::class, 'edit'])->name('edit');
+    Route::put('mutasi-penerimaan/{id}',      [MutasiPenerimaanController::class, 'update'])->name('update');
+    Route::delete('mutasi-penerimaan/{id}',   [MutasiPenerimaanController::class, 'destroy'])->name('destroy');
+    Route::get('mutasi-penerimaan/{id}',      [MutasiPenerimaanController::class, 'show'])->name('show');
+
+    });
+
+    //================= MASTER PAJAK =================//
+    Route::prefix('master/pajak')->name('pajak.')->group(function () {
+        Route::get('/', [PajakController::class, 'index'])->name('index');
+        Route::get('/create', [PajakController::class, 'create'])->name('create');
+        Route::get('/api/select', [PajakController::class, 'getForSelect'])->name('select');
+        Route::post('/', [PajakController::class, 'store'])->name('store');
+        Route::delete('/', [PajakController::class, 'bulkDelete'])->name('bulk-delete');
+        Route::get('/{id}', [PajakController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [PajakController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [PajakController::class, 'update'])->name('update');
+        Route::delete('/{id}', [PajakController::class, 'destroy'])->name('destroy');
+    });
+    //================= END MASTER PAJAK =================//
+
+    //================= REKAP PIUTANG CUSTOMER =================//
+    Route::prefix('rekap')->group(function () {
+        Route::get('piutang-contract', [RekapPiutangContractController::class, 'index'])->name('rekap-piutang-contract.index');
+        Route::get('proforma-invoice-contract/create/{id_jo_cont}', [InvoicePembayaranContractController::class, 'create'])->name('proforma-invoice-contract.create');
+        Route::post('proforma-invoice-contract', [InvoicePembayaranContractController::class, 'store'])->name('proforma-invoice-contract.store');
+
+        // Invoice Contract List (full CRUD)
+        Route::prefix('invoice-contract')->name('invoice-contract.')->group(function () {
+            Route::get('/',           [InvoicePembayaranContractController::class, 'index'])->name('index');
+            Route::get('/create',     [InvoicePembayaranContractController::class, 'create'])->name('create');
+            Route::post('/',          [InvoicePembayaranContractController::class, 'store'])->name('store');
+            Route::get('/{id}/edit',  [InvoicePembayaranContractController::class, 'edit'])->name('edit');
+            Route::put('/{id}',       [InvoicePembayaranContractController::class, 'update'])->name('update');
+            Route::delete('/{id}',    [InvoicePembayaranContractController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/header',      [InvoicePembayaranContractController::class, 'updateHeader'])->name('header.update');
+            Route::post('/{id}/items/bulk',  [InvoicePembayaranContractController::class, 'bulkSaveItems'])->name('items.bulk-save');
+        });
+    });
+    //================= END REKAP PIUTANG CUSTOMER =================//
+
 });
+

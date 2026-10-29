@@ -175,6 +175,7 @@ class LpjContractController extends Controller
                 'joContract.contract',
                 'joContract.area',
                 'kasbons.kasbonContract.items.joContractItem.invoice',
+                'kasbons.kasbonContract.items.joContractPajak',
                 'items',
             ])->findOrFail($id);
 
@@ -198,29 +199,58 @@ class LpjContractController extends Controller
                 if (!$kasbon) continue;
 
                 foreach ($kasbon->items as $kasbonItem) {
+                    $isTaxRow   = ($kasbonItem->item_type ?? 'item') === 'tax';
                     $joContItem = $kasbonItem->joContractItem;
+                    $joPajak    = $kasbonItem->joContractPajak;
                     $lpjItem    = $lpjItemsMap->get($kasbonItem->id_kasbon_cont_item);
 
-                    $mergedItems[] = [
-                        'id_kasbon_cont_item'    => $kasbonItem->id_kasbon_cont_item,
-                        'id_kasbon_cont'         => $kasbonItem->id_kasbon_cont,
-                        'id_jo_cont_item'        => $kasbonItem->id_jo_cont_item,
-                        'id_kasbon_cont_no'      => $kasbon->id_kasbon_cont,   // nomor kasbon (string)
-                        'invoice_typ'            => $joContItem?->invoice?->invoice_typ ?? '-',
-                        'invoice_ctg'            => $joContItem?->invoice?->invoice_ctg ?? '-',
-                        'nilai_hpp_cont_item'    => (float) $kasbonItem->nilai_hpp_cont_item,
-                        // ← nilai_kasbon = nominal yang dikasbon di kasbon INI (bisa cicilan)
-                        'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
-                        'total_kasbon'           => (float) $kasbonItem->total_kasbon,
-                        'id_lpj_cont_item'       => $lpjItem?->id ?? null,
-                        'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
-                        'has_lpj'                => $lpjItem !== null,
-                        'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
-                        'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
-                        'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
-                        'origin_lpj_cont'        => $joContItem?->origin_lpj_cont ?? null,
-                        'is_orphaned'            => $joContItem === null,
-                    ];
+                    if ($isTaxRow) {
+                        // ── Tax / Pajak row ──
+                        $mergedItems[] = [
+                            'id_kasbon_cont_item'    => $kasbonItem->id_kasbon_cont_item,
+                            'id_kasbon_cont'         => $kasbonItem->id_kasbon_cont,
+                            'id_jo_cont_item'        => null,
+                            'id_jo_cont_pajak'       => $kasbonItem->id_jo_cont_pajak,
+                            'item_type'              => 'tax',
+                            'id_kasbon_cont_no'      => $kasbon->id_kasbon_cont,
+                            'invoice_typ'            => $joPajak?->nama_pajak ?? $kasbonItem->id_kasbon_cont_item,
+                            'invoice_ctg'            => 'Tax',
+                            'nilai_hpp_cont_item'    => (float) $kasbonItem->nilai_hpp_cont_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'total_kasbon'           => (float) $kasbonItem->total_kasbon,
+                            'id_lpj_cont_item'       => $lpjItem?->id ?? null,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'origin_lpj_cont'        => null,
+                            'is_orphaned'            => false,
+                        ];
+                    } else {
+                        // ── Regular item row ──
+                        $mergedItems[] = [
+                            'id_kasbon_cont_item'    => $kasbonItem->id_kasbon_cont_item,
+                            'id_kasbon_cont'         => $kasbonItem->id_kasbon_cont,
+                            'id_jo_cont_item'        => $kasbonItem->id_jo_cont_item,
+                            'id_jo_cont_pajak'       => null,
+                            'item_type'              => 'item',
+                            'id_kasbon_cont_no'      => $kasbon->id_kasbon_cont,
+                            'invoice_typ'            => $joContItem?->invoice?->invoice_typ ?? '-',
+                            'invoice_ctg'            => $joContItem?->invoice?->invoice_ctg ?? '-',
+                            'nilai_hpp_cont_item'    => (float) $kasbonItem->nilai_hpp_cont_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'total_kasbon'           => (float) $kasbonItem->total_kasbon,
+                            'id_lpj_cont_item'       => $lpjItem?->id ?? null,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'origin_lpj_cont'        => $joContItem?->origin_lpj_cont ?? null,
+                            'is_orphaned'            => $joContItem === null,
+                        ];
+                    }
                 }
             }
 
@@ -295,7 +325,8 @@ class LpjContractController extends Controller
         $validator = Validator::make($request->all(), [
             'items'                          => 'required|array',
             'items.*.id_kasbon_cont_item'    => 'required',
-            'items.*.id_jo_cont_item'        => 'required',
+            'items.*.id_jo_cont_item'        => 'nullable',
+            'items.*.item_type'              => 'nullable|in:item,tax',
             'items.*.amount_lpj'             => 'required|numeric|min:0',
             'items.*.id_md_chart_of_account' => 'nullable|exists:a13_md_chart_of_account,id_md_chart_of_account',
         ]);
@@ -309,11 +340,13 @@ class LpjContractController extends Controller
             DB::beginTransaction();
 
             foreach ($request->items as $itemData) {
-                $amountLpj = (float) $itemData['amount_lpj'];
-                $coa       = $itemData['id_md_chart_of_account'] ?? null;
+                $amountLpj  = (float) $itemData['amount_lpj'];
+                $coa        = $itemData['id_md_chart_of_account'] ?? null;
+                $isTaxRow   = ($itemData['item_type'] ?? 'item') === 'tax';
+                $joContItem = $isTaxRow ? null : ($itemData['id_jo_cont_item'] ?? null);
 
-                // ── Validasi: amount_lpj tidak boleh melebihi nilai_kasbon pada kasbon item ini ──
-                if ($amountLpj > 0) {
+                // ── Validasi amount hanya untuk item biasa (bukan pajak) ──
+                if (!$isTaxRow && $amountLpj > 0) {
                     $kasbonItem = KasbonContractItem::where('id_kasbon_cont_item', $itemData['id_kasbon_cont_item'])->first();
                     if ($kasbonItem) {
                         $nilaiKasbon = (float) $kasbonItem->nilai_kasbon;
@@ -344,7 +377,8 @@ class LpjContractController extends Controller
                         'id_lpj_cont_item'       => IdGenerator::generate('D03', 'd03_lpj_cont_item', 'id_lpj_cont_item'),
                         'id_lpj_cont'            => $lpj->id_lpj_cont,
                         'id_kasbon_cont_item'    => $itemData['id_kasbon_cont_item'],
-                        'id_jo_cont_item'        => $itemData['id_jo_cont_item'],
+                        'id_jo_cont_item'        => $joContItem,
+                        'item_type'              => $isTaxRow ? 'tax' : 'item',
                         'amount_lpj'             => $amountLpj,
                         'id_md_chart_of_account' => $coa,
                     ]);

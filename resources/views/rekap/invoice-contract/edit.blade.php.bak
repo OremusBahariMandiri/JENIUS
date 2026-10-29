@@ -1,0 +1,506 @@
+@extends('layouts.app')
+
+@section('title', 'Edit Invoice – ' . $invoice->no_invoice)
+
+@push('styles')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+    <style>
+        .invoiceContractEditPage .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.08);
+        }
+        .invoiceContractEditPage .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+        }
+        .invoiceContractEditPage .form-control:focus,
+        .invoiceContractEditPage .form-select:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 0.2rem rgba(16,185,129,0.25);
+        }
+        .invoiceContractEditPage .form-label {
+            color: var(--text-dark);
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        .invoiceContractEditPage .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .invoiceContractEditPage .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .invoiceContractEditPage .btn-success {
+            background-color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+        .invoiceContractEditPage .btn-success:hover {
+            background-color: var(--dark-green);
+            border-color: var(--dark-green);
+        }
+
+        /* TABLE STYLES — sama persis dengan JO Contract */
+        .table-items { width: 100%; margin-bottom: 1rem; background-color: transparent; }
+        .table-items thead th {
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid #2c3e50;
+            padding: 12px 10px;
+            font-weight: 600;
+            font-size: 0.875rem;
+            vertical-align: middle;
+            text-align: center;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .table-items tbody td {
+            border: 1px solid #dee2e6;
+            padding: 10px;
+            vertical-align: middle;
+            background-color: #fff;
+            text-align: center;
+        }
+        .table-items tbody tr:hover td { background-color: #f8f9fa; }
+        .table-items .item-number-cell {
+            font-weight: 600;
+            color: #2c3e50;
+            background-color: #ecf0f1 !important;
+        }
+        .table-items .category-cell {
+            background: #e8f5e9 !important;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        .table-items .tax-category-cell {
+            background: #fef3c7 !important;
+            color: #92400e;
+            font-weight: 600;
+        }
+        .table-items .tax-row td { background: #fffbeb; }
+        .table-items .tax-row:hover td { background: #fef9c3 !important; }
+        .no-items-row td {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+            background: #f8f9fa !important;
+        }
+        .table-footer {
+            background: #2c3e50;
+            color: white;
+            font-weight: 700;
+        }
+        .table-footer td { padding: 15px 10px; font-size: 0.95rem; }
+
+        /* FINAL SAVE BUTTON */
+        .final-save-section {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+            border-radius: 12px 12px 0 0;
+            margin-top: 30px;
+            z-index: 100;
+        }
+        .btn-final-save {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(16,185,129,0.4);
+            transition: all 0.3s;
+        }
+        .btn-final-save:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(16,185,129,0.5);
+            color: white;
+        }
+        .btn-final-back {
+            background: linear-gradient(135deg, #868686 0%, #5e5e5e 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 6px 20px rgba(27,27,27,0.4);
+            transition: all 0.3s;
+        }
+        .btn-final-back:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(49,49,49,0.5);
+            color: white;
+        }
+
+        /* Currency input in table cell */
+        .currency-group-table {
+            display: flex;
+            align-items: center;
+        }
+        .currency-label-table {
+            background-color: #2c3e50;
+            color: white;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.7rem;
+            border-radius: 6px 0 0 6px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .currency-input-table {
+            border-radius: 0 6px 6px 0 !important;
+            border-left: none !important;
+            text-align: right;
+        }
+    </style>
+@endpush
+
+@section('content')
+<div class="container-fluid invoiceContractEditPage">
+
+    {{-- Page Header Card --}}
+    <div class="card shadow mb-4">
+        <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
+            <span class="fw-bold">
+                <i class="fas fa-file-invoice me-2"></i>Edit Invoice – {{ $invoice->no_invoice }}
+                <span class="badge bg-{{ $invoice->status === 'draft' ? 'warning text-dark' : ($invoice->status === 'closed' ? 'secondary' : 'success') }} ms-2" style="font-size:.7rem">
+                    {{ ucfirst($invoice->status) }}
+                </span>
+            </span>
+            <div class="d-flex gap-2 align-items-center">
+                <a href="{{ route('invoice-contract.index') }}" class="btn btn-light btn-sm">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show">
+            <i class="fas fa-check-circle me-1"></i>{{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show">
+            <i class="fas fa-exclamation-circle me-1"></i>{{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('invoice-contract.update', $invoice->id_invoice_contract) }}" id="editForm">
+        @csrf @method('PUT')
+
+        {{-- ── Header Card (collapsible) ── --}}
+        <div class="card shadow mb-4">
+            <div class="card-header text-black d-flex justify-content-between align-items-center"
+                 style="background-color: #d1fae5; cursor:pointer" onclick="toggleHeader()">
+                <h6 class="mb-0"><i class="fas fa-file-alt me-2"></i>Invoice Header</h6>
+                <i class="fas fa-chevron-down" id="headerChevron"></i>
+            </div>
+            <div class="card-body p-4" id="headerBody" style="display:none">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Nomor Invoice</label>
+                        <input type="text" name="no_invoice" class="form-control" value="{{ old('no_invoice', $invoice->no_invoice) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">To Customer</label>
+                        <input type="text" name="to_customer" class="form-control" value="{{ old('to_customer', $invoice->to_customer) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Tgl Invoice</label>
+                        <input type="date" name="tgl_invoice" class="form-control" value="{{ old('tgl_invoice', $invoice->tgl_invoice?->format('Y-m-d')) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Jatuh Tempo</label>
+                        <input type="date" name="due_date" class="form-control" value="{{ old('due_date', $invoice->due_date?->format('Y-m-d')) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="draft"  {{ $invoice->status === 'draft'  ? 'selected' : '' }}>Draft</option>
+                            <option value="sent"   {{ $invoice->status === 'sent'   ? 'selected' : '' }}>Sent</option>
+                            <option value="closed" {{ $invoice->status === 'closed' ? 'selected' : '' }}>Closed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Contract No</label>
+                        <input type="text" name="contract_no" class="form-control" value="{{ old('contract_no', $invoice->contract_no) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">PO Number</label>
+                        <input type="text" name="po_number" class="form-control" value="{{ old('po_number', $invoice->po_number) }}">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Currency</label>
+                        <select name="currency" class="form-select">
+                            <option value="IDR" {{ $invoice->currency === 'IDR' ? 'selected' : '' }}>IDR</option>
+                            <option value="USD" {{ $invoice->currency === 'USD' ? 'selected' : '' }}>USD</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Close Note</label>
+                        <textarea name="close_note" class="form-control" rows="2">{{ old('close_note', $invoice->close_note) }}</textarea>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Reopen Note</label>
+                        <textarea name="reopen_note" class="form-control" rows="2">{{ old('reopen_note', $invoice->reopen_note) }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── Items Card ── --}}
+        <div class="card shadow mb-4">
+            <div class="card-header text-black" style="background-color: #d1fae5">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0"><i class="fas fa-list me-2"></i>Invoice Items</h6>
+                    {{-- Info strip --}}
+                    <div class="d-flex gap-3 align-items-center small text-muted">
+                        <span><strong>JO:</strong> {{ $invoice->joContract?->no_jo_cont ?? '-' }}</span>
+                        <span><strong>Customer:</strong> {{ $invoice->joContract?->contract?->customer?->customer ?? $invoice->to_customer ?? '-' }}</span>
+                        <span><strong>Tgl:</strong> {{ $invoice->tgl_invoice?->format('d/m/Y') ?? '-' }}</span>
+                        <span><strong>Due:</strong> {{ $invoice->due_date?->format('d/m/Y') ?? '-' }}</span>
+                        @if($kursUsd)
+                        <span class="badge bg-dark">Kurs {{ number_format($kursUsd, 0, ',', '.') }}</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-4">
+                <div class="table-responsive">
+                    <table class="table table-items table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="width:4%">No</th>
+                                <th style="width:13%">Category</th>
+                                <th style="width:16%">Item</th>
+                                <th style="width:12%">IDR</th>
+                                <th style="width:10%">USD</th>
+                                <th style="width:15%">Invoice (IDR)</th>
+                                <th style="width:20%">Akun</th>
+                                <th style="width:10%">Reimburse</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        @php $globalIndex = 1; $totalDpp = 0; $totalPpn = 0; $totalReimb = 0; @endphp
+
+                        {{-- Regular items grouped by category --}}
+                        @foreach($groupedItems as $category => $catItems)
+                        @if($category === '__TAX__') @continue @endif
+                        @foreach($catItems as $idx => $invItem)
+                        @php
+                            $joItem  = $invItem->joContractItem;
+                            $nomInv  = (float)$invItem->nominal_invoice;
+                            $selIdr  = (float)($joItem?->hargajual_idr ?? 0);
+                            $selUsd  = (float)($joItem?->pendapatan_usd ?? 0);
+                            $itemLbl = $joItem?->invoice?->invoice_typ ?? ('Item #' . $invItem->id_invoice_contract_item);
+                            $isReimb = (bool)$invItem->is_reimbursement;
+                            if($isReimb) $totalReimb += $nomInv;
+                            else         $totalDpp   += $nomInv;
+                        @endphp
+                        <tr class="item-row" data-is-tax="0">
+                            <td class="item-number-cell">{{ $globalIndex++ }}</td>
+                            @if($idx === 0)
+                            <td class="category-cell" rowspan="{{ $catItems->count() }}">{{ $category }}</td>
+                            @endif
+                            <td class="text-start">
+                                <span class="fw-semibold" style="color:#2c3e50">{{ $itemLbl }}</span>
+                                @if($joItem?->note)
+                                    <div class="text-muted fst-italic" style="font-size:.72rem">{{ $joItem->note }}</div>
+                                @endif
+                            </td>
+                            <td>{{ $selIdr > 0 ? number_format($selIdr, 0, ',', '.') : '-' }}</td>
+                            <td>{{ $selUsd > 0 ? number_format($selUsd, 2, ',', '.') : '-' }}</td>
+                            <td>
+                                <div class="currency-group-table">
+                                    <span class="currency-label-table">IDR</span>
+                                    <input type="text"
+                                           name="items[{{ $invItem->id_invoice_contract_item }}][nominal_invoice]"
+                                           class="form-control form-control-sm currency-input currency-input-table"
+                                           value="{{ old('items.'.$invItem->id_invoice_contract_item.'.nominal_invoice', $nomInv > 0 ? number_format($nomInv, 0, ',', '.') : '') }}"
+                                           placeholder="0">
+                                </div>
+                            </td>
+                            <td>
+                                <select name="items[{{ $invItem->id_invoice_contract_item }}][id_md_chart_of_account]"
+                                        class="form-select form-select-sm s2-coa">
+                                    <option value="">-- Akun --</option>
+                                    @foreach($coas as $coa)
+                                        <option value="{{ $coa->id_md_chart_of_account }}"
+                                            {{ old('items.'.$invItem->id_invoice_contract_item.'.id_md_chart_of_account', $invItem->id_md_chart_of_account) == $coa->id_md_chart_of_account ? 'selected' : '' }}>
+                                            {{ $coa->no_account }} – {{ $coa->account_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td>
+                                <input type="checkbox"
+                                       name="items[{{ $invItem->id_invoice_contract_item }}][is_reimbursement]"
+                                       class="form-check-input item-reimb-cb"
+                                       value="1"
+                                       {{ $isReimb ? 'checked' : '' }}>
+                            </td>
+                        </tr>
+                        @endforeach
+                        @endforeach
+
+                        {{-- Tax rows --}}
+                        @if(isset($groupedItems['__TAX__']))
+                        @foreach($groupedItems['__TAX__'] as $idx => $invItem)
+                        @php
+                            $pajak   = $invItem->joContractPajak;
+                            $nomInv  = (float)$invItem->nominal_invoice;
+                            $taxLbl  = $invItem->deskripsi ?? $pajak?->nama_pajak ?? ('Tax #' . $invItem->id_invoice_contract_item);
+                            $nomPajak = (float)($pajak?->nominal_pajak ?? 0);
+                            $totalPpn += $nomInv;
+                        @endphp
+                        <tr class="item-row tax-row" data-is-tax="1">
+                            <td class="item-number-cell">{{ $globalIndex++ }}</td>
+                            @if($idx === 0)
+                            <td class="tax-category-cell" rowspan="{{ $groupedItems['__TAX__']->count() }}">Pajak (PPN)</td>
+                            @endif
+                            <td class="text-start">
+                                <span class="fw-semibold" style="color:#92400e">{{ $taxLbl }}</span>
+                            </td>
+                            <td>{{ $nomPajak > 0 ? number_format($nomPajak, 0, ',', '.') : '-' }}</td>
+                            <td>-</td>
+                            <td>
+                                <div class="currency-group-table">
+                                    <span class="currency-label-table">IDR</span>
+                                    <input type="text"
+                                           name="items[{{ $invItem->id_invoice_contract_item }}][nominal_invoice]"
+                                           class="form-control form-control-sm currency-input currency-input-table"
+                                           value="{{ old('items.'.$invItem->id_invoice_contract_item.'.nominal_invoice', $nomInv > 0 ? number_format($nomInv, 0, ',', '.') : '') }}"
+                                           placeholder="0">
+                                </div>
+                            </td>
+                            <td>
+                                <select name="items[{{ $invItem->id_invoice_contract_item }}][id_md_chart_of_account]"
+                                        class="form-select form-select-sm s2-coa">
+                                    <option value="">-- Akun --</option>
+                                    @foreach($coas as $coa)
+                                        <option value="{{ $coa->id_md_chart_of_account }}"
+                                            {{ old('items.'.$invItem->id_invoice_contract_item.'.id_md_chart_of_account', $invItem->id_md_chart_of_account) == $coa->id_md_chart_of_account ? 'selected' : '' }}>
+                                            {{ $coa->no_account }} – {{ $coa->account_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td></td>
+                        </tr>
+                        @endforeach
+                        @endif
+
+                        {{-- Empty state --}}
+                        @if(collect($groupedItems)->flatten()->isEmpty())
+                        <tr class="no-items-row">
+                            <td colspan="8">
+                                <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                <p class="mb-0 fw-bold">Tidak ada item</p>
+                            </td>
+                        </tr>
+                        @endif
+                        </tbody>
+
+                        {{-- Footer total --}}
+                        @php $grandTotal = $totalDpp + $totalPpn + $totalReimb; @endphp
+                        <tfoot>
+                            <tr class="table-footer">
+                                <td colspan="5" class="text-end pe-3">Summary</td>
+                                <td colspan="3">
+                                    <div class="d-flex gap-3 justify-content-center">
+                                        <span>DPP: <strong id="summDpp">{{ number_format($totalDpp, 0, ',', '.') }}</strong></span>
+                                        <span>PPN: <strong id="summPpn">{{ number_format($totalPpn, 0, ',', '.') }}</strong></span>
+                                        <span>Reimb: <strong id="summReimb">{{ number_format($totalReimb, 0, ',', '.') }}</strong></span>
+                                        <span>Total: <strong id="summTotal">{{ number_format($grandTotal, 0, ',', '.') }}</strong></span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- Final Save --}}
+        <div class="final-save-section">
+            <div class="d-flex justify-content-between align-items-center">
+                <a href="{{ route('invoice-contract.index') }}" class="btn btn-final-back">
+                    <i class="fas fa-arrow-left me-2"></i>Kembali
+                </a>
+                <button type="submit" class="btn btn-final-save">
+                    <i class="fas fa-save me-2"></i>Simpan Perubahan
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+@endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+function toggleHeader() {
+    const body    = document.getElementById('headerBody');
+    const chevron = document.getElementById('headerChevron');
+    const shown   = body.style.display !== 'none';
+    body.style.display = shown ? 'none' : 'block';
+    chevron.className  = shown ? 'fas fa-chevron-down' : 'fas fa-chevron-up';
+}
+
+$(document).ready(function(){
+    // Select2
+    $('.s2-coa').select2({
+        theme: 'bootstrap-5',
+        placeholder: '-- Akun --',
+        allowClear: true,
+        width: '100%',
+    });
+
+    // Currency formatting
+    function parseCur(v) {
+        return parseFloat(String(v).replace(/\./g,'').replace(',','.')) || 0;
+    }
+    function fmtCur(n) {
+        return Math.round(n).toLocaleString('id-ID');
+    }
+
+    $(document).on('input', '.currency-input', function(){
+        let raw = $(this).val().replace(/\./g,'').replace(/[^0-9]/g,'');
+        let num = parseInt(raw) || 0;
+        $(this).val(num > 0 ? num.toLocaleString('id-ID') : '');
+        recalc();
+    });
+
+    $(document).on('change', '.item-reimb-cb', function(){
+        recalc();
+    });
+
+    function recalc() {
+        let dpp = 0, ppn = 0, reimb = 0;
+        $('.item-row').each(function(){
+            const isTax  = $(this).data('is-tax') == 1;
+            const nom    = parseCur($(this).find('.currency-input').val());
+            const isReimb = $(this).find('.item-reimb-cb').is(':checked');
+            if(isTax)        ppn   += nom;
+            else if(isReimb) reimb += nom;
+            else             dpp   += nom;
+        });
+        $('#summDpp').text(fmtCur(dpp));
+        $('#summPpn').text(fmtCur(ppn));
+        $('#summReimb').text(fmtCur(reimb));
+        $('#summTotal').text(fmtCur(dpp + ppn + reimb));
+    }
+});
+</script>
+@endpush

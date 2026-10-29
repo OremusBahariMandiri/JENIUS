@@ -814,6 +814,7 @@
                         </div>
                     </div>
 
+
                 </form>
 
                 {{-- FINAL BACK SECTION --}}
@@ -1111,6 +1112,7 @@
                 $('#joSummaryWrapper').show();
 
                 loadJoContractItems(idJoCont);
+                loadJoPajakForCreate(idJoCont);
             });
 
             // ── JO Item change → fill HPP ──
@@ -1214,36 +1216,24 @@
         // =============================================
         // LOAD JO CONTRACT ITEMS (for the CA item dropdown)
         // =============================================
-        function loadJoContractItems(idJoCont) {
+        // =============================================
+        // LOAD JO PAJAK (for create: stored in memory, appended to item table after header save)
+        // =============================================
+        let joPajakForCreate = [];
+
+        function loadJoPajakForCreate(idJoCont) {
             $.ajax({
-                url: '{{ route('kasbon-contract.jo-items.get') }}',
+                url: '{{ route('kasbon-contract.jo-pajak.get') }}',
                 method: 'GET',
-                data: {
-                    id_jo_cont: idJoCont
-                },
+                data: { id_jo_cont: idJoCont },
                 success: function(response) {
                     if (response.success) {
-                        joContractItems = response.data;
-
-                        // Populate CA item dropdown
-                        let options = '<option value="">-- Select Item --</option>';
-                        response.data.forEach(item => {
-                            options +=
-                                `<option value="${item.id_jo_cont_item}">${item.invoice_typ} (${item.invoice_ctg})</option>`;
-                        });
-                        $('#input_jo_cont_item').html(options);
-
-                        // Update summary card item count
-                        const n = response.data.length;
-                        $('#joSummaryItemCount').text(n + ' item' + (n !== 1 ? 's' : ''));
+                        joPajakForCreate = response.data;
                     } else {
-                        $('#joSummaryItemCount').text('—');
+                        joPajakForCreate = [];
                     }
                 },
-                error: function() {
-                    showFloatingAlert('error', 'Failed to load JO Contract items');
-                    $('#joSummaryItemCount').text('—');
-                }
+                error: function() { joPajakForCreate = []; }
             });
         }
 

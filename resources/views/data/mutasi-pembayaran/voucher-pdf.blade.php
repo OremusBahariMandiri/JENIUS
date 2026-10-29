@@ -196,6 +196,26 @@
         .sign-space {
             height: 60px;
         }
+
+        /* Tambahkan di dalam <style> */
+        .paid-to-meta {
+            font-size: 7pt;
+            color: #333;
+            font-weight: normal;
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+
+        .paid-to-meta span.meta-lbl {
+            font-weight: bold;
+            color: #000;
+        }
+
+        .paid-to-name {
+            font-size: 9pt;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
     </style>
 </head>
 
@@ -242,6 +262,8 @@
                 if ($rowspan > 0) {
                     $groups[] = [
                         'paid_to' => $pdfRow['paid_to'] ?? '-',
+                        'jo_nomor' => $pdfRow['jo_nomor'] ?? null,
+                        'kasbon_nomor' => $pdfRow['kasbon_nomor'] ?? null,
                         'rowspan' => $rowspan,
                         'cats' => $cats,
                     ];
@@ -381,7 +403,7 @@
         <table class="main">
             <thead>
                 <tr>
-                    <th style="width:20%;">PAID TO</th>
+                    <th style="width:20%;">RELEASE TO</th>
                     <th style="text-align:left;">DESCRIPTION</th>
                     <th class="amt">AMOUNT (IDR)</th>
                 </tr>
@@ -392,7 +414,15 @@
                         <tr class="cat-row">
                             @if ($catIdx === 0)
                                 <td class="paid-to-cell" rowspan="{{ $grp['rowspan'] }}">
-                                    {{ $grp['paid_to'] }}
+                                    <div class="paid-to-name">{{ $grp['paid_to'] }}</div>
+                                    <div class="paid-to-meta">
+                                        @if ($grp['jo_nomor'])
+                                            <span class="meta-lbl">JO</span> : {{ $grp['jo_nomor'] }}<br>
+                                        @endif
+                                        @if ($grp['kasbon_nomor'])
+                                            <span class="meta-lbl">CA</span> : {{ $grp['kasbon_nomor'] }}
+                                        @endif
+                                    </div>
                                 </td>
                             @endif
                             <td style="font-weight:bold;">{{ strtoupper($cat['name']) }} :</td>
@@ -432,11 +462,13 @@
             {{-- Header label --}}
             <tr>
                 <td style="font-weight:bold;">Cashier</td>
-                <td style="font-weight:bold;">Head of Finance</td>
+                <td style="font-weight:bold;">Admin</td>
                 <td style="font-weight:bold;">Accounting</td>
+                <td style="font-weight:bold;">Head of Finance</td>
             </tr>
             {{-- Space TTD --}}
             <tr>
+                <td class="sign-space">&nbsp;</td>
                 <td class="sign-space">&nbsp;</td>
                 <td class="sign-space">&nbsp;</td>
                 <td class="sign-space">&nbsp;</td>
@@ -446,9 +478,11 @@
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
+                <td>&nbsp;</td>
             </tr>
             {{-- Tanggal --}}
             <tr>
+                <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>
                 <td>&nbsp;</td>

@@ -943,6 +943,47 @@
                                             </tr>
                                         @endif
                                     </tbody>
+
+                                    {{-- TAX ROWS (populated by JS) --}}
+                                    <tbody id="taxTableBody">
+                                        @foreach($pajakItems as $pi)
+                                        @php
+                                            $allTaxRowNumber = ($globalIndex ?? 1) + $loop->index;
+                                        @endphp
+                                        <tr class="tax-row"
+                                            data-tax-id="{{ $pi->id_jo_cont_pajak }}"
+                                            data-raw="{{ $pi->nominal_pajak }}"
+                                            data-include-selling="{{ $pi->include_selling ? 1 : 0 }}"
+                                            data-include-hpp="{{ $pi->include_hpp ? 1 : 0 }}">
+                                            <td class="text-center">{{ $allTaxRowNumber }}</td>
+                                            <td>Tax</td>
+                                            <td>{{ $pi->nama_pajak }}</td>
+                                            <td class="text-end">—</td>
+                                            <td class="text-end">—</td>
+                                            <td class="tax-selling">
+                                                @if($pi->include_selling)
+                                                    {{ number_format($pi->nominal_pajak, 2, ',', '.') }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </td>
+                                            <td class="tax-hpp">
+                                                @if($pi->include_hpp)
+                                                    {{ number_format($pi->nominal_pajak, 2, ',', '.') }}
+                                                @else
+                                                    —
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-danger btn-xs"
+                                                    onclick="deleteTax(this, '{{ $pi->id_jo_cont_pajak }}')" title="Remove Tax">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+
                                     <tfoot class="table-footer">
                                         <tr>
                                             <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
@@ -972,8 +1013,49 @@
                                             </td>
                                             <td></td>
                                         </tr>
+
                                     </tfoot>
                                 </table>
+
+                                {{-- TAX INPUT PANEL --}}
+                                <div id="taxInputPanel" class="mt-3 p-3 rounded-3" style="background:#fffbf0; border:1px solid #ffc107;">
+                                    <div class="d-flex align-items-end gap-3 flex-wrap">
+                                        <div style="flex:1; min-width:220px;">
+                                            <label class="form-label form-label-sm fw-semibold mb-1" style="color:#856404;">
+                                                <i class="fas fa-percent me-1"></i>Tax Type
+                                            </label>
+                                            <select id="selectTax" class="form-select form-select-sm">
+                                                <option value="">-- Select Tax --</option>
+                                            </select>
+                                        </div>
+                                        <div style="min-width:160px;">
+                                            <label class="form-label form-label-sm fw-semibold mb-1" style="color:#28a745;">Tax Amount</label>
+                                            <div class="input-group input-group-sm">
+                                                <span class="input-group-text">IDR</span>
+                                                <input type="text" id="taxAmount" class="form-control text-end fw-bold" readonly style="background:#f0fff4; color:#28a745;">
+                                            </div>
+                                        </div>
+                                        <div class="d-flex flex-column gap-1" style="min-width:170px;">
+                                            <label class="form-label form-label-sm fw-semibold mb-1" style="color:#856404;">Include in</label>
+                                            <div class="d-flex gap-3">
+                                                <div class="form-check form-check-inline mb-0">
+                                                    <input class="form-check-input" type="checkbox" id="taxIncludeSelling" checked>
+                                                    <label class="form-check-label" for="taxIncludeSelling" style="font-size:0.85rem;">Selling Price</label>
+                                                </div>
+                                                <div class="form-check form-check-inline mb-0">
+                                                    <input class="form-check-input" type="checkbox" id="taxIncludeHpp">
+                                                    <label class="form-check-label" for="taxIncludeHpp" style="font-size:0.85rem;">HPP</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex align-items-end" style="padding-bottom:1px;">
+                                            <button type="button" class="btn btn-warning btn-sm fw-bold px-4" id="addTaxBtn">
+                                                <i class="fas fa-plus me-1"></i>Add Tax to Table
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{-- END TAX INPUT PANEL --}}
 
                                 {{-- LPJ origin note — ditampilkan via Blade jika ada, JS akan toggle saat add/remove --}}
                                 <div class="lpj-origin-note mt-2" id="lpjOriginNote"
@@ -1017,8 +1099,50 @@
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        // ── GLOBAL: deleteTax — harus di luar document.ready agar onclick bisa memanggil ──
+        function deleteTax(btn, id) {
+            var row = $(btn).closest('tr');
+            var destroyUrl = '{{ url("jo-contract/pajak/destroy") }}/' + id;
+            var csrf = '{{ csrf_token() }}';
+            Swal.fire({
+                title: 'Remove Tax?',
+                text: 'This tax entry will be removed.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Remove',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+                $.ajax({
+                    url: destroyUrl,
+                    method: 'DELETE',
+                    headers: { 'X-CSRF-TOKEN': csrf },
+                    success: function(res) {
+                        if (res.success) {
+                            row.remove();
+                            var baseCount = $('.item-row').length;
+                            $('#taxTableBody tr.tax-row').each(function(i) {
+                                $(this).find('td:first').text(baseCount + i + 1);
+                            });
+                            if (typeof updateGrandTotal === 'function') updateGrandTotal();
+                            Swal.fire({ icon: 'success', title: 'Removed', text: 'Tax entry removed.', timer: 1200, showConfirmButton: false });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Could not remove this tax entry.' });
+                        }
+                    },
+                    error: function(xhr) {
+                        var err = xhr.responseJSON;
+                        Swal.fire({ icon: 'error', title: 'Failed', text: err && err.message ? err.message : 'Could not remove this tax entry.' });
+                    }
+                });
+            });
+        }
+
         // ========================================
         // GLOBAL VARIABLES
         // ========================================
@@ -1113,10 +1237,13 @@
         }
 
         function formatNumber(amount) {
-            return amount.toLocaleString('id-ID', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
+            // Format identik dengan PHP number_format($x, 2, ',', '.')
+            // ribuan: titik, desimal: koma — konsisten tanpa bergantung locale browser
+            const num = parseFloat(amount) || 0;
+            const fixed = num.toFixed(2);
+            const parts = fixed.split('.');
+            parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return parts[0] + ',' + parts[1];
         }
 
         setupRupiahInput(document.getElementById('global_kurs_usd_display'));
@@ -2419,21 +2546,21 @@
         }
 
         function updateGrandTotal() {
-            let totalIDR = 0,
-                totalUSD = 0,
-                totalHPP = 0,
-                totalSelling = 0;
-
+            let totalIDR = 0, totalUSD = 0, totalHPP = 0, totalSelling = 0;
             $('.item-row').each(function() {
                 const hasCategoryCell = $(this).find('.category-cell').length > 0;
                 const off = hasCategoryCell ? 0 : -1;
-
-                totalIDR += parseRupiah($(this).find('td').eq(3 + off).text());
-                totalUSD += parseRupiah($(this).find('td').eq(4 + off).text());
+                totalIDR     += parseRupiah($(this).find('td').eq(3 + off).text());
+                totalUSD     += parseRupiah($(this).find('td').eq(4 + off).text());
                 totalSelling += parseRupiah($(this).find('td').eq(5 + off).text());
-                totalHPP += parseRupiah($(this).find('td').eq(6 + off).text());
+                totalHPP     += parseRupiah($(this).find('td').eq(6 + off).text());
             });
-
+            // Add tax nominals based on include_selling / include_hpp flags
+            $('#taxTableBody tr.tax-row').each(function() {
+                const raw = parseFloat($(this).data('raw')) || 0;
+                if ($(this).data('include-selling') == 1) totalSelling += raw;
+                if ($(this).data('include-hpp')     == 1) totalHPP     += raw;
+            });
             $('#footerTotalIDR').text(formatNumber(totalIDR));
             $('#footerTotalUSD').text(formatNumber(totalUSD));
             $('#footerTotalSelling').text(formatNumber(totalSelling));
@@ -2469,6 +2596,150 @@
                 allowClear: true,
                 width: '100%',
             });
+        // ============================================================
+        // TAX JAVASCRIPT
+        // ============================================================
+
+        // isolated block scope to avoid const conflicts
+        {
+            const joContId   = '{{ $joContract->id_jo_cont }}';
+            const storeUrl   = '{{ route("jo-contract.pajak.store") }}';
+            const destroyUrl = (id) => `{{ url("jo-contract/pajak/destroy") }}/${id}`;
+            const selectUrl  = '{{ route("pajak.select") }}';
+            const csrf       = '{{ csrf_token() }}';
+
+            // Init Select2
+            $('#selectTax').select2({
+                theme: 'bootstrap-5',
+                placeholder: '-- Select Tax --',
+                allowClear: true,
+                width: '100%',
+                ajax: {
+                    url: selectUrl,
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) { return { q: params.term }; },
+                    processResults: function(res) {
+                        return { results: res.data || [] };
+                    },
+                    cache: true
+                }
+            });
+
+            // Recalc tax amount preview based on current selling total (items only, no tax)
+            function getItemsSellingTotal() {
+                let total = 0;
+                $('.item-row').each(function() {
+                    const hasCat = $(this).find('.category-cell').length > 0;
+                    const off = hasCat ? 0 : -1;
+                    total += parseRupiah($(this).find('td').eq(5 + off).text());
+                });
+                return total;
+            }
+
+            function recalcPreview() {
+                const sel = $('#selectTax').select2('data');
+                if (!sel || !sel.length || !sel[0].id) {
+                    $('#taxAmount').val('');
+                    return;
+                }
+                const pct  = parseFloat(sel[0].persentase) || 0;
+                const base = getItemsSellingTotal();
+                $('#taxAmount').val(formatNumber(Math.round(base * pct / 100 * 100) / 100));
+            }
+
+            $('#selectTax').on('select2:select select2:unselect select2:clear', function() {
+                recalcPreview();
+            });
+
+            // Next row number after all item-rows and existing tax-rows
+            function nextRowNumber() {
+                const itemCount = $('.item-row').length;
+                const taxCount  = $('#taxTableBody tr.tax-row').length;
+                return itemCount + taxCount + 1;
+            }
+
+            // Add Tax
+            $('#addTaxBtn').on('click', function() {
+                const taxId = $('#selectTax').val();
+                if (!taxId) {
+                    Swal.fire({ icon: 'warning', title: 'Select Tax', text: 'Please select a tax type first.', confirmButtonColor: '#ffc107' });
+                    return;
+                }
+                const incSelling = $('#taxIncludeSelling').is(':checked') ? 1 : 0;
+                const incHpp     = $('#taxIncludeHpp').is(':checked') ? 1 : 0;
+                if (!incSelling && !incHpp) {
+                    Swal.fire({ icon: 'warning', title: 'Select Target', text: 'Please check at least one of Selling Price or HPP.', confirmButtonColor: '#ffc107' });
+                    return;
+                }
+                const btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Adding...');
+                $.ajax({
+                    url: storeUrl,
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': csrf },
+                    data: {
+                        id_jo_cont:       joContId,
+                        id_md_pajak:      taxId,
+                        include_selling:  incSelling,
+                        include_hpp:      incHpp
+                    },
+                    success: function(res) {
+                        if (res.success) {
+                            appendTaxRow(res.data, nextRowNumber());
+                            updateGrandTotal();
+                            recalcPreview();
+                            $('#selectTax').val(null).trigger('change');
+                            $('#taxIncludeSelling').prop('checked', true);
+                            $('#taxIncludeHpp').prop('checked', false);
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Something went wrong.' });
+                        }
+                    },
+                    error: function(xhr) {
+                        const err = xhr.responseJSON;
+                        const msg = err && err.message ? err.message :
+                            (err && err.errors ? Object.values(err.errors).flat().join(', ') : 'Request failed.');
+                        Swal.fire({ icon: 'error', title: 'Failed', text: msg });
+                    },
+                    complete: function() {
+                        btn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i>Add Tax to Table');
+                    }
+                });
+            });
+
+            // Delete Tax — handled by global deleteTax() function below
+
+            function renumberTaxRows() {
+                const baseCount = $('.item-row').length;
+                $('#taxTableBody tr.tax-row').each(function(i) {
+                    $(this).find('td:first').text(baseCount + i + 1);
+                });
+            }
+
+            function appendTaxRow(d, rowNum) {
+                const sellingVal = d.include_selling ? formatNumber(d.nominal_pajak) : '—';
+                const hppVal     = d.include_hpp     ? formatNumber(d.nominal_pajak) : '—';
+                const row = '<tr class="tax-row"' +
+                    ' data-tax-id="' + d.id + '"' +
+                    ' data-raw="' + d.nominal_pajak + '"' +
+                    ' data-include-selling="' + (d.include_selling ? 1 : 0) + '"' +
+                    ' data-include-hpp="' + (d.include_hpp ? 1 : 0) + '">' +
+                    '<td class="text-center">' + rowNum + '</td>' +
+                    '<td>Tax</td>' +
+                    '<td>' + d.nama_pajak + '</td>' +
+                    '<td class="text-end">—</td>' +
+                    '<td class="text-end">—</td>' +
+                    '<td class="tax-selling">' + sellingVal + '</td>' +
+                    '<td class="tax-hpp">' + hppVal + '</td>' +
+                    '<td class="text-center"><button type="button" class="btn btn-danger btn-xs" onclick="deleteTax(this,\'' + d.id + '\')" title="Remove Tax"><i class="fas fa-trash-alt"></i></button></td>' +
+                    '</tr>';
+                $('#taxTableBody').append(row);
+            }
+        } // end TAX block scope
+
         });
+
+
+
     </script>
 @endpush

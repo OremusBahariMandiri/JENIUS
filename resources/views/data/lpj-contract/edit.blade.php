@@ -21,7 +21,9 @@
             'coa_no' => $i['coa_no'] ?? null,
             'coa_name' => $i['coa_name'] ?? null,
             'origin_lpj_cont' => $i['origin_lpj_cont'] ?? null,
-            'is_orphaned' => $i['is_orphaned'] ?? false, // ← TAMBAH INI
+            'item_type' => $i['item_type'] ?? 'item',
+            'id_jo_cont_pajak' => $i['id_jo_cont_pajak'] ?? null,
+            'is_orphaned' => $i['is_orphaned'] ?? false,
         ],
     );
 @endphp
@@ -394,6 +396,17 @@
             background: #e0eeff !important;
         }
 
+        /* Tax / pajak rows */
+        .table-lpj tbody tr.row-tax td {
+            background: #fffbeb !important;
+        }
+        .table-lpj tbody tr.row-tax:hover td {
+            background: #fef3c7 !important;
+        }
+        .table-lpj tbody tr.row-tax .category-cell {
+            color: #b45309;
+            font-weight: 600;
+        }
         .table-lpj tbody tr.row-from-lpj .coa-select-cell select {
             background: #eff6ff;
         }
@@ -1393,6 +1406,7 @@
         const currentLpjContStr = '{{ $lpj->id_lpj_cont }}';
         const csrfToken = $('meta[name="csrf-token"]').attr('content');
         const bulkSaveUrl = '{{ route('lpj-contract.items.bulk-save', $lpj->id) }}';
+        let activeItemType = 'item'; // track item_type dari row yang sedang di-edit
         const storeNewItemUrl = '{{ route('lpj-contract.item.store-new', $lpj->id) }}';
         const updateHeaderUrl = '/lpj-contract/header/update/{{ $lpj->id }}';
         const refreshKasbonsUrl = '{{ route('lpj-contract.refresh-kasbons', $lpj->id) }}';
@@ -1559,6 +1573,7 @@
                     items: [{
                         id_kasbon_cont_item: item.id_kasbon_cont_item,
                         id_jo_cont_item: item.id_jo_cont_item,
+                        item_type: item.item_type || 'item',
                         amount_lpj: item.amount_lpj,
                         id_md_chart_of_account: coaId || null,
                     }]
@@ -1692,7 +1707,8 @@
                             `<td class="category-cell" rowspan="${catRowspan}">${category}</td>` :
                             '';
 
-                        const rowClass = isOrigin ? 'item-row row-from-lpj' : 'item-row';
+                        const isTaxRow = item.item_type === 'tax';
+                        const rowClass = isOrigin ? 'item-row row-from-lpj' : (isTaxRow ? 'item-row row-tax' : 'item-row');
 
                         $tbody.append(`
                     <tr class="${rowClass}" id="row_${gIdx}"
@@ -1762,6 +1778,7 @@
             $('#inputCoa').val(item.id_md_chart_of_account || '');
             $('#activeKasbonContItemId').val(item.id_kasbon_cont_item);
             $('#activeJoContItemId').val(item.id_jo_cont_item);
+            activeItemType = item.item_type || 'item';
             $('#activeRowIndex').val(index);
             $('#activeHpp').val(item.nilai_hpp_cont_item);
             $('#activeNilaiKasbon').val(item.nilai_kasbon);
@@ -1851,6 +1868,7 @@
                     items: [{
                         id_kasbon_cont_item: kasbonContItemId,
                         id_jo_cont_item: joContItemId,
+                        item_type: activeItemType,
                         amount_lpj: amountLpj,
                         id_md_chart_of_account: coaId,
                     }]
@@ -1900,6 +1918,7 @@
                         items: [{
                             id_kasbon_cont_item: item.id_kasbon_cont_item,
                             id_jo_cont_item: item.id_jo_cont_item,
+                            item_type: item.item_type || 'item',
                             amount_lpj: 0,
                             id_md_chart_of_account: null,
                         }]
@@ -1980,6 +1999,7 @@
                 const payload = filled.map(i => ({
                     id_kasbon_cont_item: i.id_kasbon_cont_item,
                     id_jo_cont_item: i.id_jo_cont_item,
+                    item_type: i.item_type || 'item',
                     amount_lpj: 0,
                     id_md_chart_of_account: null,
                 }));
