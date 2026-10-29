@@ -1057,6 +1057,27 @@
                 </a>
             </div>
 
+            {{-- User Management --}}
+            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
+                <div class="nav-item has-submenu" data-tooltip="User Management">
+                    <a class="nav-link {{ request()->routeIs('user.*') ? 'menu-open' : '' }}" href="javascript:void(0)" onclick="toggleSubmenu('userManagement', this)">
+                        <i class="fas fa-users"></i>
+                        <span>User Management</span>
+                        <i class="fas fa-chevron-down submenu-indicator"></i>
+                    </a>
+                    <div class="sidebar-submenu {{ request()->routeIs('user.*') ? 'show' : '' }}" id="userManagement">
+                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management'))
+                            <div class="submenu-item">
+                                <a href="{{ route('user.index') }}" class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}">
+                                    <i class="fas fa-user-cog me-1"></i>
+                                    <span>Users</span>
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
             {{-- Data Master --}}
             @if (auth()->check() &&
                     (auth()->user()->is_admin ||
@@ -1525,6 +1546,25 @@
         </header>
 
         <main class="content">
+            {{-- Flash Messages --}}
+            @if(session('success'))
+                <div class="alert alert-success alert-dismissible fade show mx-3 mt-3" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show mx-3 mt-3" role="alert">
+                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if(session('warning'))
+                <div class="alert alert-warning alert-dismissible fade show mx-3 mt-3" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
             @yield('content')
         </main>
     </div>
