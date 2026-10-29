@@ -87,27 +87,8 @@
                                 </div>
                             </div>
 
-                            <!-- Type -->
-                            <div class="col-lg-6">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">Type</label>
-                                    <select name="type" class="form-select @error('type') is-invalid @enderror">
-                                        <option value="">-- Select Type --</option>
-                                        @foreach($typeOptions as $value => $label)
-                                        <option value="{{ $value }}"
-                                            {{ old('type', $account->type) == $value ? 'selected' : '' }}>
-                                            {{ $label }}
-                                        </option>
-                                        @endforeach
-                                    </select>
-                                    @error('type')
-                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-
                             <!-- Payment Type -->
-                            <div class="col-lg-6">
+                            <div class="col-lg-12">
                                 <div class="mb-3">
                                     <label class="form-label fw-semibold">Payment Type</label>
                                     <select name="payment_type" class="form-select @error('payment_type') is-invalid @enderror">

@@ -45,4 +45,9 @@ class KasbonContractItem extends Model
     {
         return $this->belongsTo(JoContractItem::class, 'id_jo_cont_item', 'id_jo_cont_item');
     }
+
+    public function joContractPajak()
+    {
+        return $this->belongsTo(JoContractPajak::class, 'id_jo_cont_pajak', 'id_jo_cont_pajak');
+    }
 }

@@ -77,7 +77,8 @@ class MutasiPembayaranController extends Controller
             if ($request->expectsJson())
                 return response()->json(['success' => true, 'data' => $mutasiPembayarans]);
 
-            $chartOfAccounts = ChartOfAccount::orderBy('no_account')->get();
+            $chartOfAccounts = ChartOfAccount::whereIn('payment_type', ['Kas', 'Bank'])
+                ->orderBy('no_account')->get();
             $currentFilters  = [
                 'nomor'                  => $request->get('nomor', ''),
                 'tanggal_dari'           => $request->get('tanggal_dari', ''),
@@ -95,7 +96,8 @@ class MutasiPembayaranController extends Controller
 
     public function create()
     {
-        $chartOfAccounts = ChartOfAccount::orderBy('no_account')->get();
+        $chartOfAccounts = ChartOfAccount::whereIn('payment_type', ['Kas', 'Bank'])
+            ->orderBy('no_account')->get();
         $nextNomor = IdGenerator::generateMutasiNo();
         return view('data.mutasi-pembayaran.create', compact('chartOfAccounts', 'nextNomor'));
     }
@@ -204,7 +206,8 @@ class MutasiPembayaranController extends Controller
                 'vouchers.details.kasbonGen',
             ])->findOrFail($id);
 
-            $chartOfAccounts = ChartOfAccount::orderBy('no_account')->get();
+            $chartOfAccounts = ChartOfAccount::whereIn('payment_type', ['Kas', 'Bank'])
+                ->orderBy('no_account')->get();
             return view('data.mutasi-pembayaran.edit', compact('mutasiPembayaran', 'chartOfAccounts'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return back()->with('error', 'Mutasi Pembayaran tidak ditemukan');
@@ -257,7 +260,18 @@ class MutasiPembayaranController extends Controller
         DB::beginTransaction();
         try {
             $mp = MutasiPembayaran::with('vouchers.details')->findOrFail($id);
-            foreach ($mp->vouchers as $v) $v->details()->delete();
+            foreach ($mp->vouchers as $v) {
+                // Reverse balance semua detail di setiap voucher
+                foreach ($v->details as $detail) {
+                    $this->applyBalanceChange(
+                        $v->id,
+                        (float) $detail->nilai,
+                        (float) $detail->selisih,
+                        'reverse'
+                    );
+                }
+                $v->details()->delete();
+            }
             $mp->vouchers()->delete();
             $mp->delete();
             DB::commit();
@@ -305,7 +319,17 @@ class MutasiPembayaranController extends Controller
         DB::beginTransaction();
         try {
             $maxUrutan    = MutasiPembayaranVoucher::where('id_mutasi_pembayaran', $request->id_mutasi_pembayaran)->max('urutan') ?? 0;
-            $nomorVoucher = IdGenerator::generateVoucherNo();
+            $coa = $request->id_md_chart_of_account
+                ? ChartOfAccount::find($request->id_md_chart_of_account)
+                : null;
+
+            if ($coa?->payment_type === 'Kas') {
+                $nomorVoucher = IdGenerator::generateVoucherNoKas();
+            } elseif ($coa?->payment_type === 'Bank') {
+                $nomorVoucher = IdGenerator::generateVoucherNoBank();
+            } else {
+                $nomorVoucher = IdGenerator::generateVoucherNo(); // fallback
+            }
             $voucher = MutasiPembayaranVoucher::create([
                 'id_mutasi_pembayaran'   => $request->id_mutasi_pembayaran,
                 'nomor_voucher'          => $nomorVoucher,
@@ -383,6 +407,17 @@ class MutasiPembayaranController extends Controller
         DB::beginTransaction();
         try {
             $voucher = MutasiPembayaranVoucher::with('details')->findOrFail($id);
+
+            // Reverse balance untuk setiap detail sebelum dihapus
+            foreach ($voucher->details as $detail) {
+                $this->applyBalanceChange(
+                    $voucher->id,
+                    (float) $detail->nilai,
+                    (float) $detail->selisih,
+                    'reverse'
+                );
+            }
+
             $voucher->details()->delete();
             $voucher->delete();
             DB::commit();
@@ -422,7 +457,7 @@ class MutasiPembayaranController extends Controller
         DB::beginTransaction();
         try {
             $amounts = $this->resolveKasbonAmounts($request->jenis, $request);
-            $detail  = MutasiPembayaranDetail::create([
+            $detail = MutasiPembayaranDetail::create([
                 'id_mutasi_voucher' => $request->id_mutasi_voucher,
                 'jenis'             => $request->jenis,
                 'id_jo_tram'        => $request->id_jo_tram,
@@ -437,6 +472,15 @@ class MutasiPembayaranController extends Controller
                 'selisih'           => $amounts['nilai'] - $amounts['pj'],
                 'keterangan'        => $request->keterangan,
             ]);
+
+            // Update COA balance
+            $this->applyBalanceChange(
+                $request->id_mutasi_voucher,
+                $amounts['nilai'],
+                $amounts['nilai'] - $amounts['pj'],
+                'deduct'
+            );
+
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Detail berhasil ditambahkan', 'data' => $this->formatDetail($detail)], 201);
         } catch (\Exception $e) {
@@ -474,7 +518,13 @@ class MutasiPembayaranController extends Controller
 
         DB::beginTransaction();
         try {
-            $detail  = MutasiPembayaranDetail::findOrFail($id);
+            $detail = MutasiPembayaranDetail::findOrFail($id);
+
+            // Simpan nilai lama sebelum update
+            $oldNilai      = (float) $detail->nilai;
+            $oldSelisih    = (float) $detail->selisih;
+            $voucherId     = $detail->id_mutasi_voucher;
+
             $jenis   = $request->jenis ?? $detail->jenis;
             $amounts = $this->resolveKasbonAmounts($jenis, $request, $detail);
 
@@ -492,8 +542,17 @@ class MutasiPembayaranController extends Controller
                 'selisih'         => $amounts['nilai'] - $amounts['pj'],
                 'keterangan'      => $request->keterangan ?? $detail->keterangan,
             ]);
+
+            // Reverse balance lama, apply balance baru
+            $this->applyBalanceChange($voucherId, $oldNilai,        $oldSelisih,                          'reverse');
+            $this->applyBalanceChange($voucherId, $amounts['nilai'], $amounts['nilai'] - $amounts['pj'],  'deduct');
+
             DB::commit();
-            return response()->json(['success' => true, 'message' => 'Detail berhasil diupdate', 'data' => $this->formatDetail($detail->fresh())]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Detail berhasil diupdate',
+                'data'    => $this->formatDetail($detail->fresh())
+            ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -504,7 +563,17 @@ class MutasiPembayaranController extends Controller
     {
         DB::beginTransaction();
         try {
-            MutasiPembayaranDetail::findOrFail($id)->delete();
+            $detail = MutasiPembayaranDetail::findOrFail($id);
+
+            // Reverse balance sebelum hapus
+            $this->applyBalanceChange(
+                $detail->id_mutasi_voucher,
+                (float) $detail->nilai,
+                (float) $detail->selisih,
+                'reverse'
+            );
+
+            $detail->delete();
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Detail berhasil dihapus']);
         } catch (\Exception $e) {
@@ -829,13 +898,28 @@ class MutasiPembayaranController extends Controller
 
     private function kasbonItemSummaryContract($joId, $usedIds): \Illuminate\Support\Collection
     {
-        return KasbonContract::with(['departemen', 'cabang', 'release', 'items.joContractItem.invoice'])
+        return KasbonContract::with(['departemen', 'cabang', 'release', 'items.joContractItem.invoice', 'items.joContractPajak'])
             ->where('id_jo_cont', $joId)->get()
             ->map(function ($k) use ($usedIds) {
                 $lpjIds = LpjKasbon::where('id_kasbon_cont', $k->id_kasbon_cont)->pluck('id_lpj_cont');
                 $items  = $k->items->map(function ($item) use ($lpjIds) {
-                    $pj  = LpjContractItem::whereIn('id_lpj_cont', $lpjIds)
+                    $isTax = ($item->item_type ?? 'item') === 'tax';
+                    $pj    = LpjContractItem::whereIn('id_lpj_cont', $lpjIds)
                         ->where('id_kasbon_cont_item', $item->id_kasbon_cont_item)->sum('amount_lpj');
+
+                    if ($isTax) {
+                        $pajak = $item->joContractPajak;
+                        return [
+                            'id'           => $item->id_kasbon_cont_item,
+                            'label'        => $pajak?->nama_pajak ?? ('Tax #' . $item->id),
+                            'kategori'     => 'Tax',
+                            'nilai_kasbon' => (float) $item->nilai_kasbon,
+                            'pj'           => (float) $pj,
+                            'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                            'akun'         => '',
+                        ];
+                    }
+
                     $inv = $item->joContractItem?->invoice;
                     $coa = ChartOfAccount::whereIn(
                         'id_md_chart_of_account',
@@ -847,9 +931,9 @@ class MutasiPembayaranController extends Controller
                         'id'           => $item->id_kasbon_cont_item,
                         'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $item->id),
                         'kategori'     => $inv?->invoice_ctg ?? '—',
-                        'nilai_kasbon' => (float)$item->nilai_kasbon,
-                        'pj'           => (float)$pj,
-                        'selisih'      => (float)($item->nilai_kasbon - $pj),
+                        'nilai_kasbon' => (float) $item->nilai_kasbon,
+                        'pj'           => (float) $pj,
+                        'selisih'      => (float) ($item->nilai_kasbon - $pj),
                         'akun'         => $coa->map(fn($c) => $c->no_account . ' — ' . $c->account_name)->implode(', '),
                     ];
                 });
@@ -1357,8 +1441,10 @@ class MutasiPembayaranController extends Controller
         }
 
         return [
-            'paid_to' => $kasbon->release->nama_release ?? null,
-            'items'   => $items,
+            'paid_to'      => $kasbon->release->nama_release ?? null,
+            'jo_nomor'     => $kasbon->joTramper?->no_jo_tram ?? null,
+            'kasbon_nomor' => $kasbon->id_kasbon_tram ?? null,
+            'items'        => $items,
         ];
     }
 
@@ -1422,8 +1508,10 @@ class MutasiPembayaranController extends Controller
         }
 
         return [
-            'paid_to' => $kasbon->release->nama_release ?? null,
-            'items'   => $items,
+            'paid_to'      => $kasbon->release->nama_release ?? null,
+            'jo_nomor'     => $kasbon->joContract?->no_jo_cont ?? null,
+            'kasbon_nomor' => $kasbon->id_kasbon_cont ?? null,
+            'items'        => $items,
         ];
     }
 
@@ -1488,8 +1576,10 @@ class MutasiPembayaranController extends Controller
         }
 
         return [
-            'paid_to' => $kasbon->release->nama_release ?? null,
-            'items'   => $items,
+            'paid_to'      => $kasbon->release->nama_release ?? null,
+            'jo_nomor'     => $kasbon->joContract?->no_jo_cont ?? null,
+            'kasbon_nomor' => $kasbon->id_kasbon_cont ?? null,
+            'items'        => $items,
         ];
     }
 
@@ -1533,16 +1623,120 @@ class MutasiPembayaranController extends Controller
         }
 
         return [
-            'paid_to' => $kasbon->release->nama_release ?? null,
-            'items'   => $items,
+            'paid_to'      => $kasbon->release->nama_release ?? null,
+            'jo_nomor'     => null,
+            'kasbon_nomor' => $kasbon->id_kasbon_gen ?? null,
+            'items'        => $items,
         ];
     }
 
-    public function nextVoucherNo()
+    public function nextVoucherNo(Request $request)
     {
-        return response()->json([
-            'success' => true,
-            'nomor'   => IdGenerator::generateVoucherNo(),
-        ]);
+        $paymentType = $request->get('payment_type');
+
+        $nomor = match ($paymentType) {
+            'Kas'  => IdGenerator::generateVoucherNoKas(),
+            'Bank' => IdGenerator::generateVoucherNoBank(),
+            default => IdGenerator::generateVoucherNo(),
+        };
+
+        return response()->json(['success' => true, 'nomor' => $nomor]);
+    }
+
+    /**
+     * Update current_balance COA saat detail ditambah/dihapus.
+     * $direction = 'deduct'  → kurangi nilai, tambah selisih (saat store)
+     * $direction = 'reverse' → tambah nilai, kurangi selisih (saat destroy)
+     */
+    protected function applyBalanceChange(int $voucherId, float $nilai, float $selisih, string $direction): void
+    {
+        $voucher = MutasiPembayaranVoucher::find($voucherId);
+        if (!$voucher?->id_md_chart_of_account) return;
+
+        $coaId = $voucher->id_md_chart_of_account;
+
+        if ($direction === 'deduct') {
+            // Kurangi nilai penuh kasbon
+            ChartOfAccount::where('id_md_chart_of_account', $coaId)
+                ->decrement('current_balance', $nilai);
+
+            // Kembalikan selisih (jika ada)
+            if (abs($selisih) > 0.001) {
+                ChartOfAccount::where('id_md_chart_of_account', $coaId)
+                    ->increment('current_balance', $selisih);
+            }
+        } elseif ($direction === 'reverse') {
+            // Balikkan: tambah nilai
+            ChartOfAccount::where('id_md_chart_of_account', $coaId)
+                ->increment('current_balance', $nilai);
+
+            // Balikkan selisih yang sudah dikembalikan sebelumnya
+            if (abs($selisih) > 0.001) {
+                ChartOfAccount::where('id_md_chart_of_account', $coaId)
+                    ->decrement('current_balance', $selisih);
+            }
+        }
+    }
+
+
+    public static function resyncKasbonDetail(string $jenis, $kasbonDbId): void
+    {
+        $col = match ($jenis) {
+            'tramper'  => 'id_kasbon_tram',
+            'other'    => 'id_kasbon_other',
+            'contract' => 'id_kasbon_cont',
+            'general'  => 'id_kasbon_gen',
+            default    => null,
+        };
+
+        if (!$col) return;
+
+        $details = MutasiPembayaranDetail::where($col, $kasbonDbId)->get();
+        if ($details->isEmpty()) return;
+
+        $instance = new self();
+
+        foreach ($details as $detail) {
+            // Hitung ulang dari kasbon + LPJ terkini
+            $amounts = $instance->resolveKasbonAmounts(
+                $detail->jenis,
+                new \Illuminate\Http\Request(),
+                $detail
+            );
+
+            $oldNilai   = (float) $detail->nilai;
+            $oldSelisih = (float) $detail->selisih;
+            $newNilai   = $amounts['nilai'];
+            $newSelisih = $amounts['nilai'] - $amounts['pj'];
+
+            // Skip jika tidak ada perubahan
+            if (abs($oldNilai - $newNilai) < 0.001 && abs($oldSelisih - $newSelisih) < 0.001) {
+                continue;
+            }
+
+            DB::beginTransaction();
+            try {
+                // Update stored amounts di detail
+                $detail->update([
+                    'nilai'   => $newNilai,
+                    'pj'      => $amounts['pj'],
+                    'selisih' => $newSelisih,
+                ]);
+
+                // Reverse balance lama, apply balance baru
+                $instance->applyBalanceChange($detail->id_mutasi_voucher, $oldNilai, $oldSelisih, 'reverse');
+                $instance->applyBalanceChange($detail->id_mutasi_voucher, $newNilai, $newSelisih, 'deduct');
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                Log::error('resyncKasbonDetail failed', [
+                    'detail_id' => $detail->id,
+                    'jenis'     => $jenis,
+                    'kasbon_id' => $kasbonDbId,
+                    'error'     => $e->getMessage(),
+                ]);
+            }
+        }
     }
 }

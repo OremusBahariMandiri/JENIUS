@@ -1,0 +1,25 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('e06_mutasi_penerimaan_detail', function (Blueprint $table) {
+            $table->string('release_to', 255)->nullable()->after('keterangan');
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('e06_mutasi_penerimaan_detail', function (Blueprint $table) {
+            $table->dropColumn('release_to');
+        });
+    }
+};

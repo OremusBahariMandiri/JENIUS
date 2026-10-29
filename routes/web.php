@@ -695,6 +695,18 @@ Route::middleware(['auth'])->group(function () {
         Route::get('piutang-contract', [RekapPiutangContractController::class, 'index'])->name('rekap-piutang-contract.index');
         Route::get('proforma-invoice-contract/create/{id_jo_cont}', [InvoicePembayaranContractController::class, 'create'])->name('proforma-invoice-contract.create');
         Route::post('proforma-invoice-contract', [InvoicePembayaranContractController::class, 'store'])->name('proforma-invoice-contract.store');
+
+        // Invoice Contract List (full CRUD)
+        Route::prefix('invoice-contract')->name('invoice-contract.')->group(function () {
+            Route::get('/',           [InvoicePembayaranContractController::class, 'index'])->name('index');
+            Route::get('/create',     [InvoicePembayaranContractController::class, 'create'])->name('create');
+            Route::post('/',          [InvoicePembayaranContractController::class, 'store'])->name('store');
+            Route::get('/{id}/edit',  [InvoicePembayaranContractController::class, 'edit'])->name('edit');
+            Route::put('/{id}',       [InvoicePembayaranContractController::class, 'update'])->name('update');
+            Route::delete('/{id}',    [InvoicePembayaranContractController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/header',      [InvoicePembayaranContractController::class, 'updateHeader'])->name('header.update');
+            Route::post('/{id}/items/bulk',  [InvoicePembayaranContractController::class, 'bulkSaveItems'])->name('items.bulk-save');
+        });
     });
     //================= END REKAP PIUTANG CUSTOMER =================//
 

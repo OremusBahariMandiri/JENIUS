@@ -190,6 +190,42 @@ class IdGenerator
     }
 
     /**
+     * Generate Nomor Voucher — Kas: AK{yy}/{NNNNN}
+     * Contoh: AK26/00001
+     */
+    public static function generateVoucherNoKas()
+    {
+        $year   = date('y');
+        $prefix = "AK{$year}.";
+
+        $last = DB::table('e02_mutasi_pembayaran_voucher')
+            ->where('nomor_voucher', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor_voucher, 5) AS UNSIGNED) DESC")
+            ->value('nomor_voucher');
+
+        $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate Nomor Voucher — Bank: BK{yy}/{NNNNN}
+     * Contoh: BK26/00001
+     */
+    public static function generateVoucherNoBank()
+    {
+        $year   = date('y');
+        $prefix = "BK{$year}.";
+
+        $last = DB::table('e02_mutasi_pembayaran_voucher')
+            ->where('nomor_voucher', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor_voucher, 5) AS UNSIGNED) DESC")
+            ->value('nomor_voucher');
+
+        $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * Generate Nomor Dokumen Mutasi Pembayaran dengan format: MP/[YYYY]/[NNNNN]
      * Sequence increment lintas semua tabel Mutasi Pembayaran
      * Contoh: MP/2026/00001, MP/2026/00002, dst
@@ -197,7 +233,7 @@ class IdGenerator
     public static function generateMutasiNo()
     {
         $year   = date('Y');
-        $prefix = "MP/{$year}/";
+        $prefix = "../{$year}/";
 
         $tables = [
             'e01_mutasi_pembayaran' => 'nomor',
@@ -226,6 +262,75 @@ class IdGenerator
 
         $newNumber = $lastNumber + 1;
 
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    public static function generatePenerimaanNo()
+    {
+        $year   = date('Y');
+        $prefix = "MR/{$year}/";
+
+        $last = DB::table('e04_mutasi_penerimaan')
+            ->where('nomor', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor, 5) AS UNSIGNED) DESC")
+            ->value('nomor');
+
+        $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
+
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate Nomor Voucher Penerimaan — Kas: AM{yy}.{NNNNN}
+     * Contoh: AM26.00001
+     */
+    public static function generateVoucherNoKasPenerimaan()
+    {
+        $year   = date('y');
+        $prefix = "AM{$year}.";
+
+        $last = DB::table('e05_mutasi_penerimaan_voucher')
+            ->where('nomor_voucher', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor_voucher, 5) AS UNSIGNED) DESC")
+            ->value('nomor_voucher');
+
+        $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate Nomor Voucher Penerimaan — Bank: BM{yy}.{NNNNN}
+     * Contoh: BM26.00001
+     */
+    public static function generateVoucherNoBankPenerimaan()
+    {
+        $year   = date('y');
+        $prefix = "BM{$year}.";
+
+        $last = DB::table('e05_mutasi_penerimaan_voucher')
+            ->where('nomor_voucher', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor_voucher, 5) AS UNSIGNED) DESC")
+            ->value('nomor_voucher');
+
+        $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
+        return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * Generate Nomor Voucher Penerimaan — Default (tanpa COA): RV/{YYYY}/{NNNNN}
+     * Contoh: RV/2026/00001
+     */
+    public static function generateVoucherNoPenerimaan()
+    {
+        $year   = date('Y');
+        $prefix = "RV/{$year}/";
+
+        $last = DB::table('e05_mutasi_penerimaan_voucher')
+            ->where('nomor_voucher', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor_voucher, 5) AS UNSIGNED) DESC")
+            ->value('nomor_voucher');
+
+        $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
         return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
     }
 }

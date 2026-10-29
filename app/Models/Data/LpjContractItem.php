@@ -16,6 +16,7 @@ class LpjContractItem extends Model
         'id_lpj_cont',
         'id_kasbon_cont_item',
         'id_jo_cont_item',
+        'item_type',
         'amount_lpj',
         'id_md_chart_of_account',
     ];
@@ -40,6 +41,7 @@ class LpjContractItem extends Model
     {
         return $this->belongsTo(JoContractItem::class, 'id_jo_cont_item', 'id_jo_cont_item');
     }
+
     public function chartOfAccount()
     {
         return $this->belongsTo(

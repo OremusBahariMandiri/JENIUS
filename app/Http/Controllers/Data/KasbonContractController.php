@@ -874,6 +874,14 @@ class KasbonContractController extends Controller
 
             $nominal = (float) ($pajak->nominal_pajak ?? 0);
 
+            // Total yang sudah dibayar di kasbon LAIN untuk pajak yang sama
+            $totalPaidOtherPajak = (float) KasbonContractItem::where('id_jo_cont_pajak', $pajak->id_jo_cont_pajak)
+                ->where('id_kasbon_cont', '!=', $kasbonContract->id_kasbon_cont)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            $maxAllowedPajak = max(0.0, $nominal - $totalPaidOtherPajak);
+
             return [
                 'id_jo_cont_item'          => null,
                 'id_jo_cont_pajak'         => $pajak->id_jo_cont_pajak,
@@ -889,8 +897,8 @@ class KasbonContractController extends Controller
                 'has_kasbon'               => $kasbonItem !== null && $kasbonItem->nilai_kasbon > 0,
                 'has_lpj_amount'           => false,
                 'origin_lpj_cont'          => null,
-                'total_paid_other_kasbons' => 0,
-                'max_allowed'              => $nominal,
+                'total_paid_other_kasbons' => $totalPaidOtherPajak,
+                'max_allowed'              => $maxAllowedPajak,
             ];
         });
 

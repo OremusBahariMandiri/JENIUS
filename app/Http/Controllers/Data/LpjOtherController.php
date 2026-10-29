@@ -337,6 +337,11 @@ class LpjOtherController extends Controller
 
             DB::commit();
 
+            $kasbonOtherIds = $lpj->kasbons->pluck('id_kasbon_other');
+            foreach ($kasbonOtherIds as $kasbonOtherId) {
+                \App\Http\Controllers\Data\MutasiPembayaranController::resyncKasbonDetail('other', $kasbonOtherId);
+            }
+
             $totals = LpjOtherItem::where('id_lpj_other', $lpj->id_lpj_other)
                 ->selectRaw('SUM(amount_lpj) as total_amount_lpj')->first();
 
@@ -441,6 +446,8 @@ class LpjOtherController extends Controller
 
             DB::commit();
             Log::info('LpjOther New Item Stored', ['jo_item' => $newJoItemId, 'kasbon_item' => $newKasbonItemId]);
+
+            \App\Http\Controllers\Data\MutasiPembayaranController::resyncKasbonDetail('other', $request->id_kasbon_other);
 
             return response()->json([
                 'success' => true,

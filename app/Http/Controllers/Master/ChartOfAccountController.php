@@ -22,11 +22,8 @@ class ChartOfAccountController extends Controller
     ];
 
     const PAYMENT_TYPE_OPTIONS = [
-        'Cash'        => 'Cash',
+        'Kas'        => 'Kas',
         'Bank'        => 'Bank',
-        'Credit Card' => 'Credit Card',
-        'Transfer'    => 'Transfer',
-        'Other'       => 'Other',
     ];
 
     public function __construct()

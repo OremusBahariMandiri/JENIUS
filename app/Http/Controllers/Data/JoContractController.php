@@ -6,7 +6,9 @@ use App\Helpers\IdGenerator;
 use App\Http\Controllers\Controller;
 use App\Models\Data\JoContract;
 use App\Models\Data\JoContractItem;
+use App\Models\Data\JoContractPajak;
 use App\Models\Data\KasbonContractItem;
+use App\Models\Master\Pajak;
 use App\Models\Data\LpjContractItem;
 use App\Models\Master\Contract;
 use App\Models\Master\Area;
@@ -677,7 +679,7 @@ class JoContractController extends Controller
         try {
             Log::info('Attempting to load JO Contract for editing', ['id' => $id]);
 
-            $joContract = JoContract::with(['items.invoice'])->findOrFail($id);
+            $joContract = JoContract::with(['items.invoice', 'pajakItems.masterPajak'])->findOrFail($id);
 
             Log::info('JO Contract loaded successfully', ['id' => $joContract->id_jo_cont, 'title' => $joContract->title, 'items_count' => $joContract->items->count()]);
             Log::info('Loading related data (contracts, areas, invoices)');
@@ -699,7 +701,8 @@ class JoContractController extends Controller
 
             Log::info('View exists, rendering...');
 
-            return view('data.jo-contract.edit', compact('joContract', 'contracts', 'areas', 'invoices'));
+            $pajakItems = $joContract->pajakItems;
+            return view('data.jo-contract.edit', compact('joContract', 'contracts', 'areas', 'invoices', 'pajakItems'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('JO Contract NOT FOUND in database', ['id' => $id, 'error' => $e->getMessage()]);
             return back()->with('error', 'JO Contract not found in database');
@@ -1178,6 +1181,122 @@ class JoContractController extends Controller
         // Fallback jika tabel tidak ada di peta di atas
         return 'Cannot delete this JO Contract because it is still being used by other related data. '
             . 'Please remove all related records first before deleting this JO Contract.';
+    }
+
+
+    // ============================================================
+    // PAJAK METHODS
+    // ============================================================
+
+    public function storePajak(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id_jo_cont'   => 'required|exists:b01_jo_cont,id_jo_cont',
+            'id_md_pajak'    => 'required|exists:a14_md_pajak,id_md_pajak',
+            'include_selling' => 'boolean',
+            'include_hpp'     => 'boolean',
+        ], [
+            'id_md_pajak.required' => 'Pilih jenis pajak',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $joContract = JoContract::with('items')->findOrFail($request->id_jo_cont);
+            $pajak      = Pajak::findOrFail($request->id_md_pajak);
+
+            // Cek apakah pajak ini sudah ada di JO ini
+            $existing = JoContractPajak::where('id_jo_cont', $request->id_jo_cont)
+                ->where('id_md_pajak', $request->id_md_pajak)
+                ->first();
+
+            if ($existing) {
+                return response()->json(['success' => false, 'message' => 'Pajak ini sudah ditambahkan ke JO tersebut'], 422);
+            }
+
+            // Dasar pengenaan = total selling price dari items
+            $dasarPengenaan = (float) $joContract->items->sum('hargajual_idr');
+            $nominalPajak   = round($dasarPengenaan * ($pajak->persentase / 100), 2);
+
+            $record = JoContractPajak::create([
+                'id_jo_cont'      => $request->id_jo_cont,
+                'id_md_pajak'     => $pajak->id_md_pajak,
+                'nama_pajak'      => $pajak->nama_pajak,
+                'persentase'      => $pajak->persentase,
+                'dasar_pengenaan' => $dasarPengenaan,
+                'nominal_pajak'   => $nominalPajak,
+                'include_selling' => (bool) $request->input('include_selling', true),
+                'include_hpp'     => (bool) $request->input('include_hpp', false),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pajak berhasil ditambahkan',
+                'data'    => [
+                    'id'              => $record->id_jo_cont_pajak,
+                    'id_md_pajak'     => $record->id_md_pajak,
+                    'nama_pajak'      => $record->nama_pajak,
+                    'persentase'      => number_format($record->persentase, 2),
+                    'dasar_pengenaan' => $record->dasar_pengenaan,
+                    'nominal_pajak'   => $record->nominal_pajak,
+                    'include_selling' => (bool) $record->include_selling,
+                    'include_hpp'     => (bool) $record->include_hpp,
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('storePajak contract failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroyPajak(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $record = JoContractPajak::findOrFail($id);
+            $record->delete();
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Pajak berhasil dihapus']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function recalcPajak(Request $request, $joContId)
+    {
+        DB::beginTransaction();
+        try {
+            $joContract = JoContract::with('items', 'pajakItems')->findOrFail($joContId);
+            $dasar      = (float) $joContract->items->sum('hargajual_idr');
+
+            foreach ($joContract->pajakItems as $p) {
+                $p->update([
+                    'dasar_pengenaan' => $dasar,
+                    'nominal_pajak'   => round($dasar * ($p->persentase / 100), 2),
+                ]);
+            }
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Pajak berhasil direcalculate',
+                'dasar'   => $dasar,
+                'items'   => $joContract->fresh('pajakItems')->pajakItems->map(fn($p) => [
+                    'id'           => $p->id_jo_cont_pajak,
+                    'nominal_pajak'=> $p->nominal_pajak,
+                ]),
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function checkItemRelations($id)

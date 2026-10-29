@@ -8,8 +8,8 @@
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <style>
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   PAGE WRAPPER
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   PAGE WRAPPER
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .mutasiEditPage .card {
             border: none;
             border-radius: 10px;
@@ -35,8 +35,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   FLOATING BADGE ALERT
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   FLOATING BADGE ALERT
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .floating-badge-alert {
             position: fixed;
             top: 80px;
@@ -111,8 +111,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   VOUCHER ACCORDION
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   VOUCHER ACCORDION
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .voucher-accordion-item {
             border: 1px solid #e2e8f0;
             border-radius: 10px;
@@ -156,8 +156,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   ADD / EDIT FORM SECTION
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   ADD / EDIT FORM SECTION
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .add-form-section {
             background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             border: 2px dashed #16a34a;
@@ -248,8 +248,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   BUTTONS
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   BUTTONS
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .btn-add-purple {
             background: linear-gradient(135deg, #16a34a, #15803d);
             border: none;
@@ -300,8 +300,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   DETAIL TABLE (tabel hasil)
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   DETAIL TABLE (tabel hasil)
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .table-detail thead th {
             background-color: #14532d;
             color: #fff;
@@ -376,8 +376,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   KASBON SUMMARY TABLE (dalam form tambah detail)
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   KASBON SUMMARY TABLE (dalam form tambah detail)
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .kasbon-summary-wrap {
             border: 1px solid #14532d;
             border-radius: 8px;
@@ -668,8 +668,8 @@
 
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   FINAL SAVE SECTION
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   FINAL SAVE SECTION
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .final-save-section {
             position: sticky;
             bottom: 0;
@@ -682,8 +682,8 @@
         }
 
         /* ══════════════════════════════════════════════
-                                                                                                                                                                                                                                                                                                                                                                                                                   SELECT2
-                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
+                                                                                                                                                                                                                                                                                                                                                                                                                                   SELECT2
+                                                                                                                                                                                                                                                                                                                                                                                                                                ══════════════════════════════════════════════ */
         .select2-container {
             width: 100% !important;
         }
@@ -903,8 +903,9 @@
                                         data-placeholder="Select Bank / Cash account...">
                                         <option value=""></option>
                                         @foreach ($chartOfAccounts as $coa)
-                                            <option value="{{ $coa->id_md_chart_of_account }}">
-                                                {{ $coa->no_account }} —
+                                            <option value="{{ $coa->id_md_chart_of_account }}"
+                                                data-payment-type="{{ $coa->payment_type }}">
+                                                [{{ $coa->payment_type }}] {{ $coa->no_account }} —
                                                 {{ $coa->account_name ?? ($coa->nama_account ?? '') }}
                                             </option>
                                         @endforeach
@@ -1179,6 +1180,7 @@
             });
         }
 
+        // SESUDAH — tambahkan handler di dalam block yang sudah ada
         $(document).ready(function() {
             initSelect2('.select2-header', null, null);
             setupRupiahInput(document.getElementById('edit_kurs_display'));
@@ -1192,7 +1194,30 @@
                 allowClear: true,
                 width: '100%',
             });
-        });
+
+            // ← TAMBAHKAN DI SINI, MASIH DI DALAM $(document).ready
+            // Generate nomor voucher otomatis saat COA dipilih
+            $(document).on('change', '#input_voucher_coa', function() {
+                const selected = $(this).find('option:selected');
+                const paymentType = selected.data('payment-type');
+                const $nomorInput = $('#input_nomor_voucher');
+
+                if (!$(this).val() || !paymentType) {
+                    $nomorInput.val('').css('opacity', 1);
+                    return;
+                }
+
+                $nomorInput.val('Generating...').css('opacity', 0.5);
+
+                fetch(ROUTES.nextVoucherNo + '?payment_type=' + encodeURIComponent(paymentType))
+                    .then(r => r.json())
+                    .then(data => {
+                        $nomorInput.val(data.success ? data.nomor : '').css('opacity', 1);
+                    })
+                    .catch(() => $nomorInput.val('').css('opacity', 1));
+            });
+
+        }); // ← tutup $(document).ready di sini
 
         // ============================================================
         // UPDATE HEADER
@@ -1257,12 +1282,14 @@
             $('#voucherFormTitle').html('<i class="fas fa-plus-square" style="color:#16a34a;"></i> Add New Voucher');
             $('#addVoucherSection').removeClass('edit-mode');
             $('#btnSaveVoucher').html('<i class="fas fa-arrow-down me-1"></i> Save Voucher');
-            $('#input_nomor_voucher, #input_voucher_keterangan').val('');
+            // Kosongkan nomor — akan di-generate ulang saat COA dipilih
+            $('#input_nomor_voucher').val('').css('opacity', 1);
+            $('#input_voucher_keterangan').val('');
             $('#input_urutan').val($('.voucher-accordion-item').length + 1);
-            // NEW fields
             $('#input_tgl_keluar').val('');
             $('#input_voucher_coa').val('').trigger('change.select2');
         }
+
         $('#btnSaveVoucher').on('click', function() {
             const editingId = $('#editing_voucher_id').val();
             const nomorVoucher = $('#input_nomor_voucher').val().trim();
@@ -1385,6 +1412,21 @@
             $('html, body').animate({
                 scrollTop: $('#addVoucherSection').offset().top - 100
             }, 400);
+
+            // Re-generate nomor berdasarkan payment_type COA yang sudah terpilih
+            const editingCoaId = panel.data('coa-id') || '';
+            if (editingCoaId) {
+                const ptOfSelected = $('#input_voucher_coa option[value="' + editingCoaId + '"]').data('payment-type');
+                if (ptOfSelected) {
+                    $('#input_nomor_voucher').val('Generating...').css('opacity', 0.5);
+                    fetch(ROUTES.nextVoucherNo + '?payment_type=' + encodeURIComponent(ptOfSelected))
+                        .then(r => r.json())
+                        .then(data => {
+                            $('#input_nomor_voucher').val(data.success ? data.nomor : '').css('opacity', 1);
+                        })
+                        .catch(() => $('#input_nomor_voucher').css('opacity', 1));
+                }
+            }
         }
 
         function deleteVoucher(id, name) {
@@ -1846,27 +1888,27 @@
                     <td>
                         ${!dipakai
                             ? `<input type="text"
-                                                                                                                                                            class="form-control form-control-sm kasbon-ket-input"
-                                                                                                                                                            data-voucher="${voucherId}" data-ki="gen-${ki}"
-                                                                                                                                                            placeholder="Notes..." style="font-size:0.78rem;">`
+                                                                                                                                                                            class="form-control form-control-sm kasbon-ket-input"
+                                                                                                                                                                            data-voucher="${voucherId}" data-ki="gen-${ki}"
+                                                                                                                                                                            placeholder="Notes..." style="font-size:0.78rem;">`
                             : '<span class="clr-muted">—</span>'
                         }
                     </td>
                     <td class="text-center">
                         ${!dipakai
                             ? `<button type="button"
-                                                                                                                                                            class="btn-tambah-kasbon kasbon-add-btn"
-                                                                                                                                                            data-voucher="${voucherId}"
-                                                                                                                                                            data-ki="gen-${ki}"
-                                                                                                                                                            data-kasbon-id="${escAttr(String(k.id_kasbon))}"
-                                                                                                                                                            data-jenis="general"
-                                                                                                                                                            data-jo-id=""
-                                                                                                                                                            onclick="addKasbonFromSummary(this)">
-                                                                                                                                                            <i class="fas fa-plus me-1"></i>Add
-                                                                                                                                                           </button>`
+                                                                                                                                                                            class="btn-tambah-kasbon kasbon-add-btn"
+                                                                                                                                                                            data-voucher="${voucherId}"
+                                                                                                                                                                            data-ki="gen-${ki}"
+                                                                                                                                                                            data-kasbon-id="${escAttr(String(k.id_kasbon))}"
+                                                                                                                                                                            data-jenis="general"
+                                                                                                                                                                            data-jo-id=""
+                                                                                                                                                                            onclick="addKasbonFromSummary(this)">
+                                                                                                                                                                            <i class="fas fa-plus me-1"></i>Add
+                                                                                                                                                                           </button>`
                             : `<button class="btn btn-sm btn-secondary" disabled>
-                                                                                                                                                               <i class="fas fa-check"></i>
-                                                                                                                                                           </button>`
+                                                                                                                                                                               <i class="fas fa-check"></i>
+                                                                                                                                                                           </button>`
                         }
                     </td>
                 </tr>`;
@@ -2038,12 +2080,12 @@
                             </span>
                             ${dipakai
                                 ? `<span class="badge"
-                                                                                                                                                                                                                                                                                                                                                                                                                                style="background:#fef3c7;color:#92400e;
-                                                                                                                                                                                                                                                                                                                                                                                                                                       font-size:0.65rem;padding:2px 7px;border-radius:20px;">                                                                                                                                                                    </span>`
+                                                                                                                                                                                                                                                                                                                                                                                                                                                style="background:#fef3c7;color:#92400e;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                       font-size:0.65rem;padding:2px 7px;border-radius:20px;">                                                                                                                                                                    </span>`
                                 : itemCount > 0
                                     ? `<span class="badge"
-                                                                                                                                                                                                                                                                                                                                                                                                                                    style="background:#dbeafe;color:#1e40af;
-                                                                                                                                                                                                                                                                                                                                                                                                                                           font-size:0.65rem;padding:2px 7px;border-radius:20px;">                                                                                                                                                                        </span>`
+                                                                                                                                                                                                                                                                                                                                                                                                                                                    style="background:#dbeafe;color:#1e40af;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                           font-size:0.65rem;padding:2px 7px;border-radius:20px;">                                                                                                                                                                        </span>`
                                     : ''
                             }
                         </div>
@@ -2054,28 +2096,28 @@
                     <td>
                         ${!dipakai
                             ? `<input type="text"
-                                                                                                                                                                                                                                                                                                                                                                                                                            class="form-control form-control-sm kasbon-ket-input"
-                                                                                                                                                                                                                                                                                                                                                                                                                            data-voucher="${voucherId}" data-ki="${ki}"
-                                                                                                                                                                                                                                                                                                                                                                                                                            placeholder="Notes..."
-                                                                                                                                                                                                                                                                                                                                                                                                                            style="font-size:0.78rem;">`
+                                                                                                                                                                                                                                                                                                                                                                                                                                            class="form-control form-control-sm kasbon-ket-input"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            data-voucher="${voucherId}" data-ki="${ki}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            placeholder="Notes..."
+                                                                                                                                                                                                                                                                                                                                                                                                                                            style="font-size:0.78rem;">`
                             : '<span class="clr-muted">—</span>'
                         }
                     </td>
                     <td class="text-center">
                         ${!dipakai
                             ? `<button type="button"
-                                                                                                                                                                                                                                                                                                                                                                                                                            class="btn-tambah-kasbon kasbon-add-btn"
-                                                                                                                                                                                                                                                                                                                                                                                                                            data-voucher="${voucherId}"
-                                                                                                                                                                                                                                                                                                                                                                                                                            data-ki="${ki}"
-                                                                                                                                                                                                                                                                                                                                                                                                                            data-kasbon-id="${escAttr(String(k.id_kasbon))}"
-                                                                                                                                                                                                                                                                                                                                                                                                                            data-jenis="${jenis}"
-                                                                                                                                                                                                                                                                                                                                                                                                                            data-jo-id="${escAttr(String(joId))}"
-                                                                                                                                                                                                                                                                                                                                                                                                                            onclick="addKasbonFromSummary(this)">
-                                                                                                                                                                                                                                                                                                                                                                                                                            <i class="fas fa-plus me-1"></i>Add
-                                                                                                                                                                                                                                                                                                                                                                                                                           </button>`
+                                                                                                                                                                                                                                                                                                                                                                                                                                            class="btn-tambah-kasbon kasbon-add-btn"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            data-voucher="${voucherId}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            data-ki="${ki}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            data-kasbon-id="${escAttr(String(k.id_kasbon))}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            data-jenis="${jenis}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            data-jo-id="${escAttr(String(joId))}"
+                                                                                                                                                                                                                                                                                                                                                                                                                                            onclick="addKasbonFromSummary(this)">
+                                                                                                                                                                                                                                                                                                                                                                                                                                            <i class="fas fa-plus me-1"></i>Add
+                                                                                                                                                                                                                                                                                                                                                                                                                                           </button>`
                             : `<button class="btn btn-sm btn-secondary" disabled>
-                                                                                                                                                                                                                                                                                                                                                                                                                               <i class="fas fa-check"></i>
-                                                                                                                                                                                                                                                                                                                                                                                                                           </button>`
+                                                                                                                                                                                                                                                                                                                                                                                                                                               <i class="fas fa-check"></i>
+                                                                                                                                                                                                                                                                                                                                                                                                                                           </button>`
                         }
                     </td>
                 </tr>`;
@@ -2365,19 +2407,19 @@
                             <td>
                                 ${!dipakai
                                     ? `<input type="text" class="form-control form-control-sm kasbon-ket-input"
-                                                                                                                                                      data-voucher="${voucherId}" data-ki="${ki}"
-                                                                                                                                                      placeholder="Notes..." style="font-size:0.78rem;">`
+                                                                                                                                                                      data-voucher="${voucherId}" data-ki="${ki}"
+                                                                                                                                                                      placeholder="Notes..." style="font-size:0.78rem;">`
                                     : '<span class="clr-muted">—</span>'}
                             </td>
                             <td class="text-center">
                                 ${!dipakai
                                     ? `<button type="button" class="btn-tambah-kasbon kasbon-add-btn"
-                                                                                                                                                      data-voucher="${voucherId}" data-ki="${ki}"
-                                                                                                                                                      data-kasbon-id="${escAttr(String(k.id_kasbon))}"
-                                                                                                                                                      data-jenis="general" data-jo-id=""
-                                                                                                                                                      onclick="addKasbonFromSummary(this)">
-                                                                                                                                                      <i class="fas fa-plus me-1"></i>Add
-                                                                                                                                                   </button>`
+                                                                                                                                                                      data-voucher="${voucherId}" data-ki="${ki}"
+                                                                                                                                                                      data-kasbon-id="${escAttr(String(k.id_kasbon))}"
+                                                                                                                                                                      data-jenis="general" data-jo-id=""
+                                                                                                                                                                      onclick="addKasbonFromSummary(this)">
+                                                                                                                                                                      <i class="fas fa-plus me-1"></i>Add
+                                                                                                                                                                   </button>`
                                     : '<button class="btn btn-sm btn-secondary" disabled><i class="fas fa-check"></i></button>'}
                             </td>
                         </tr>`;

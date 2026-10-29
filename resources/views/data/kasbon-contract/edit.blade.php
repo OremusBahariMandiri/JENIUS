@@ -971,7 +971,9 @@
                                 <input type="hidden" id="activeJoContItemId" value="">
                                 <input type="hidden" id="activeRowIndex" value="">
                                 <input type="hidden" id="activeHppValue" value="0">
-                                <input type="hidden" id="activeMaxAllowed" value="0"> <!-- ← BARU -->
+                                <input type="hidden" id="activeMaxAllowed" value="0">
+                                <input type="hidden" id="activeItemType" value="item">
+                                <input type="hidden" id="activeJoContPajakId" value="">
                             </div>
 
                             {{-- ===== TABLE ===== --}}
@@ -1610,42 +1612,39 @@
                     const isTaxRow = item.item_type === 'tax';
 
                     const categoryCell = catIndex === 0 ?
-                        `<td class="category-cell" rowspan="${rowspan}" style="${isTaxRow ? 'background:#f5f3ff; color:#6d28d9; font-weight:700;' : ''}">${category}</td>` :
+                        `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
                         '';
 
                     if (isTaxRow) {
-                        // ── Tax row: inline input, langsung save ──
+                        // ── Tax row: sama persis seperti item biasa (edit button → modal) ──
+                        const clearBtnTax = `
+                            <button type="button" class="btn btn-danger btn-sm btn-clear-row"
+                                onclick="clearItem(${globalIndex})"
+                                ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
+                                <i class="fas fa-trash"></i>
+                            </button>`;
+
                         $tbody.append(`
                             <tr class="item-row item-row-tax" id="row_${globalIndex}"
                                 data-index="${globalIndex}"
                                 data-jo-cont-pajak="${item.id_jo_cont_pajak}"
-                                data-category="Tax"
-                                style="background:#faf9ff;">
+                                data-category="Tax">
                                 <td class="cell-center fw-bold text-muted">${rowNo++}</td>
                                 ${categoryCell}
                                 <td class="text-start">
-                                    <span class="fw-semibold" style="color:#6d28d9;">
-                                        <i class="fas fa-percent me-1" style="font-size:.75rem;"></i>${item.invoice_typ}
-                                    </span>
+                                    <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
                                 </td>
                                 <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
                                 <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                                <td class="cell-right">
-                                    <div class="input-group input-group-sm">
-                                        <span class="input-group-text" style="font-size:.75rem;">IDR</span>
-                                        <input type="text"
-                                               class="form-control text-end tax-ca-input rupiah-input"
-                                               data-index="${globalIndex}"
-                                               value="${formatNumber(item.nilai_kasbon)}"
-                                               style="min-width:110px; font-size:.85rem;">
-                                    </div>
-                                </td>
+                                <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
                                 <td class="cell-center">
-                                    <button type="button" class="btn btn-danger btn-sm btn-clear-tax"
-                                        onclick="clearTaxItem(${globalIndex})"
-                                        ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <div class="d-flex gap-1 justify-content-center">
+                                        <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                                            onclick="openEditItem(${globalIndex})" title="Edit CA amount">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        ${clearBtnTax}
+                                    </div>
                                 </td>
                             </tr>`);
                     } else {
@@ -1729,8 +1728,10 @@
             );
 
             $('#activeHppValue').val(item.hpp_ops || 0);
-            $('#activeMaxAllowed').val(item.max_allowed || 0); // ← BARU
-            $('#activeJoContItemId').val(item.id_jo_cont_item);
+            $('#activeMaxAllowed').val(item.max_allowed || 0);
+            $('#activeJoContItemId').val(item.id_jo_cont_item || '');
+            $('#activeItemType').val(item.item_type || 'item');
+            $('#activeJoContPajakId').val(item.id_jo_cont_pajak || '');
             $('#activeRowIndex').val(index);
 
             if (item.has_kasbon && item.nilai_kasbon > 0) {
@@ -1767,6 +1768,8 @@
             $('#inputItemCard').removeClass('active');
             $('#inputNilaiKasbon').val('');
             $('#activeJoContItemId').val('');
+            $('#activeItemType').val('item');
+            $('#activeJoContPajakId').val('');
             $('#activeRowIndex').val('');
             $('#activeHppValue').val('0');
             resetCaValidation();
@@ -1793,27 +1796,23 @@
                     }],
                 }),
                 success: function(response) {
+                    $('#btnSaveItemInput').prop('disabled', false);
                     if (response.success) {
                         mergedItems[index].nilai_kasbon = nilaiKasbon;
                         mergedItems[index].has_kasbon   = nilaiKasbon > 0;
-                        // Update clear button state
-                        $(`#row_${index}`).find('.btn-clear-tax').prop('disabled', nilaiKasbon <= 0);
+                        refreshRowAfterSave(index, nilaiKasbon, nilaiKasbon > 0);
                         updateFooter();
+                        closeInputCard();
                         showFloatingAlert('success', 'Tax CA saved!');
                     } else {
                         showFloatingAlert('error', response.message || 'Failed to save');
                     }
                 },
                 error: function(xhr) {
+                    $('#btnSaveItemInput').prop('disabled', false);
                     showFloatingAlert('error', xhr.responseJSON?.message || 'Failed to save tax CA');
                 }
             });
-        }
-
-        function clearTaxItem(index) {
-            doSaveTaxItem(index, 0);
-            // Also reset the input field
-            $(`#row_${index}`).find('.tax-ca-input').val('0,00');
         }
 
         function doSaveItem(joContItemId, rowIndex, nilaiKasbon) {
@@ -1866,12 +1865,18 @@
         // ══════════════════════════════════════════════════════════
         function saveItemInput() {
             const joContItemId = $('#activeJoContItemId').val();
-            const rowIndex = parseInt($('#activeRowIndex').val());
-            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
+            const itemType     = $('#activeItemType').val() || 'item';
+            const pajakId      = $('#activeJoContPajakId').val();
+            const rowIndex     = parseInt($('#activeRowIndex').val());
+            const nilaiKasbon  = parseRupiah($('#inputNilaiKasbon').val());
+            const maxAllowed   = parseFloat($('#activeMaxAllowed').val() || '0');
 
-            if (!joContItemId) {
+            if (itemType !== 'tax' && !joContItemId) {
                 showFloatingAlert('error', 'No item selected');
+                return;
+            }
+            if (itemType === 'tax' && !pajakId) {
+                showFloatingAlert('error', 'No tax item selected');
                 return;
             }
             if (nilaiKasbon <= 0) {
@@ -1886,7 +1891,12 @@
 
             $('#btnSaveItemInput').prop('disabled', true);
             showFloatingAlert('saving', 'Saving...');
-            doSaveItem(joContItemId, rowIndex, nilaiKasbon);
+
+            if (itemType === 'tax') {
+                doSaveTaxItem(rowIndex, nilaiKasbon);
+            } else {
+                doSaveItem(joContItemId, rowIndex, nilaiKasbon);
+            }
         }
 
         // Bind tombol & Enter
@@ -2001,8 +2011,10 @@
                     },
                     data: JSON.stringify({
                         items: [{
-                            id_jo_cont_item: item.id_jo_cont_item,
-                            nilai_kasbon: 0
+                            id_jo_cont_item:  item.id_jo_cont_item || null,
+                            id_jo_cont_pajak: item.id_jo_cont_pajak || null,
+                            item_type:        item.item_type || 'item',
+                            nilai_kasbon:     0
                         }],
                         _token: csrfToken
                     }),
@@ -2324,19 +2336,6 @@
 
             // ── Render tabel ──
             renderTable();
-
-            // ── Setup tax CA inputs (rupiah format + auto-save on blur) ──
-            $(document).on('focus', '.tax-ca-input', function() {
-                setupRupiahInput(this);
-            });
-            $(document).on('blur', '.tax-ca-input', function() {
-                const idx   = parseInt($(this).data('index'));
-                const raw   = $(this).val().replace(/\./g, '').replace(',', '.');
-                const nilai = parseFloat(raw) || 0;
-                if (nilai !== (mergedItems[idx].nilai_kasbon || 0)) {
-                    doSaveTaxItem(idx, nilai);
-                }
-            });
 
         });
     </script>
