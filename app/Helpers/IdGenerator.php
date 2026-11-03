@@ -198,10 +198,10 @@ class IdGenerator
         $year   = date('y');
         $prefix = "AK{$year}.";
 
-        $last = DB::table('e02_mutasi_pembayaran_voucher')
-            ->where('nomor_voucher', 'LIKE', $prefix . '%')
-            ->orderByRaw("CAST(RIGHT(nomor_voucher, 5) AS UNSIGNED) DESC")
-            ->value('nomor_voucher');
+        $last = DB::table('e01_mutasi_pembayaran')
+            ->where('nomor', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor, 5) AS UNSIGNED) DESC")
+            ->value('nomor');
 
         $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
         return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
@@ -216,10 +216,10 @@ class IdGenerator
         $year   = date('y');
         $prefix = "BK{$year}.";
 
-        $last = DB::table('e02_mutasi_pembayaran_voucher')
-            ->where('nomor_voucher', 'LIKE', $prefix . '%')
-            ->orderByRaw("CAST(RIGHT(nomor_voucher, 5) AS UNSIGNED) DESC")
-            ->value('nomor_voucher');
+        $last = DB::table('e01_mutasi_pembayaran')
+            ->where('nomor', 'LIKE', $prefix . '%')
+            ->orderByRaw("CAST(RIGHT(nomor, 5) AS UNSIGNED) DESC")
+            ->value('nomor');
 
         $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
         return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
