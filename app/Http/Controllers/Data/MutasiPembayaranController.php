@@ -1758,8 +1758,8 @@ class MutasiPembayaranController extends Controller
 
     /**
      * Update current_balance COA saat detail ditambah/dihapus.
-     * $direction = 'deduct'  → kurangi nilai, tambah selisih (saat store)
-     * $direction = 'reverse' → tambah nilai, kurangi selisih (saat destroy)
+     * $direction = 'deduct'  → kurangi current_balance sebesar nilai (total pembayaran keluar)
+     * $direction = 'reverse' → tambah current_balance sebesar nilai (saat dibatalkan/dihapus)
      */
     protected function applyBalanceChange(int $voucherId, float $nilai, float $selisih, string $direction): void
     {
@@ -1769,25 +1769,13 @@ class MutasiPembayaranController extends Controller
         $coaId = $voucher->id_md_chart_of_account;
 
         if ($direction === 'deduct') {
-            // Kurangi nilai penuh kasbon
+            // Kurangi balance sebesar total nilai pembayaran yang keluar dari kas/bank
             ChartOfAccount::where('id_md_chart_of_account', $coaId)
                 ->decrement('current_balance', $nilai);
-
-            // Kembalikan selisih (jika ada)
-            if (abs($selisih) > 0.001) {
-                ChartOfAccount::where('id_md_chart_of_account', $coaId)
-                    ->increment('current_balance', $selisih);
-            }
         } elseif ($direction === 'reverse') {
-            // Balikkan: tambah nilai
+            // Balikkan: kembalikan nilai ke balance
             ChartOfAccount::where('id_md_chart_of_account', $coaId)
                 ->increment('current_balance', $nilai);
-
-            // Balikkan selisih yang sudah dikembalikan sebelumnya
-            if (abs($selisih) > 0.001) {
-                ChartOfAccount::where('id_md_chart_of_account', $coaId)
-                    ->decrement('current_balance', $selisih);
-            }
         }
     }
 
