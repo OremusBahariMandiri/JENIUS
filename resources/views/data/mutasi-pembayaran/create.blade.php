@@ -85,104 +85,6 @@
             display: inline-block;
         }
 
-        /* VOUCHER SILHOUETTE SECTION */
-        .voucher-silhouette-card {
-            position: relative;
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
-            overflow: hidden;
-        }
-
-        .voucher-silhouette-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.82);
-            backdrop-filter: blur(3px);
-            z-index: 10;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            border-radius: 10px;
-        }
-
-        .voucher-silhouette-overlay .lock-icon {
-            width: 56px;
-            height: 56px;
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            color: #059669;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
-        }
-
-        .voucher-silhouette-overlay p {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: #374151;
-            margin: 0;
-        }
-
-        .voucher-silhouette-overlay small {
-            font-size: 0.8rem;
-            color: #6b7280;
-        }
-
-        /* Silhouette content (blurred behind overlay) */
-        .silhouette-header {
-            background-color: #d1fae5;
-            padding: 1rem 1.5rem;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 10px 10px 0 0;
-        }
-
-        .silhouette-body {
-            padding: 1.5rem;
-        }
-
-        .silhouette-voucher-form {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border: 2px dashed #10b981;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
-
-        .silhouette-bar {
-            height: 12px;
-            background: #e5e7eb;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-
-        .silhouette-bar.w-60 { width: 60%; }
-        .silhouette-bar.w-40 { width: 40%; }
-        .silhouette-bar.w-80 { width: 80%; }
-        .silhouette-bar.w-30 { width: 30%; }
-
-        .silhouette-accordion {
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 10px;
-        }
-
-        .silhouette-accordion-header {
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-            padding: 12px 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
         /* FINAL SAVE SECTION */
         .final-save-section {
             position: sticky;
@@ -211,6 +113,41 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 25px rgba(49, 49, 49, 0.5);
             color: white;
+        }
+
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-container .select2-selection--single {
+            height: calc(1.5em + 0.75rem + 2px) !important;
+            padding: 0.375rem 0.75rem !important;
+            border: 2px solid #dee2e6 !important;
+            border-radius: 8px !important;
+        }
+
+        .select2-container .select2-selection--single .select2-selection__rendered {
+            line-height: 1.5 !important;
+            padding-left: 0 !important;
+            color: #212529;
+        }
+
+        .select2-container .select2-selection--single .select2-selection__arrow {
+            height: 100% !important;
+        }
+
+        .voucher-no-preview {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            color: #065f46;
+            display: none;
+        }
+
+        .voucher-no-preview.show {
+            display: block;
         }
     </style>
 @endpush
@@ -270,20 +207,20 @@
                             @csrf
 
                             <div class="row">
-                                {{-- Mutation Number (disabled) --}}
+                                {{-- Voucher Number (auto-generated based on Bank/Cash) --}}
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Mutation Number</label>
+                                    <label class="form-label">Voucher No.</label>
                                     <div class="input-group">
                                         <span class="input-group-text bg-success text-white">
                                             <i class="fas fa-hashtag"></i>
                                         </span>
-                                        <input type="text" class="form-control fw-bold"
-                                            value="{{ $nextNomor ?? 'AUTO-GENERATED' }}"
+                                        <input type="text" id="voucher_no_preview" class="form-control fw-bold"
+                                            value="Auto-generate on save"
                                             disabled
                                             style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
                                     </div>
-                                    <small class="text-muted">
-                                        <i class="fas fa-info-circle me-1"></i>Auto-generate on save
+                                    <small class="text-muted" id="voucher_no_hint">
+                                        <i class="fas fa-info-circle me-1"></i>Select Bank / Cash first to preview format
                                     </small>
                                 </div>
 
@@ -295,6 +232,30 @@
                                     @error('tanggal')
                                         <div class="text-danger small mt-1">{{ $message }}</div>
                                     @enderror
+                                </div>
+
+                                {{-- Bank / Cash --}}
+                                <div class="col-md-12 mb-3">
+                                    <label class="form-label required-field">Bank / Cash Account</label>
+                                    <select name="id_md_chart_of_account" id="select_coa" class="form-select"
+                                        data-placeholder="Select Bank / Cash account...">
+                                        <option value=""></option>
+                                        @foreach ($chartOfAccounts as $coa)
+                                            <option value="{{ $coa->id_md_chart_of_account }}"
+                                                data-payment-type="{{ $coa->payment_type }}"
+                                                {{ old('id_md_chart_of_account') == $coa->id_md_chart_of_account ? 'selected' : '' }}>
+                                                [{{ $coa->payment_type }}] {{ $coa->no_account }} —
+                                                {{ $coa->account_name ?? ($coa->nama_account ?? '') }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    @error('id_md_chart_of_account')
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
+                                    @enderror
+                                    <small class="text-muted mt-1 d-block">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Kas → voucher number format AK{yy}.{NNNNN} &nbsp;|&nbsp; Bank → BK{yy}.{NNNNN}
+                                    </small>
                                 </div>
 
                                 {{-- Check No. / BG --}}
@@ -310,7 +271,7 @@
                                 {{-- Exchange Rate --}}
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Exchange Rate (if any)</label>
-                                    <input type="text" name="kurs" id="kurs_display" class="form-control"
+                                    <input type="text" id="kurs_display" class="form-control"
                                         value="{{ old('kurs') ? number_format(old('kurs'), 2, ',', '.') : '' }}"
                                         placeholder="0,00">
                                     <input type="hidden" name="kurs" id="kurs_value" value="{{ old('kurs', 0) }}">
@@ -332,96 +293,11 @@
 
                             <div class="d-flex justify-content-end">
                                 <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-save me-1"></i> Save
+                                    <i class="fas fa-save me-1"></i> Save & Continue
                                 </button>
                             </div>
 
                         </form>
-                    </div>
-                </div>
-
-                {{-- ══ VOUCHERS CARD — SILHOUETTE (locked until header saved) ══ --}}
-                <div class="voucher-silhouette-card shadow mb-4">
-
-                    {{-- Overlay --}}
-                    <div class="voucher-silhouette-overlay">
-                        <div class="lock-icon">
-                            <i class="fas fa-lock"></i>
-                        </div>
-                        <p>Save Payment Mutation Information first</p>
-                        <small>Vouchers can be added after the mutation header is saved</small>
-                    </div>
-
-                    {{-- Blurred content behind overlay --}}
-                    <div class="silhouette-header">
-                        <span class="fw-bold">
-                            <i class="fas fa-layer-group me-2"></i>Payment Vouchers
-                            <span class="badge bg-secondary ms-1">0</span>
-                        </span>
-                        <button class="btn btn-light btn-sm" disabled>
-                            <i class="fas fa-plus me-1"></i> Add Voucher
-                        </button>
-                    </div>
-
-                    <div class="silhouette-body">
-                        {{-- Fake "Add Voucher" form --}}
-                        <div class="silhouette-voucher-form">
-                            <div class="silhouette-bar w-30 mb-3" style="height:14px;"></div>
-                            <div class="row g-3">
-                                <div class="col-md-4">
-                                    <div class="silhouette-bar w-80"></div>
-                                    <div class="silhouette-bar w-60" style="height:36px; border-radius:6px;"></div>
-                                </div>
-                                <div class="col-md-2">
-                                    <div class="silhouette-bar w-80"></div>
-                                    <div class="silhouette-bar w-60" style="height:36px; border-radius:6px;"></div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="silhouette-bar w-80"></div>
-                                    <div class="silhouette-bar" style="height:36px; border-radius:6px;"></div>
-                                </div>
-                                <div class="col-md-3">
-                                    <div class="silhouette-bar w-60"></div>
-                                    <div class="silhouette-bar w-80" style="height:36px; border-radius:6px;"></div>
-                                </div>
-                                <div class="col-md-9">
-                                    <div class="silhouette-bar w-40"></div>
-                                    <div class="silhouette-bar" style="height:36px; border-radius:6px;"></div>
-                                </div>
-                                <div class="col-12 d-flex justify-content-end gap-2">
-                                    <div class="silhouette-bar w-30" style="height:38px; border-radius:20px;"></div>
-                                    <div class="silhouette-bar w-30" style="height:38px; border-radius:20px; background:#d1fae5;"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Fake accordion rows --}}
-                        <div class="silhouette-accordion">
-                            <div class="silhouette-accordion-header">
-                                <div class="d-flex align-items-center gap-2" style="width:60%;">
-                                    <div class="silhouette-bar w-30" style="height:22px; border-radius:20px; background:#bbf7d0; margin:0; flex-shrink:0; width:40px;"></div>
-                                    <div class="silhouette-bar w-60" style="height:14px; margin:0; flex:1;"></div>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <div class="silhouette-bar" style="height:28px; width:28px; border-radius:6px; margin:0;"></div>
-                                    <div class="silhouette-bar" style="height:28px; width:28px; border-radius:6px; margin:0;"></div>
-                                    <div class="silhouette-bar" style="height:28px; width:28px; border-radius:6px; margin:0;"></div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="silhouette-accordion" style="opacity:0.5;">
-                            <div class="silhouette-accordion-header" style="background:#f8fafc;">
-                                <div class="d-flex align-items-center gap-2" style="width:50%;">
-                                    <div class="silhouette-bar" style="height:22px; border-radius:20px; background:#e2e8f0; margin:0; flex-shrink:0; width:40px;"></div>
-                                    <div class="silhouette-bar w-40" style="height:14px; margin:0; flex:1;"></div>
-                                </div>
-                                <div class="d-flex gap-2">
-                                    <div class="silhouette-bar" style="height:28px; width:28px; border-radius:6px; margin:0;"></div>
-                                    <div class="silhouette-bar" style="height:28px; width:28px; border-radius:6px; margin:0;"></div>
-                                    <div class="silhouette-bar" style="height:28px; width:28px; border-radius:6px; margin:0;"></div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
 
@@ -434,7 +310,7 @@
         <div class="d-flex justify-content-between align-items-center">
             <div class="text-muted small">
                 <i class="fas fa-info-circle me-1"></i>
-                Header changes are saved on submit — vouchers can be added after saving
+                Fill in the form above, then click Save & Continue to add payment details
             </div>
             <div class="d-flex gap-2">
                 <a href="{{ route('mutasi-pembayaran.index') }}" class="btn btn-final-back">
@@ -450,6 +326,57 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function() {
+            // Init Select2 for COA
+            $('#select_coa').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Bank / Cash account...',
+                allowClear: true,
+                width: '100%',
+            });
+
+            // When COA changes, fetch next voucher number
+            $('#select_coa').on('change', function() {
+                const val = $(this).val();
+                const $preview = $('#voucher_no_preview');
+                const $hint = $('#voucher_no_hint');
+
+                if (!val) {
+                    $preview.val('Auto-generate on save');
+                    $hint.html('<i class="fas fa-info-circle me-1"></i>Select Bank / Cash first to preview format');
+                    return;
+                }
+
+                // Read payment type directly from the original <option> element
+                const paymentType = $('select#select_coa option[value="' + val + '"]').data('payment-type')
+                                 || $('select#select_coa option[value="' + val + '"]').attr('data-payment-type');
+
+                if (!paymentType) {
+                    $preview.val('Auto-generate on save');
+                    $hint.html('<i class="fas fa-info-circle me-1"></i>Cannot determine account type');
+                    return;
+                }
+
+                $preview.val('Generating...').css('opacity', 0.5);
+
+                fetch('/data/mutasi-pembayaran/next-voucher-no?payment_type=' + encodeURIComponent(paymentType), {
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                    .then(r => {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return r.json();
+                    })
+                    .then(data => {
+                        $preview.val(data.success ? data.nomor : 'Auto-generate on save').css('opacity', 1);
+                        $hint.html('<i class="fas fa-check-circle text-success me-1"></i>Voucher number will be auto-generated when saved');
+                    })
+                    .catch(err => {
+                        console.error('[VoucherNo]', err);
+                        $preview.val('Auto-generate on save').css('opacity', 1);
+                        $hint.html('<i class="fas fa-exclamation-circle text-warning me-1"></i>Could not preview – will auto-generate on save');
+                    });
+            });
+
+            // Kurs formatting
             const kursDisplay = document.getElementById('kurs_display');
             const kursValue   = document.getElementById('kurs_value');
 

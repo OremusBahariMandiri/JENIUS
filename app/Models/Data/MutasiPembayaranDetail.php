@@ -32,6 +32,13 @@ class MutasiPembayaranDetail extends Model
         'selisih',
 
         'keterangan',
+        'id_md_chart_of_account',
+        // Custom type fields
+        'custom_id_md_release',
+        'custom_id_md_dep',
+        'custom_id_md_branch',
+        'custom_nilai',
+        'custom_pj',
     ];
 
     protected $casts = [
@@ -98,6 +105,21 @@ class MutasiPembayaranDetail extends Model
     public function kasbonGen()
     {
         return $this->belongsTo(KasbonGen::class, 'id_kasbon_gen', 'id');
+    }
+
+    public function customRelease()
+    {
+        return $this->belongsTo(\App\Models\Master\ReleaseTo::class, 'custom_id_md_release', 'id_md_release');
+    }
+
+    public function customDepartemen()
+    {
+        return $this->belongsTo(\App\Models\Master\Departemen::class, 'custom_id_md_dep', 'id_md_dep');
+    }
+
+    public function customCabang()
+    {
+        return $this->belongsTo(\App\Models\Master\Branch::class, 'custom_id_md_branch', 'id_md_branch');
     }
 
     // ── Helpers: ambil JO atau Kasbon aktif sesuai jenis ──
