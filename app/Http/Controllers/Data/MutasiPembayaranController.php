@@ -624,6 +624,8 @@ class MutasiPembayaranController extends Controller
                 'custom_id_md_release'   => $request->has('custom_id_md_release') ? ($request->custom_id_md_release ?: null) : $detail->custom_id_md_release,
                 'custom_id_md_dep'       => $request->has('custom_id_md_dep') ? ($request->custom_id_md_dep ?: null) : $detail->custom_id_md_dep,
                 'custom_id_md_branch'    => $request->has('custom_id_md_branch') ? ($request->custom_id_md_branch ?: null) : $detail->custom_id_md_branch,
+                'custom_nilai'           => $jenis === 'custom' ? $amounts['nilai'] : $detail->custom_nilai,
+                'custom_pj'              => $jenis === 'custom' ? $amounts['pj']    : $detail->custom_pj,
             ]);
 
             // Reverse balance lama, apply balance baru
