@@ -80,6 +80,7 @@
                             <option value="other">Other</option>
                             <option value="contract">Contract</option>
                             <option value="general">General</option>
+                            <option value="custom">Custom</option>
                         </select>
                     </div>
 
@@ -174,7 +175,17 @@
                     <div id="genKasbonAlert-{{ $voucher->id }}" class="mt-2" style="display:none;"></div>
                     <div id="genKasbonForm-{{ $voucher->id }}" style="display:none;">
                         <div class="row g-3 mt-1">
-
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold">COA</label>
+                                <select id="input_coa_gen-{{ $voucher->id }}"
+                                    class="form-select select2-coa-gen-{{ $voucher->id }}"
+                                    data-placeholder="Select COA...">
+                                    <option value=""></option>
+                                    @foreach ($allCoa ?? [] as $c)
+                                        <option value="{{ $c->id_md_chart_of_account }}">{{ $c->no_account }} - {{ $c->account_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             {{-- Notes: satu-satunya input manual untuk general --}}
                             <div class="col-md-12">
                                 <label class="form-label fw-semibold">Notes</label>
@@ -217,6 +228,17 @@
                         <div id="kasbonAlert-{{ $voucher->id }}" class="mt-2" style="display:none;"></div>
                         <div id="kasbonForm-{{ $voucher->id }}" style="display:none;">
                             <div class="row g-3 mt-1">
+                            <div class="col-md-12">
+                                <label class="form-label fw-semibold">COA</label>
+                                <select id="input_coa_ref-{{ $voucher->id }}"
+                                    class="form-select select2-coa-ref-{{ $voucher->id }}"
+                                    data-placeholder="Select COA...">
+                                    <option value=""></option>
+                                    @foreach ($allCoa ?? [] as $c)
+                                        <option value="{{ $c->id_md_chart_of_account }}">{{ $c->no_account }} - {{ $c->account_name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                                 <div class="col-md-12">
                                     <label class="form-label fw-semibold">Notes</label>
                                     <input type="text" id="input_ket-{{ $voucher->id }}" class="form-control"
@@ -240,6 +262,17 @@
                 {{-- Section Manual (uang_muka / penerimaan) --}}
                 <div id="manualSection-{{ $voucher->id }}" class="mt-3" style="display:none;">
                     <div class="row g-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">COA</label>
+                            <select id="input_coa_manual-{{ $voucher->id }}"
+                                class="form-select select2-coa-manual-{{ $voucher->id }}"
+                                data-placeholder="Select COA...">
+                                <option value=""></option>
+                                @foreach ($allCoa ?? [] as $c)
+                                    <option value="{{ $c->id_md_chart_of_account }}">{{ $c->no_account }} - {{ $c->account_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold required-field">Department</label>
                             <select id="input_dep_manual-{{ $voucher->id }}"
@@ -264,9 +297,12 @@
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold required-field">Amount (IDR)</label>
-                            <input type="text" id="input_nilai-{{ $voucher->id }}" class="form-control"
-                                placeholder="0,00">
-                            <input type="hidden" id="input_nilai_raw-{{ $voucher->id }}" value="0">
+                            <div class="currency-group">
+                                <span class="currency-label">IDR</span>
+                                <input type="text" id="input_nilai-{{ $voucher->id }}" class="form-control currency-input"
+                                    placeholder="0">
+                                <input type="hidden" id="input_nilai_raw-{{ $voucher->id }}" value="0">
+                            </div>
                         </div>
                         <div class="col-md-12">
                             <label class="form-label fw-semibold">Notes</label>
@@ -283,6 +319,84 @@
                                 <i class="fas fa-plus me-1"></i> Save Detail
                             </button>
                         </div>
+                    </div>
+                </div>
+
+
+                {{-- Section Custom --}}
+                <div id="customSection-{{ $voucher->id }}" class="mt-3" style="display:none;">
+                    <div class="custom-detail-card">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold required-field">Release To</label>
+                            <select id="input_custom_release_to-{{ $voucher->id }}"
+                                class="form-select select2-custom-release-{{ $voucher->id }}"
+                                data-placeholder="Select Release...">
+                                <option value=""></option>
+                                @foreach ($departemenList ?? [] as $dep)
+                                    <option value="{{ $dep->nama_dep }}">{{ $dep->nama_dep }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">COA</label>
+                            <select id="input_custom_coa-{{ $voucher->id }}"
+                                class="form-select select2-custom-coa-{{ $voucher->id }}"
+                                data-placeholder="Select COA...">
+                                <option value=""></option>
+                                @foreach ($allCoa ?? [] as $c)
+                                    <option value="{{ $c->id_md_chart_of_account }}">{{ $c->no_account }} - {{ $c->account_name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold required-field">Department</label>
+                            <select id="input_custom_dep-{{ $voucher->id }}"
+                                class="form-select select2-custom-dep-{{ $voucher->id }}"
+                                data-placeholder="Select Department...">
+                                <option value=""></option>
+                                @foreach ($departemenList ?? [] as $dep)
+                                    <option value="{{ $dep->id_md_dep }}">{{ $dep->nama_dep }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold required-field">Branch</label>
+                            <select id="input_custom_branch-{{ $voucher->id }}"
+                                class="form-select select2-custom-branch-{{ $voucher->id }}"
+                                data-placeholder="Select Branch...">
+                                <option value=""></option>
+                                @foreach ($branchList ?? [] as $branch)
+                                    <option value="{{ $branch->id_md_branch }}">{{ $branch->nama_branch }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold required-field">Amount (IDR)</label>
+                            <div class="currency-group">
+                                <span class="currency-label">IDR</span>
+                                <input type="text" id="input_custom_nilai-{{ $voucher->id }}"
+                                    class="form-control currency-input"
+                                    placeholder="0">
+                                <input type="hidden" id="input_custom_nilai_raw-{{ $voucher->id }}" value="0">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Notes</label>
+                            <input type="text" id="input_custom_notes-{{ $voucher->id }}"
+                                class="form-control" placeholder="Notes...">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end mt-3 gap-2">
+                        <button type="button" class="btn btn-cancel-edit-style"
+                            onclick="resetDetailForm({{ $voucher->id }})">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn btn-add-purple"
+                            onclick="saveDetailCustom({{ $voucher->id }})">
+                            <i class="fas fa-plus me-1"></i> Save Detail
+                        </button>
+                    </div>
                     </div>
                 </div>
 
@@ -344,9 +458,12 @@
                         </div>
                         <div class="col-md-12" id="edit_nilai_col-{{ $voucher->id }}">
                             <label class="form-label fw-semibold required-field">Amount (IDR)</label>
-                            <input type="text" id="edit_nilai_input-{{ $voucher->id }}" class="form-control"
-                                placeholder="0,00">
-                            <input type="hidden" id="edit_nilai_raw-{{ $voucher->id }}" value="0">
+                            <div class="currency-group">
+                                <span class="currency-label">IDR</span>
+                                <input type="text" id="edit_nilai_input-{{ $voucher->id }}" class="form-control currency-input"
+                                    placeholder="0">
+                                <input type="hidden" id="edit_nilai_raw-{{ $voucher->id }}" value="0">
+                            </div>
                         </div>
                     </div>
                 </div>

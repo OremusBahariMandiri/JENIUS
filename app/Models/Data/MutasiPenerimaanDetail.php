@@ -39,7 +39,10 @@ class MutasiPenerimaanDetail extends Model
         'id_md_dep',
         'id_md_branch',
 
-        // Nilai — COA pakai COA voucher, bukan per detail
+        // COA per detail (opsional)
+        'id_md_chart_of_account',
+
+        // Nilai
         'release_to',
         'nilai',
         'keterangan',

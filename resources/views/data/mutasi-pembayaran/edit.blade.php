@@ -38,7 +38,7 @@
         .kasbon-summary-wrap{border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;}
         .kasbon-summary-header{background:linear-gradient(135deg,#f8fafc,#f1f5f9);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e8f0;font-weight:600;font-size:.83rem;color:#1e293b;}
         .table-kasbon-summary{font-size:.82rem;}
-        .table-kasbon-summary thead th{background:#f0fdf4;color:#14532d;padding:8px 12px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.03em;border:none;white-space:nowrap;}
+        .table-kasbon-summary thead th{background:#2d3748;color:#fff;padding:8px 12px;font-weight:700;font-size:.73rem;text-transform:uppercase;letter-spacing:.03em;border:none;white-space:nowrap;}
         .table-kasbon-summary tbody td{padding:8px 12px;vertical-align:middle;border-color:#f1f5f9;}
         .table-kasbon-summary tfoot td{background:#f8fafc;font-weight:700;padding:8px 12px;border-top:2px solid #e2e8f0;}
         .num-cell{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;font-size:.82rem;}
@@ -54,7 +54,7 @@
         .btn-toggle-items{background:none;border:1px solid #e2e8f0;color:#64748b;width:22px;height:22px;border-radius:4px;font-size:.7rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;padding:0;}
         .btn-toggle-items:hover:not(:disabled){background:#e0f2fe;border-color:#7dd3fc;color:#0369a1;}
         .btn-toggle-items .toggle-chev{transition:transform .2s;display:inline-block;}
-        .kasbon-item-row td{background:#f0fdf4!important;border-bottom:1px solid #dcfce7;font-size:.79rem;color:#374151;}
+        .kasbon-item-row td{background:#f8f9fa!important;border-bottom:1px solid #e9ecef;font-size:.79rem;color:#374151;}
         .table-detail thead th{background:#2d3748;color:#fff;font-size:.76rem;padding:10px 12px;font-weight:600;white-space:nowrap;}
         .table-detail tbody td{padding:8px 12px;vertical-align:middle;font-size:.82rem;}
         .table-detail tbody tr:hover td{background:#f8fafc;}
@@ -80,6 +80,19 @@
         #modalKasbonInfo .ki-table tbody td.num{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
         #modalKasbonInfo .ki-table tfoot td{background:#f5f6f7;color:#000;padding:9px 12px;font-weight:700;font-size:.8rem;border:none;white-space:nowrap;}
         #modalKasbonInfo .ki-table tfoot td.num{text-align:right;font-variant-numeric:tabular-nums;}
+
+        /* ── Table footer (JO-Contract style) ── */
+        .table-footer-mp { background:#f1f5f9; color:#111827; font-weight:700; border-top:2px solid #2c3e50; }
+        .table-footer-mp td { padding:12px 10px; font-size:.9rem; }
+        .currency-group-footer-mp { display:flex; align-items:center; gap:5px; }
+        .currency-label-footer-mp { background:#2c3e50; color:#fff; border:1px solid #2c3e50; padding:.45rem .7rem; font-size:.78rem; border-radius:6px; min-width:46px; text-align:center; font-weight:700; }
+        .value-footer-mp { flex:1; color:#111827; font-weight:700; font-size:.9rem; padding-left:8px; font-variant-numeric:tabular-nums; }
+        .value-footer-mp.clr-pos { color:#16a34a; }
+        .value-footer-mp.clr-neg { color:#dc2626; }
+        .value-footer-mp.clr-zero { color:#6b7280; }
+        /* body rows kasbon summary: semua nominal hitam */
+        .table-kasbon-summary tbody .value-footer-mp.clr-nilai,
+        .table-kasbon-summary tbody .value-footer-mp.clr-pj { color:#212529!important; }
     </style>
 @endpush
 
@@ -116,9 +129,7 @@
                                 value="{{ $mutasiPembayaran->nomor ?? '-' }}" readonly
                                 style="background-color:#f0fdf4;color:#14532d;letter-spacing:1px;">
                         </div>
-                        <small class="text-muted mt-1 d-block" id="edit_voucher_no_hint">
-                            <i class="fas fa-info-circle me-1"></i>Nomor akan diperbarui jika tipe akun berubah
-                        </small>
+
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label required-field">Date</label>
@@ -143,8 +154,30 @@
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Kurs</label>
-                        <input type="text" id="edit_kurs_display" class="form-control" value="{{ $mutasiPembayaran->kurs ? number_format($mutasiPembayaran->kurs,2,',','.') : '' }}" placeholder="0,00">
-                        <input type="hidden" id="edit_kurs_value" value="{{ $mutasiPembayaran->kurs ?? 0 }}">
+                        <div class="input-group">
+                            <input type="text" id="edit_kurs_display" class="form-control" readonly
+                                placeholder="1,0000"
+                                value="{{ $mutasiPembayaran->kurs && $mutasiPembayaran->kurs != 1 ? number_format($mutasiPembayaran->kurs,2,',','.') : '' }}"
+                                style="background:#f8fafc;cursor:pointer;"
+                                onclick="$('#modalKursDetail').modal('show')">
+                            <button type="button" class="btn btn-outline-secondary" onclick="$('#modalKursDetail').modal('show')"
+                                title="Set Kurs Detail">
+                                <i class="fas fa-dollar-sign"></i>
+                            </button>
+                        </div>
+                        <small class="text-muted mt-1 d-block" id="kurs_summary_text">
+                            @if($mutasiPembayaran->mata_uang && $mutasiPembayaran->mata_uang !== 'IDR')
+                                <i class="fas fa-info-circle me-1"></i>
+                                {{ $mutasiPembayaran->mata_uang }} @
+                                {{ number_format($mutasiPembayaran->kurs,2,',','.') }}
+                                @if($mutasiPembayaran->tgl_kurs) · {{ \Carbon\Carbon::parse($mutasiPembayaran->tgl_kurs)->format('d/m/Y') }} @endif
+                            @else
+                                <i class="fas fa-info-circle me-1"></i>Default: IDR (1:1)
+                            @endif
+                        </small>
+                        <input type="hidden" id="edit_kurs_value" value="{{ $mutasiPembayaran->kurs ?? 1 }}">
+                        <input type="hidden" id="edit_mata_uang_value" value="{{ $mutasiPembayaran->mata_uang ?? 'IDR' }}">
+                        <input type="hidden" id="edit_tgl_kurs_value" value="{{ $mutasiPembayaran->tgl_kurs ? \Carbon\Carbon::parse($mutasiPembayaran->tgl_kurs)->format('Y-m-d') : '' }}">
                     </div>
                     <div class="col-md-12 mb-3">
                         <label class="form-label">Memo</label>
@@ -275,7 +308,7 @@
                                             <th>CA Number</th><th class="text-end">Amount</th>
                                             <th class="text-end">PJ / LPJ</th><th class="text-end">Balance</th>
                                             <th style="min-width:180px;">COA</th>
-                                            <th>Notes</th><th width="90" class="text-center">Action</th>
+                                            <th style="min-width:220px;">Notes</th><th width="90" class="text-center">Action</th>
                                         </tr></thead>
                                         <tbody id="kasbonSummaryBody-{{ $voucher->id }}">
                                             <tr><td colspan="6" class="text-center text-muted py-3"><i class="fas fa-arrow-up me-1"></i> Select type to show cash advances</td></tr>
@@ -399,10 +432,71 @@
     </div>
 
     <div class="final-save-section">
-        <div class="d-flex justify-content-end">
-            <a href="{{ route('mutasi-pembayaran.index') }}" class="btn btn-outline-secondary">
-                <i class="fas fa-arrow-left me-1"></i> Back to List
-            </a>
+        <div class="d-flex justify-content-between align-items-center">
+            <div></div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('mutasi-pembayaran.pdf', $mutasiPembayaran->id) }}" target="_blank"
+                    class="btn"
+                    style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
+                           border-color:red; background-color:rgb(255,237,237); color:red;">
+                    <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                </a>
+                <a href="{{ route('mutasi-pembayaran.index') }}"
+                    class="btn"
+                    style="background:linear-gradient(135deg,#868686 0%,#5e5e5e 100%); border:none; color:white;
+                           padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
+                           box-shadow:0 6px 20px rgba(27,27,27,0.4);">
+                    <i class="fas fa-arrow-left me-2"></i> Back
+                </a>
+            </div>
+        </div>
+    </div>
+
+    {{-- MODAL: Kurs Detail --}}
+    <div class="modal fade" id="modalKursDetail" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+            <div class="modal-content" style="border-radius:14px;border:none;overflow:hidden;">
+                <div class="modal-header" style="background-color:#dcfce7;border:none;border-bottom:1px solid #bbf7d0;padding:16px 20px;">
+                    <div>
+                        <h6 class="modal-title mb-0" style="font-weight:700;color:#14532d;"><i class="fas fa-dollar-sign me-2"></i>Exchange Rate</h6>
+                        <div style="font-size:.75rem;color:#16a34a;margin-top:2px;">Set currency exchange rate detail</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="padding:24px;">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Currency</label>
+                        <select id="kurs_mata_uang" class="form-select" style="border-radius:8px;">
+                            <option value="IDR">IDR — Indonesian Rupiah</option>
+                            <option value="USD">USD — US Dollar</option>
+                            <option value="EUR">EUR — Euro</option>
+                            <option value="SGD">SGD — Singapore Dollar</option>
+                            <option value="MYR">MYR — Malaysian Ringgit</option>
+                            <option value="JPY">JPY — Japanese Yen</option>
+                            <option value="CNY">CNY — Chinese Yuan</option>
+                            <option value="AUD">AUD — Australian Dollar</option>
+                            <option value="GBP">GBP — British Pound</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Exchange Rate Value</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background:#f1f5f9;font-size:.85rem;">IDR</span>
+                            <input type="text" id="kurs_nilai_input" class="form-control" placeholder="0,00" style="border-radius:0 8px 8px 0;">
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Rate Date</label>
+                        <input type="date" id="kurs_tgl_input" class="form-control" style="border-radius:8px;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border:none;padding:12px 20px;gap:8px;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:8px;">Cancel</button>
+                    <button type="button" class="btn text-white" onclick="saveKursDetail()" style="background:#16a34a;border-radius:8px;font-weight:600;">
+                        <i class="fas fa-check me-1"></i> Save
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -598,7 +692,9 @@
             const payload = {
                 tanggal, id_md_chart_of_account:coaId,
                 no_cek:$('#edit_no_cek').val(),
-                kurs:parseRupiah($('#edit_kurs_display').val()),
+                kurs:$('#edit_kurs_value').val()||1,
+                mata_uang:$('#edit_mata_uang_value').val()||'IDR',
+                tgl_kurs:$('#edit_tgl_kurs_value').val()||'',
                 memo:$('#edit_memo').val(),
                 _token:CSRF
             };
@@ -761,28 +857,33 @@
 <button type="button" class="btn-toggle-items" data-voucher="${vid}" data-ki="${ki}" onclick="toggleKasbonItems(this)" ${ic===0?'disabled style="opacity:.3"':''}><i class="fas fa-chevron-right toggle-chev"></i></button>
 <button type="button" class="btn-kasbon-info" onclick="showKasbonInfo(this)" data-nomor="${escAttr(k.nomor)}" data-rel="${escAttr(k.release||'')}" data-dep="${escAttr(k.departemen||'')}" data-cab="${escAttr(k.cabang||'')}" data-tgl="${escAttr(k.tgl_kasbon||'')}" data-tgl-rel="${escAttr(k.tgl_release||'')}" data-items="${escAttr(JSON.stringify(k.items||[]))}"><i class="fas fa-info"></i></button>
 <span class="fw-semibold" style="font-size:.82rem;">${escHtml(k.nomor)}</span></div></td>
-<td class="num-cell clr-nilai">${formatNumber(k.nilai)}</td>
-<td class="num-cell clr-pj">${formatNumber(k.pj)}</td>
-<td class="num-cell ${sCls}">${formatNumber(k.selisih)}</td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(k.nilai)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(k.pj)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp ${sCls}">${formatNumber(k.selisih)}</span></div></td>
 <td>${!dipakai?`<select class="form-select form-select-sm kasbon-coa-select" data-voucher="${vid}" data-ki="${ki}" style="min-width:170px;"><option value="">-- COA --</option>${ALL_COAS.map(c=>`<option value="${c.id}">${c.no} - ${c.nama}</option>`).join('')}</select>`:'<span class="clr-muted">-</span>'}</td>
-<td>${!dipakai?`<input type="text" class="form-control form-control-sm kasbon-ket-input" data-voucher="${vid}" data-ki="${ki}" placeholder="Notes...">`:' <span class="clr-muted">-</span>'}</td>
+<td>${!dipakai?`<input type="text" class="form-control form-control-sm kasbon-ket-input" style="min-width:200px;" data-voucher="${vid}" data-ki="${ki}" placeholder="Notes...">`:' <span class="clr-muted">-</span>'}</td>
 <td class="text-center">${!dipakai?`<button type="button" class="btn-tambah-kasbon kasbon-add-btn" data-voucher="${vid}" data-ki="${ki}" data-kasbon-id="${escAttr(String(k.id_kasbon))}" data-jenis="${jenis}" data-jo-id="${escAttr(String(joId))}" onclick="addKasbonFromSummary(this)"><i class="fas fa-plus me-1"></i>Add</button>`:'<button class="btn btn-sm btn-secondary" disabled><i class="fas fa-check"></i></button>'}</td>
 </tr>`;
                 (k.items||[]).forEach((item,ii)=>{
                     const iS=parseFloat(item.selisih||0),iC=iS>0.001?'clr-pos':iS<-0.001?'clr-neg':'clr-zero';
                     rows+=`<tr class="kasbon-item-row ${dipakai?'sudah-dipakai':''}" data-parent-voucher="${vid}" data-parent-ki="${ki}" style="display:none;">
 <td style="padding-left:56px;font-size:.78rem;color:#64748b;">${escHtml(item.label||'Item #'+(ii+1))}</td>
-<td class="num-cell clr-nilai" style="font-size:.78rem;">${formatNumber(item.nilai_kasbon)}</td>
-<td class="num-cell clr-pj" style="font-size:.78rem;">${formatNumber(item.pj)}</td>
-<td class="num-cell ${iC}" style="font-size:.78rem;">${formatNumber(item.selisih)}</td>
-<td colspan="2"></td></tr>`;
+<td><div class="currency-group-footer-mp" style="font-size:.78rem;"><span class="currency-label-footer-mp" style="font-size:.72rem;padding:.35rem .5rem;">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(item.nilai_kasbon)}</span></div></td>
+<td><div class="currency-group-footer-mp" style="font-size:.78rem;"><span class="currency-label-footer-mp" style="font-size:.72rem;padding:.35rem .5rem;">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(item.pj)}</span></div></td>
+<td><div class="currency-group-footer-mp" style="font-size:.78rem;"><span class="currency-label-footer-mp" style="font-size:.72rem;padding:.35rem .5rem;">IDR</span><span class="value-footer-mp ${iC}">${formatNumber(item.selisih)}</span></div></td>
+<td colspan="3"></td></tr>`;
                 });
             });
             $(`#kasbonSummaryBody-${vid}`).html(rows);
             const canAdd=kasbons.filter(k=>!k.sudah_dipakai).length;
             $(`#btnAddAll-${vid}`).html(`<i class="fas fa-plus-circle me-1"></i> Add All (${canAdd})`).toggle(canAdd>0);
             const tSC=totS>0.001?'clr-pos':totS<-0.001?'clr-neg':'clr-zero';
-            $(`#kasbonSummaryFoot-${vid}`).html(`<tr><td class="fw-bold">Total</td><td class="num-cell clr-nilai">${formatNumber(totN)}</td><td class="num-cell clr-pj">${formatNumber(totP)}</td><td class="num-cell ${tSC}">${formatNumber(totS)}</td><td colspan="2"></td></tr>`);
+            $(`#kasbonSummaryFoot-${vid}`).html(`<tr class="table-footer-mp">
+<td class="text-end fw-bold" style="color:#111827;">TOTAL</td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(totN)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(totP)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp">${formatNumber(totS)}</span></div></td>
+<td colspan="3"></td></tr>`);
         }
 
         function toggleKasbonItems(btn){
@@ -1022,8 +1123,8 @@
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">-</td>
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">${escHtml(d.keterangan||'-')}</td>
 <td style="vertical-align:middle;font-size:.8rem;">${coaBadge}</td>
-<td class="num-cell clr-nilai" style="vertical-align:middle;">${formatNumber(d.nilai)}</td>
-<td class="num-cell clr-pj" style="vertical-align:middle;">${formatNumber(d.pj)}</td>
+<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.nilai)}</td>
+<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.pj)}</td>
 <td class="num-cell ${sCls}" style="vertical-align:middle;">${formatNumber(d.selisih)}</td>
 <td class="text-center" style="vertical-align:middle;">${customAksi}</td></tr>`;
                         return;
@@ -1041,8 +1142,8 @@
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">-</td>
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">-</td>
 <td style="vertical-align:middle;font-size:.8rem;">${coaNoItems}</td>
-<td class="num-cell clr-nilai" style="vertical-align:middle;">${formatNumber(d.nilai)}</td>
-<td class="num-cell clr-pj" style="vertical-align:middle;">${formatNumber(d.pj)}</td>
+<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.nilai)}</td>
+<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.pj)}</td>
 <td class="num-cell ${sCls}" style="vertical-align:middle;">${formatNumber(d.selisih)}</td>
 <td class="text-center" style="vertical-align:middle;">${aksi}</td></tr>`;
                     } else {
@@ -1068,8 +1169,8 @@
                                 const coac=firstKasbon?`<td rowspan="${kr}" style="vertical-align:middle;font-size:.8rem;">${coaKasbon}</td>`:'';
                                 const aksc=firstKasbon?`<td class="text-center" rowspan="${kr}" style="vertical-align:middle;">${aksi}</td>`:'';
                                 html+=`<tr>${noc}${joc}${kasc}${relDepBraCell}${catc}<td style="font-size:.78rem;vertical-align:middle;">${escHtml(item.label||'-')}</td>
-${coac}<td class="num-cell clr-nilai" style="vertical-align:middle;">${formatNumber(item.nilai_kasbon||0)}</td>
-<td class="num-cell clr-pj" style="vertical-align:middle;">${formatNumber(item.pj||0)}</td>
+${coac}<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(item.nilai_kasbon||0)}</td>
+<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(item.pj||0)}</td>
 <td class="num-cell ${iC}" style="vertical-align:middle;">${formatNumber(item.selisih||0)}</td>
 ${aksc}</tr>`;
                                 firstKasbon=false;
@@ -1080,12 +1181,12 @@ ${aksc}</tr>`;
             });
             $tbody.html(html);
             const tSC=totS>0.001?'clr-pos':totS<-0.001?'clr-neg':'clr-zero';
-            $tfoot.html(`<tr>
-<td colspan="7" class="text-end fw-bold" style="background:#2d3748;color:#fff;padding:9px 12px;">GRAND TOTAL</td>
-<td style="background:#2d3748;color:#fff;padding:9px 12px;text-align:right;">${formatNumber(totN)}</td>
-<td style="background:#2d3748;color:#fff;padding:9px 12px;text-align:right;">${formatNumber(totP)}</td>
-<td class="${tSC}" style="background:#2d3748;padding:9px 12px;text-align:right;">${formatNumber(totS)}</td>
-<td style="background:#2d3748;"></td></tr>`);
+            $tfoot.html(`<tr class="table-footer-mp">
+<td colspan="7" class="text-end" style="color:#fff;">GRAND TOTAL</td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(totN)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(totP)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp ${tSC}">${formatNumber(totS)}</span></div></td>
+<td></td></tr>`);
             updateDetailCountBadge(vid,details.length);
         }
 
@@ -1150,5 +1251,65 @@ ${aksc}</tr>`;
             }
             new bootstrap.Modal(document.getElementById('modalKasbonInfo')).show();
         }
+
+        /* ══ MODAL KURS ══ */
+        $('#modalKursDetail').on('show.bs.modal', function(){
+            const mu  = $('#edit_mata_uang_value').val() || 'IDR';
+            const val = $('#edit_kurs_value').val() || '';
+            const tgl = $('#edit_tgl_kurs_value').val() || '';
+            $('#kurs_mata_uang').val(mu);
+            const numVal = parseFloat(val);
+            if(numVal && numVal !== 1 && mu !== 'IDR'){
+                // Tampilkan tanpa trailing zeros — format 2 desimal, strip jika .00
+                const fmt = numVal % 1 === 0
+                    ? numVal.toLocaleString('id-ID')
+                    : numVal.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+                $('#kurs_nilai_input').val(fmt);
+                $('#kurs_nilai_input').prop('readonly', false);
+            } else {
+                $('#kurs_nilai_input').val(mu === 'IDR' ? '1' : '').prop('readonly', mu === 'IDR');
+            }
+            $('#kurs_tgl_input').val(tgl);
+        });
+
+        $('#kurs_mata_uang').on('change', function(){
+            const mu = $(this).val();
+            if(mu === 'IDR'){
+                $('#kurs_nilai_input').val('1').prop('readonly', true).removeClass('is-invalid');
+            } else {
+                $('#kurs_nilai_input').val('').prop('readonly', false).focus();
+            }
+        });
+
+        $('#kurs_nilai_input').on('input', function(){
+            $(this).val($(this).val().replace(/[^0-9,]/g, ''));
+        });
+
+        window.saveKursDetail = function(){
+            const mu  = $('#kurs_mata_uang').val();
+            const raw = $('#kurs_nilai_input').val().replace(',', '.');
+            const val = parseFloat(raw);
+            const tgl = $('#kurs_tgl_input').val();
+
+            if(!val || val <= 0){
+                $('#kurs_nilai_input').addClass('is-invalid').focus();
+                return;
+            }
+            $('#kurs_nilai_input').removeClass('is-invalid');
+
+            $('#edit_kurs_value').val(val);
+            $('#edit_mata_uang_value').val(mu);
+            $('#edit_tgl_kurs_value').val(tgl);
+
+            const fmt = val.toLocaleString('id-ID', {minimumFractionDigits:2, maximumFractionDigits:2});
+            $('#edit_kurs_display').val(mu === 'IDR' ? '' : fmt);
+
+            let summary = mu !== 'IDR'
+                ? '<i class="fas fa-info-circle me-1"></i>' + mu + ' @ ' + fmt + (tgl ? ' · ' + tgl.split('-').reverse().join('/') : '')
+                : '<i class="fas fa-info-circle me-1"></i>Default: IDR (1:1)';
+            $('#kurs_summary_text').html(summary);
+
+            $('#modalKursDetail').modal('hide');
+        };
     </script>
 @endpush

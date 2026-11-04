@@ -168,6 +168,28 @@
             font-size: .875rem;
         }
 
+        /* ── Currency group (sama seperti edit JO) ── */
+        .currency-group {
+            display: flex;
+            align-items: center;
+        }
+        .currency-label {
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid #2c3e50;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+            border-radius: 6px 0 0 6px;
+            min-width: 50px;
+            text-align: center;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .currency-input {
+            border-radius: 0 6px 6px 0 !important;
+            border-left: none !important;
+        }
+
         .detail-edit-mode-box {
             background: linear-gradient(135deg, #eff6ff, #dbeafe);
             border: 2px solid #3b82f6;
@@ -535,6 +557,10 @@
             text-align: right;
             font-variant-numeric: tabular-nums;
         }
+        .custom-detail-card{background:linear-gradient(135deg,#f8f9fa 0%,#e9ecef 100%);border:2px dashed #10b981;border-radius:12px;padding:20px;margin-bottom:0;}
+        .custom-detail-card .form-label{font-weight:600;color:#2c3e50;font-size:.875rem;}
+        .custom-detail-card .form-control,.custom-detail-card .form-select{border:2px solid #dee2e6;border-radius:8px;padding:.6rem .75rem;transition:all .3s;}
+        .custom-detail-card .form-control:focus,.custom-detail-card .form-select:focus{border-color:#10b981;box-shadow:0 0 0 .3rem rgba(16,185,129,.15);}
     </style>
 @endpush
 
@@ -560,6 +586,7 @@
                 </div>
 
                 <input type="hidden" id="current_mutasi_id" value="{{ $mutasiPenerimaan->id }}">
+                <input type="hidden" id="current_voucher_id" value="{{ $singleVoucher->id ?? '' }}">
 
                 {{-- Header Card --}}
                 <div class="card shadow mb-4">
@@ -568,33 +595,71 @@
                     </div>
                     <div class="card-body p-4">
                         <div class="row">
+                            {{-- Voucher No. --}}
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Document No.</label>
+                                <label class="form-label">Voucher No.</label>
                                 <div class="input-group">
-                                    <span class="input-group-text" style="background:#16a34a; color:white;"><i
-                                            class="fas fa-hashtag"></i></span>
-                                    <input type="text" class="form-control fw-bold"
-                                        value="{{ $mutasiPenerimaan->nomor ?? '-' }}" readonly
-                                        style="background-color:#f0fdf4; color:#14532d; letter-spacing:1px;">
+                                    <span class="input-group-text" style="background:#16a34a;color:white;"><i class="fas fa-hashtag"></i></span>
+                                    <input type="text" id="display_nomor_voucher" class="form-control fw-bold" readonly
+                                        value="{{ $mutasiPenerimaan->nomor ?? '—' }}"
+                                        style="background-color:#f0fdf4;color:#14532d;letter-spacing:1px;">
                                 </div>
                             </div>
+                            {{-- Date --}}
                             <div class="col-md-6 mb-3">
                                 <label class="form-label required-field">Date</label>
                                 <input type="date" id="edit_tanggal" class="form-control"
                                     value="{{ $mutasiPenerimaan->tanggal ? \Carbon\Carbon::parse($mutasiPenerimaan->tanggal)->format('Y-m-d') : '' }}">
                             </div>
+                            {{-- Bank / Cash COA --}}
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label required-field">Bank / Cash</label>
+                                <select id="edit_coa" class="form-select"
+                                    data-placeholder="Select Bank / Cash account...">
+                                    <option value=""></option>
+                                    @foreach ($chartOfAccounts as $coa)
+                                        <option value="{{ $coa->id_md_chart_of_account }}"
+                                            data-payment-type="{{ $coa->payment_type }}"
+                                            {{ $singleVoucher && $singleVoucher->id_md_chart_of_account == $coa->id_md_chart_of_account ? 'selected' : '' }}>
+                                            [{{ $coa->payment_type }}] {{ $coa->no_account }} — {{ $coa->account_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            {{-- No. Cek --}}
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">No. Cek / BG / Ref</label>
                                 <input type="text" id="edit_no_cek" class="form-control"
                                     value="{{ $mutasiPenerimaan->no_cek }}">
                             </div>
+                            {{-- Kurs --}}
                             <div class="col-md-6 mb-3">
-                                <label class="form-label">Exchange Rate</label>
-                                <input type="text" id="edit_kurs_display" class="form-control"
-                                    value="{{ $mutasiPenerimaan->kurs ? number_format($mutasiPenerimaan->kurs, 2, ',', '.') : '' }}"
-                                    placeholder="0,00">
-                                <input type="hidden" id="edit_kurs_value" value="{{ $mutasiPenerimaan->kurs ?? 0 }}">
+                                <label class="form-label">Kurs</label>
+                                <div class="input-group">
+                                    <input type="text" id="edit_kurs_display" class="form-control" readonly
+                                        placeholder="1,00"
+                                        value="{{ $mutasiPenerimaan->kurs && $mutasiPenerimaan->kurs != 1 ? number_format($mutasiPenerimaan->kurs,2,',','.') : '' }}"
+                                        style="background:#f8fafc;cursor:pointer;"
+                                        onclick="$('#modalKursDetail').modal('show')">
+                                    <button type="button" class="btn btn-outline-secondary"
+                                        onclick="$('#modalKursDetail').modal('show')" title="Set Exchange Rate">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </button>
+                                </div>
+                                <small class="text-muted mt-1 d-block" id="kurs_summary_text">
+                                    @if($mutasiPenerimaan->mata_uang && $mutasiPenerimaan->mata_uang !== 'IDR')
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        {{ $mutasiPenerimaan->mata_uang }} @ {{ number_format($mutasiPenerimaan->kurs,2,',','.') }}
+                                        @if($mutasiPenerimaan->tgl_kurs) · {{ \Carbon\Carbon::parse($mutasiPenerimaan->tgl_kurs)->format('d/m/Y') }} @endif
+                                    @else
+                                        <i class="fas fa-info-circle me-1"></i>Default: IDR (1:1)
+                                    @endif
+                                </small>
+                                <input type="hidden" id="edit_kurs_value"      value="{{ $mutasiPenerimaan->kurs ?? 1 }}">
+                                <input type="hidden" id="edit_mata_uang_value" value="{{ $mutasiPenerimaan->mata_uang ?? 'IDR' }}">
+                                <input type="hidden" id="edit_tgl_kurs_value"  value="{{ $mutasiPenerimaan->tgl_kurs ? \Carbon\Carbon::parse($mutasiPenerimaan->tgl_kurs)->format('Y-m-d') : '' }}">
                             </div>
+                            {{-- Memo --}}
                             <div class="col-md-12 mb-3">
                                 <label class="form-label">Memo</label>
                                 <textarea id="edit_memo" class="form-control" rows="3">{{ $mutasiPenerimaan->memo }}</textarea>
@@ -608,98 +673,37 @@
                     </div>
                 </div>
 
-                {{-- Vouchers Card --}}
+                {{-- Payment Details Card --}}
                 <div class="card shadow mb-4">
                     <div class="card-header text-black d-flex justify-content-between align-items-center"
                         style="background-color: #dcfce7">
                         <h6 class="mb-0">
-                            <i class="fas fa-layer-group me-2"></i>Receive Vouchers
-                            <span class="badge bg-secondary ms-2"
-                                id="voucherCount">{{ $mutasiPenerimaan->vouchers->count() }}</span>
+                            <i class="fas fa-list-ul me-2"></i>Details
                         </h6>
-                        <button type="button" class="btn btn-light btn-sm" id="btnShowAddVoucher">
-                            <i class="fas fa-plus me-1"></i> Add Voucher
-                        </button>
                     </div>
                     <div class="card-body p-4">
-
-                        {{-- Add/Edit Voucher Form --}}
-                        <div class="add-form-section mb-4" id="addVoucherSection" style="display:none;">
-                            <h6 id="voucherFormTitle">
-                                <i class="fas fa-plus-square" style="color:#16a34a;"></i> Add New Voucher
-                            </h6>
-                            <input type="hidden" id="editing_voucher_id" value="">
-                            <div class="row">
-                                <div class="col-md-2 mb-3">
-                                    <label class="form-label">Voucher No.</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text" style="background:#16a34a; color:white;"><i
-                                                class="fas fa-hashtag"></i></span>
-                                        <input type="text" id="input_nomor_voucher" class="form-control fw-bold"
-                                            placeholder="Auto-generated..." readonly
-                                            style="background-color:#f0fdf4; color:#14532d; letter-spacing:1px;">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Bank / Cash COA</label>
-                                    <select id="input_voucher_coa" class="form-select"
-                                        data-placeholder="Select Bank / Cash account...">
-                                        <option value=""></option>
-                                        @foreach ($chartOfAccounts as $coa)
-                                            <option value="{{ $coa->id_md_chart_of_account }}"
-                                                data-payment-type="{{ $coa->payment_type }}">
-                                                [{{ $coa->payment_type }}] {{ $coa->no_account }} —
-                                                {{ $coa->account_name }}
-                                            </option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-3 mb-3">
-                                    <label class="form-label">Date Received</label>
-                                    <input type="date" id="input_tgl_voucher" class="form-control">
-                                </div>
-                                <div class="col-md-1 mb-3">
-                                    <label class="form-label">Order</label>
-                                    <input type="number" id="input_urutan" class="form-control" min="1"
-                                        value="{{ $mutasiPenerimaan->vouchers->count() + 1 }}">
-                                </div>
-                                <div class="col-md-12 mb-3">
-                                    <label class="form-label">Notes</label>
-                                    <input type="text" id="input_voucher_keterangan" class="form-control"
-                                        placeholder="Voucher notes...">
-                                </div>
-                                <div class="col-12 d-flex gap-2 justify-content-end">
-                                    <button type="button" class="btn btn-cancel-edit-style" id="btnCancelVoucher">
-                                        <i class="fas fa-times"></i> Cancel
-                                    </button>
-                                    <button type="button" class="btn btn-add-purple" id="btnSaveVoucher">
-                                        <i class="fas fa-arrow-down me-1"></i> Save Voucher
-                                    </button>
-                                </div>
+                        @if ($singleVoucher)
+                            {{-- Hide accordion chrome: header toggle + edit/delete buttons --}}
+                            <style>
+                                #voucher-panel-{{ $singleVoucher->id }} .voucher-accordion-header { display: none !important; }
+                                #voucher-body-{{ $singleVoucher->id }} { display: block !important; padding: 0 !important; border: none !important; }
+                                #voucher-panel-{{ $singleVoucher->id }} { border: none !important; border-radius: 0 !important; box-shadow: none !important; }
+                            </style>
+                            @include('data.mutasi-penerimaan._voucher_panel', [
+                                'voucher'           => $singleVoucher,
+                                'mutasiPenerimaan'  => $mutasiPenerimaan,
+                                'chartOfAccounts'   => $chartOfAccounts,
+                                'allCoa'            => $allCoa,
+                                'departemenList'    => $departemenList,
+                                'branchList'        => $branchList,
+                            ])
+                        @else
+                            <div class="text-center py-5 text-muted">
+                                <i class="fas fa-exclamation-circle fa-3x mb-3 d-block"></i>
+                                <p class="fw-bold">No voucher found</p>
+                                <small>Please save the header with a COA to initialize payment details</small>
                             </div>
-                        </div>
-
-                        {{-- Voucher Accordion List --}}
-                        <div id="voucherAccordion">
-                            @forelse ($mutasiPenerimaan->vouchers->sortBy('urutan') as $voucher)
-                                @include('data.mutasi-penerimaan._voucher_panel', [
-                                    'voucher' => $voucher,
-                                    'mutasiPenerimaan' => $mutasiPenerimaan,
-                                    'chartOfAccounts' => $chartOfAccounts,
-                                    'allCoa' => $allCoa,
-                                    'departemenList' => $departemenList,
-                                    'branchList' => $branchList,
-                                ])
-                            @empty
-                                <div id="noVoucherMessage" class="text-center py-5 text-muted">
-                                    <i class="fas fa-inbox fa-4x mb-3 d-block"></i>
-                                    <p class="fw-bold">No vouchers yet</p>
-                                    <small>Click "Add Voucher" to get started</small>
-                                </div>
-                            @endforelse
-                        </div>
-
+                        @endif
                     </div>
                 </div>
             </div>
@@ -730,6 +734,54 @@
                         data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-danger flex-fill fw-bold" id="btnConfirmDeleteDetail">
                         <i class="fas fa-trash me-1"></i> Yes, Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Modal: Exchange Rate ── --}}
+    <div class="modal fade" id="modalKursDetail" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+            <div class="modal-content" style="border-radius:14px;border:none;overflow:hidden;">
+                <div class="modal-header" style="background-color:#dcfce7;border:none;border-bottom:1px solid #bbf7d0;padding:16px 20px;">
+                    <div>
+                        <h6 class="modal-title mb-0" style="font-weight:700;color:#14532d;"><i class="fas fa-dollar-sign me-2"></i>Exchange Rate</h6>
+                        <div style="font-size:.75rem;color:#16a34a;margin-top:2px;">Set currency exchange rate detail</div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" style="padding:24px;">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Currency</label>
+                        <select id="kurs_mata_uang" class="form-select" style="border-radius:8px;">
+                            <option value="IDR">IDR — Indonesian Rupiah</option>
+                            <option value="USD">USD — US Dollar</option>
+                            <option value="EUR">EUR — Euro</option>
+                            <option value="SGD">SGD — Singapore Dollar</option>
+                            <option value="MYR">MYR — Malaysian Ringgit</option>
+                            <option value="JPY">JPY — Japanese Yen</option>
+                            <option value="CNY">CNY — Chinese Yuan</option>
+                            <option value="AUD">AUD — Australian Dollar</option>
+                            <option value="GBP">GBP — British Pound</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Exchange Rate Value</label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background:#f1f5f9;font-size:.85rem;">IDR</span>
+                            <input type="text" id="kurs_nilai_input" class="form-control" placeholder="0,00" style="border-radius:0 8px 8px 0;">
+                        </div>
+                    </div>
+                    <div class="mb-1">
+                        <label class="form-label fw-semibold" style="font-size:.85rem;">Rate Date</label>
+                        <input type="date" id="kurs_tgl_input" class="form-control" style="border-radius:8px;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border:none;padding:12px 20px;gap:8px;">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:8px;">Cancel</button>
+                    <button type="button" class="btn text-white" onclick="saveKursDetail()" style="background:#16a34a;border-radius:8px;font-weight:600;">
+                        <i class="fas fa-check me-1"></i> Save
                     </button>
                 </div>
             </div>
@@ -851,26 +903,55 @@
             return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
         }
 
-        function fmtRp(v) {
-            let val = String(v).replace(/[^\d,]/g, '').replace(/\./g, '');
-            if (!val) return ''; // ← izinkan kosong saat mengetik
-            let [int, dec] = val.split(',');
-            if (dec !== undefined && dec.length > 2) dec = dec.substring(0, 2);
-            int = (int || '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            if (!int && dec === undefined) return '';
-            return dec !== undefined ? (int || '0') + ',' + dec : int;
+        function formatRupiah(value) {
+            let number = String(value).replace(/[^\d,]/g, '').replace(/\./g, '');
+            if (number === '') return '';
+            let parts = number.split(',');
+            let integerPart = parts[0];
+            let decimalPart = parts.length > 1 ? parts[1] : '';
+            if (decimalPart.length > 2) decimalPart = decimalPart.substring(0, 2);
+            integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return parts.length > 1 ? integerPart + ',' + decimalPart : integerPart + ',00';
         }
+
+        // alias lama (kurs display masih pakai fmtRp)
+        function fmtRp(v) { return formatRupiah(v); }
 
         function setupRp(el) {
             if (!el) return;
             el.addEventListener('input', function() {
-                this.value = fmtRp(this.value);
+                let cursorPosition = this.selectionStart;
+                let beforeCursor = this.value.substring(0, cursorPosition);
+                let formatted = formatRupiah(this.value);
+                this.value = formatted;
+                if (!beforeCursor.includes(',')) {
+                    let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+                    let newPos = 0, digitCount = 0;
+                    for (let i = 0; i < this.value.length; i++) {
+                        if (/\d/.test(this.value[i])) {
+                            digitCount++;
+                            if (digitCount === digitsBeforeCursor) { newPos = i + 1; break; }
+                        }
+                    }
+                    this.setSelectionRange(newPos, newPos);
+                } else {
+                    let commaPos = this.value.indexOf(',');
+                    let decimalDigits = (beforeCursor.split(',')[1] || '').length;
+                    let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+                    this.setSelectionRange(newPos, newPos);
+                }
             });
             el.addEventListener('blur', function() {
-                if (!this.value) {
-                    this.value = '0,00';
-                } else if (!this.value.includes(',')) {
-                    this.value += ',00';
+                if (this.value) {
+                    if (!this.value.includes(',')) {
+                        this.value = this.value + ',00';
+                    } else {
+                        let parts = this.value.split(',');
+                        if (parts[1] !== undefined) {
+                            if (parts[1].length === 0) this.value = parts[0] + ',00';
+                            else if (parts[1].length < 2) this.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                        }
+                    }
                 }
             });
         }
@@ -962,29 +1043,29 @@
             $('#edit_kurs_display').on('input', function() {
                 $('#edit_kurs_value').val(parseRp($(this).val()));
             });
-            initS2('#input_voucher_coa', 'Select Bank / Cash account...');
+            initS2('#edit_coa', 'Select Bank / Cash account...');
 
-            $(document).on('change', '#input_voucher_coa', function() {
-                const pt = $(this).find('option:selected').data('payment-type');
-                const $n = $('#input_nomor_voucher');
-                if (!$(this).val() || !pt) {
-                    $n.val('');
-                    return;
-                }
-                $n.val('Generating...').css('opacity', .5);
-                fetch(ROUTES.nextVoucherNo + '?payment_type=' + encodeURIComponent(pt))
-                    .then(r => r.json()).then(d => $n.val(d.success ? d.nomor : '').css('opacity', 1))
-                    .catch(() => $n.val('').css('opacity', 1));
-            });
-
-            @foreach ($mutasiPenerimaan->vouchers as $v)
-                initVoucherPanelSelects({{ $v->id }});
-            @endforeach
+            @if ($singleVoucher)
+                // Single voucher - init panel and load details immediately
+                initVoucherPanelSelects({{ $singleVoucher->id }});
+                loadVoucherDetails({{ $singleVoucher->id }});
+            @endif
         });
 
         // ============================================================
         // UPDATE HEADER
         // ============================================================
+        // Update Voucher No display when COA changes
+        $('#edit_coa').on('change', function() {
+            const paymentType = $('option:selected', this).data('payment-type') || '';
+            if (!paymentType) return;
+            $.get('/data/mutasi-penerimaan/next-voucher-no', { payment_type: paymentType }, function(r) {
+                if (r.success) {
+                    $('#display_nomor_voucher').val(r.nomor + ' (preview)').css('color', '#b45309');
+                }
+            });
+        });
+
         $('#btnSaveHeader').on('click', function() {
             const tanggal = $('#edit_tanggal').val();
             if (!tanggal) {
@@ -998,27 +1079,31 @@
                 data: {
                     tanggal,
                     no_cek: $('#edit_no_cek').val(),
-                    kurs: parseRp($('#edit_kurs_display').val()),
+                    kurs: $('#edit_kurs_value').val() || 1,
+                    mata_uang: $('#edit_mata_uang_value').val() || 'IDR',
+                    tgl_kurs: $('#edit_tgl_kurs_value').val() || '',
                     memo: $('#edit_memo').val(),
+                    id_md_chart_of_account: $('#edit_coa').val() || null,
                     _token: CSRF
                 },
-                success: r => r.success ? showFloatingAlert('success', 'Header updated!') :
-                    showFloatingAlert('error', r.message || 'Failed'),
+                success: function(r) {
+                    if (r.success) {
+                        showFloatingAlert('success', 'Header updated!');
+                        // Update displayed nomor if returned
+                        if (r.data && r.data.nomor) {
+                            $('#display_nomor_voucher').val(r.data.nomor).css('color', '#14532d');
+                        }
+                    } else {
+                        showFloatingAlert('error', r.message || 'Failed');
+                    }
+                },
                 error: xhr => showFloatingAlert('error', xhr.responseJSON?.message || 'Failed'),
             });
         });
 
         // ============================================================
-        // VOUCHER
+        // VOUCHER (removed - 1 mutasi = 1 voucher, managed via header)
         // ============================================================
-        $('#btnShowAddVoucher').on('click', function() {
-            $('#addVoucherSection').slideDown(200);
-            clearVoucherForm();
-            $('#noVoucherMessage').hide();
-            fetch(ROUTES.nextVoucherNo).then(r => r.json()).then(d => {
-                if (d.success) $('#input_nomor_voucher').val(d.nomor);
-            });
-        });
         $('#btnCancelVoucher').on('click', function() {
             $('#addVoucherSection').slideUp(200);
             clearVoucherForm();
@@ -1405,6 +1490,7 @@
         // ============================================================
         // VOUCHER PANEL
         // ============================================================
+
         function toggleVoucherPanel(voucherId) {
             const $body = $(`#voucher-body-${voucherId}`);
             const $icon = $(`.toggle-icon-${voucherId}`);
@@ -1423,10 +1509,17 @@
 
         function initVoucherPanelSelects(voucherId) {
             initS2(`.select2-jo-${voucherId}`, 'Select JO...');
+            initS2(`.select2-custom-release-${voucherId}`, 'Select Release...');
+            initS2(`.select2-custom-coa-${voucherId}`, 'Select COA...');
+            initS2(`.select2-custom-dep-${voucherId}`, 'Select Department...');
+            initS2(`.select2-custom-branch-${voucherId}`, 'Select Branch...');
             initS2(`.select2-kasbon-gen-${voucherId}`, 'Select General CA...');
             initS2(`.select2-kasbon-${voucherId}`, 'Select CA...');
             initS2(`.select2-dep-manual-${voucherId}`, 'Select Department...');
             initS2(`.select2-branch-manual-${voucherId}`, 'Select Branch...');
+            initS2(`.select2-coa-manual-${voucherId}`, 'Select COA...');
+            initS2(`.select2-coa-ref-${voucherId}`, 'Select COA...');
+            initS2(`.select2-coa-gen-${voucherId}`, 'Select COA...');
             setupRp(document.getElementById(`input_nilai-${voucherId}`));
             if (document.getElementById(`input_nilai-${voucherId}`)) {
                 $(`#input_nilai-${voucherId}`).on('input', function() {
@@ -1441,12 +1534,54 @@
         // ============================================================
 
         // Step 1: Jenis change
+        // Rupiah input for custom nilai — same format as JO
+        $(document).on('input', '[id^="input_custom_nilai-"]', function() {
+            const el = this;
+            let cursorPosition = el.selectionStart;
+            let beforeCursor = el.value.substring(0, cursorPosition);
+            let formatted = formatRupiah(el.value);
+            el.value = formatted;
+            if (!beforeCursor.includes(',')) {
+                let digitsBeforeCursor = beforeCursor.replace(/\D/g, '').length;
+                let newPos = 0, digitCount = 0;
+                for (let i = 0; i < el.value.length; i++) {
+                    if (/\d/.test(el.value[i])) {
+                        digitCount++;
+                        if (digitCount === digitsBeforeCursor) { newPos = i + 1; break; }
+                    }
+                }
+                el.setSelectionRange(newPos, newPos);
+            } else {
+                let commaPos = el.value.indexOf(',');
+                let decimalDigits = (beforeCursor.split(',')[1] || '').length;
+                let newPos = commaPos + 1 + Math.min(decimalDigits, 2);
+                el.setSelectionRange(newPos, newPos);
+            }
+            const vid = $(el).attr('id').replace('input_custom_nilai-', '');
+            $(`#input_custom_nilai_raw-${vid}`).val(parseRp(formatted));
+        });
+        $(document).on('blur', '[id^="input_custom_nilai-"]', function() {
+            if (this.value) {
+                if (!this.value.includes(',')) {
+                    this.value = this.value + ',00';
+                } else {
+                    let parts = this.value.split(',');
+                    if (parts[1] !== undefined) {
+                        if (parts[1].length === 0) this.value = parts[0] + ',00';
+                        else if (parts[1].length < 2) this.value = parts[0] + ',' + parts[1].padEnd(2, '0');
+                    }
+                }
+                const vid = $(this).attr('id').replace('input_custom_nilai-', '');
+                $(`#input_custom_nilai_raw-${vid}`).val(parseRp(this.value));
+            }
+        });
+
         function onJenisChange(voucherId) {
             const jenis = $(`#input_jenis-${voucherId}`).val();
             const $jenisCol = $(`#jenisCol-${voucherId}`);
             // reset all
             $(`#joCol-${voucherId}, #genKasbonCol-${voucherId}`).hide();
-            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #manualSection-${voucherId}`).hide();
+            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #manualSection-${voucherId}, #customSection-${voucherId}`).hide();
             $(`#kasbonInfoPanel-${voucherId}, #genKasbonInfoPanel-${voucherId}`).hide();
             $(`#input_tipe_pem-${voucherId}`).val('');
             $(`#addDetailSection-${voucherId} .btn-tipe-pem`).removeClass('active');
@@ -1455,6 +1590,12 @@
                 return;
             }
             $jenisCol.removeClass('col-12').addClass('col-md-3');
+
+            if (jenis === 'custom') {
+                $(`#customSection-${voucherId}`).show();
+                $jenisCol.removeClass('col-md-3').addClass('col-md-3'); // keep compact
+                return;
+            }
 
             if (jenis === 'general') {
                 $(`#genKasbonCol-${voucherId}`).show();
@@ -1668,6 +1809,47 @@
         // ============================================================
         // SAVE DETAIL
         // ============================================================
+        function saveDetailCustom(voucherId) {
+            const releaseToEl = $(`#input_custom_release_to-${voucherId}`);
+            const releaseTo   = releaseToEl.val() || releaseToEl.find('option:selected').text();
+            const coaId       = $(`#input_custom_coa-${voucherId}`).val();
+            const depId       = $(`#input_custom_dep-${voucherId}`).val();
+            const branchId    = $(`#input_custom_branch-${voucherId}`).val();
+            const nilaiRaw    = parseFloat($(`#input_custom_nilai_raw-${voucherId}`).val()) || 0;
+            const notes       = $(`#input_custom_notes-${voucherId}`).val();
+
+            if (!depId || !branchId) { showFloatingAlert('error', 'Department and Branch are required'); return; }
+            if (!nilaiRaw || nilaiRaw <= 0) { showFloatingAlert('error', 'Amount must be greater than 0'); return; }
+
+            showFloatingAlert('saving', 'Saving...');
+            $.ajax({
+                url: ROUTES.detailStore,
+                method: 'POST',
+                data: {
+                    id_mutasi_voucher: voucherId,
+                    jenis: 'custom',
+                    tipe_pembayaran: 'penerimaan_pembayaran',
+                    id_md_dep: depId,
+                    id_md_branch: branchId,
+                    nilai: nilaiRaw,
+                    release_to: releaseTo || null,
+                    id_md_chart_of_account: coaId || null,
+                    keterangan: notes,
+                    _token: CSRF,
+                },
+                success: function(r) {
+                    if (r.success) {
+                        showFloatingAlert('success', 'Detail saved!');
+                        resetDetailForm(voucherId);
+                        loadVoucherDetails(voucherId);
+                    } else {
+                        showFloatingAlert('error', r.message || 'Failed');
+                    }
+                },
+                error: xhr => showFloatingAlert('error', xhr.responseJSON?.message || 'Failed'),
+            });
+        }
+
         function saveDetailGeneral(voucherId) {
             const kasbonId = $(`#input_kasbon_gen-${voucherId}`).val();
             const dep = $(`#input_dep_gen-${voucherId}`).val();
@@ -1679,6 +1861,7 @@
                 return;
             }
             const pid = 'gen_' + voucherId;
+            const coaGenId = $(`#input_coa_gen-${voucherId}`).val();
             submitDetail(voucherId, {
                 jenis: 'general',
                 tipe_pembayaran: 'pengembalian_lebih_bayar',
@@ -1686,6 +1869,7 @@
                 id_md_cust: $(`#input_id_md_cust_ki-${pid}`).val(),
                 id_md_dep: dep,
                 id_md_branch: branch,
+                id_md_chart_of_account: coaGenId || null,
                 release_to: releaseTo,
                 keterangan: ket,
             });
@@ -1705,12 +1889,14 @@
             const pid = 'kasbon_' + voucherId;
             const joId = $(`#input_jo-${voucherId}`).val();
             const custId = $(`#input_id_md_cust_ki-${pid}`).val();
+            const coaRefId = $(`#input_coa_ref-${voucherId}`).val();
             const payload = {
                 jenis,
                 tipe_pembayaran: 'pengembalian_lebih_bayar',
                 id_md_cust: custId,
                 id_md_dep: dep,
                 id_md_branch: branch,
+                id_md_chart_of_account: coaRefId || null,
                 release_to: releaseTo,
                 keterangan: ket,
             };
@@ -1742,12 +1928,14 @@
                 showFloatingAlert('error', 'Dept, Branch, and amount are required');
                 return;
             }
+            const coaId = $(`#input_coa_manual-${voucherId}`).val();
             const payload = {
                 jenis,
                 tipe_pembayaran: tipe,
                 id_md_dep: dep,
                 id_md_branch: branch,
                 id_md_cust: custId,
+                id_md_chart_of_account: coaId || null,
                 nilai,
                 keterangan: ket
             };
@@ -1786,8 +1974,12 @@
         // ============================================================
         function resetDetailForm(voucherId) {
             $(`#input_jenis-${voucherId}`).val('');
+            $(`#input_custom_nilai-${voucherId}`).val('');
+            $(`#input_custom_nilai_raw-${voucherId}`).val('0');
+            $(`#input_custom_notes-${voucherId}`).val('');
+            $(`#customSection-${voucherId}`).hide();
             $(`#joCol-${voucherId}, #genKasbonCol-${voucherId}`).hide();
-            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #manualSection-${voucherId}`).hide();
+            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #manualSection-${voucherId}, #customSection-${voucherId}`).hide();
             $(`#kasbonInfoPanel-${voucherId}, #genKasbonInfoPanel-${voucherId}`).hide();
             $(`#kasbonAlert-${voucherId}, #kasbonForm-${voucherId}`).hide();
             $(`#genKasbonAlert-${voucherId}, #genKasbonForm-${voucherId}`).hide();
@@ -1798,6 +1990,7 @@
             $(`#input_dep-${voucherId}, #input_branch-${voucherId}`).val('').trigger('change.select2');
             $(`#input_dep_gen-${voucherId}, #input_branch_gen-${voucherId}`).val('').trigger('change.select2');
             $(`#input_dep_manual-${voucherId}, #input_branch_manual-${voucherId}`).val('').trigger('change.select2');
+            $(`#input_coa_manual-${voucherId}, #input_coa_ref-${voucherId}, #input_coa_gen-${voucherId}`).val('').trigger('change.select2');
             $(`#input_nilai-${voucherId}`).val('');
             $(`#input_ket-${voucherId}, #input_ket_gen-${voucherId}, #input_ket_manual-${voucherId}`).val('');
             $(`#input_dep_gen-${voucherId}`).val('');
@@ -2103,5 +2296,57 @@
         window._allCoa = @json(($allCoa ?? collect())->map(fn($c) => ['id' => $c->id_md_chart_of_account, 'nomor' => $c->no_account, 'nama' => $c->account_name]));
         window._depList = @json(($departemenList ?? collect())->map(fn($d) => ['id' => $d->id_md_dep, 'nama' => $d->nama_dep]));
         window._brList = @json(($branchList ?? collect())->map(fn($b) => ['id' => $b->id_md_branch, 'nama' => $b->nama_branch]));
+    
+        // ── Kurs Modal ──
+        $('#modalKursDetail').on('show.bs.modal', function(){
+            const mu  = $('#edit_mata_uang_value').val() || 'IDR';
+            const val = parseFloat($('#edit_kurs_value').val()) || 1;
+            const tgl = $('#edit_tgl_kurs_value').val() || '';
+            $('#kurs_mata_uang').val(mu);
+            if(mu !== 'IDR' && val !== 1){
+                const fmt = val % 1 === 0
+                    ? val.toLocaleString('id-ID')
+                    : val.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+                $('#kurs_nilai_input').val(fmt).prop('readonly', false);
+            } else {
+                $('#kurs_nilai_input').val(mu === 'IDR' ? '1' : '').prop('readonly', mu === 'IDR');
+            }
+            $('#kurs_tgl_input').val(tgl);
+        });
+
+        $('#kurs_mata_uang').on('change', function(){
+            const mu = $(this).val();
+            if(mu === 'IDR'){
+                $('#kurs_nilai_input').val('1').prop('readonly', true).removeClass('is-invalid');
+            } else {
+                $('#kurs_nilai_input').val('').prop('readonly', false).focus();
+            }
+        });
+
+        $('#kurs_nilai_input').on('input', function(){
+            $(this).val($(this).val().replace(/[^0-9,]/g,''));
+        });
+
+        window.saveKursDetail = function(){
+            const mu  = $('#kurs_mata_uang').val();
+            const raw = $('#kurs_nilai_input').val().replace(',','.');
+            const val = parseFloat(raw);
+            const tgl = $('#kurs_tgl_input').val();
+            if(!val || val <= 0){ $('#kurs_nilai_input').addClass('is-invalid').focus(); return; }
+            $('#kurs_nilai_input').removeClass('is-invalid');
+            $('#edit_kurs_value').val(val);
+            $('#edit_mata_uang_value').val(mu);
+            $('#edit_tgl_kurs_value').val(tgl);
+            const fmt = val % 1 === 0
+                ? val.toLocaleString('id-ID')
+                : val.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+            $('#edit_kurs_display').val(mu === 'IDR' ? '' : fmt);
+            const summary = mu !== 'IDR'
+                ? '<i class="fas fa-info-circle me-1"></i>' + mu + ' @ ' + fmt + (tgl ? ' · ' + tgl.split('-').reverse().join('/') : '')
+                : '<i class="fas fa-info-circle me-1"></i>Default: IDR (1:1)';
+            $('#kurs_summary_text').html(summary);
+            $('#modalKursDetail').modal('hide');
+        };
+
     </script>
 @endpush

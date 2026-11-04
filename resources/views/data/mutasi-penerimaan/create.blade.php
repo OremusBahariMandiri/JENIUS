@@ -3,6 +3,9 @@
 @section('title', 'Add Receive Mutation')
 
 @push('styles')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <style>
         :root { --primary-green: #10b981; --dark-green: #059669; --text-dark: #1e293b; }
         .mutasiCreatePage .card { border: none; border-radius: 10px; box-shadow: 0 0 20px rgba(0,0,0,.08); }
@@ -74,16 +77,15 @@
                         <form action="{{ route('mutasi-penerimaan.store') }}" method="POST" id="createForm">
                             @csrf
                             <div class="row">
-                                {{-- Mutation Number --}}
+                                {{-- Voucher No. --}}
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Mutation Number</label>
+                                    <label class="form-label">Voucher No.</label>
                                     <div class="input-group">
-                                        <span class="input-group-text bg-success text-white"><i class="fas fa-hashtag"></i></span>
-                                        <input type="text" class="form-control fw-bold"
-                                            value="{{ $nextNomor ?? 'AUTO-GENERATED' }}" disabled
-                                            style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                        <span class="input-group-text" style="background:#16a34a;color:white;"><i class="fas fa-hashtag"></i></span>
+                                        <input type="text" id="preview_nomor_mutasi" class="form-control fw-bold"
+                                            value="Auto-generate on save" disabled
+                                            style="background-color:#f0fdf4;color:#14532d;letter-spacing:1px;">
                                     </div>
-                                    <small class="text-muted"><i class="fas fa-info-circle me-1"></i>Auto-generate on save</small>
                                 </div>
 
                                 {{-- Date --}}
@@ -94,7 +96,22 @@
                                     @error('tanggal') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                                 </div>
 
-                                {{-- No Cek / Ref --}}
+                                {{-- Bank / Cash --}}
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required-field">Bank / Cash</label>
+                                    <select name="id_md_chart_of_account" id="input_coa_create" class="form-select"
+                                        data-placeholder="Select Bank / Cash account...">
+                                        <option value=""></option>
+                                        @foreach ($chartOfAccounts as $coa)
+                                            <option value="{{ $coa->id_md_chart_of_account }}"
+                                                data-payment-type="{{ $coa->payment_type }}">
+                                                [{{ $coa->payment_type }}] {{ $coa->no_account }} — {{ $coa->account_name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                {{-- No. Cek --}}
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">No. Cek / BG / Ref</label>
                                     <input type="text" name="no_cek" class="form-control"
@@ -102,19 +119,31 @@
                                     @error('no_cek') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
                                 </div>
 
-                                {{-- Exchange Rate --}}
+                                {{-- Kurs --}}
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Exchange Rate (if any)</label>
-                                    <input type="text" id="kurs_display" class="form-control"
-                                        value="{{ old('kurs') ? number_format(old('kurs'), 2, ',', '.') : '' }}"
-                                        placeholder="0,00">
-                                    <input type="hidden" name="kurs" id="kurs_value" value="{{ old('kurs', 0) }}">
-                                    @error('kurs') <div class="text-danger small mt-1">{{ $message }}</div> @enderror
+                                    <label class="form-label">Kurs</label>
+                                    <div class="input-group">
+                                        <input type="text" id="kurs_display" class="form-control" readonly
+                                            placeholder="1,00"
+                                            value="{{ old('kurs') && old('kurs') != 1 ? number_format(old('kurs'),2,',','.') : '' }}"
+                                            style="background:#f8fafc;cursor:pointer;"
+                                            onclick="$('#modalKursCreate').modal('show')">
+                                        <button type="button" class="btn btn-outline-secondary"
+                                            onclick="$('#modalKursCreate').modal('show')" title="Set Exchange Rate">
+                                            <i class="fas fa-dollar-sign"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-muted mt-1 d-block" id="kurs_summary_text">
+                                        <i class="fas fa-info-circle me-1"></i>Default: IDR (1:1)
+                                    </small>
+                                    <input type="hidden" name="kurs"      id="kurs_value"      value="{{ old('kurs', 1) }}">
+                                    <input type="hidden" name="mata_uang" id="mata_uang_value"  value="{{ old('mata_uang', 'IDR') }}">
+                                    <input type="hidden" name="tgl_kurs"  id="tgl_kurs_value"   value="{{ old('tgl_kurs', '') }}">
                                 </div>
 
                                 {{-- Memo --}}
                                 <div class="col-md-12 mb-3">
-                                    <label class="form-label">Memo / Notes</label>
+                                    <label class="form-label">Memo</label>
                                     <textarea name="memo" class="form-control" rows="3"
                                         placeholder="Additional notes...">{{ old('memo') }}</textarea>
                                 </div>
@@ -134,11 +163,10 @@
                     <div class="voucher-silhouette-overlay">
                         <div class="lock-icon"><i class="fas fa-lock"></i></div>
                         <p>Save Receive Mutation header first</p>
-                        <small>Vouchers and payment details can be added after saving</small>
+                        <small>Payment details can be added after saving</small>
                     </div>
                     <div class="silhouette-header">
-                        <span class="fw-bold"><i class="fas fa-layer-group me-2"></i>Receive Vouchers <span class="badge bg-secondary ms-1">0</span></span>
-                        <button class="btn btn-light btn-sm" disabled><i class="fas fa-plus me-1"></i> Add Voucher</button>
+                        <span class="fw-bold"><i class="fas fa-list-ul me-2"></i>Payment Details <span class="badge bg-secondary ms-1">0</span></span>
                     </div>
                     <div class="silhouette-body">
                         <div class="silhouette-voucher-form">
@@ -168,26 +196,130 @@
             </a>
         </div>
     </div>
+
+{{-- ── Modal: Exchange Rate ── --}}
+<div class="modal fade" id="modalKursCreate" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+        <div class="modal-content" style="border-radius:14px;border:none;overflow:hidden;">
+            <div class="modal-header" style="background-color:#dcfce7;border:none;border-bottom:1px solid #bbf7d0;padding:16px 20px;">
+                <div>
+                    <h6 class="modal-title mb-0" style="font-weight:700;color:#14532d;"><i class="fas fa-dollar-sign me-2"></i>Exchange Rate</h6>
+                    <div style="font-size:.75rem;color:#16a34a;margin-top:2px;">Set currency exchange rate detail</div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" style="padding:24px;">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:.85rem;">Currency</label>
+                    <select id="c_kurs_mata_uang" class="form-select" style="border-radius:8px;">
+                        <option value="IDR">IDR — Indonesian Rupiah</option>
+                        <option value="USD">USD — US Dollar</option>
+                        <option value="EUR">EUR — Euro</option>
+                        <option value="SGD">SGD — Singapore Dollar</option>
+                        <option value="MYR">MYR — Malaysian Ringgit</option>
+                        <option value="JPY">JPY — Japanese Yen</option>
+                        <option value="CNY">CNY — Chinese Yuan</option>
+                        <option value="AUD">AUD — Australian Dollar</option>
+                        <option value="GBP">GBP — British Pound</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size:.85rem;">Exchange Rate Value</label>
+                    <div class="input-group">
+                        <span class="input-group-text" style="background:#f1f5f9;font-size:.85rem;">IDR</span>
+                        <input type="text" id="c_kurs_nilai" class="form-control" placeholder="0,00" style="border-radius:0 8px 8px 0;">
+                    </div>
+                </div>
+                <div class="mb-1">
+                    <label class="form-label fw-semibold" style="font-size:.85rem;">Rate Date</label>
+                    <input type="date" id="c_kurs_tgl" class="form-control" style="border-radius:8px;">
+                </div>
+            </div>
+            <div class="modal-footer" style="border:none;padding:12px 20px;gap:8px;">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal" style="border-radius:8px;">Cancel</button>
+                <button type="button" class="btn text-white" onclick="saveKursCreate()" style="background:#16a34a;border-radius:8px;font-weight:600;">
+                    <i class="fas fa-check me-1"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         $(document).ready(function () {
-            const kursDisplay = document.getElementById('kurs_display');
-            const kursValue   = document.getElementById('kurs_value');
-            if (kursDisplay) {
-                kursDisplay.addEventListener('input', function () {
-                    let val = this.value.replace(/[^\d,]/g, '').replace(/\./g, '');
-                    let [int, dec] = val.split(',');
-                    if (dec !== undefined && dec.length > 2) dec = dec.substring(0, 2);
-                    int = (int || '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-                    this.value = dec !== undefined ? int + ',' + dec : int;
-                    kursValue.value = parseFloat((val || '0').replace(',', '.')) || 0;
+            // Select2 for COA
+            $('#input_coa_create').select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Select Bank / Cash account...',
+                allowClear: true,
+                width: '100%',
+            });
+
+            // Auto-preview voucher number based on COA selection
+            $('#input_coa_create').on('change', function() {
+                const paymentType = $('option:selected', this).data('payment-type') || '';
+                if (!paymentType) return;
+                $.get('/data/mutasi-penerimaan/next-voucher-no', { payment_type: paymentType }, function(r) {
+                    if (r.success) {
+                        $('#preview_nomor_mutasi').val(r.nomor + ' (preview)').css('color', '#065f46');
+                    }
                 });
-                kursDisplay.addEventListener('blur', function () {
-                    if (this.value && !this.value.includes(',')) this.value += ',00';
-                });
-            }
+            });
+
+            // ── Kurs Modal ──
+            $('#modalKursCreate').on('show.bs.modal', function(){
+                const mu  = $('#mata_uang_value').val() || 'IDR';
+                const val = parseFloat($('#kurs_value').val()) || 1;
+                const tgl = $('#tgl_kurs_value').val() || '';
+                $('#c_kurs_mata_uang').val(mu);
+                if(mu !== 'IDR' && val !== 1){
+                    const fmt = val % 1 === 0
+                        ? val.toLocaleString('id-ID')
+                        : val.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+                    $('#c_kurs_nilai').val(fmt).prop('readonly', false);
+                } else {
+                    $('#c_kurs_nilai').val(mu === 'IDR' ? '1' : '').prop('readonly', mu === 'IDR');
+                }
+                $('#c_kurs_tgl').val(tgl);
+            });
+
+            $('#c_kurs_mata_uang').on('change', function(){
+                const mu = $(this).val();
+                if(mu === 'IDR'){
+                    $('#c_kurs_nilai').val('1').prop('readonly', true).removeClass('is-invalid');
+                } else {
+                    $('#c_kurs_nilai').val('').prop('readonly', false).focus();
+                }
+            });
+
+            $('#c_kurs_nilai').on('input', function(){
+                $(this).val($(this).val().replace(/[^0-9,]/g,''));
+            });
+
+            window.saveKursCreate = function(){
+                const mu  = $('#c_kurs_mata_uang').val();
+                const raw = $('#c_kurs_nilai').val().replace(',','.');
+                const val = parseFloat(raw);
+                const tgl = $('#c_kurs_tgl').val();
+                if(!val || val <= 0){ $('#c_kurs_nilai').addClass('is-invalid').focus(); return; }
+                $('#c_kurs_nilai').removeClass('is-invalid');
+                $('#kurs_value').val(val);
+                $('#mata_uang_value').val(mu);
+                $('#tgl_kurs_value').val(tgl);
+                const fmt = val % 1 === 0
+                    ? val.toLocaleString('id-ID')
+                    : val.toLocaleString('id-ID',{minimumFractionDigits:2,maximumFractionDigits:2});
+                $('#kurs_display').val(mu === 'IDR' ? '' : fmt);
+                const summary = mu !== 'IDR'
+                    ? '<i class="fas fa-info-circle me-1"></i>' + mu + ' @ ' + fmt + (tgl ? ' · ' + tgl.split('-').reverse().join('/') : '')
+                    : '<i class="fas fa-info-circle me-1"></i>Default: IDR (1:1)';
+                $('#kurs_summary_text').html(summary);
+                $('#modalKursCreate').modal('hide');
+            };
         });
     </script>
 @endpush

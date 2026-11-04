@@ -634,6 +634,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('mutasi-pembayaran/{id}/edit', [MutasiPembayaranController::class, 'edit'])->name('edit');
         Route::put('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'update'])->name('update');
         Route::delete('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'destroy'])->name('destroy');
+        Route::get('mutasi-pembayaran/{id}/pdf',  [MutasiPembayaranController::class, 'exportMutasiPdf'])->name('pdf');
         Route::get('mutasi-pembayaran/{id}',     [MutasiPembayaranController::class, 'show'])->name('show');
     });
 
