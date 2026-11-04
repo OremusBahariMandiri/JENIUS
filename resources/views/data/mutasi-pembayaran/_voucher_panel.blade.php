@@ -157,11 +157,11 @@
                             <table class="table table-kasbon-summary mb-0">
                                 <thead>
                                     <tr>
-                                        <th class="text-start">CA Number</th>
-                                        <th class="text-end">Amount</th>
-                                        <th class="text-end">PJ / LPJ</th>
-                                        <th class="text-end">Balance</th>
-                                        <th>Notes</th>
+                                        <th class="text-start" style="width:25%;">CA Number</th>
+                                        <th class="text-end" style="width:15%;">Amount</th>
+                                        <th class="text-end" style="width:15%;">PJ / LPJ</th>
+                                        <th class="text-end" style="width:15%;">Balance</th>
+                                        <th style="width:20%;">Notes</th>
                                         <th width="90" class="text-center">Aksi</th>
                                     </tr>
                                 </thead>

@@ -18,6 +18,8 @@ class MutasiPembayaran extends Model
         'no_cek',
         'tanggal',
         'kurs',
+        'mata_uang',
+        'tgl_kurs',
         'memo',
         'created_by',
     ];
@@ -25,6 +27,7 @@ class MutasiPembayaran extends Model
     protected $casts = [
         'tanggal'    => 'date',
         'kurs'       => 'decimal:4',
+        'tgl_kurs'   => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];

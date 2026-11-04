@@ -429,10 +429,21 @@
 
                 <!-- BOTTOM ACTIONS -->
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <a href="{{ route('mutasi-pembayaran.index') }}"
-                        class="btn btn-outline-secondary px-4 py-2 fw-semibold">
-                        <i class="fas fa-arrow-left me-1"></i> Back to List
-                    </a>
+                    <div class="d-flex gap-2">
+                        <a href="{{ route('mutasi-pembayaran.pdf', $mutasiPembayaran->id) }}" target="_blank"
+                            class="btn"
+                            style="padding:12px 32px; border-radius:12px; font-weight:700; font-size:1rem;
+                                   border-color:red; background-color:rgb(255,237,237); color:red;">
+                            <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                        </a>
+                        <a href="{{ route('mutasi-pembayaran.index') }}"
+                            class="btn"
+                            style="background:linear-gradient(135deg,#868686 0%,#5e5e5e 100%); border:none; color:white;
+                                   padding:12px 32px; border-radius:12px; font-weight:700; font-size:1rem;
+                                   box-shadow:0 6px 20px rgba(27,27,27,0.4);">
+                            <i class="fas fa-arrow-left me-2"></i> Back
+                        </a>
+                    </div>
                     <a href="{{ route('mutasi-pembayaran.edit', $mutasiPembayaran->id) }}"
                         class="btn text-white px-4 py-2 fw-semibold" style="background:#7c3aed; border-radius:10px;">
                         <i class="fas fa-edit me-1"></i> Edit Mutasi

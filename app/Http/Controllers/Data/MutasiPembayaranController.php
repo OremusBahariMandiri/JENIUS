@@ -9,6 +9,7 @@ use App\Models\Data\MutasiPembayaranVoucher;
 use App\Models\Data\MutasiPembayaranDetail;
 
 use App\Models\Data\JoTramper;
+use App\Models\Data\JoTramperItem;
 use App\Models\Data\JoOther;
 use App\Models\Data\JoContract;
 
@@ -110,6 +111,8 @@ class MutasiPembayaranController extends Controller
             'no_cek'                 => 'nullable|string|max:100',
             'tanggal'                => 'required|date',
             'kurs'                   => 'nullable|numeric|min:0',
+            'mata_uang'              => 'nullable|string|max:10',
+            'tgl_kurs'               => 'nullable|date',
             'memo'                   => 'nullable|string',
         ]);
 
@@ -137,6 +140,8 @@ class MutasiPembayaranController extends Controller
                 'no_cek'                 => $request->no_cek,
                 'tanggal'                => $request->tanggal,
                 'kurs'                   => $request->kurs ?? 1,
+                'mata_uang'              => $request->mata_uang ?? 'IDR',
+                'tgl_kurs'               => $request->tgl_kurs ?: null,
                 'memo'                   => $request->memo,
                 'created_by'             => auth()->id(),
             ]);
@@ -248,6 +253,8 @@ class MutasiPembayaranController extends Controller
             'no_cek'                 => 'nullable|string|max:100',
             'tanggal'                => 'required|date',
             'kurs'                   => 'nullable|numeric|min:0',
+            'mata_uang'              => 'nullable|string|max:10',
+            'tgl_kurs'               => 'nullable|date',
             'memo'                   => 'nullable|string',
         ]);
 
@@ -267,6 +274,8 @@ class MutasiPembayaranController extends Controller
                 'no_cek'                 => $request->no_cek,
                 'tanggal'                => $request->tanggal,
                 'kurs'                   => $request->kurs ?? 1,
+                'mata_uang'              => $request->mata_uang ?? 'IDR',
+                'tgl_kurs'               => $request->tgl_kurs ?: null,
                 'memo'                   => $request->memo,
             ];
             if ($request->filled('new_nomor')) {
@@ -828,13 +837,13 @@ class MutasiPembayaranController extends Controller
             $voucherId = $request->get('voucher_id'); // tambah param dari JS
 
             $usedTram  = MutasiPembayaranDetail::whereNotNull('id_kasbon_tram')
-                ->when($voucherId, fn($q) => $q->where('id_mutasi_voucher', $voucherId))
+                ->when($voucherId, fn($q) => $q->where('id_mutasi_voucher', '!=', $voucherId))
                 ->pluck('id_kasbon_tram');
             $usedOther = MutasiPembayaranDetail::whereNotNull('id_kasbon_other')
-                ->when($voucherId, fn($q) => $q->where('id_mutasi_voucher', $voucherId))
+                ->when($voucherId, fn($q) => $q->where('id_mutasi_voucher', '!=', $voucherId))
                 ->pluck('id_kasbon_other');
             $usedCont  = MutasiPembayaranDetail::whereNotNull('id_kasbon_cont')
-                ->when($voucherId, fn($q) => $q->where('id_mutasi_voucher', $voucherId))
+                ->when($voucherId, fn($q) => $q->where('id_mutasi_voucher', '!=', $voucherId))
                 ->pluck('id_kasbon_cont');
 
             $data = match ($jenis) {
@@ -1028,15 +1037,23 @@ class MutasiPembayaranController extends Controller
 
     private function kasbonItemSummaryTramper($joId, $usedIds): \Illuminate\Support\Collection
     {
-        return KasbonTramper::with(['departemen', 'cabang', 'release', 'items.joTramperItem.invoice'])
+        return KasbonTramper::with(['departemen', 'cabang', 'release', 'items'])
             ->where('id_jo_tram', $joId)->get()
             ->map(function ($k) use ($usedIds) {
+                // JoTramperItem tidak pakai SoftDeletes, query biasa sudah cukup
+                $joItemMap = \App\Models\Data\JoTramperItem::query()
+                    ->where('id_jo_tram', $k->id_jo_tram)
+                    ->with('invoice')
+                    ->get()
+                    ->keyBy('id_jo_tram_item');
+
                 $lpjIds = LpjKasbonTramper::where('id_kasbon_tram', $k->id_kasbon_tram)->pluck('id_lpj_tram');
-                $items  = $k->items->map(function ($item) use ($lpjIds) {
-                    $pj  = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
+                $items  = $k->items->map(function ($item) use ($lpjIds, $joItemMap) {
+                    $pj    = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
                         ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)->sum('amount_lpj');
-                    $inv = $item->joTramperItem?->invoice;
-                    $coa = ChartOfAccount::whereIn(
+                    $jo    = $joItemMap->get($item->id_jo_tram_item);
+                    $inv   = $jo?->invoice;
+                    $coa   = ChartOfAccount::whereIn(
                         'id_md_chart_of_account',
                         LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
                             ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)
@@ -1044,7 +1061,7 @@ class MutasiPembayaranController extends Controller
                     )->get(['no_account', 'account_name']);
                     return [
                         'id'           => $item->id_kasbon_tram_item,
-                        'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $item->id),
+                        'label'        => $inv?->invoice_typ ?? $item->id_jo_tram_item ?? $item->id_kasbon_tram_item,
                         'kategori'     => $inv?->invoice_ctg ?? '—',
                         'nilai_kasbon' => (float)$item->nilai_kasbon,
                         'pj'           => (float)$pj,
@@ -1058,15 +1075,23 @@ class MutasiPembayaranController extends Controller
 
     private function kasbonItemSummaryOther($joId, $usedIds): \Illuminate\Support\Collection
     {
-        return KasbonOther::with(['departemen', 'cabang', 'release', 'items.joOtherItem.invoice'])
+        return KasbonOther::with(['departemen', 'cabang', 'release', 'items'])
             ->where('id_jo_other', $joId)->get()
             ->map(function ($k) use ($usedIds) {
+                // Load JO other items langsung (withTrashed) untuk menghindari masalah soft-delete
+                $joItemMap = \App\Models\Data\JoOtherItem::query()
+                    ->where('id_jo_other', $k->id_jo_other)
+                    ->with('invoice')
+                    ->get()
+                    ->keyBy('id_jo_other_item');
+
                 $lpjIds = LpjKasbonOther::where('id_kasbon_other', $k->id_kasbon_other)->pluck('id_lpj_other');
-                $items  = $k->items->map(function ($item) use ($lpjIds) {
-                    $pj  = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
+                $items  = $k->items->map(function ($item) use ($lpjIds, $joItemMap) {
+                    $pj    = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
                         ->where('id_kasbon_other_item', $item->id_kasbon_other_item)->sum('amount_lpj');
-                    $inv = $item->joOtherItem?->invoice;
-                    $coa = ChartOfAccount::whereIn(
+                    $jo    = $joItemMap->get($item->id_jo_other_item);
+                    $inv   = $jo?->invoice;
+                    $coa   = ChartOfAccount::whereIn(
                         'id_md_chart_of_account',
                         LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
                             ->where('id_kasbon_other_item', $item->id_kasbon_other_item)
@@ -1074,7 +1099,7 @@ class MutasiPembayaranController extends Controller
                     )->get(['no_account', 'account_name']);
                     return [
                         'id'           => $item->id_kasbon_other_item,
-                        'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $item->id),
+                        'label'        => $inv?->invoice_typ ?? $item->id_jo_other_item ?? $item->id_kasbon_other_item,
                         'kategori'     => $inv?->invoice_ctg ?? '—',
                         'nilai_kasbon' => (float)$item->nilai_kasbon,
                         'pj'           => (float)$pj,
@@ -1088,17 +1113,18 @@ class MutasiPembayaranController extends Controller
 
     private function kasbonItemSummaryGeneral($usedIds): \Illuminate\Support\Collection
     {
-        return KasbonGen::with(['departemen', 'cabang', 'release', 'items'])
+        return KasbonGen::with(['departemen', 'cabang', 'release', 'items.invoice'])
             ->orderBy('tgl_kasbon', 'desc')
             ->get()
             ->map(function ($k) use ($usedIds) {
                 $items = $k->items->map(function ($item) {
-                    $pj = (float) LpjGenItem::where('id_kasbon_gen_item', $item->id_kasbon_gen_item)
+                    $pj  = (float) LpjGenItem::where('id_kasbon_gen_item', $item->id_kasbon_gen_item)
                         ->sum('amount_lpj');
+                    $inv = $item->invoice;
                     return [
                         'id'           => $item->id_kasbon_gen_item,
-                        'label'        => $item->id_kasbon_gen_item,
-                        'kategori'     => '—',
+                        'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $item->id_kasbon_gen_item),
+                        'kategori'     => $inv?->invoice_ctg ?? '—',
                         'nilai_kasbon' => (float) $item->nilai_kasbon,
                         'pj'           => $pj,
                         'selisih'      => (float) $item->nilai_kasbon - $pj,
@@ -1138,60 +1164,95 @@ class MutasiPembayaranController extends Controller
         if (!$kasbon) return [];
 
         return match ($jenis) {
-            'tramper' => KasbonTramperItem::with('joTramperItem.invoice')
-                ->where('id_kasbon_tram', $kasbon->id_kasbon_tram)->get()
-                ->map(function ($item) use ($kasbon) {
-                    $lpjIds = LpjKasbonTramper::where('id_kasbon_tram', $kasbon->id_kasbon_tram)->pluck('id_lpj_tram');
-                    $pj     = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
-                        ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)->sum('amount_lpj');
-                    $inv    = $item->joTramperItem?->invoice;
-                    $coa    = ChartOfAccount::whereIn(
-                        'id_md_chart_of_account',
-                        LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
-                            ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)
-                            ->pluck('id_md_chart_of_account')->unique()->filter()
-                    )->get(['no_account', 'account_name']);
-                    return [
-                        'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $item->id),
-                        'kategori'     => $inv?->invoice_ctg ?? '—',
-                        'nilai_kasbon' => (float)$item->nilai_kasbon,
-                        'pj'           => (float)$pj,
-                        'selisih'      => (float)($item->nilai_kasbon - $pj),
-                        'akun'         => $coa->map(fn($c) => $c->no_account . ' — ' . $c->account_name)->implode(', '),
-                    ];
-                })->toArray(),
+            'tramper' => (function () use ($kasbon) {
+                // JoTramperItem tidak pakai SoftDeletes, query biasa sudah cukup
+                $joItemMap = JoTramperItem::query()
+                    ->where('id_jo_tram', $kasbon->id_jo_tram)
+                    ->with('invoice')
+                    ->get()
+                    ->keyBy('id_jo_tram_item');
 
-            'other' => KasbonOtherItem::with('joOtherItem.invoice')
-                ->where('id_kasbon_other', $kasbon->id_kasbon_other)->get()
-                ->map(function ($item) use ($kasbon) {
-                    $lpjIds = LpjKasbonOther::where('id_kasbon_other', $kasbon->id_kasbon_other)->pluck('id_lpj_other');
-                    $pj     = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
-                        ->where('id_kasbon_other_item', $item->id_kasbon_other_item)->sum('amount_lpj');
-                    $inv    = $item->joOtherItem?->invoice;
-                    $coa    = ChartOfAccount::whereIn(
-                        'id_md_chart_of_account',
-                        LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
-                            ->where('id_kasbon_other_item', $item->id_kasbon_other_item)
-                            ->pluck('id_md_chart_of_account')->unique()->filter()
-                    )->get(['no_account', 'account_name']);
-                    return [
-                        'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $item->id),
-                        'kategori'     => $inv?->invoice_ctg ?? '—',
-                        'nilai_kasbon' => (float)$item->nilai_kasbon,
-                        'pj'           => (float)$pj,
-                        'selisih'      => (float)($item->nilai_kasbon - $pj),
-                        'akun'         => $coa->map(fn($c) => $c->no_account . ' — ' . $c->account_name)->implode(', '),
-                    ];
-                })->toArray(),
+                $lpjIds = LpjKasbonTramper::where('id_kasbon_tram', $kasbon->id_kasbon_tram)->pluck('id_lpj_tram');
 
-            'contract' => KasbonContractItem::with('joContractItem.invoice')
+                return KasbonTramperItem::where('id_kasbon_tram', $kasbon->id_kasbon_tram)->get()
+                    ->map(function ($item) use ($kasbon, $joItemMap, $lpjIds) {
+                        $pj  = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
+                            ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)->sum('amount_lpj');
+                        $jo  = $joItemMap->get($item->id_jo_tram_item);
+                        $inv = $jo?->invoice;
+                        $coa = ChartOfAccount::whereIn(
+                            'id_md_chart_of_account',
+                            LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
+                                ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)
+                                ->pluck('id_md_chart_of_account')->unique()->filter()
+                        )->get(['no_account', 'account_name']);
+                        return [
+                            'label'        => $inv?->invoice_typ ?? $item->id_jo_tram_item ?? ('Item #' . $item->id),
+                            'kategori'     => $inv?->invoice_ctg ?? '—',
+                            'nilai_kasbon' => (float) $item->nilai_kasbon,
+                            'pj'           => (float) $pj,
+                            'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                            'akun'         => $coa->map(fn($c) => $c->no_account . ' — ' . $c->account_name)->implode(', '),
+                        ];
+                    })->toArray();
+            })(),
+
+            'other' => (function () use ($kasbon) {
+                // Build manual map dari JoOtherItem supaya invoice ter-load dengan benar
+                // (sama pola dengan kasbonItemSummaryOther)
+                $joItemMap = \App\Models\Data\JoOtherItem::query()
+                    ->where('id_jo_other', $kasbon->id_jo_other)
+                    ->with('invoice')
+                    ->get()
+                    ->keyBy('id_jo_other_item');
+
+                $lpjIds = LpjKasbonOther::where('id_kasbon_other', $kasbon->id_kasbon_other)->pluck('id_lpj_other');
+
+                return KasbonOtherItem::where('id_kasbon_other', $kasbon->id_kasbon_other)->get()
+                    ->map(function ($item) use ($kasbon, $joItemMap, $lpjIds) {
+                        $pj  = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
+                            ->where('id_kasbon_other_item', $item->id_kasbon_other_item)->sum('amount_lpj');
+                        $jo  = $joItemMap->get($item->id_jo_other_item);
+                        $inv = $jo?->invoice;
+                        $coa = ChartOfAccount::whereIn(
+                            'id_md_chart_of_account',
+                            LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
+                                ->where('id_kasbon_other_item', $item->id_kasbon_other_item)
+                                ->pluck('id_md_chart_of_account')->unique()->filter()
+                        )->get(['no_account', 'account_name']);
+                        return [
+                            'label'        => $inv?->invoice_typ ?? $item->id_jo_other_item ?? ('Item #' . $item->id),
+                            'kategori'     => $inv?->invoice_ctg ?? '—',
+                            'nilai_kasbon' => (float) $item->nilai_kasbon,
+                            'pj'           => (float) $pj,
+                            'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                            'akun'         => $coa->map(fn($c) => $c->no_account . ' — ' . $c->account_name)->implode(', '),
+                        ];
+                    })->toArray();
+            })(),
+
+            'contract' => KasbonContractItem::with(['joContractItem.invoice', 'joContractPajak'])
                 ->where('id_kasbon_cont', $kasbon->id_kasbon_cont)->get()
                 ->map(function ($item) use ($kasbon) {
                     $lpjIds = LpjKasbon::where('id_kasbon_cont', $kasbon->id_kasbon_cont)->pluck('id_lpj_cont');
                     $pj     = LpjContractItem::whereIn('id_lpj_cont', $lpjIds)
                         ->where('id_kasbon_cont_item', $item->id_kasbon_cont_item)->sum('amount_lpj');
-                    $inv    = $item->joContractItem?->invoice;
-                    $coa    = ChartOfAccount::whereIn(
+                    $isTax  = ($item->item_type ?? 'item') === 'tax';
+
+                    if ($isTax) {
+                        $pajak = $item->joContractPajak;
+                        return [
+                            'label'        => $pajak?->nama_pajak ?? ('Tax #' . $item->id),
+                            'kategori'     => 'Tax',
+                            'nilai_kasbon' => (float) $item->nilai_kasbon,
+                            'pj'           => (float) $pj,
+                            'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                            'akun'         => '',
+                        ];
+                    }
+
+                    $inv = $item->joContractItem?->invoice;
+                    $coa = ChartOfAccount::whereIn(
                         'id_md_chart_of_account',
                         LpjContractItem::whereIn('id_lpj_cont', $lpjIds)
                             ->where('id_kasbon_cont_item', $item->id_kasbon_cont_item)
@@ -1200,9 +1261,9 @@ class MutasiPembayaranController extends Controller
                     return [
                         'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $item->id),
                         'kategori'     => $inv?->invoice_ctg ?? '—',
-                        'nilai_kasbon' => (float)$item->nilai_kasbon,
-                        'pj'           => (float)$pj,
-                        'selisih'      => (float)($item->nilai_kasbon - $pj),
+                        'nilai_kasbon' => (float) $item->nilai_kasbon,
+                        'pj'           => (float) $pj,
+                        'selisih'      => (float) ($item->nilai_kasbon - $pj),
                         'akun'         => $coa->map(fn($c) => $c->no_account . ' — ' . $c->account_name)->implode(', '),
                     ];
                 })->toArray(),
@@ -1445,6 +1506,47 @@ class MutasiPembayaranController extends Controller
             ]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    public function exportMutasiPdf(int $id)
+    {
+        $mutasi = \App\Models\Data\MutasiPembayaran::with(['coa', 'vouchers.details'])->findOrFail($id);
+
+        $pdfRows = [];
+        $allDetails = $mutasi->vouchers->flatMap(fn($v) => $v->details);
+
+        foreach ($allDetails as $detail) {
+            $jenis      = $detail->jenis;
+            $kasbonDbId = match ($jenis) {
+                'tramper'  => $detail->id_kasbon_tram  ?? null,
+                'other'    => $detail->id_kasbon_other ?? null,
+                'contract' => $detail->id_kasbon_cont  ?? null,
+                'general'  => $detail->id_kasbon_gen   ?? null,
+                default    => null,
+            };
+
+            if (!$kasbonDbId && $jenis !== 'custom') continue;
+
+            $row = match ($jenis) {
+                'tramper'  => $this->voucherPdfRowTramper($kasbonDbId),
+                'other'    => $this->voucherPdfRowOther($kasbonDbId),
+                'contract' => $this->voucherPdfRowContract($kasbonDbId),
+                'general'  => $this->voucherPdfRowGen($kasbonDbId),
+                default    => ['paid_to' => null, 'items' => []],
+            };
+
+            if (!empty($row['paid_to']) || !empty($row['items'])) {
+                $pdfRows[] = $row;
+            }
+        }
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
+            'data.mutasi-pembayaran.mutasi-pdf',
+            ['mutasi' => $mutasi, 'pdfRows' => $pdfRows]
+        )->setPaper('a4', 'portrait');
+
+        $filename = 'cash-out-' . str_replace(['/', '\\'], '-', $mutasi->nomor ?? $id) . '.pdf';
+        return $pdf->stream($filename);
     }
 
     public function exportVoucherPdf($voucherId)

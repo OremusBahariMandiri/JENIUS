@@ -94,17 +94,22 @@ class MutasiPenerimaanController extends Controller
 
     public function create()
     {
-        $nextNomor = IdGenerator::generatePenerimaanNo();
-        return view('data.mutasi-penerimaan.create', compact('nextNomor'));
+        // nextNomor is just a placeholder - actual nomor = voucher nomor based on COA type
+        $chartOfAccounts = ChartOfAccount::whereIn('payment_type', ['Kas', 'Bank'])
+            ->orderBy('no_account')->get();
+        return view('data.mutasi-penerimaan.create', compact('chartOfAccounts'));
     }
 
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'no_cek'   => 'nullable|string|max:100',
-            'tanggal'  => 'required|date',
-            'kurs'     => 'nullable|numeric|min:0',
-            'memo'     => 'nullable|string',
+            'no_cek'                 => 'nullable|string|max:100',
+            'tanggal'                => 'required|date',
+            'kurs'                   => 'nullable|numeric|min:0',
+            'mata_uang'              => 'nullable|string|max:10',
+            'tgl_kurs'               => 'nullable|date',
+            'memo'                   => 'nullable|string',
+            'id_md_chart_of_account' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -115,15 +120,36 @@ class MutasiPenerimaanController extends Controller
 
         DB::beginTransaction();
         try {
-            $nomor = IdGenerator::generatePenerimaanNo();
+            // Nomor mutasi = nomor voucher (1 mutasi = 1 voucher)
+            $coaId  = $request->id_md_chart_of_account ?: null;
+            $coa    = $coaId ? ChartOfAccount::find($coaId) : null;
+            $nomor  = match ($coa?->payment_type) {
+                'Kas'   => IdGenerator::generateVoucherNoKasPenerimaan(),
+                'Bank'  => IdGenerator::generateVoucherNoBankPenerimaan(),
+                default => IdGenerator::generateVoucherNoPenerimaan(),
+            };
+
             $mp = MutasiPenerimaan::create([
                 'nomor'      => $nomor,
                 'no_cek'     => $request->no_cek,
                 'tanggal'    => $request->tanggal,
                 'kurs'       => $request->kurs ?? 1,
+                'mata_uang'  => $request->mata_uang ?? 'IDR',
+                'tgl_kurs'   => $request->tgl_kurs ?: null,
                 'memo'       => $request->memo,
                 'created_by' => auth()->id(),
             ]);
+
+            // Auto-create single voucher with same nomor
+            MutasiPenerimaanVoucher::create([
+                'id_mutasi_penerimaan'   => $mp->id,
+                'nomor_voucher'          => $nomor,
+                'keterangan'             => null,
+                'urutan'                 => 1,
+                'tanggal'                => $request->tanggal,
+                'id_md_chart_of_account' => $coaId,
+            ]);
+
             DB::commit();
 
             if ($request->expectsJson())
@@ -197,8 +223,11 @@ class MutasiPenerimaanController extends Controller
             $departemenList  = Departemen::orderBy('nama_dep')->get();
             $branchList      = Branch::orderBy('nama_branch')->get();
 
+            $singleVoucher = $mutasiPenerimaan->vouchers()->orderBy('urutan')->first();
+
             return view('data.mutasi-penerimaan.edit', compact(
                 'mutasiPenerimaan',
+                'singleVoucher',
                 'chartOfAccounts',
                 'allCoa',
                 'departemenList',
@@ -214,10 +243,11 @@ class MutasiPenerimaanController extends Controller
     public function update(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'no_cek'   => 'nullable|string|max:100',
-            'tanggal'  => 'required|date',
-            'kurs'     => 'nullable|numeric|min:0',
-            'memo'     => 'nullable|string',
+            'no_cek'                 => 'nullable|string|max:100',
+            'tanggal'                => 'required|date',
+            'kurs'                   => 'nullable|numeric|min:0',
+            'memo'                   => 'nullable|string',
+            'id_md_chart_of_account' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -229,7 +259,44 @@ class MutasiPenerimaanController extends Controller
         DB::beginTransaction();
         try {
             $mp = MutasiPenerimaan::findOrFail($id);
+
+            // Handle COA change on single voucher + update nomor
+            $voucher = $mp->vouchers()->orderBy('urutan')->first();
+            $nomorBaru = $mp->nomor; // default: keep existing
+
+            if ($voucher && $request->has('id_md_chart_of_account')) {
+                $oldCoaId = $voucher->id_md_chart_of_account;
+                $newCoaId = $request->id_md_chart_of_account ?: null;
+
+                if ($oldCoaId !== $newCoaId) {
+                    // COA changed: adjust balances
+                    $totalNilai = (float) $voucher->details()->sum('nilai');
+                    if ($totalNilai > 0) {
+                        if ($oldCoaId)
+                            ChartOfAccount::where('id_md_chart_of_account', $oldCoaId)
+                                ->decrement('current_balance', $totalNilai);
+                        if ($newCoaId)
+                            ChartOfAccount::where('id_md_chart_of_account', $newCoaId)
+                                ->increment('current_balance', $totalNilai);
+                    }
+
+                    // Generate new nomor based on new COA type
+                    $newCoa = $newCoaId ? ChartOfAccount::find($newCoaId) : null;
+                    $nomorBaru = match ($newCoa?->payment_type) {
+                        'Kas'   => IdGenerator::generateVoucherNoKasPenerimaan(),
+                        'Bank'  => IdGenerator::generateVoucherNoBankPenerimaan(),
+                        default => IdGenerator::generateVoucherNoPenerimaan(),
+                    };
+
+                    $voucher->update([
+                        'id_md_chart_of_account' => $newCoaId,
+                        'nomor_voucher'           => $nomorBaru,
+                    ]);
+                }
+            }
+
             $mp->update([
+                'nomor'   => $nomorBaru,
                 'no_cek'  => $request->no_cek,
                 'tanggal' => $request->tanggal,
                 'kurs'    => $request->kurs ?? 1,
@@ -238,7 +305,11 @@ class MutasiPenerimaanController extends Controller
             DB::commit();
 
             if ($request->expectsJson())
-                return response()->json(['success' => true, 'message' => 'Header berhasil diupdate']);
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Header berhasil diupdate',
+                    'data'    => ['nomor' => $nomorBaru],
+                ]);
             return redirect()->route('mutasi-penerimaan.show', $id)->with('success', 'Data berhasil diupdate');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -423,7 +494,7 @@ class MutasiPenerimaanController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'id_mutasi_voucher'      => 'required|exists:e05_mutasi_penerimaan_voucher,id',
-            'jenis'                  => 'required|in:tramper,other,contract,general',
+            'jenis'                  => 'required|in:tramper,other,contract,general,custom',
             'tipe_pembayaran'        => 'required|in:uang_muka_pembayaran,penerimaan_pembayaran,pengembalian_lebih_bayar',
             'id_jo_tram'             => 'nullable|exists:b03_jo_tram,id_jo_tram',
             'id_jo_other'            => 'nullable|exists:b05_jo_other,id_jo_other',
@@ -437,6 +508,7 @@ class MutasiPenerimaanController extends Controller
             'nilai'                  => 'nullable|numeric|min:0',
             'keterangan'             => 'nullable|string|max:255',
             'release_to'             => 'nullable|string|max:255',
+            'id_md_chart_of_account' => 'nullable|string|max:50',
         ]);
         if ($validator->fails())
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -445,8 +517,15 @@ class MutasiPenerimaanController extends Controller
         try {
             $isPengembalian = $request->tipe_pembayaran === MutasiPenerimaanDetail::TIPE_PENGEMBALIAN;
 
+            // Custom type: direct amount entry
+            if ($request->jenis === 'custom') {
+                $nilai      = (float) ($request->nilai ?? 0);
+                $idMdCust   = null;
+                $idMdDep    = $request->id_md_dep;
+                $idMdBranch = $request->id_md_branch;
+            }
             // Resolve nilai & customer
-            if ($isPengembalian) {
+            elseif ($isPengembalian) {
                 // Nilai dari selisih LPJ (kasbon - lpj, hanya jika positif)
                 $kasbonInfo = $this->resolveKasbonInfo($request->jenis, $request);
                 if (!$kasbonInfo || !$kasbonInfo['has_lpj']) {
@@ -468,24 +547,30 @@ class MutasiPenerimaanController extends Controller
                 $idMdDep    = $request->id_md_dep;
                 $idMdBranch = $request->id_md_branch;
             }
+            // Assign $nilai/$idMdCust/$idMdDep/$idMdBranch defaults for custom (already set above)
+            if (!isset($nilai)) $nilai = 0;
+            if (!isset($idMdCust)) $idMdCust = null;
+            if (!isset($idMdDep)) $idMdDep = null;
+            if (!isset($idMdBranch)) $idMdBranch = null;
 
             $detail = MutasiPenerimaanDetail::create([
-                'id_mutasi_voucher' => $request->id_mutasi_voucher,
-                'jenis'             => $request->jenis,
-                'tipe_pembayaran'   => $request->tipe_pembayaran,
-                'id_jo_tram'        => $request->id_jo_tram,
-                'id_jo_other'       => $request->id_jo_other,
-                'id_jo_cont'        => $request->id_jo_cont,
-                'id_kasbon_tram'    => $request->id_kasbon_tram,
-                'id_kasbon_other'   => $request->id_kasbon_other,
-                'id_kasbon_cont'    => $request->id_kasbon_cont,
-                'id_kasbon_gen'     => $request->id_kasbon_gen,
-                'id_md_cust'        => $idMdCust,
-                'id_md_dep'         => $idMdDep,
-                'id_md_branch'      => $idMdBranch,
-                'release_to'        => $request->jenis === 'general' ? $request->release_to : null,
-                'nilai'             => $nilai,
-                'keterangan'        => $request->keterangan,
+                'id_mutasi_voucher'         => $request->id_mutasi_voucher,
+                'jenis'                     => $request->jenis,
+                'tipe_pembayaran'           => $request->tipe_pembayaran,
+                'id_jo_tram'                => $request->id_jo_tram,
+                'id_jo_other'               => $request->id_jo_other,
+                'id_jo_cont'                => $request->id_jo_cont,
+                'id_kasbon_tram'            => $request->id_kasbon_tram,
+                'id_kasbon_other'           => $request->id_kasbon_other,
+                'id_kasbon_cont'            => $request->id_kasbon_cont,
+                'id_kasbon_gen'             => $request->id_kasbon_gen,
+                'id_md_cust'                => $idMdCust,
+                'id_md_dep'                 => $idMdDep,
+                'id_md_branch'              => $idMdBranch,
+                'release_to'                => in_array($request->jenis, ['general','custom']) ? $request->release_to : null,
+                'nilai'                     => $nilai,
+                'keterangan'                => $request->keterangan,
+                'id_md_chart_of_account'    => $request->id_md_chart_of_account,
             ]);
 
             $this->applyBalanceChange($request->id_mutasi_voucher, $nilai, 'add');
@@ -520,6 +605,7 @@ class MutasiPenerimaanController extends Controller
             'id_md_dep'     => 'nullable|string|max:50',
             'id_md_branch'  => 'nullable|string|max:50',
             'nilai'         => 'nullable|numeric|min:0',
+            'id_md_chart_of_account' => 'nullable|string|max:50',
         ]);
         if ($validator->fails())
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
@@ -528,7 +614,10 @@ class MutasiPenerimaanController extends Controller
         try {
             $detail = MutasiPenerimaanDetail::findOrFail($id);
 
-            $updateData = ['keterangan' => $request->keterangan];
+            $updateData = [
+                'keterangan'             => $request->keterangan,
+                'id_md_chart_of_account' => $request->id_md_chart_of_account ?? $detail->id_md_chart_of_account,
+            ];
 
             if ($detail->tipe_pembayaran !== 'pengembalian_lebih_bayar') {
                 // Non-refund: boleh edit dep, branch, nilai
