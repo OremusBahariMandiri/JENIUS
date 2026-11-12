@@ -16,9 +16,14 @@
             'total_kasbon' => $i['total_kasbon'],
             'has_kasbon' => $i['has_kasbon'],
             'has_lpj_amount' => $i['has_lpj_amount'], // ← TAMBAH
-            'origin_lpj_tram' => $i['origin_lpj_tram'] ?? null,
+            'origin_lpj_tram'          => $i['origin_lpj_tram'] ?? null,
+            'item_type'                => $i['item_type'] ?? 'item',
+            'id_jo_tram_pajak'         => $i['id_jo_tram_pajak'] ?? null,
+            'total_paid_other_kasbons' => $i['total_paid_other_kasbons'] ?? 0,
+            'max_allowed'              => $i['max_allowed'] ?? 0,
         ],
     );
+
 @endphp
 
 @push('styles')
@@ -209,9 +214,9 @@
 
         .input-item-card.active {
             display: block;
-            border: 2px solid #10b981;
-            background: #f0fdf4;
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+            border: 2px solid #3b82f6;
+            background: #f0f7ff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
         }
 
         .input-item-card .card-title-bar {
@@ -220,17 +225,17 @@
             gap: 10px;
             margin-bottom: 20px;
             padding-bottom: 14px;
-            border-bottom: 1px solid #bbf7d0;
+            border-bottom: 1px solid #bfdbfe;
         }
 
         .input-item-card .card-title-bar i {
-            color: #10b981;
+            color: #3b82f6;
             font-size: 1rem;
         }
 
         .input-item-card .card-title-bar span {
             font-weight: 700;
-            color: #2c3e50;
+            color: #1e40af;
             font-size: 1rem;
         }
 
@@ -253,7 +258,7 @@
         .info-field .info-value {
             font-size: 0.9rem;
             font-weight: 700;
-            color: #2c3e50;
+            color: #1e40af;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -292,19 +297,19 @@
         }
 
         .btn-save-item-input {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             border: none;
             color: white;
             padding: 10px 28px;
             border-radius: 8px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
             transition: all 0.25s;
         }
 
         .btn-save-item-input:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.45);
             color: white;
         }
 
@@ -361,6 +366,11 @@
             border-right: 2px solid #dee2e6;
         }
 
+        .table-kasbon .category-cell-tax {
+            background: #fffbea !important;
+            color: #92400e !important;
+        }
+
         .cell-right {
             text-align: right;
         }
@@ -391,22 +401,27 @@
             width: 100%;
         }
 
+        /* IDR label in item rows */
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.4rem; font-size: 0.72rem; border-radius: 4px; min-width: 36px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { font-size: 0.88rem; font-weight: 600; color: #2c3e50; text-align: right; flex: 1; }
+
         .footer-currency-label {
-            background-color: #2C3E50;
+            background-color: #2c3e50;
             color: white;
-            padding: 4px 10px;
-            border-radius: 5px;
-            font-size: .78rem;
-            font-weight: 700;
-            min-width: 44px;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            min-width: 36px;
             text-align: center;
             flex-shrink: 0;
         }
 
         .footer-value {
-            color: #2C3E50;
+            color: #000;
             font-weight: 700;
-            font-size: .95rem;
+            font-size: 0.88rem;
             text-align: right;
             flex: 1;
         }
@@ -471,7 +486,7 @@
             padding: 18px 20px;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             border-radius: 12px 12px 0 0;
-            margin-top: 30px;
+            margin-top: 0;
             z-index: 100;
         }
 
@@ -1294,6 +1309,14 @@
                                 <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
                             </button>
                         </div>
+                        <div class="d-flex align-items-center gap-2 px-4 py-2"
+                            style="background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+                            <i class="fas fa-bolt" style="color:#2563eb; font-size:.8rem; flex-shrink:0;"></i>
+                            <span style="font-size:.8rem; color:#1e40af;">
+                                <strong>Auto-saved.</strong>
+                                Items and amounts are saved instantly — once they appear in the table, they're already recorded.
+                            </span>
+                        </div>
                         <div class="card-body p-4">
 
                             {{-- INPUT CARD --}}
@@ -1303,34 +1326,52 @@
                                     <span>Input CA Amount</span>
                                 </div>
                                 <div class="row g-3 mb-4">
-                                    <div class="col-md-4">
-                                        <div class="info-field">
-                                            <div class="info-label">Description</div>
-                                            <div class="info-value" id="infoInvoiceTyp">—</div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-2">
+                                    <div class="col-md-12">
                                         <div class="info-field">
                                             <div class="info-label">Category</div>
                                             <div class="info-value" id="infoInvoiceCtg">—</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-12">
+                                        <div class="info-field">
+                                            <div class="info-label">Item</div>
+                                            <div class="info-value" id="infoInvoiceTyp">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
                                         <div class="info-field">
                                             <div class="info-label">Selling Price (IDR)</div>
                                             <div class="info-value" id="infoHargaJual">—</div>
                                         </div>
                                     </div>
-                                    <div class="col-md-3">
+                                    <div class="col-md-6">
                                         <div class="info-field">
-                                            <div class="info-label">Total CA / HPP (IDR)</div>
-                                            <div class="info-value" id="infoTotalKasbon">—</div>
+                                            <div class="info-label">HPP (IDR)</div>
+                                            <div class="info-value" id="infoHpp">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-field">
+                                            <div class="info-label">Paid in Other CAs (IDR)</div>
+                                            <div class="info-value" id="infoPaidOther" style="color:#d97706;">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-field">
+                                            <div class="info-label">Max Allowed for This CA (IDR)</div>
+                                            <div class="info-value" id="infoMaxAllowed" style="color:#059669;">—</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="info-field">
+                                            <div class="info-label">Already in This CA (IDR)</div>
+                                            <div class="info-value" id="infoCurrentKasbon">—</div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-12">
-                                        <label class="form-label fw-bold" style="color:#2c3e50; font-size:0.875rem;">
+                                        <label class="form-label fw-bold" style="color:#1e40af; font-size:0.875rem;">
                                             CA Amount (IDR) <span style="color:#dc3545;">*</span>
                                         </label>
                                         <div class="currency-group">
@@ -1355,6 +1396,9 @@
                                 <input type="hidden" id="activeJoContItemId" value="">
                                 <input type="hidden" id="activeRowIndex" value="">
                                 <input type="hidden" id="activeHppValue" value="0">
+                                <input type="hidden" id="activeMaxAllowed" value="0">
+                                <input type="hidden" id="activeItemType" value="item">
+                                <input type="hidden" id="activeJoTramPajakId" value="">
                             </div>
 
                             {{-- TABLE --}}
@@ -1364,9 +1408,9 @@
                                         <tr>
                                             <th style="width:4%;">No</th>
                                             <th style="width:13%;">Category</th>
-                                            <th class="text-start" style="min-width:200px;">Description</th>
+                                            <th class="text-start" style="min-width:200px;">Item</th>
                                             <th style="width:15%;">Selling Price (IDR)</th>
-                                            <th style="width:15%;">Total CA / HPP (IDR)</th>
+                                            <th style="width:15%;">HPP (IDR)</th>
                                             <th style="width:15%;">CA Amount (IDR)</th>
                                             <th style="width:10%;">Action</th>
                                         </tr>
@@ -1758,18 +1802,31 @@
 
         function validateCaInput() {
             const ca = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
-            const $input = $('#inputNilaiKasbon'),
-                $hint = $('#caValidationHint');
-            if (ca <= 0 || hpp <= 0) {
+            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
+            const $input = $('#inputNilaiKasbon');
+            const $hint = $('#caValidationHint');
+
+            if (ca <= 0) {
                 $input.removeClass('input-invalid input-valid');
                 setHint($hint, null, '', '');
                 return;
             }
-            if (ca > hpp) {
-                setHint($hint, $input, `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
+            if (maxAllowed <= 0) {
+                setHint($hint, $input,
+                    `⚠ HPP for this item is fully covered by other Cash Advances. Cannot add more.`, 'danger');
+                return;
+            }
+            if (ca > maxAllowed) {
+                setHint($hint, $input,
+                    `⚠ Exceeds remaining budget. Max allowed for this CA: IDR ${formatNumber(maxAllowed)}.`, 'danger');
             } else {
-                setHint($hint, $input, '', '');
+                const remaining = maxAllowed - ca;
+                if (remaining > 0) {
+                    setHint($hint, $input,
+                        `✓ Remaining budget after this CA: IDR ${formatNumber(remaining)}`, 'ok');
+                } else {
+                    setHint($hint, $input, '✓ Fully covers the remaining budget.', 'ok');
+                }
             }
         }
 
@@ -1832,14 +1889,13 @@
                     rowspan = items.length;
                 items.forEach(function(item, catIndex) {
                     const globalIndex = mergedItems.indexOf(item);
-                    const hasFilled = item.has_kasbon && item.nilai_kasbon > 0;
-                    const isFromLpj = !!item.origin_lpj_tram; // ← TAMBAH
-                    if (isFromLpj) hasOriginItems = true; // ← TAMBAH
+                    const hasFilled  = item.has_kasbon && item.nilai_kasbon > 0;
+                    const isFromLpj  = !!item.origin_lpj_tram;
+                    const isTaxRow   = item.item_type === 'tax';
+                    if (isFromLpj) hasOriginItems = true;
 
-                    // ← TAMBAH badge
                     const lpjBadge = isFromLpj ?
-                        `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` :
-                        '';
+                        `<span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>` : '';
 
                     const clearBtn = `
                 <button type="button" class="btn btn-danger btn-sm btn-clear-row"
@@ -1848,17 +1904,16 @@
                     <i class="fas fa-trash"></i>
                 </button>`;
 
+                    const catClass    = isTaxRow ? 'category-cell category-cell-tax' : 'category-cell';
+                    const rowStyle    = isTaxRow ? ' style="background:#fefce8;"' : '';
+                    const rowClass    = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
                     const categoryCell = catIndex === 0 ?
-                        `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
-                        '';
-
-                    // ← TAMBAH rowClass
-                    const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
+                        `<td class="${catClass}" rowspan="${rowspan}">${category}</td>` : '';
 
                     $tbody.append(`
-                <tr class="${rowClass}" id="row_${globalIndex}"
+                <tr class="${rowClass}" id="row_${globalIndex}"${rowStyle}
                     data-index="${globalIndex}"
-                    data-jo-item="${item.id_jo_tram_item}"
+                    data-jo-item="${item.id_jo_tram_item || ''}"
                     data-category="${category}">
                     <td class="cell-center fw-bold text-muted">${rowNo++}</td>
                     ${categoryCell}
@@ -1866,9 +1921,9 @@
                         <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
                         ${lpjBadge}
                     </td>
-                    <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
-                    <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                    <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                    <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hargajual_idr)}</span></div></td>
+                    <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hpp_ops)}</span></div></td>
+                    <td class="nilai-kasbon-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell nilai-kasbon-val">${formatNumber(item.nilai_kasbon)}</span></div></td>
                     <td class="cell-center">
                         <div class="d-flex gap-1 justify-content-center">
                             <button type="button" class="btn btn-primary btn-sm btn-edit-row"
@@ -1888,7 +1943,7 @@
 
         function refreshRowAfterSave(globalIndex, nilaiKasbon, saved) {
             const $row = $(`#row_${globalIndex}`);
-            $row.find('.nilai-kasbon-cell').text(formatNumber(nilaiKasbon));
+            $row.find('.nilai-kasbon-val').text(formatNumber(nilaiKasbon));
             $row.find('.btn-clear-row')
                 .prop('disabled', !saved)
                 .attr('title', saved ? 'Clear CA amount' : 'No CA amount to clear');
@@ -1902,10 +1957,16 @@
             $('#infoInvoiceTyp').text(item.invoice_typ);
             $('#infoInvoiceCtg').text(item.invoice_ctg);
             $('#infoHargaJual').text(formatNumber(item.hargajual_idr));
-            $('#infoTotalKasbon').text(formatNumber(item.hpp_ops));
+            $('#infoHpp').text(formatNumber(item.hpp_ops));
+            $('#infoPaidOther').text(formatNumber(item.total_paid_other_kasbons || 0));
+            $('#infoMaxAllowed').text(formatNumber(item.max_allowed || 0));
+            $('#infoCurrentKasbon').text(formatNumber(item.has_kasbon ? (item.nilai_kasbon || 0) : 0));
 
             $('#activeHppValue').val(item.hpp_ops || 0);
-            $('#activeJoContItemId').val(item.id_jo_tram_item);
+            $('#activeMaxAllowed').val(item.max_allowed || 0);
+            $('#activeJoContItemId').val(item.id_jo_tram_item || '');
+            $('#activeItemType').val(item.item_type || 'item');
+            $('#activeJoTramPajakId').val(item.id_jo_tram_pajak || '');
             $('#activeRowIndex').val(index);
 
             if (item.has_kasbon && item.nilai_kasbon > 0) {
@@ -1942,6 +2003,15 @@
         // SAVE ITEM — CORE
         // ══════════════════════════════════════════════════════════
         function doSaveItem(joTramItemId, rowIndex, nilaiKasbon) {
+            const itemType    = $('#activeItemType').val() || 'item';
+            const pajakId     = $('#activeJoTramPajakId').val() || null;
+            const itemPayload = {
+                id_jo_tram_item: joTramItemId || null,
+                item_type:       itemType,
+                nilai_kasbon:    nilaiKasbon,
+            };
+            if (itemType === 'tax' && pajakId) itemPayload.id_jo_tram_pajak = pajakId;
+
             $.ajax({
                 url: bulkSaveUrl,
                 method: 'POST',
@@ -1950,10 +2020,7 @@
                     'X-CSRF-TOKEN': csrfToken
                 },
                 data: JSON.stringify({
-                    items: [{
-                        id_jo_tram_item: joTramItemId,
-                        nilai_kasbon: nilaiKasbon
-                    }],
+                    items: [itemPayload],
                     _token: csrfToken
                 }),
                 success: function(response) {
@@ -2006,108 +2073,45 @@
             }
         }
 
-        function saveItemInput() {
-            const joTramItemId = $('#activeJoContItemId').val();
-            const rowIndex = parseInt($('#activeRowIndex').val());
-            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
-
-            if (!joTramItemId) {
-                showFloatingAlert('error', 'No item selected');
-                return;
-            }
-            if (nilaiKasbon <= 0) {
-                showFloatingAlert('error', 'Please enter a CA Amount');
-                return;
-            }
-            if (hpp > 0 && nilaiKasbon > hpp) {
-                showFloatingAlert('error',
-                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
-                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
-                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
-                return;
-            }
-
-            $('#btnSaveItemInput').prop('disabled', true);
-
-            $.ajax({
-                url: checkConflictUrl,
-                method: 'GET',
-                data: {
-                    id_jo_tram_item: joTramItemId,
-                    id_kasbon_tram: currentKasbonTramStr
-                },
-                success: function(res) {
-                    if (res.success && res.has_conflict) {
-                        showConflictModal(res.conflict.id_kasbon_tram, res.conflict.nilai_kasbon, function() {
-                            executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, true);
-                        });
-                    } else {
-                        executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, false);
-                    }
-                },
-                error: function() {
-                    executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, false);
-                }
-            });
-        }
-
-        function executeSaveItem(joTramItemId, rowIndex, nilaiKasbon, hasConflict) {
-            showFloatingAlert('saving', hasConflict ? 'Removing previous CA amount...' : 'Saving...');
-            if (hasConflict) {
-                $.ajax({
-                    url: clearConflictUrl,
-                    method: 'POST',
-                    data: {
-                        id_jo_tram_item: joTramItemId,
-                        id_kasbon_tram: currentKasbonTramStr,
-                        _token: csrfToken
-                    },
-                    success: function(res) {
-                        if (res.success) {
-                            showFloatingAlert('saving', 'Saving new CA amount...');
-                            doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
-                        } else {
-                            $('#btnSaveItemInput').prop('disabled', false);
-                            showFloatingAlert('error', 'Failed to clear previous CA: ' + (res.message || ''));
-                        }
-                    },
-                    error: function() {
-                        showFloatingAlert('saving', 'Saving...');
-                        doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
-                    }
-                });
-            } else {
-                doSaveItem(joTramItemId, rowIndex, nilaiKasbon);
-            }
-        }
-
         // ══════════════════════════════════════════════════════════
         // SAVE ITEM — MAIN
         // ══════════════════════════════════════════════════════════
         function saveItemInput() {
+            const itemType     = $('#activeItemType').val() || 'item';
             const joTramItemId = $('#activeJoContItemId').val();
-            const rowIndex = parseInt($('#activeRowIndex').val());
-            const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
+            const pajakId      = $('#activeJoTramPajakId').val();
+            const rowIndex     = parseInt($('#activeRowIndex').val());
+            const nilaiKasbon  = parseRupiah($('#inputNilaiKasbon').val());
+            const hpp          = parseFloat($('#activeHppValue').val() || '0');
 
-            if (!joTramItemId) {
+            // Validate identifier based on item type
+            if (itemType !== 'tax' && !joTramItemId) {
                 showFloatingAlert('error', 'No item selected');
+                return;
+            }
+            if (itemType === 'tax' && !pajakId) {
+                showFloatingAlert('error', 'No tax item selected');
                 return;
             }
             if (nilaiKasbon <= 0) {
                 showFloatingAlert('error', 'Please enter a CA Amount');
                 return;
             }
-            if (hpp > 0 && nilaiKasbon > hpp) {
+            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
+            if (nilaiKasbon > maxAllowed) {
                 showFloatingAlert('error',
-                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
-                setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
-                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                    `CA Amount exceeds remaining budget. Max: IDR ${formatNumber(maxAllowed)}`);
                 return;
             }
 
             $('#btnSaveItemInput').prop('disabled', true);
+
+            // Tax rows: skip conflict check, save directly
+            if (itemType === 'tax') {
+                showFloatingAlert('saving', 'Saving...');
+                doSaveItem(null, rowIndex, nilaiKasbon);
+                return;
+            }
 
             $.ajax({
                 url: checkConflictUrl,

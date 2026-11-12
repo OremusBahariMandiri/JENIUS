@@ -80,12 +80,19 @@
     $logoBase64 = base64_encode(file_get_contents($logoPath));
     $logoSrc    = 'data:image/png;base64,' . $logoBase64;
 
-    // Lookup kasbon items by jo_other_item id
-    $kasbonLookup = $kasbonOther->items->keyBy('id_jo_other_item');
+    // Lookup kasbon items by jo_other_item id (regular) and id_jo_other_pajak (tax)
+    $kasbonLookup      = $kasbonOther->items->where('item_type', '!=', 'tax')->keyBy('id_jo_other_item');
+    $kasbonTaxLookup   = $kasbonOther->items->where('item_type', 'tax')->keyBy('id_jo_other_pajak');
 
     // Sumber baris = seluruh JO Other items
     $joItems = $kasbonOther->joOther
         ? $kasbonOther->joOther->items
+        : collect();
+
+    // Pajak rows (include_hpp = true)
+    $pajakItems = $kasbonOther->joOther
+        ? \App\Models\Data\JoOtherPajak::where('id_jo_other', $kasbonOther->id_jo_other)
+            ->where('include_hpp', true)->get()
         : collect();
 
     $groupedItems = $joItems->groupBy(
@@ -102,11 +109,25 @@
             $nilaiKasbon = $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0;
             $totalCA += $nilaiKasbon;
             $flatItems->push([
-                'category' => $cat,
-                'typ'      => $invoiceTyp,
-                'amount'   => $nilaiKasbon,
+                'category'  => $cat,
+                'typ'       => $invoiceTyp,
+                'amount'    => $nilaiKasbon,
+                'item_type' => 'item',
             ]);
         }
+    }
+
+    // Tambahkan pajak rows
+    foreach ($pajakItems as $pajak) {
+        $kasbonTaxItem = $kasbonTaxLookup->get($pajak->id_jo_other_pajak);
+        $nilaiKasbon   = $kasbonTaxItem ? (float) $kasbonTaxItem->nilai_kasbon : 0;
+        $totalCA += $nilaiKasbon;
+        $flatItems->push([
+            'category'  => 'Tax',
+            'typ'       => $pajak->nama_pajak,
+            'amount'    => $nilaiKasbon,
+            'item_type' => 'tax',
+        ]);
     }
 
     $blankNeeded = max(0, 8 - $flatItems->count());
