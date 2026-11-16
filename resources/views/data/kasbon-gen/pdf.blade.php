@@ -83,19 +83,33 @@
     $groupedItems = $kasbonGen->items->groupBy(
         fn($i) => optional($i->invoice)->invoice_ctg ?? 'Uncategorized'
     );
-    $totalCA    = isset($totalCA) ? $totalCA : $kasbonGen->items->sum('nilai_kasbon');
+
+    $totalCA    = isset($totalCA)    ? $totalCA    : $kasbonGen->items->sum('nilai_kasbon');
     $totalPajak = isset($totalPajak) ? $totalPajak : $kasbonGen->pajakItems->sum('nominal_pajak');
     $grandTotal = isset($grandTotal) ? $grandTotal : ($totalCA + $totalPajak);
 
     $flatItems = collect();
+
+    // Regular items
     foreach ($groupedItems as $cat => $items) {
         foreach ($items as $item) {
             $flatItems->push([
                 'category' => $cat,
                 'typ'      => optional($item->invoice)->invoice_typ ?? $item->id_md_invoice,
                 'amount'   => (float) $item->nilai_kasbon,
+                'is_tax'   => false,
             ]);
         }
+    }
+
+    // Tax rows — appended after items, no yellow highlight
+    foreach ($kasbonGen->pajakItems as $pjk) {
+        $flatItems->push([
+            'category' => 'Tax',
+            'typ'      => $pjk->nama_pajak . ($pjk->persentase > 0 ? ' (' . (float)$pjk->persentase . '%)' : ''),
+            'amount'   => (float) $pjk->nominal_pajak,
+            'is_tax'   => true,
+        ]);
     }
 
     $blankNeeded = max(0, 8 - $flatItems->count());
@@ -155,7 +169,7 @@
         <td style="text-align:center; font-weight:bold;">Jumlah</td>
     </tr>
 
-    {{-- ── ITEM ROWS ── --}}
+    {{-- ── ITEM + TAX ROWS (flat, no colour on tax) ── --}}
     @foreach ($flatItems as $fi)
     <tr>
         <td colspan="4">{{ $fi['category'] }} - {{ $fi['typ'] }}</td>
@@ -178,37 +192,9 @@
     </tr>
     @endfor
 
-    {{-- ── SUBTOTAL ── --}}
+    {{-- ── TOTAL (Grand Total, yellow) ── --}}
     <tr>
-        <td class="total-label" colspan="4">SUBTOTAL</td>
-        <td class="total-value">
-            <table class="rp-table">
-                <tr>
-                    <td class="rp-left">Rp</td>
-                    <td class="rp-right">{{ number_format($totalCA, 0, ',', '.') }}</td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-
-    {{-- ── TAX ROWS ── --}}
-    @foreach ($kasbonGen->pajakItems as $pjk)
-    <tr>
-        <td colspan="4">{{ $pjk->nama_pajak }} ({{ number_format($pjk->persentase, 2) }}%)</td>
-        <td class="total-value">
-            <table class="rp-table">
-                <tr>
-                    <td class="rp-left">Rp</td>
-                    <td class="rp-right">{{ number_format($pjk->nominal_pajak, 0, ',', '.') }}</td>
-                </tr>
-            </table>
-        </td>
-    </tr>
-    @endforeach
-
-    {{-- ── GRAND TOTAL ── --}}
-    <tr>
-        <td class="total-label" colspan="4">GRAND TOTAL</td>
+        <td class="total-label" colspan="4">TOTAL</td>
         <td class="total-value">
             <table class="rp-table">
                 <tr>
@@ -223,7 +209,7 @@
         <td colspan="5" style="height:20px; border:none; padding:0;"></td>
     </tr>
 
-    {{-- ── TTD SECTION (tabel terpisah agar kolom bisa rata 20%) ── --}}
+    {{-- ── TTD SECTION ── --}}
     <tr>
         <td colspan="5" style="padding:0; border:none;">
             <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
