@@ -464,8 +464,12 @@
         .currency-group-footer {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
             gap: 6px;
+        }
+
+        .currency-group-footer .footer-value {
+            flex: 1;
+            text-align: right;
         }
 
         .currency-label-footer {
