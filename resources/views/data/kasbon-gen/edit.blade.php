@@ -1003,7 +1003,7 @@
                     <div class="d-flex justify-content-between align-items-center">
                         <div></div>
                         <div class="d-flex gap-2">
-                            <a href="{{ route('kasbon-gen.export-pdf', $kasbonGen->id_kasbon_gen) }}" target="_blank"
+                            <a href="{{ route('kasbon-gen.export-pdf', $kasbonGen->id) }}" target="_blank"
                                 class="btn"
                                 style="padding:13px 35px; border-radius:10px; font-weight:700; font-size:1rem;
                                        border-color:red; background-color:rgb(255,237,237); color:red">
