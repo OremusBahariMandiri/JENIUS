@@ -736,6 +736,18 @@
                                 <span class="items-count-badge"
                                     id="itemsCountBadge">{{ $kasbonGen->items->count() }}</span>
                             </h6>
+                            <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
+                                style="border-radius:8px;">
+                                <i class="fas fa-trash-alt me-1"></i> Reset All Items
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-4 py-2"
+                            style="background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+                            <i class="fas fa-bolt" style="color:#2563eb; font-size:.8rem; flex-shrink:0;"></i>
+                            <span style="font-size:.8rem; color:#1e40af;">
+                                <strong>Auto-saved.</strong>
+                                Items and tax are saved instantly — once they appear in the table, they're already recorded.
+                            </span>
                         </div>
                         <div class="card-body p-4">
 
@@ -906,8 +918,8 @@
                                     </tbody>
                                     <tfoot class="table-footer">
                                         <tr>
-                                            <td colspan="3" class="text-center pe-3"><strong>GRAND TOTAL</strong></td>
-                                            <td>
+                                            <td colspan="3" class="text-end pe-3"><strong>GRAND TOTAL</strong></td>
+                                            <td class="text-end">
                                                 <div class="currency-group-footer">
                                                     <span class="currency-label-footer">IDR</span>
                                                     <span class="footer-value" id="footerGrandTotal">
@@ -928,13 +940,6 @@
                                             LPJ page.</span>
                                     </div>
                                 @endif
-
-                                <div class="d-flex justify-content-end mt-2">
-                                    <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
-                                        style="border-radius:8px;">
-                                        <i class="fas fa-trash-alt me-1"></i> Reset All Items
-                                    </button>
-                                </div>
 
                                 {{-- ===== TAX INPUT PANEL ===== --}}
                                 <div class="card mt-3" id="taxInputPanel">
