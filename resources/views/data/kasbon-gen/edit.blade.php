@@ -846,9 +846,10 @@
                                                 data-pajak-id="{{ $pjk->id_md_pajak }}"
                                                 data-raw="{{ $pjk->nominal_pajak }}">
                                                 <td class="text-center fw-bold text-muted">{{ $taxIndex++ }}</td>
-                                                <td class="text-start fw-semibold" style="color:#0d6efd;">TAX</td>
-                                                <td class="text-start">
-                                                    {{ $pjk->nama_pajak }} ({{ number_format($pjk->persentase, 2) }}%)
+                                                <td class="text-start fw-semibold" style="background:#fffbea !important; color:#92400e;">TAX</td>
+                                                <td class="text-start" style="background:#fffbea !important;">
+                                                    <span class="fw-semibold" style="color:#2c3e50;">{{ $pjk->nama_pajak }}</span>
+                                                    <small class="text-muted ms-1">({{ number_format($pjk->persentase, 2) }}%)</small>
                                                 </td>
                                                 <td class="text-end nilai-kasbon-cell tax-nominal-cell">
                                                     {{ number_format($pjk->nominal_pajak, 2, ',', '.') }}
@@ -1617,7 +1618,7 @@
                                 const opt = $('#selectTax option[value="' + d.id_md_pajak + '"]');
                                 const pct = parseFloat(opt.data('pct') || d.persentase || 0);
                                 const row = $('#row_pajak_' + editingTaxId);
-                                row.find('td:nth-child(3)').text(d.nama_pajak + ' (' + parseFloat(d.persentase).toFixed(2) + '%)');
+                                row.find('td:nth-child(3)').html('<span class="fw-semibold" style="color:#2c3e50;">' + d.nama_pajak + '</span><small class="text-muted ms-1">(' + parseFloat(d.persentase).toFixed(2) + '%)</small>');
                                 row.find('.tax-nominal-cell').text(formatNumber(parseFloat(d.nominal_pajak)));
                                 row.data('raw', parseFloat(d.nominal_pajak));
                                 row.data('pajak-id', d.id_md_pajak);
@@ -1659,8 +1660,11 @@
                                         data-raw="${d.nominal_pajak}"
                                         data-pct="${pct}">
                                     <td class="text-center fw-bold text-muted">${taxNum}</td>
-                                    <td class="text-start fw-semibold" style="color:#0d6efd;">TAX</td>
-                                    <td class="text-start">${d.nama_pajak} (${parseFloat(d.persentase).toFixed(2)}%)</td>
+                                    <td class="text-start fw-semibold" style="background:#fffbea !important; color:#92400e;">TAX</td>
+                                    <td class="text-start" style="background:#fffbea !important;">
+                                        <span class="fw-semibold" style="color:#2c3e50;">${d.nama_pajak}</span>
+                                        <small class="text-muted ms-1">(${parseFloat(d.persentase).toFixed(2)}%)</small>
+                                    </td>
                                     <td class="text-end nilai-kasbon-cell tax-nominal-cell">${formatNumber(parseFloat(d.nominal_pajak))}</td>
                                     <td class="text-center">
                                         <div class="d-flex gap-1 justify-content-center">
