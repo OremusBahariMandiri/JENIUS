@@ -83,7 +83,9 @@
     $groupedItems = $kasbonGen->items->groupBy(
         fn($i) => optional($i->invoice)->invoice_ctg ?? 'Uncategorized'
     );
-    $totalCA = $kasbonGen->items->sum('nilai_kasbon');
+    $totalCA    = isset($totalCA) ? $totalCA : $kasbonGen->items->sum('nilai_kasbon');
+    $totalPajak = isset($totalPajak) ? $totalPajak : $kasbonGen->pajakItems->sum('nominal_pajak');
+    $grandTotal = isset($grandTotal) ? $grandTotal : ($totalCA + $totalPajak);
 
     $flatItems = collect();
     foreach ($groupedItems as $cat => $items) {
@@ -131,8 +133,8 @@
 
     {{-- ── AREA | TGL | NAMA | BAGIAN ── --}}
     <tr>
-        <td style="width:22%;">AREA : <strong>{{ $kasbonGen->cabang->nama_branch ?? '-' }}</strong></td>
-        <td style="width:18%;">TGL : <strong>{{ $kasbonGen->tgl_release ? $kasbonGen->tgl_release->format('d/m/Y') : '-' }}</strong></td>
+        <td style="width:22%;">AREA : <strong>{{ $kasbonGen->area->area ?? ($kasbonGen->cabang->nama_branch ?? '-') }}</strong></td>
+        <td style="width:18%;">TGL : <strong>{{ $kasbonGen->tgl_kasbon ? $kasbonGen->tgl_kasbon->format('d/m/Y') : '-' }}</strong></td>
         <td colspan="2" style="width:28%;">NAMA : <strong>{{ $kasbonGen->release->nama_release ?? '-' }}</strong></td>
         <td style="width:32%;">BAGIAN : <strong>{{ $kasbonGen->departemen->nama_dep ?? '-' }}</strong></td>
     </tr>
@@ -176,14 +178,42 @@
     </tr>
     @endfor
 
-    {{-- ── TOTAL ── --}}
+    {{-- ── SUBTOTAL ── --}}
     <tr>
-        <td class="total-label" colspan="4">TOTAL</td>
+        <td class="total-label" colspan="4">SUBTOTAL</td>
+        <td class="total-value">
+            <table class="rp-table">
+                <tr>
+                    <td class="rp-left">Rp</td>
+                    <td class="rp-right">{{ number_format($totalCA, 0, ',', '.') }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    {{-- ── TAX ROWS ── --}}
+    @foreach ($kasbonGen->pajakItems as $pjk)
+    <tr>
+        <td colspan="4">{{ $pjk->nama_pajak }} ({{ number_format($pjk->persentase, 2) }}%)</td>
+        <td class="total-value">
+            <table class="rp-table">
+                <tr>
+                    <td class="rp-left">Rp</td>
+                    <td class="rp-right">{{ number_format($pjk->nominal_pajak, 0, ',', '.') }}</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+    @endforeach
+
+    {{-- ── GRAND TOTAL ── --}}
+    <tr>
+        <td class="total-label" colspan="4">GRAND TOTAL</td>
         <td class="total-value">
             <table class="rp-table">
                 <tr>
                     <td class="rp-left rp-bold" style="background:#ffff00;">Rp</td>
-                    <td class="rp-right rp-bold" style="background:#ffff00;">{{ number_format($totalCA, 0, ',', '.') }}</td>
+                    <td class="rp-right rp-bold" style="background:#ffff00;">{{ number_format($grandTotal, 0, ',', '.') }}</td>
                 </tr>
             </table>
         </td>
@@ -193,40 +223,49 @@
         <td colspan="5" style="height:20px; border:none; padding:0;"></td>
     </tr>
 
-    {{-- ── TTD HEADER ── --}}
+    {{-- ── TTD SECTION (tabel terpisah agar kolom bisa rata 20%) ── --}}
     <tr>
-        <td class="ttd-header">TANDA TANGAN<br>PEMOHON :</td>
-        <td class="ttd-header">MENYETUJUI :</td>
-        <td class="ttd-header">MENYETUJUI</td>
-        <td class="ttd-header">DIBAYARKAN OLEH :</td>
-        <td class="ttd-header">DITERIMA OLEH:</td>
-    </tr>
-
-    {{-- ── TTD SPACE ── --}}
-    <tr>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-    </tr>
-
-    {{-- ── NAMA TTD (kosong) ── --}}
-    <tr>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-    </tr>
-
-    {{-- ── TGL ROW ── --}}
-    <tr>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
+        <td colspan="5" style="padding:0; border:none;">
+            <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                <colgroup>
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                </colgroup>
+                <tbody>
+                    <tr>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">TANDA TANGAN<br>PEMOHON :</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">MENYETUJUI :</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">MENYETUJUI</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">DIBAYARKAN OLEH :</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">DITERIMA OLEH:</td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
     </tr>
 
     {{-- ── FOOTER NOTE ── --}}

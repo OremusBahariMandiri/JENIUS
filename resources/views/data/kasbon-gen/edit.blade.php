@@ -631,6 +631,20 @@
                                         value="{{ $kasbonGen->tgl_release ? $kasbonGen->tgl_release->format('Y-m-d') : '' }}">
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}"
+                                                {{ $kasbonGen->id_md_area == $area->id_md_area ? 'selected' : '' }}>
+                                                {{ $area->area }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Priority</label>
                                     <select name="priority" id="priority" class="form-select" required>
@@ -823,14 +837,72 @@
                                             </tr>
                                         @endif
                                     </tbody>
+                                    <tbody id="taxTableBody">
+                                        @foreach ($kasbonGen->pajakItems as $pjk)
+                                            <tr class="tax-row"
+                                                id="row_pajak_{{ $pjk->id_kasbon_gen_pajak }}"
+                                                data-tax-id="{{ $pjk->id_kasbon_gen_pajak }}"
+                                                data-pajak-id="{{ $pjk->id_md_pajak }}"
+                                                data-raw="{{ $pjk->nominal_pajak }}">
+                                                <td class="text-center fw-bold text-muted">TAX</td>
+                                                <td colspan="2" class="text-start">
+                                                    {{ $pjk->nama_pajak }} ({{ number_format($pjk->persentase, 2) }}%)
+                                                    <small class="text-muted ms-1">
+                                                        Base: {{ number_format($pjk->dasar_pengenaan, 2, ',', '.') }}
+                                                    </small>
+                                                </td>
+                                                <td class="text-end nilai-kasbon-cell tax-nominal-cell">
+                                                    {{ number_format($pjk->nominal_pajak, 2, ',', '.') }}
+                                                </td>
+                                                <td class="text-center">
+                                                    <div class="d-flex gap-1 justify-content-center">
+                                                        <button type="button" class="btn btn-warning btn-sm"
+                                                            onclick="editTax('{{ $pjk->id_kasbon_gen_pajak }}', '{{ $pjk->id_md_pajak }}')"
+                                                            title="Edit Tax">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <button type="button" class="btn btn-danger btn-sm"
+                                                            onclick="deleteTax(this, '{{ $pjk->id_kasbon_gen_pajak }}')"
+                                                            title="Remove Tax">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
                                     <tfoot class="table-footer">
                                         <tr>
-                                            <td colspan="3" class="text-center pe-3"><strong>GRAND TOTAL</strong></td>
+                                            <td colspan="3" class="text-center pe-3"><strong>SUBTOTAL</strong></td>
                                             <td>
                                                 <div class="currency-group-footer">
                                                     <span class="currency-label-footer">IDR</span>
                                                     <span class="footer-value" id="footerTotalKasbon">
                                                         {{ number_format($kasbonGen->items->sum('nilai_kasbon'), 2, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-center pe-3"><strong>TAX</strong></td>
+                                            <td>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">IDR</span>
+                                                    <span class="footer-value" id="footerTotalPajak">
+                                                        {{ number_format($kasbonGen->pajakItems->sum('nominal_pajak'), 2, ',', '.') }}
+                                                    </span>
+                                                </div>
+                                            </td>
+                                            <td></td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="3" class="text-center pe-3"><strong>GRAND TOTAL</strong></td>
+                                            <td>
+                                                <div class="currency-group-footer">
+                                                    <span class="currency-label-footer">IDR</span>
+                                                    <span class="footer-value" id="footerGrandTotal">
+                                                        {{ number_format($kasbonGen->items->sum('nilai_kasbon') + $kasbonGen->pajakItems->sum('nominal_pajak'), 2, ',', '.') }}
                                                     </span>
                                                 </div>
                                             </td>
@@ -853,6 +925,41 @@
                                         style="border-radius:8px;">
                                         <i class="fas fa-trash-alt me-1"></i> Reset All Items
                                     </button>
+                                </div>
+
+                                {{-- ===== TAX INPUT PANEL ===== --}}
+                                <div class="card mt-3" id="taxInputPanel">
+                                    <div class="card-header d-flex align-items-center gap-2"
+                                        style="background:#f8f9fa; border-radius:8px 8px 0 0;">
+                                        <i class="fas fa-percentage text-primary"></i>
+                                        <strong>Tax / Pajak</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row g-2 align-items-end">
+                                            <div class="col-md-6">
+                                                <label class="form-label">Select Tax</label>
+                                                <select id="selectTax" class="form-select select2-field">
+                                                    <option value="">-- Select Tax --</option>
+                                                    @foreach ($pajaks as $pj)
+                                                        <option value="{{ $pj->id_md_pajak }}"
+                                                            data-nama="{{ $pj->nama_pajak }}"
+                                                            data-pct="{{ $pj->persentase }}">
+                                                            {{ $pj->nama_pajak }} ({{ number_format($pj->persentase, 2) }}%)
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4 d-flex gap-2">
+                                                <button type="button" class="btn btn-primary flex-fill" id="addTaxBtn">
+                                                    <i class="fas fa-plus me-1"></i> <span id="addTaxBtnLabel">Add Tax</span>
+                                                </button>
+                                                <button type="button" class="btn btn-secondary" id="cancelEditTaxBtn"
+                                                    style="display:none;">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -1098,6 +1205,7 @@
                 data: {
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),
@@ -1426,11 +1534,191 @@
         }
 
         function updateGrandTotal() {
-            let total = 0;
+            let subtotal = 0;
             $('.item-row').each(function() {
-                total += parseRupiah($(this).find('.nilai-kasbon-cell').text());
+                subtotal += parseRupiah($(this).find('.nilai-kasbon-cell').text());
             });
-            $('#footerTotalKasbon').text(formatNumber(total));
+            $('#footerTotalKasbon').text(formatNumber(subtotal));
+
+            // Recalculate each tax row nominal based on new subtotal
+            let totalPajak = 0;
+            $('#taxTableBody tr.tax-row').each(function() {
+                const taxId  = $(this).data('tax-id');
+                const rawPct = parseFloat($(this).data('pct') || 0);
+                if (rawPct > 0) {
+                    const nominal = subtotal * rawPct / 100;
+                    $(this).find('.tax-nominal-cell').text(formatNumber(nominal));
+                    $(this).data('raw', nominal);
+                    totalPajak += nominal;
+                } else {
+                    totalPajak += parseRupiah($(this).find('.tax-nominal-cell').text());
+                }
+            });
+            $('#footerTotalPajak').text(formatNumber(totalPajak));
+            $('#footerGrandTotal').text(formatNumber(subtotal + totalPajak));
         }
+
+        // ========================================
+        // TAX (PAJAK) FUNCTIONS
+        // ========================================
+        let editingTaxId = null;
+
+        function editTax(taxId, pajakId) {
+            editingTaxId = taxId;
+            $('#selectTax').val(pajakId).trigger('change');
+            $('#addTaxBtnLabel').text('Update Tax');
+            $('#cancelEditTaxBtn').show();
+            $('html, body').animate({ scrollTop: $('#taxInputPanel').offset().top - 150 }, 300);
+        }
+
+        function deleteTax(btn, id) {
+            var row = $(btn).closest('tr');
+            Swal.fire({
+                title: 'Remove Tax?',
+                text: 'This tax entry will be removed.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Remove',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+                $.ajax({
+                    url: '/data/kasbon-gen/pajak/destroy/' + id,
+                    type: 'POST',
+                    data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
+                    success: function(res) {
+                        if (res.success) {
+                            row.remove();
+                            updateGrandTotal();
+                            Swal.fire({ icon: 'success', title: 'Removed', text: 'Tax removed.', timer: 1200, showConfirmButton: false });
+                        } else {
+                            Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Could not remove tax.' });
+                        }
+                    },
+                    error: function(xhr) {
+                        var err = xhr.responseJSON;
+                        Swal.fire({ icon: 'error', title: 'Failed', text: err && err.message ? err.message : 'Could not remove tax.' });
+                    }
+                });
+            });
+        }
+
+        $(document).ready(function() {
+            // Store pct on each tax row for recalculation
+            $('#taxTableBody tr.tax-row').each(function() {
+                const pajakId = $(this).data('pajak-id');
+                const opt = $('#selectTax option[value="' + pajakId + '"]');
+                if (opt.length) {
+                    $(this).data('pct', parseFloat(opt.data('pct') || 0));
+                }
+            });
+
+            $('#cancelEditTaxBtn').on('click', function() {
+                editingTaxId = null;
+                $('#selectTax').val('').trigger('change');
+                $('#addTaxBtnLabel').text('Add Tax');
+                $(this).hide();
+            });
+
+            $('#addTaxBtn').on('click', function() {
+                const pajakId = $('#selectTax').val();
+                if (!pajakId) {
+                    Swal.fire({ icon: 'warning', title: 'Select Tax', text: 'Please select a tax first.' });
+                    return;
+                }
+
+                const kasbonGenId = '{{ $kasbonGen->id_kasbon_gen }}';
+                const csrf        = '{{ csrf_token() }}';
+
+                if (editingTaxId) {
+                    // UPDATE
+                    $.ajax({
+                        url: '/data/kasbon-gen/pajak/update/' + editingTaxId,
+                        type: 'POST',
+                        data: { _method: 'PUT', _token: csrf, id_md_pajak: pajakId },
+                        success: function(res) {
+                            if (res.success) {
+                                const d   = res.data;
+                                const opt = $('#selectTax option[value="' + d.id_md_pajak + '"]');
+                                const pct = parseFloat(opt.data('pct') || d.persentase || 0);
+                                const row = $('#row_pajak_' + editingTaxId);
+                                row.find('td:nth-child(2)').html(
+                                    d.nama_pajak + ' (' + parseFloat(d.persentase).toFixed(2) + '%)' +
+                                    '<small class="text-muted ms-1">Base: ' + formatNumber(parseFloat(d.dasar_pengenaan)) + '</small>'
+                                );
+                                row.find('.tax-nominal-cell').text(formatNumber(parseFloat(d.nominal_pajak)));
+                                row.data('raw', parseFloat(d.nominal_pajak));
+                                row.data('pajak-id', d.id_md_pajak);
+                                row.data('pct', pct);
+                                editingTaxId = null;
+                                $('#selectTax').val('').trigger('change');
+                                $('#addTaxBtnLabel').text('Add Tax');
+                                $('#cancelEditTaxBtn').hide();
+                                updateGrandTotal();
+                                Swal.fire({ icon: 'success', title: 'Updated', text: 'Tax updated.', timer: 1200, showConfirmButton: false });
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Could not update tax.' });
+                            }
+                        },
+                        error: function(xhr) {
+                            var err = xhr.responseJSON;
+                            Swal.fire({ icon: 'error', title: 'Failed', text: err && err.message ? err.message : 'Could not update tax.' });
+                        }
+                    });
+                } else {
+                    // STORE
+                    $.ajax({
+                        url: '/data/kasbon-gen/pajak/store',
+                        type: 'POST',
+                        data: { _token: csrf, id_kasbon_gen: kasbonGenId, id_md_pajak: pajakId },
+                        success: function(res) {
+                            if (res.success) {
+                                const d   = res.data;
+                                const opt = $('#selectTax option[value="' + d.id_md_pajak + '"]');
+                                const pct = parseFloat(opt.data('pct') || d.persentase || 0);
+
+                                // Remove no-items row in taxTableBody if present
+                                $('#taxTableBody tr.no-tax-row').remove();
+
+                                const row = `<tr class="tax-row" id="row_pajak_${d.id_kasbon_gen_pajak}"
+                                        data-tax-id="${d.id_kasbon_gen_pajak}"
+                                        data-pajak-id="${d.id_md_pajak}"
+                                        data-raw="${d.nominal_pajak}"
+                                        data-pct="${pct}">
+                                    <td class="text-center fw-bold text-muted">TAX</td>
+                                    <td colspan="2" class="text-start">
+                                        ${d.nama_pajak} (${parseFloat(d.persentase).toFixed(2)}%)
+                                        <small class="text-muted ms-1">Base: ${formatNumber(parseFloat(d.dasar_pengenaan))}</small>
+                                    </td>
+                                    <td class="text-end nilai-kasbon-cell tax-nominal-cell">${formatNumber(parseFloat(d.nominal_pajak))}</td>
+                                    <td class="text-center">
+                                        <div class="d-flex gap-1 justify-content-center">
+                                            <button type="button" class="btn btn-warning btn-sm"
+                                                onclick="editTax('${d.id_kasbon_gen_pajak}', '${d.id_md_pajak}')"
+                                                title="Edit Tax"><i class="fas fa-edit"></i></button>
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                onclick="deleteTax(this, '${d.id_kasbon_gen_pajak}')"
+                                                title="Remove Tax"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </td>
+                                </tr>`;
+                                $('#taxTableBody').append(row);
+                                $('#selectTax').val('').trigger('change');
+                                updateGrandTotal();
+                                Swal.fire({ icon: 'success', title: 'Added', text: 'Tax added.', timer: 1200, showConfirmButton: false });
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Could not add tax.' });
+                            }
+                        },
+                        error: function(xhr) {
+                            var err = xhr.responseJSON;
+                            Swal.fire({ icon: 'error', title: 'Failed', text: err && err.message ? err.message : 'Could not add tax.' });
+                        }
+                    });
+                }
+            });
+        });
     </script>
 @endpush

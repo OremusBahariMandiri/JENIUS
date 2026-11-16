@@ -13,6 +13,9 @@ use App\Models\Master\Departemen;
 use App\Models\Master\Branch;
 use App\Models\Master\ReleaseTo;
 use App\Models\Master\Invoice;
+use App\Models\Master\Area;
+use App\Models\Master\Pajak;
+use App\Models\Data\KasbonGenPajak;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -101,10 +104,11 @@ class KasbonGenController extends Controller
         $departemens     = Departemen::orderBy('nama_dep')->get();
         $cabangs         = Branch::orderBy('nama_branch')->get();
         $releases        = ReleaseTo::orderBy('id_md_release')->get();
+        $areas           = Area::orderBy('area')->get();
         $previewNoKasbon = IdGenerator::generateCaNo('c07_kasbon_gen', 'id_kasbon_gen');
         $invoices        = Invoice::where('jo_ctg', 'general')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
 
-        return view('data.kasbon-gen.create', compact('departemens', 'cabangs', 'releases', 'previewNoKasbon', 'invoices'));
+        return view('data.kasbon-gen.create', compact('departemens', 'cabangs', 'releases', 'areas', 'previewNoKasbon', 'invoices'));
     }
 
     // ========================================
@@ -127,6 +131,7 @@ class KasbonGenController extends Controller
                 'due_date'          => 'nullable|date_format:Y-m-d\TH:i',
                 'ca_release_status' => 'nullable|in:pending,release',
                 'ca_release_date'   => 'nullable|date',
+                'id_md_area'        => 'nullable|exists:a03_md_area,id_md_area',
             ]);
 
             if ($validator->fails()) {
@@ -143,6 +148,7 @@ class KasbonGenController extends Controller
                 'id_kasbon_gen'     => $idKasbonGen,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'nomor'             => $newNomor,
                 'tgl_kasbon'        => $request->tgl_kasbon,
@@ -155,7 +161,7 @@ class KasbonGenController extends Controller
             ]);
 
             DB::commit();
-            $kasbonGen->load(['departemen', 'cabang', 'release']);
+            $kasbonGen->load(['departemen', 'cabang', 'area', 'release']);
 
             return response()->json([
                 'success'      => true,
@@ -187,6 +193,7 @@ class KasbonGenController extends Controller
                 'due_date'          => 'nullable|date_format:Y-m-d\TH:i',
                 'ca_release_status' => 'nullable|in:pending,release',
                 'ca_release_date'   => 'nullable|date',
+                'id_md_area'        => 'nullable|exists:a03_md_area,id_md_area',
             ]);
 
             if ($validator->fails()) {
@@ -198,6 +205,7 @@ class KasbonGenController extends Controller
             $kasbonGen->update([
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'tgl_kasbon'        => $request->tgl_kasbon,
                 'tgl_release'       => $request->tgl_release,
@@ -208,7 +216,7 @@ class KasbonGenController extends Controller
                 'ca_release_date'   => $request->ca_release_date ?: null,
             ]);
             DB::commit();
-            $kasbonGen->load(['departemen', 'cabang', 'release']);
+            $kasbonGen->load(['departemen', 'cabang', 'area', 'release']);
 
             return response()->json(['success' => true, 'message' => 'Header updated successfully', 'data' => $kasbonGen], 200);
         } catch (\Exception $e) {
@@ -577,7 +585,7 @@ class KasbonGenController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $kasbonGen = KasbonGen::with(['departemen', 'cabang', 'release', 'items.invoice'])->findOrFail($id);
+            $kasbonGen = KasbonGen::with(['departemen', 'cabang', 'area', 'release', 'items.invoice', 'pajakItems'])->findOrFail($id);
             $summary   = [
                 'total_items'        => $kasbonGen->items->count(),
                 'total_nilai_kasbon' => $kasbonGen->items->sum('nilai_kasbon'),
@@ -597,13 +605,16 @@ class KasbonGenController extends Controller
 
     public function edit($id)
     {
-        $kasbonGen   = KasbonGen::with(['items.invoice'])->findOrFail($id);
+        $kasbonGen   = KasbonGen::with(['items.invoice', 'pajakItems'])->findOrFail($id);
         $departemens = Departemen::orderBy('nama_dep')->get();
         $cabangs     = Branch::orderBy('nama_branch')->get();
         $releases    = ReleaseTo::orderBy('id_md_release')->get();
+        $areas       = Area::orderBy('area')->get();
         $invoices    = Invoice::where('jo_ctg', 'general')->orderBy('invoice_ctg')->orderBy('invoice_typ')->get();
 
-        return view('data.kasbon-gen.edit', compact('kasbonGen', 'departemens', 'cabangs', 'releases', 'invoices'));
+        $pajaks = Pajak::where('is_active', 1)->orderBy('nama_pajak')->get();
+
+        return view('data.kasbon-gen.edit', compact('kasbonGen', 'departemens', 'cabangs', 'releases', 'areas', 'invoices', 'pajaks'));
     }
 
     // ========================================
@@ -624,6 +635,7 @@ class KasbonGenController extends Controller
             'items.*.nilai_kasbon'  => 'required|numeric|min:0',
             'priority'              => 'required|in:urgent,high,normal',
             'due_date'              => 'nullable|date_format:Y-m-d\TH:i',
+            'id_md_area'            => 'nullable|exists:a03_md_area,id_md_area',
         ]);
 
         if ($validator->fails()) {
@@ -641,6 +653,7 @@ class KasbonGenController extends Controller
                 'id_kasbon_gen'  => $idKasbonGen,
                 'id_md_dep'      => $request->id_md_dep,
                 'id_md_cabang'   => $request->id_md_cabang,
+                'id_md_area'     => $request->id_md_area ?: null,
                 'id_md_release'  => $request->id_md_release,
                 'nomor'          => $newNomor,
                 'tgl_kasbon'     => $request->tgl_kasbon,
@@ -682,6 +695,7 @@ class KasbonGenController extends Controller
             'items.*.nilai_kasbon'  => 'required|numeric|min:0',
             'priority'              => 'required|in:urgent,high,normal',
             'due_date'              => 'nullable|date_format:Y-m-d\TH:i',
+            'id_md_area'            => 'nullable|exists:a03_md_area,id_md_area',
         ]);
 
         if ($validator->fails()) {
@@ -695,6 +709,7 @@ class KasbonGenController extends Controller
             $kasbonGen->update([
                 'id_md_dep'     => $request->id_md_dep,
                 'id_md_cabang'  => $request->id_md_cabang,
+                'id_md_area'    => $request->id_md_area ?: null,
                 'id_md_release' => $request->id_md_release,
                 'tgl_kasbon'    => $request->tgl_kasbon,
                 'tgl_release'   => $request->tgl_release,
@@ -882,14 +897,139 @@ class KasbonGenController extends Controller
     // EXPORT PDF
     // ========================================
 
+    // ========================================
+    // PAJAK (TAX) — storePajak / updatePajak / destroyPajak
+    // ========================================
+
+    public function storePajak(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id_kasbon_gen' => 'required|exists:c07_kasbon_gen,id_kasbon_gen',
+            'id_md_pajak'   => 'required|exists:a14_md_pajak,id_md_pajak',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $kasbonGen = KasbonGen::with('items')->where('id_kasbon_gen', $request->id_kasbon_gen)->firstOrFail();
+            $pajak     = Pajak::findOrFail($request->id_md_pajak);
+
+            // Prevent duplicate pajak per kasbon
+            $exists = KasbonGenPajak::where('id_kasbon_gen', $request->id_kasbon_gen)
+                ->where('id_md_pajak', $request->id_md_pajak)
+                ->exists();
+            if ($exists) {
+                DB::rollBack();
+                return response()->json(['success' => false, 'message' => 'Tax already added for this CA.'], 422);
+            }
+
+            $dasarPengenaan = $kasbonGen->items->sum('nilai_kasbon');
+            $nominalPajak   = round($dasarPengenaan * $pajak->persentase / 100, 2);
+
+            $kasbonGenPajak = KasbonGenPajak::create([
+                'id_kasbon_gen'  => $request->id_kasbon_gen,
+                'id_md_pajak'    => $pajak->id_md_pajak,
+                'nama_pajak'     => $pajak->nama_pajak,
+                'persentase'     => $pajak->persentase,
+                'dasar_pengenaan'=> $dasarPengenaan,
+                'nominal_pajak'  => $nominalPajak,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tax added successfully.',
+                'data'    => $kasbonGenPajak,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('KasbonGen storePajak failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to add tax: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function updatePajak(Request $request, $id)
+    {
+        $kasbonGenPajak = KasbonGenPajak::findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'id_md_pajak' => 'required|exists:a14_md_pajak,id_md_pajak',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $pajak     = Pajak::findOrFail($request->id_md_pajak);
+            $kasbonGen = KasbonGen::with('items')->where('id_kasbon_gen', $kasbonGenPajak->id_kasbon_gen)->firstOrFail();
+
+            // Prevent duplicate if changing to a different pajak that already exists
+            if ($request->id_md_pajak !== $kasbonGenPajak->id_md_pajak) {
+                $exists = KasbonGenPajak::where('id_kasbon_gen', $kasbonGenPajak->id_kasbon_gen)
+                    ->where('id_md_pajak', $request->id_md_pajak)
+                    ->where('id_kasbon_gen_pajak', '!=', $id)
+                    ->exists();
+                if ($exists) {
+                    DB::rollBack();
+                    return response()->json(['success' => false, 'message' => 'This tax is already added for this CA.'], 422);
+                }
+            }
+
+            $dasarPengenaan = $kasbonGen->items->sum('nilai_kasbon');
+            $nominalPajak   = round($dasarPengenaan * $pajak->persentase / 100, 2);
+
+            $kasbonGenPajak->update([
+                'id_md_pajak'    => $pajak->id_md_pajak,
+                'nama_pajak'     => $pajak->nama_pajak,
+                'persentase'     => $pajak->persentase,
+                'dasar_pengenaan'=> $dasarPengenaan,
+                'nominal_pajak'  => $nominalPajak,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Tax updated successfully.',
+                'data'    => $kasbonGenPajak,
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('KasbonGen updatePajak failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to update tax: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function destroyPajak($id)
+    {
+        $kasbonGenPajak = KasbonGenPajak::findOrFail($id);
+        try {
+            $kasbonGenPajak->delete();
+            return response()->json(['success' => true, 'message' => 'Tax removed successfully.']);
+        } catch (\Exception $e) {
+            Log::error('KasbonGen destroyPajak failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Failed to remove tax.'], 500);
+        }
+    }
+
+
     public function exportPdf($id)
     {
         try {
-            $kasbonGen = KasbonGen::with(['departemen', 'cabang', 'release', 'items.invoice'])->findOrFail($id);
-            $totalCA   = $kasbonGen->items->sum('nilai_kasbon');
-            $terbilang = $this->toTerbilang((int) round($totalCA)) . ' Rupiah';
-
-            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('data.kasbon-gen.pdf', compact('kasbonGen', 'terbilang'))
+            $kasbonGen = KasbonGen::with(['departemen', 'cabang', 'area', 'release', 'items.invoice'])->findOrFail($id);
+            $totalCA     = $kasbonGen->items->sum('nilai_kasbon');
+            $totalPajak  = $kasbonGen->pajakItems->sum('nominal_pajak');
+            $grandTotal  = $totalCA + $totalPajak;
+            $terbilang = $this->toTerbilang((int) round($grandTotal)) . ' Rupiah';
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('data.kasbon-gen.pdf', compact('kasbonGen', 'terbilang', 'totalCA', 'totalPajak', 'grandTotal'))
                 ->setPaper('a4', 'portrait')
                 ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => false, 'defaultFont' => 'Arial', 'dpi' => 150]);
 

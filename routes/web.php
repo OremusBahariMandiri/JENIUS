@@ -33,6 +33,7 @@ use App\Http\Controllers\Rekap\InvoicePembayaranContractController;
 use App\Http\Controllers\Master\PajakController;
 use App\Http\Controllers\Master\VesselController;
 use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\Tracking\TrackingJoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('login'));
@@ -233,6 +234,12 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('data')->group(function () {
 
         //================= JO TRAMPER ROUTE GROUP =================//
+        Route::post('jo-tramper/pajak/store', [JoTramperController::class, 'storePajak'])->name('jo-tramper.pajak.store');
+        Route::delete('jo-tramper/pajak/destroy/{id}', [JoTramperController::class, 'destroyPajak'])->name('jo-tramper.pajak.destroy');
+        Route::put('jo-tramper/pajak/update/{id}', [JoTramperController::class, 'updatePajak'])->name('jo-tramper.pajak.update');
+        Route::post('jo-other/pajak/store', [JoOtherController::class, 'storePajak'])->name('jo-other.pajak.store');
+        Route::delete('jo-other/pajak/destroy/{id}', [JoOtherController::class, 'destroyPajak'])->name('jo-other.pajak.destroy');
+        Route::put('jo-other/pajak/update/{id}', [JoOtherController::class, 'updatePajak'])->name('jo-other.pajak.update');
         Route::get(
             'jo-tramper/item/check-relations/{id}',
             [JoTramperController::class, 'checkRelations']
@@ -334,6 +341,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk-delete', [JoContractController::class, 'bulkDelete'])->name('bulk-delete');
         // Pajak routes
         Route::post('/pajak/store', [JoContractController::class, 'storePajak'])->name('pajak.store');
+        Route::put('/pajak/update/{id}', [JoContractController::class, 'updatePajak'])->name('pajak.update');
         Route::delete('/pajak/destroy/{id}', [JoContractController::class, 'destroyPajak'])->name('pajak.destroy');
         Route::post('/pajak/recalc/{joContId}', [JoContractController::class, 'recalcPajak'])->name('pajak.recalc');
     });
@@ -401,6 +409,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-tramper.items.get');
     Route::get('kasbon-tramper/jo-items', [KasbonTramperController::class, 'getJoTramperItems'])
         ->name('kasbon-tramper.jo-items.get');
+    Route::get('kasbon-tramper/jo-pajak', [KasbonTramperController::class, 'getJoPajakItems'])
+        ->name('kasbon-tramper.jo-pajak.get');
     Route::get('kasbon-tramper/item/check-conflict', [KasbonTramperController::class, 'checkItemConflict'])
         ->name('kasbon-tramper.item.check-conflict');
     Route::post('kasbon-tramper/item/clear-conflict', [KasbonTramperController::class, 'clearConflictItem'])
@@ -470,6 +480,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-gen.item.destroy');
     Route::get('kasbon-gen/{id}/items', [KasbonGenController::class, 'getItems'])
         ->name('kasbon-gen.items.get');
+    Route::post('kasbon-gen/pajak/store', [KasbonGenController::class, 'storePajak'])
+        ->name('kasbon-gen.pajak.store');
+    Route::put('kasbon-gen/pajak/update/{id}', [KasbonGenController::class, 'updatePajak'])
+        ->name('kasbon-gen.pajak.update');
+    Route::delete('kasbon-gen/pajak/destroy/{id}', [KasbonGenController::class, 'destroyPajak'])
+        ->name('kasbon-gen.pajak.destroy');
     Route::resource('kasbon-gen', KasbonGenController::class);
     Route::get('kasbon-gen-select', [KasbonGenController::class, 'getForSelect'])
         ->name('kasbon-gen.select');
@@ -710,6 +726,14 @@ Route::middleware(['auth'])->group(function () {
         });
     });
     //================= END REKAP PIUTANG CUSTOMER =================//
+
+    //================= TRACKING ROUTES =================//
+    Route::prefix("tracking")->name("tracking-")->group(function () {
+        Route::get("jo",         [\App\Http\Controllers\Tracking\TrackingJoController::class, "index"])->name("jo.index");
+        Route::get("jo/data",    [\App\Http\Controllers\Tracking\TrackingJoController::class, "getData"])->name("jo.data");
+        Route::get("jo/jo-list", [\App\Http\Controllers\Tracking\TrackingJoController::class, "getJoList"])->name("jo.jo-list");
+    });
+    //================= END TRACKING ROUTES =================//
 
 });
 
