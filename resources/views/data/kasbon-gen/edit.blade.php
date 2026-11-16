@@ -961,7 +961,7 @@
                                             </div>
                                             {{-- Col 2: Preview CA Amount --}}
                                             <div class="col-md-4">
-                                                <label class="form-label small fw-semibold text-muted mb-1">CA Amount (Dasar Pengenaan)</label>
+                                                <label class="form-label small fw-semibold text-muted mb-1">Tax Amount Preview</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text" style="background:#e9ecef; font-size:.8rem; font-weight:600; color:#495057;">IDR</span>
                                                     <input type="text" id="previewCaAmount" class="form-control text-end"
@@ -1184,6 +1184,21 @@
                 width: '100%'
             });
             updateGrandTotal();
+
+            // Tax preview on select change
+            $('#selectTax').on('change', function() {
+                const opt = $(this).find('option:selected');
+                const pct = parseFloat(opt.data('pct') || 0);
+                if (pct > 0) {
+                    let subtotal = 0;
+                    $('.item-row').each(function() {
+                        subtotal += parseRupiah($(this).find('.nilai-kasbon-cell .value-cell').text());
+                    });
+                    $('#previewCaAmount').val(formatNumber(subtotal * pct / 100));
+                } else {
+                    $('#previewCaAmount').val('');
+                }
+            });
 
             $('#input_category').on('change', function() {
                 const category = $(this).val();
@@ -1566,8 +1581,14 @@
                 subtotal += parseRupiah($(this).find('.nilai-kasbon-cell .value-cell').text());
             });
 
-            // Update CA Amount preview in tax panel
-            $('#previewCaAmount').val(subtotal > 0 ? formatNumber(subtotal) : '');
+            // Sync preview if a tax is currently selected
+            const _selPct = parseFloat($('#selectTax option:selected').data('pct') || 0);
+            if (_selPct > 0) {
+                const _preview = subtotal * _selPct / 100;
+                $('#previewCaAmount').val(formatNumber(_preview));
+            } else {
+                $('#previewCaAmount').val('');
+            }
 
             // Recalculate each tax row nominal based on new subtotal
             let totalPajak = 0;
