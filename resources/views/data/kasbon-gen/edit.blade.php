@@ -945,8 +945,9 @@
                                     </div>
                                     <div class="card-body">
                                         <div class="row g-2 align-items-end">
-                                            <div class="col-md-6">
-                                                <label class="form-label">Select Tax</label>
+                                            {{-- Col 1: Select Tax --}}
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-semibold text-muted mb-1">Select Tax</label>
                                                 <select id="selectTax" class="form-select select2-field">
                                                     <option value="">-- Select Tax --</option>
                                                     @foreach ($pajaks as $pj)
@@ -958,7 +959,18 @@
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            <div class="col-md-4 d-flex gap-2">
+                                            {{-- Col 2: Preview CA Amount --}}
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-semibold text-muted mb-1">CA Amount (Dasar Pengenaan)</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text" style="background:#e9ecef; font-size:.8rem; font-weight:600; color:#495057;">IDR</span>
+                                                    <input type="text" id="previewCaAmount" class="form-control text-end"
+                                                        style="background:#f8f9fa; font-weight:600; color:#2c3e50;"
+                                                        readonly placeholder="0,00">
+                                                </div>
+                                            </div>
+                                            {{-- Col 3: Add Tax button --}}
+                                            <div class="col-md-4 d-flex gap-2 align-items-end">
                                                 <button type="button" class="btn btn-primary flex-fill" id="addTaxBtn">
                                                     <i class="fas fa-plus me-1"></i> <span id="addTaxBtnLabel">Add Tax</span>
                                                 </button>
@@ -1553,6 +1565,9 @@
             $('.item-row').each(function() {
                 subtotal += parseRupiah($(this).find('.nilai-kasbon-cell .value-cell').text());
             });
+
+            // Update CA Amount preview in tax panel
+            $('#previewCaAmount').val(subtotal > 0 ? formatNumber(subtotal) : '');
 
             // Recalculate each tax row nominal based on new subtotal
             let totalPajak = 0;
