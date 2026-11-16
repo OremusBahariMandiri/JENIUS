@@ -831,8 +831,11 @@
                                                                     LPJ</span>
                                                             @endif
                                                         </td>
-                                                        <td class="text-end nilai-kasbon-cell">
-                                                            {{ number_format($item->nilai_kasbon, 2, ',', '.') }}
+                                                        <td class="nilai-kasbon-cell">
+                                                            <div class="currency-group-cell">
+                                                                <span class="currency-label-cell">IDR</span>
+                                                                <span class="value-cell">{{ number_format($item->nilai_kasbon, 2, ',', '.') }}</span>
+                                                            </div>
                                                         </td>
                                                         <td class="text-center">
                                                             <div class="d-flex gap-1 justify-content-center">
@@ -1283,7 +1286,12 @@
                                 <td class="text-center fw-bold text-muted">${globalItemNumber}</td>
                                 <td class="category-cell text-start">${category}</td>
                                 <td class="text-start item-type-cell">${itemText}</td>
-                                <td class="text-end nilai-kasbon-cell">${formatNumber(r.data.nilai_kasbon)}</td>
+                                <td class="nilai-kasbon-cell">
+                                    <div class="currency-group-cell">
+                                        <span class="currency-label-cell">IDR</span>
+                                        <span class="value-cell">${formatNumber(r.data.nilai_kasbon)}</span>
+                                    </div>
+                                </td>
                                 <td class="text-center">
                                     <div class="d-flex gap-1 justify-content-center">
                                         <button type="button" class="btn btn-primary btn-sm btn-edit-row"
@@ -1328,7 +1336,7 @@
                                 ` <span class="badge ms-1" style="background:#3b82f6; font-size:.65rem;">From LPJ</span>`
                             );
                         }
-                        $row.find('.nilai-kasbon-cell').text(formatNumber(r.data.nilai_kasbon));
+                        $row.find('.nilai-kasbon-cell .value-cell').text(formatNumber(r.data.nilai_kasbon));
                         $row.attr('data-invoice-id', invoiceId).attr('data-category', category);
                         $row.removeClass('tr-active');
                         updateGrandTotal();
@@ -1543,7 +1551,7 @@
         function updateGrandTotal() {
             let subtotal = 0;
             $('.item-row').each(function() {
-                subtotal += parseRupiah($(this).find('.nilai-kasbon-cell').text());
+                subtotal += parseRupiah($(this).find('.nilai-kasbon-cell .value-cell').text());
             });
 
             // Recalculate each tax row nominal based on new subtotal
