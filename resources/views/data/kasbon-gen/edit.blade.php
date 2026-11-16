@@ -434,6 +434,33 @@
             font-size: 0.95rem;
         }
 
+        .currency-group-cell {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .currency-label-cell {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.78rem;
+            border-radius: 4px;
+            min-width: 42px;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .value-cell {
+            flex: 1;
+            text-align: right;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #2c3e50;
+        }
+
         .currency-group-footer {
             display: flex;
             align-items: center;
@@ -851,8 +878,11 @@
                                                     <span class="fw-semibold" style="color:#2c3e50;">{{ $pjk->nama_pajak }}</span>
                                                     <small class="text-muted ms-1">({{ number_format($pjk->persentase, 2) }}%)</small>
                                                 </td>
-                                                <td class="text-end nilai-kasbon-cell tax-nominal-cell">
-                                                    {{ number_format($pjk->nominal_pajak, 2, ',', '.') }}
+                                                <td class="nilai-kasbon-cell tax-nominal-cell" style="background:#fffbea !important;">
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($pjk->nominal_pajak, 2, ',', '.') }}</span>
+                                                    </div>
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="d-flex gap-1 justify-content-center">
@@ -1522,11 +1552,11 @@
                 const rawPct = parseFloat($(this).data('pct') || 0);
                 if (rawPct > 0) {
                     const nominal = subtotal * rawPct / 100;
-                    $(this).find('.tax-nominal-cell').text(formatNumber(nominal));
+                    $(this).find('.tax-nominal-cell .value-cell').text(formatNumber(nominal));
                     $(this).data('raw', nominal);
                     totalPajak += nominal;
                 } else {
-                    totalPajak += parseRupiah($(this).find('.tax-nominal-cell').text());
+                    totalPajak += parseRupiah($(this).find('.tax-nominal-cell .value-cell').text());
                 }
             });
             $('#footerGrandTotal').text(formatNumber(subtotal + totalPajak));
@@ -1619,7 +1649,7 @@
                                 const pct = parseFloat(opt.data('pct') || d.persentase || 0);
                                 const row = $('#row_pajak_' + editingTaxId);
                                 row.find('td:nth-child(3)').html('<span class="fw-semibold" style="color:#2c3e50;">' + d.nama_pajak + '</span><small class="text-muted ms-1">(' + parseFloat(d.persentase).toFixed(2) + '%)</small>');
-                                row.find('.tax-nominal-cell').text(formatNumber(parseFloat(d.nominal_pajak)));
+                                row.find('.tax-nominal-cell .value-cell').text(formatNumber(parseFloat(d.nominal_pajak)));
                                 row.data('raw', parseFloat(d.nominal_pajak));
                                 row.data('pajak-id', d.id_md_pajak);
                                 row.data('pct', pct);
@@ -1665,7 +1695,12 @@
                                         <span class="fw-semibold" style="color:#2c3e50;">${d.nama_pajak}</span>
                                         <small class="text-muted ms-1">(${parseFloat(d.persentase).toFixed(2)}%)</small>
                                     </td>
-                                    <td class="text-end nilai-kasbon-cell tax-nominal-cell">${formatNumber(parseFloat(d.nominal_pajak))}</td>
+                                    <td class="nilai-kasbon-cell tax-nominal-cell" style="background:#fffbea !important;">
+                                        <div class="currency-group-cell">
+                                            <span class="currency-label-cell">IDR</span>
+                                            <span class="value-cell">${formatNumber(parseFloat(d.nominal_pajak))}</span>
+                                        </div>
+                                    </td>
                                     <td class="text-center">
                                         <div class="d-flex gap-1 justify-content-center">
                                             <button type="button" class="btn btn-primary btn-sm"
