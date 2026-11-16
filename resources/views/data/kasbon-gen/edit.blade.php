@@ -1020,6 +1020,7 @@
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css">
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
         const currentKasbonGenId = {{ $kasbonGen->id }};
         const currentKasbonGenStr = '{{ $kasbonGen->id_kasbon_gen }}';
@@ -1585,7 +1586,7 @@
             }).then(function(result) {
                 if (!result.isConfirmed) return;
                 $.ajax({
-                    url: '/data/kasbon-gen/pajak/destroy/' + id,
+                    url: '/kasbon-gen/pajak/destroy/' + id,
                     type: 'POST',
                     data: { _method: 'DELETE', _token: '{{ csrf_token() }}' },
                     success: function(res) {
@@ -1635,7 +1636,7 @@
                 if (editingTaxId) {
                     // UPDATE
                     $.ajax({
-                        url: '/data/kasbon-gen/pajak/update/' + editingTaxId,
+                        url: '/kasbon-gen/pajak/update/' + editingTaxId,
                         type: 'POST',
                         data: { _method: 'PUT', _token: csrf, id_md_pajak: pajakId },
                         success: function(res) {
@@ -1670,7 +1671,7 @@
                 } else {
                     // STORE
                     $.ajax({
-                        url: '/data/kasbon-gen/pajak/store',
+                        url: '/kasbon-gen/pajak/store',
                         type: 'POST',
                         data: { _token: csrf, id_kasbon_gen: kasbonGenId, id_md_pajak: pajakId },
                         success: function(res) {
