@@ -844,19 +844,18 @@
                                                 data-tax-id="{{ $pjk->id_kasbon_gen_pajak }}"
                                                 data-pajak-id="{{ $pjk->id_md_pajak }}"
                                                 data-raw="{{ $pjk->nominal_pajak }}">
-                                                <td class="text-center fw-bold text-muted">TAX</td>
-                                                <td colspan="2" class="text-start">
-                                                    {{ $pjk->nama_pajak }} ({{ number_format($pjk->persentase, 2) }}%)
-                                                    <small class="text-muted ms-1">
-                                                        Base: {{ number_format($pjk->dasar_pengenaan, 2, ',', '.') }}
-                                                    </small>
+                                                <td class="text-center fw-bold" style="color:#0d6efd;">TAX</td>
+                                                <td class="text-start">{{ $pjk->nama_pajak }}</td>
+                                                <td class="text-start text-muted" style="font-size:.85em;">
+                                                    {{ number_format($pjk->persentase, 2) }}% &times;
+                                                    {{ number_format($pjk->dasar_pengenaan, 2, ',', '.') }}
                                                 </td>
                                                 <td class="text-end nilai-kasbon-cell tax-nominal-cell">
                                                     {{ number_format($pjk->nominal_pajak, 2, ',', '.') }}
                                                 </td>
                                                 <td class="text-center">
                                                     <div class="d-flex gap-1 justify-content-center">
-                                                        <button type="button" class="btn btn-warning btn-sm"
+                                                        <button type="button" class="btn btn-primary btn-sm"
                                                             onclick="editTax('{{ $pjk->id_kasbon_gen_pajak }}', '{{ $pjk->id_md_pajak }}')"
                                                             title="Edit Tax">
                                                             <i class="fas fa-edit"></i>
@@ -872,30 +871,6 @@
                                         @endforeach
                                     </tbody>
                                     <tfoot class="table-footer">
-                                        <tr>
-                                            <td colspan="3" class="text-center pe-3"><strong>SUBTOTAL</strong></td>
-                                            <td>
-                                                <div class="currency-group-footer">
-                                                    <span class="currency-label-footer">IDR</span>
-                                                    <span class="footer-value" id="footerTotalKasbon">
-                                                        {{ number_format($kasbonGen->items->sum('nilai_kasbon'), 2, ',', '.') }}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td></td>
-                                        </tr>
-                                        <tr>
-                                            <td colspan="3" class="text-center pe-3"><strong>TAX</strong></td>
-                                            <td>
-                                                <div class="currency-group-footer">
-                                                    <span class="currency-label-footer">IDR</span>
-                                                    <span class="footer-value" id="footerTotalPajak">
-                                                        {{ number_format($kasbonGen->pajakItems->sum('nominal_pajak'), 2, ',', '.') }}
-                                                    </span>
-                                                </div>
-                                            </td>
-                                            <td></td>
-                                        </tr>
                                         <tr>
                                             <td colspan="3" class="text-center pe-3"><strong>GRAND TOTAL</strong></td>
                                             <td>
@@ -1539,12 +1514,10 @@
             $('.item-row').each(function() {
                 subtotal += parseRupiah($(this).find('.nilai-kasbon-cell').text());
             });
-            $('#footerTotalKasbon').text(formatNumber(subtotal));
 
             // Recalculate each tax row nominal based on new subtotal
             let totalPajak = 0;
             $('#taxTableBody tr.tax-row').each(function() {
-                const taxId  = $(this).data('tax-id');
                 const rawPct = parseFloat($(this).data('pct') || 0);
                 if (rawPct > 0) {
                     const nominal = subtotal * rawPct / 100;
@@ -1555,7 +1528,6 @@
                     totalPajak += parseRupiah($(this).find('.tax-nominal-cell').text());
                 }
             });
-            $('#footerTotalPajak').text(formatNumber(totalPajak));
             $('#footerGrandTotal').text(formatNumber(subtotal + totalPajak));
         }
 
@@ -1645,9 +1617,9 @@
                                 const opt = $('#selectTax option[value="' + d.id_md_pajak + '"]');
                                 const pct = parseFloat(opt.data('pct') || d.persentase || 0);
                                 const row = $('#row_pajak_' + editingTaxId);
-                                row.find('td:nth-child(2)').html(
-                                    d.nama_pajak + ' (' + parseFloat(d.persentase).toFixed(2) + '%)' +
-                                    '<small class="text-muted ms-1">Base: ' + formatNumber(parseFloat(d.dasar_pengenaan)) + '</small>'
+                                row.find('td:nth-child(2)').text(d.nama_pajak);
+                                row.find('td:nth-child(3)').html(
+                                    parseFloat(d.persentase).toFixed(2) + '% &times; ' + formatNumber(parseFloat(d.dasar_pengenaan))
                                 );
                                 row.find('.tax-nominal-cell').text(formatNumber(parseFloat(d.nominal_pajak)));
                                 row.data('raw', parseFloat(d.nominal_pajak));
@@ -1688,15 +1660,15 @@
                                         data-pajak-id="${d.id_md_pajak}"
                                         data-raw="${d.nominal_pajak}"
                                         data-pct="${pct}">
-                                    <td class="text-center fw-bold text-muted">TAX</td>
-                                    <td colspan="2" class="text-start">
-                                        ${d.nama_pajak} (${parseFloat(d.persentase).toFixed(2)}%)
-                                        <small class="text-muted ms-1">Base: ${formatNumber(parseFloat(d.dasar_pengenaan))}</small>
+                                    <td class="text-center fw-bold" style="color:#0d6efd;">TAX</td>
+                                    <td class="text-start">${d.nama_pajak}</td>
+                                    <td class="text-start text-muted" style="font-size:.85em;">
+                                        ${parseFloat(d.persentase).toFixed(2)}% &times; ${formatNumber(parseFloat(d.dasar_pengenaan))}
                                     </td>
                                     <td class="text-end nilai-kasbon-cell tax-nominal-cell">${formatNumber(parseFloat(d.nominal_pajak))}</td>
                                     <td class="text-center">
                                         <div class="d-flex gap-1 justify-content-center">
-                                            <button type="button" class="btn btn-warning btn-sm"
+                                            <button type="button" class="btn btn-primary btn-sm"
                                                 onclick="editTax('${d.id_kasbon_gen_pajak}', '${d.id_md_pajak}')"
                                                 title="Edit Tax"><i class="fas fa-edit"></i></button>
                                             <button type="button" class="btn btn-danger btn-sm"
