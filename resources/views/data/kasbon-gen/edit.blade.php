@@ -838,17 +838,17 @@
                                         @endif
                                     </tbody>
                                     <tbody id="taxTableBody">
+                                        @php $taxIndex = $kasbonGen->items->count() + 1; @endphp
                                         @foreach ($kasbonGen->pajakItems as $pjk)
                                             <tr class="tax-row"
                                                 id="row_pajak_{{ $pjk->id_kasbon_gen_pajak }}"
                                                 data-tax-id="{{ $pjk->id_kasbon_gen_pajak }}"
                                                 data-pajak-id="{{ $pjk->id_md_pajak }}"
                                                 data-raw="{{ $pjk->nominal_pajak }}">
-                                                <td class="text-center fw-bold" style="color:#0d6efd;">TAX</td>
-                                                <td class="text-start">{{ $pjk->nama_pajak }}</td>
-                                                <td class="text-start text-muted" style="font-size:.85em;">
-                                                    {{ number_format($pjk->persentase, 2) }}% &times;
-                                                    {{ number_format($pjk->dasar_pengenaan, 2, ',', '.') }}
+                                                <td class="text-center fw-bold text-muted">{{ $taxIndex++ }}</td>
+                                                <td class="text-start fw-semibold" style="color:#0d6efd;">TAX</td>
+                                                <td class="text-start">
+                                                    {{ $pjk->nama_pajak }} ({{ number_format($pjk->persentase, 2) }}%)
                                                 </td>
                                                 <td class="text-end nilai-kasbon-cell tax-nominal-cell">
                                                     {{ number_format($pjk->nominal_pajak, 2, ',', '.') }}
@@ -1617,10 +1617,7 @@
                                 const opt = $('#selectTax option[value="' + d.id_md_pajak + '"]');
                                 const pct = parseFloat(opt.data('pct') || d.persentase || 0);
                                 const row = $('#row_pajak_' + editingTaxId);
-                                row.find('td:nth-child(2)').text(d.nama_pajak);
-                                row.find('td:nth-child(3)').html(
-                                    parseFloat(d.persentase).toFixed(2) + '% &times; ' + formatNumber(parseFloat(d.dasar_pengenaan))
-                                );
+                                row.find('td:nth-child(3)').text(d.nama_pajak + ' (' + parseFloat(d.persentase).toFixed(2) + '%)');
                                 row.find('.tax-nominal-cell').text(formatNumber(parseFloat(d.nominal_pajak)));
                                 row.data('raw', parseFloat(d.nominal_pajak));
                                 row.data('pajak-id', d.id_md_pajak);
@@ -1655,16 +1652,15 @@
                                 // Remove no-items row in taxTableBody if present
                                 $('#taxTableBody tr.no-tax-row').remove();
 
+                                const taxNum = $('.item-row').length + $('#taxTableBody tr.tax-row').length + 1;
                                 const row = `<tr class="tax-row" id="row_pajak_${d.id_kasbon_gen_pajak}"
                                         data-tax-id="${d.id_kasbon_gen_pajak}"
                                         data-pajak-id="${d.id_md_pajak}"
                                         data-raw="${d.nominal_pajak}"
                                         data-pct="${pct}">
-                                    <td class="text-center fw-bold" style="color:#0d6efd;">TAX</td>
-                                    <td class="text-start">${d.nama_pajak}</td>
-                                    <td class="text-start text-muted" style="font-size:.85em;">
-                                        ${parseFloat(d.persentase).toFixed(2)}% &times; ${formatNumber(parseFloat(d.dasar_pengenaan))}
-                                    </td>
+                                    <td class="text-center fw-bold text-muted">${taxNum}</td>
+                                    <td class="text-start fw-semibold" style="color:#0d6efd;">TAX</td>
+                                    <td class="text-start">${d.nama_pajak} (${parseFloat(d.persentase).toFixed(2)}%)</td>
                                     <td class="text-end nilai-kasbon-cell tax-nominal-cell">${formatNumber(parseFloat(d.nominal_pajak))}</td>
                                     <td class="text-center">
                                         <div class="d-flex gap-1 justify-content-center">
