@@ -470,6 +470,8 @@
         .currency-group-footer .footer-value {
             flex: 1;
             text-align: right;
+            font-size: 0.88rem;
+            font-weight: 600;
         }
 
         .currency-label-footer {
