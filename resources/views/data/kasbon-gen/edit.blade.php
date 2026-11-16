@@ -1000,10 +1000,19 @@
                 </form>
 
                 <div class="final-save-section">
-                    <div class="d-flex justify-content-end">
-                        <a href="{{ route('kasbon-gen.index') }}" class="btn btn-final-back">
-                            <i class="fas fa-arrow-left me-1"></i> Back to List
-                        </a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div></div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('kasbon-gen.export-pdf', $kasbonGen->id_kasbon_gen) }}" target="_blank"
+                                class="btn"
+                                style="padding:13px 35px; border-radius:10px; font-weight:700; font-size:1rem;
+                                       border-color:red; background-color:rgb(255,237,237); color:red">
+                                <i class="fas fa-file-pdf me-2"></i> Generate CA
+                            </a>
+                            <a href="{{ route('kasbon-gen.index') }}" class="btn btn-final-back">
+                                <i class="fas fa-arrow-left me-1"></i> Back to List
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
