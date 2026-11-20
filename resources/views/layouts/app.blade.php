@@ -311,7 +311,8 @@
         }
 
         .sidebar-submenu.show {
-            max-height: 800px;
+            max-height: 70vh;
+            overflow-y: auto;
         }
 
         .submenu-item {
@@ -355,7 +356,27 @@
         }
 
         .sidebar-nested-submenu.show {
-            max-height: 500px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        /* Custom scrollbar for sidebar submenus */
+        .sidebar-submenu::-webkit-scrollbar,
+        .sidebar-nested-submenu::-webkit-scrollbar {
+            width: 4px;
+        }
+        .sidebar-submenu::-webkit-scrollbar-track,
+        .sidebar-nested-submenu::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-submenu::-webkit-scrollbar-thumb,
+        .sidebar-nested-submenu::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 2px;
+        }
+        .sidebar-submenu::-webkit-scrollbar-thumb:hover,
+        .sidebar-nested-submenu::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
 
         .nested-submenu-item {
@@ -1057,438 +1078,382 @@
                 </a>
             </div>
 
-            {{-- User Management --}}
-            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
-                <div class="nav-item has-submenu" data-tooltip="User Management">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="userManagement">
-                        <i class="fas fa-users"></i>
-                        <span>User Management</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->routeIs('user.*') ? 'show' : '' }}" id="userManagement">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management'))
-                            <div class="submenu-item">
+            {{-- ADMINISTRATION --}}
+            @php
+                $adminGroupActive = request()->routeIs('user.*') || request()->routeIs('user-access.*') || request()->is('master/*') || request()->routeIs('company-profile.*');
+            @endphp
+            <div class="nav-item has-submenu" data-tooltip="Administration">
+                <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="groupAdministration">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Administration</span>
+                    <i class="fas fa-chevron-down submenu-indicator"></i>
+                </a>
+                <div class="sidebar-submenu {{ $adminGroupActive ? 'show' : '' }}" id="groupAdministration">
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('user_management')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="userManagement">
+                            <i class="fas fa-users"></i>
+                            <span>User Management</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('user.*') || request()->routeIs('user-access.*') ? 'show' : '' }}" id="userManagement">
+                            <div class="nested-submenu-item">
                                 <a href="{{ route('user.index') }}" class="nav-link {{ request()->routeIs('user.*') ? 'active' : '' }}">
-                                    <i class="fas fa-user-cog me-1"></i>
-                                    <span>Users</span>
+                                    <i class="fas fa-user-cog me-1"></i><span>Users</span>
                                 </a>
                             </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            {{-- Data Master --}}
-            @if (auth()->check() &&
-                    (auth()->user()->is_admin ||
-                        auth()->user()->hasAccessToMenu('customer') ||
-                        auth()->user()->hasAccessToMenu('contract') ||
-                        auth()->user()->hasAccessToMenu('area') ||
-                        auth()->user()->hasAccessToMenu('item') ||
-                        auth()->user()->hasAccessToMenu('vessel') ||
-                        auth()->user()->hasAccessToMenu('port') ||
-                        auth()->user()->hasAccessToMenu('other') ||
-                        auth()->user()->hasAccessToMenu('departemen') ||
-                        auth()->user()->hasAccessToMenu('branch') ||
-                        auth()->user()->hasAccessToMenu('release_to') ||
-                        auth()->user()->hasAccessToMenu('cost_type') ||
-                        auth()->user()->hasAccessToMenu('pajak') ||
-                        auth()->user()->hasAccessToMenu('parent_coa') ||
-                        auth()->user()->hasAccessToMenu('chart_of_account')))
-                <div class="nav-item has-submenu" data-tooltip="Data Master">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataMaster">
-                        <i class="fas fa-cogs"></i>
-                        <span>Data Master</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->is('master/*') ? 'show' : '' }}" id="dataMaster">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('customer'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('customer.*') ? 'active' : '' }}"
-                                    href="{{ route('customer.index') }}">
-                                    <i class="fas fa-user-circle"></i>
-                                    <span>Customer</span>
+                            <div class="nested-submenu-item">
+                                <a href="" class="nav-link {{ request()->routeIs('user-access.*') ? 'active' : '' }}">
+                                    <i class="fas fa-key me-1"></i><span>Access Control</span>
                                 </a>
                             </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('contract'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('contract.*') ? 'active' : '' }}"
-                                    href="{{ route('contract.index') }}">
-                                    <i class="fas fa-building"></i>
-                                    <span>Contract</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('area'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('area.*') ? 'active' : '' }}"
-                                    href="{{ route('area.index') }}">
-                                    <i class="fas fa-globe"></i>
-                                    <span>Area</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('item'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('invoice.*') ? 'active' : '' }}"
-                                    href="{{ route('invoice.index') }}">
-                                    <i class="fas fa-project-diagram"></i>
-                                    <span>Item List</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('vessel'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('vessel.*') ? 'active' : '' }}"
-                                    href="{{ route('vessel.index') }}">
-                                    <i class="fas fa-ship"></i>
-                                    <span>Vessel</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('port'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('port.*') ? 'active' : '' }}"
-                                    href="{{ route('port.index') }}">
-                                    <i class="fas fa-anchor"></i>
-                                    <span>Port</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('other'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('other.*') ? 'active' : '' }}"
-                                    href="{{ route('other.index') }}">
-                                    <i class="fas fa-ellipsis-h"></i>
-                                    <span>Other</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('departemen'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('departemen.*') ? 'active' : '' }}"
-                                    href="{{ route('departemen.index') }}">
-                                    <i class="fas fa-sitemap"></i>
-                                    <span>Departemen</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('branch'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('branch.*') ? 'active' : '' }}"
-                                    href="{{ route('branch.index') }}">
-                                    <i class="fas fa-code-branch"></i>
-                                    <span>Branch</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('release_to'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('release_to.*') ? 'active' : '' }}"
-                                    href="{{ route('release_to.index') }}">
-                                    <i class="fas fa-paper-plane"></i>
-                                    <span>Release To</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('cost_type'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('cost-type.*') ? 'active' : '' }}"
-                                    href="{{ route('cost-type.index') }}">
-                                    <i class="fas fa-tags"></i>
-                                    <span>Cost Type</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('pajak'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('pajak.*') ? 'active' : '' }}"
-                                    href="{{ route('pajak.index') }}">
-                                    <i class="fas fa-percent"></i>
-                                    <span>Tax</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('parent_coa'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('parent-coa.*') ? 'active' : '' }}"
-                                    href="{{ route('parent-coa.index') }}">
-                                    <i class="fas fa-folder-open"></i>
-                                    <span>Parent COA</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('chart_of_account'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('chart-of-account.*') ? 'active' : '' }}"
-                                    href="{{ route('chart-of-account.index') }}">
-                                    <i class="fas 	fa-chart-bar"></i>
-                                    <span>Chart Of Account</span>
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            {{-- Job Order --}}
-            @if (auth()->check() &&
-                    (auth()->user()->is_admin ||
-                        auth()->user()->hasAccessToMenu('jo_contract') ||
-                        auth()->user()->hasAccessToMenu('jo_tramper') ||
-                        auth()->user()->hasAccessToMenu('jo_other')))
-                <div class="nav-item has-submenu" data-tooltip="Job Order">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenData">
-                        <i class="fas fa-briefcase"></i>
-                        <span>Job Order</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->routeIs('jo-contract.*') || request()->routeIs('jo-tramper.*') || request()->routeIs('jo-other.*') ? 'show' : '' }}"
-                        id="manajemenData">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}"
-                                    href="{{ route('jo-contract.index') }}">
-                                    <i class="fas fa-file-contract"></i>
-                                    <span>JO Contract</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_tramper'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('jo-tramper.*') ? 'active' : '' }}"
-                                    href="{{ route('jo-tramper.index') }}">
-                                    <i class="fas fa-truck-moving"></i>
-                                    <span>JO Tramper</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_other'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('jo-other.*') ? 'active' : '' }}"
-                                    href="{{ route('jo-other.index') }}">
-                                    <i class="fas fa-ellipsis-h"></i>
-                                    <span>JO Other</span>
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            {{-- Cash Advance --}}
-            @if (auth()->check() &&
-                    (auth()->user()->is_admin ||
-                        auth()->user()->hasAccessToMenu('ca_contract') ||
-                        auth()->user()->hasAccessToMenu('ca_tramper') ||
-                        auth()->user()->hasAccessToMenu('ca_other') ||
-                        auth()->user()->hasAccessToMenu('ca_general')))
-                <div class="nav-item has-submenu" data-tooltip="Cash Advance">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenKasbon">
-                        <i class="fas fa-cash-register"></i>
-                        <span>Cash Advance Ops.</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->routeIs('kasbon-contract.*') || request()->routeIs('kasbon-tramper.*') || request()->routeIs('kasbon-other.*') || request()->routeIs('kasbon-gen.*') ? 'show' : '' }}"
-                        id="manajemenKasbon">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_contract'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('kasbon-contract.*') ? 'active' : '' }}"
-                                    href="{{ route('kasbon-contract.index') }}">
-                                    <i class="fas fa-file-contract"></i>
-                                    <span>CA Contract</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_tramper'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('kasbon-tramper.*') ? 'active' : '' }}"
-                                    href="{{ route('kasbon-tramper.index') }}">
-                                    <i class="fas fa-truck-moving"></i>
-                                    <span>CA Tramper</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_other'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('kasbon-other.*') ? 'active' : '' }}"
-                                    href="{{ route('kasbon-other.index') }}">
-                                    <i class="fas fa-ellipsis-h"></i>
-                                    <span>CA Other</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_general'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('kasbon-gen.*') ? 'active' : '' }}"
-                                    href="{{ route('kasbon-gen.index') }}">
-                                    <i class="fas fa-building"></i>
-                                    <span>CA General</span>
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            {{-- LPJ --}}
-            @if (auth()->check() &&
-                    (auth()->user()->is_admin ||
-                        auth()->user()->hasAccessToMenu('lpj_contract') ||
-                        auth()->user()->hasAccessToMenu('lpj_tramper') ||
-                        auth()->user()->hasAccessToMenu('lpj_other') ||
-                        auth()->user()->hasAccessToMenu('lpj_general')))
-                <div class="nav-item has-submenu" data-tooltip="Cash Advance">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenLpj">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <span>LPJ</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->routeIs('lpj-contract.*') || request()->routeIs('lpj-tramper.*') || request()->routeIs('lpj-other.*') || request()->routeIs('lpj-gen.*') ? 'show' : '' }}"
-                        id="manajemenLpj">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_contract'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('lpj-contract.*') ? 'active' : '' }}"
-                                    href="{{ route('lpj-contract.index') }}">
-                                    <i class="fas fa-file-contract"></i>
-                                    <span>LPJ Contract</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_tramper'))
-                            <div class="submenu-item">
-                                <a class="nav-link" href="{{ route('lpj-tramper.index') }}">
-                                    <i class="fas fa-truck-moving"></i>
-                                    <span>LPJ Tramper</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_other'))
-                            <div class="submenu-item">
-                                <a class="nav-link" href="{{ route('lpj-other.index') }}">
-                                    <i class="fas fa-ellipsis-h"></i>
-                                    <span>LPJ Other</span>
-                                </a>
-                            </div>
-                        @endif
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_general'))
-                            <div class="submenu-item">
-                                <a class="nav-link" href="{{ route('lpj-gen.index') }}">
-                                    <i class="fas fa-building"></i>
-                                    <span>LPJ General</span>
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-            @endif
-
-            {{-- MUTASI --}}
-            @if (auth()->check() &&
-                    (auth()->user()->is_admin ||
-                        auth()->user()->hasAccessToMenu('mutasi_pembayaran') ||
-                        auth()->user()->hasAccessToMenu('mutasi_penerimaan')))
-                <div class="nav-item has-submenu" data-tooltip="Cash Advance">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenMutasi">
-                        <i class="fas fa-exchange-alt""></i>
-                        <span>Mutation</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->routeIs('lpj-contract.*') || request()->routeIs('lpj-tramper.*') || request()->routeIs('lpj-other.*') || request()->routeIs('lpj-gen.*') ? 'show' : '' }}"
-                        id="manajemenMutasi">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_pembayaran'))
-                            <div class="submenu-item">
-                                <a class="nav-link" href="{{ route('mutasi-pembayaran.index') }}">
-                                    <i class="fas fa-money-bill-transfer"></i>
-                                    <span>Multi-Payment Transaction</span>
-                                </a>
-                            </div>
-                        @endif
-
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_penerimaan'))
-                            <div class="submenu-item">
-                                <a class="nav-link" href="{{ route('mutasi-penerimaan.index') }}">
-                                    <i class="fas fa-hand-holding-dollar"></i>
-                                    <span>Multi-Receipt Transaction</span>
-                                </a>
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-            {{-- Invoice List --}}
-            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract')))
-                <div class="nav-item has-submenu" data-tooltip="Invoice">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenInvoiceList">
-                        <i class="fas fa-file-invoice"></i>
-                        <span>Invoice</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->routeIs('invoice-contract*') ? 'show' : '' }}"
-                        id="manajemenInvoiceList">
-                        <div class="submenu-item">
-                            <a class="nav-link {{ request()->routeIs('invoice-contract*') ? 'active' : '' }}"
-                                href="{{ route('invoice-contract.index') }}">
-                                <i class="fas fa-file-contract"></i>
-                                <span>Contract</span>
-                            </a>
-                        </div>
-                        <div class="submenu-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-truck-moving"></i>
-                                <span>Tramper</span>
-                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
-                            </a>
-                        </div>
-                        <div class="submenu-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-ellipsis-h"></i>
-                                <span>Other</span>
-                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
-                            </a>
                         </div>
                     </div>
-                </div>
-            @endif
+                    @endif
 
-            {{-- Customer Receivables Recap --}}
-            @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract')))
-                <div class="nav-item has-submenu" data-tooltip="Customer Receivables">
-                    <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenRekapPiutang">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                        <span>Customer Receivables</span>
-                        <i class="fas fa-chevron-down submenu-indicator"></i>
-                    </a>
-                    <div class="sidebar-submenu {{ request()->routeIs('rekap-piutang-contract*') ? 'show' : '' }}"
-                        id="manajemenRekapPiutang">
-                        @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract'))
-                            <div class="submenu-item">
-                                <a class="nav-link {{ request()->routeIs('rekap-piutang-contract*') ? 'active' : '' }}"
-                                    href="{{ route('rekap-piutang-contract.index') }}">
-                                    <i class="fas fa-file-contract"></i>
-                                    <span>Contract</span>
-                                </a>
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('customer') || auth()->user()->hasAccessToMenu('contract') || auth()->user()->hasAccessToMenu('area') || auth()->user()->hasAccessToMenu('item') || auth()->user()->hasAccessToMenu('vessel') || auth()->user()->hasAccessToMenu('port') || auth()->user()->hasAccessToMenu('other') || auth()->user()->hasAccessToMenu('departemen') || auth()->user()->hasAccessToMenu('branch') || auth()->user()->hasAccessToMenu('release_to') || auth()->user()->hasAccessToMenu('cost_type') || auth()->user()->hasAccessToMenu('pajak') || auth()->user()->hasAccessToMenu('parent_coa') || auth()->user()->hasAccessToMenu('chart_of_account')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="dataMaster">
+                            <i class="fas fa-database"></i>
+                            <span>Data Master</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->is('master/*') || request()->routeIs('company-profile.*') ? 'show' : '' }}" id="dataMaster">
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('customer'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('customer.*') ? 'active' : '' }}" href="{{ route('customer.index') }}"><i class="fas fa-user-circle"></i><span>Customer</span></a>
                             </div>
-                        @endif
-                        <div class="submenu-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-truck-moving"></i>
-                                <span>Tramper</span>
-                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
-                            </a>
-                        </div>
-                        <div class="submenu-item">
-                            <a class="nav-link" href="#">
-                                <i class="fas fa-ellipsis-h"></i>
-                                <span>Other</span>
-                                <span class="badge bg-secondary ms-1" style="font-size:10px">Soon</span>
-                            </a>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('contract'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('contract.*') ? 'active' : '' }}" href="{{ route('contract.index') }}"><i class="fas fa-building"></i><span>Contract</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('area'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('area.*') ? 'active' : '' }}" href="{{ route('area.index') }}"><i class="fas fa-globe"></i><span>Area</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('item'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('invoice.*') ? 'active' : '' }}" href="{{ route('invoice.index') }}"><i class="fas fa-project-diagram"></i><span>Item List</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('vessel'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('vessel.*') ? 'active' : '' }}" href="{{ route('vessel.index') }}"><i class="fas fa-ship"></i><span>Vessel</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('port'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('port.*') ? 'active' : '' }}" href="{{ route('port.index') }}"><i class="fas fa-anchor"></i><span>Port</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('other'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('other.*') ? 'active' : '' }}" href="{{ route('other.index') }}"><i class="fas fa-ellipsis-h"></i><span>Other</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('departemen'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('departemen.*') ? 'active' : '' }}" href="{{ route('departemen.index') }}"><i class="fas fa-sitemap"></i><span>Departemen</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('branch'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('branch.*') ? 'active' : '' }}" href="{{ route('branch.index') }}"><i class="fas fa-code-branch"></i><span>Branch</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('release_to'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('release_to.*') ? 'active' : '' }}" href="{{ route('release_to.index') }}"><i class="fas fa-paper-plane"></i><span>Release To</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('cost_type'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('cost-type.*') ? 'active' : '' }}" href="{{ route('cost-type.index') }}"><i class="fas fa-tags"></i><span>Cost Type</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('pajak'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('pajak.*') ? 'active' : '' }}" href="{{ route('pajak.index') }}"><i class="fas fa-percent"></i><span>Tax</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('parent_coa'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('parent-coa.*') ? 'active' : '' }}" href="{{ route('parent-coa.index') }}"><i class="fas fa-folder-open"></i><span>Parent COA</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('chart_of_account'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('chart-of-account.*') ? 'active' : '' }}" href="{{ route('chart-of-account.index') }}"><i class="fas fa-chart-bar"></i><span>Chart of Account</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin)
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('company-profile.*') ? 'active' : '' }}" href="{{ route('company-profile.edit') }}"><i class="fas fa-building"></i><span>Company Profile</span></a>
+                            </div>
+                            @endif
                         </div>
                     </div>
-                </div>
-            @endif
+                    @endif
 
+                </div>
+            </div>
+
+            {{-- OPERATIONS --}}
+            @php
+                $opsGroupActive = request()->routeIs('jo-contract.*') || request()->routeIs('jo-tramper.*') || request()->routeIs('jo-other.*')
+                    || request()->routeIs('kasbon-contract.*') || request()->routeIs('kasbon-tramper.*') || request()->routeIs('kasbon-other.*') || request()->routeIs('kasbon-gen.*')
+                    || request()->routeIs('lpj-contract.*') || request()->routeIs('lpj-tramper.*') || request()->routeIs('lpj-other.*') || request()->routeIs('lpj-gen.*')
+                    || request()->routeIs('tracking-*');
+            @endphp
+            <div class="nav-item has-submenu" data-tooltip="Operations">
+                <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="groupOperations">
+                    <i class="fas fa-industry"></i>
+                    <span>Operations</span>
+                    <i class="fas fa-chevron-down submenu-indicator"></i>
+                </a>
+                <div class="sidebar-submenu {{ $opsGroupActive ? 'show' : '' }}" id="groupOperations">
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract') || auth()->user()->hasAccessToMenu('jo_tramper') || auth()->user()->hasAccessToMenu('jo_other')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenData">
+                            <i class="fas fa-briefcase"></i>
+                            <span>Job Order</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('jo-contract.*') || request()->routeIs('jo-tramper.*') || request()->routeIs('jo-other.*') ? 'show' : '' }}" id="manajemenData">
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_contract'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('jo-contract.*') ? 'active' : '' }}" href="{{ route('jo-contract.index') }}"><i class="fas fa-file-contract"></i><span>JO Contract</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_tramper'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('jo-tramper.*') ? 'active' : '' }}" href="{{ route('jo-tramper.index') }}"><i class="fas fa-truck-moving"></i><span>JO Tramper</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('jo_other'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('jo-other.*') ? 'active' : '' }}" href="{{ route('jo-other.index') }}"><i class="fas fa-ellipsis-h"></i><span>JO Other</span></a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_contract') || auth()->user()->hasAccessToMenu('ca_tramper') || auth()->user()->hasAccessToMenu('ca_other') || auth()->user()->hasAccessToMenu('ca_general')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenKasbon">
+                            <i class="fas fa-cash-register"></i>
+                            <span>Cash Advance</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('kasbon-contract.*') || request()->routeIs('kasbon-tramper.*') || request()->routeIs('kasbon-other.*') || request()->routeIs('kasbon-gen.*') ? 'show' : '' }}" id="manajemenKasbon">
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_contract'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-contract.*') ? 'active' : '' }}" href="{{ route('kasbon-contract.index') }}"><i class="fas fa-file-contract"></i><span>CA Contract</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_tramper'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-tramper.*') ? 'active' : '' }}" href="{{ route('kasbon-tramper.index') }}"><i class="fas fa-truck-moving"></i><span>CA Tramper</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_other'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-other.*') ? 'active' : '' }}" href="{{ route('kasbon-other.index') }}"><i class="fas fa-ellipsis-h"></i><span>CA Other</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('ca_general'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('kasbon-gen.*') ? 'active' : '' }}" href="{{ route('kasbon-gen.index') }}"><i class="fas fa-building"></i><span>CA General</span></a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_contract') || auth()->user()->hasAccessToMenu('lpj_tramper') || auth()->user()->hasAccessToMenu('lpj_other') || auth()->user()->hasAccessToMenu('lpj_general')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenLpj">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>LPJ</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('lpj-contract.*') || request()->routeIs('lpj-tramper.*') || request()->routeIs('lpj-other.*') || request()->routeIs('lpj-gen.*') ? 'show' : '' }}" id="manajemenLpj">
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_contract'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('lpj-contract.*') ? 'active' : '' }}" href="{{ route('lpj-contract.index') }}"><i class="fas fa-file-contract"></i><span>LPJ Contract</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_tramper'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('lpj-tramper.*') ? 'active' : '' }}" href="{{ route('lpj-tramper.index') }}"><i class="fas fa-truck-moving"></i><span>LPJ Tramper</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_other'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('lpj-other.*') ? 'active' : '' }}" href="{{ route('lpj-other.index') }}"><i class="fas fa-ellipsis-h"></i><span>LPJ Other</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('lpj_general'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('lpj-gen.*') ? 'active' : '' }}" href="{{ route('lpj-gen.index') }}"><i class="fas fa-building"></i><span>LPJ General</span></a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('tracking_jo')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenTracking">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Tracking</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('tracking-*') ? 'show' : '' }}" id="manajemenTracking">
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('tracking-jo*') ? 'active' : '' }}" href="{{ route('tracking-jo.index') }}"><i class="fas fa-search-location"></i><span>Tracking JO</span></a>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                </div>
+            </div>
+
+            {{-- FINANCE --}}
+            @php
+                $finGroupActive = request()->routeIs('mutasi-pembayaran.*') || request()->routeIs('mutasi-penerimaan.*')
+                    || request()->routeIs('invoice-contract*') || request()->routeIs('invoice-tramper*') || request()->routeIs('invoice-other*')
+                    || request()->routeIs('rekap-piutang-contract*') || request()->routeIs('rekap-piutang-tramper*') || request()->routeIs('rekap-piutang-other*')
+                    || request()->routeIs('soa*')
+                    || request()->routeIs('trial-balance.*');
+            @endphp
+            <div class="nav-item has-submenu" data-tooltip="Finance">
+                <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="groupFinance">
+                    <i class="fas fa-coins"></i>
+                    <span>Finance</span>
+                    <i class="fas fa-chevron-down submenu-indicator"></i>
+                </a>
+                <div class="sidebar-submenu {{ $finGroupActive ? 'show' : '' }}" id="groupFinance">
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_pembayaran') || auth()->user()->hasAccessToMenu('mutasi_penerimaan')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenMutasi">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Mutation</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('mutasi-pembayaran.*') || request()->routeIs('mutasi-penerimaan.*') ? 'show' : '' }}" id="manajemenMutasi">
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_pembayaran'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('mutasi-pembayaran.*') ? 'active' : '' }}" href="{{ route('mutasi-pembayaran.index') }}"><i class="fas fa-money-bill-transfer"></i><span>Multi-Payment Transaction</span></a>
+                            </div>
+                            @endif
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('mutasi_penerimaan'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('mutasi-penerimaan.*') ? 'active' : '' }}" href="{{ route('mutasi-penerimaan.index') }}"><i class="fas fa-hand-holding-dollar"></i><span>Multi-Receipt Transaction</span></a>
+                            </div>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenInvoiceList">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Invoice</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('invoice-contract*') || request()->routeIs('invoice-tramper*') || request()->routeIs('invoice-other*') ? 'show' : '' }}" id="manajemenInvoiceList">
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('invoice-contract*') ? 'active' : '' }}" href="{{ route('invoice-contract.index') }}"><i class="fas fa-file-contract"></i><span>Contract</span></a>
+                            </div>
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('invoice-tramper*') ? 'active' : '' }}" href="{{ route('invoice-tramper.index') }}"><i class="fas fa-truck-moving"></i><span>Tramper</span></a>
+                            </div>
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('invoice-other*') ? 'active' : '' }}" href="{{ route('invoice-other.index') }}"><i class="fas fa-ellipsis-h"></i><span>Other</span></a>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract')))
+                    <div class="submenu-item">
+                        <a class="nav-link {{ request()->routeIs('soa*') ? 'active' : '' }}"
+                           href="{{ route('soa.index') }}">
+                            <i class="fas fa-address-card"></i>
+                            <span>Statement of Account</span>
+                        </a>
+                    </div>
+                    @endif
+
+                    @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract')))
+                    <div class="submenu-item has-nested-submenu">
+                        <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="manajemenRekapPiutang">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Customer Receivables</span>
+                            <i class="fas fa-chevron-right submenu-indicator ms-auto"></i>
+                        </a>
+                        <div class="sidebar-nested-submenu {{ request()->routeIs('rekap-piutang-contract*') || request()->routeIs('rekap-piutang-tramper*') || request()->routeIs('rekap-piutang-other*') ? 'show' : '' }}" id="manajemenRekapPiutang">
+                            @if (auth()->user()->is_admin || auth()->user()->hasAccessToMenu('rekap_piutang_contract'))
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('rekap-piutang-contract*') ? 'active' : '' }}" href="{{ route('rekap-piutang-contract.index') }}"><i class="fas fa-file-contract"></i><span>Contract</span></a>
+                            </div>
+                            @endif
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('rekap-piutang-tramper*') ? 'active' : '' }}" href="{{ route('rekap-piutang-tramper.index') }}"><i class="fas fa-truck-moving"></i><span>Tramper</span></a>
+                            </div>
+                            <div class="nested-submenu-item">
+                                <a class="nav-link {{ request()->routeIs('rekap-piutang-other*') ? 'active' : '' }}" href="{{ route('rekap-piutang-other.index') }}"><i class="fas fa-ellipsis-h"></i><span>Other</span></a>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+
+                    <div class="submenu-item">
+                        <a class="nav-link {{ request()->routeIs('trial-balance.*') ? 'active' : '' }}"
+                           href="{{ route('trial-balance.index') }}">
+                            <i class="fas fa-balance-scale"></i>
+                            <span>Trial Balance</span>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+
+
+            {{-- SETTINGS --}}
+            @php
+                $settingsGroupActive = request()->routeIs('activity-log.*');
+            @endphp
+            @if(auth()->check() && auth()->user()->is_admin)
+            <div class="nav-item has-submenu" data-tooltip="Settings">
+                <a class="nav-link menu-dropdown" href="javascript:void(0)" data-menu="groupSettings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                    <i class="fas fa-chevron-down submenu-indicator"></i>
+                </a>
+                <div class="sidebar-submenu {{ $settingsGroupActive ? 'show' : '' }}" id="groupSettings">
+
+                    <div class="submenu-item">
+                        <a class="nav-link {{ request()->routeIs('activity-log.*') ? 'active' : '' }}"
+                           href="{{ route('activity-log.index') }}">
+                            <i class="fas fa-history"></i>
+                            <span>Log Aktivitas</span>
+                        </a>
+                    </div>
+
+                </div>
+            </div>
             @endif
 
         </nav>
@@ -1547,23 +1512,19 @@
 
         <main class="content">
             {{-- Flash Messages --}}
+            {{-- Global Floating Badge Alert --}}
+            <div id="globalFloatingAlert" class="global-floating-badge-alert">
+                <i class="fas fa-circle-notch fa-spin" id="globalAlertIcon"></i>
+                <div class="global-alert-text" id="globalAlertText">Processing...</div>
+            </div>
             @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show mx-3 mt-3" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+                <div id="flashSuccess" data-message="{{ session('success') }}" style="display:none;"></div>
             @endif
             @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show mx-3 mt-3" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+                <div id="flashError" data-message="{{ session('error') }}" style="display:none;"></div>
             @endif
             @if(session('warning'))
-                <div class="alert alert-warning alert-dismissible fade show mx-3 mt-3" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>{{ session('warning') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
+                <div id="flashWarning" data-message="{{ session('warning') }}" style="display:none;"></div>
             @endif
             @yield('content')
         </main>
@@ -1573,6 +1534,57 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
+        // ── Global Floating Badge Alert CSS ──
+        (function(){
+            var style = document.createElement('style');
+            style.textContent = `
+                .global-floating-badge-alert {
+                    position: fixed; top: 80px; right: 30px; z-index: 99999;
+                    min-width: 260px; padding: 15px 20px; border-radius: 12px;
+                    box-shadow: 0 8px 25px rgba(0,0,0,0.2); display: none;
+                    backdrop-filter: blur(10px);
+                }
+                .global-floating-badge-alert.show {
+                    display: flex; align-items: center; gap: 12px;
+                    animation: gfaSlideIn 0.4s ease-out;
+                }
+                .global-floating-badge-alert.hiding { animation: gfaSlideOut 0.4s ease-in; }
+                .global-floating-badge-alert.gfa-success { background: linear-gradient(135deg,#10b981,#059669); color:#fff; }
+                .global-floating-badge-alert.gfa-error   { background: linear-gradient(135deg,#ef4444,#dc2626); color:#fff; }
+                .global-floating-badge-alert.gfa-warning { background: linear-gradient(135deg,#fbbf24,#f59e0b); color:#fff; }
+                .global-floating-badge-alert i { font-size: 1.3rem; }
+                .global-alert-text { flex:1; font-weight:600; font-size:0.95rem; }
+                @keyframes gfaSlideIn { from{transform:translateX(400px);opacity:0} to{transform:translateX(0);opacity:1} }
+                @keyframes gfaSlideOut { from{transform:translateX(0);opacity:1} to{transform:translateX(400px);opacity:0} }
+            `;
+            document.head.appendChild(style);
+        })();
+
+        // ── Global Flash Handler ──
+        document.addEventListener('DOMContentLoaded', function () {
+            function showGlobalAlert(type, message) {
+                var el   = document.getElementById('globalFloatingAlert');
+                var icon = document.getElementById('globalAlertIcon');
+                var text = document.getElementById('globalAlertText');
+                el.className = 'global-floating-badge-alert';
+                if (type === 'success') { el.classList.add('gfa-success'); icon.className = 'fas fa-check-circle'; }
+                if (type === 'error')   { el.classList.add('gfa-error');   icon.className = 'fas fa-exclamation-circle'; }
+                if (type === 'warning') { el.classList.add('gfa-warning'); icon.className = 'fas fa-exclamation-triangle'; }
+                text.textContent = message;
+                el.classList.add('show');
+                setTimeout(function(){
+                    el.classList.add('hiding');
+                    setTimeout(function(){ el.classList.remove('show','hiding'); }, 400);
+                }, 3500);
+            }
+            var s = document.getElementById('flashSuccess');
+            var e = document.getElementById('flashError');
+            var w = document.getElementById('flashWarning');
+            if (s) showGlobalAlert('success', s.dataset.message);
+            if (e) showGlobalAlert('error',   e.dataset.message);
+            if (w) showGlobalAlert('warning', w.dataset.message);
+        });
+
         class SidebarManager {
             constructor() {
                 this.sidebar = document.getElementById('sidebar');
@@ -1624,7 +1636,21 @@
                                         });
                                 }
                             } else {
-                                if (!submenu.classList.contains('sidebar-nested-submenu')) {}
+                                if (!submenu.classList.contains('sidebar-nested-submenu')) {
+                                    // Close other top-level sidebar-submenu siblings
+                                    document.querySelectorAll('.sidebar-submenu.show').forEach(sib => {
+                                        if (sib !== submenu) {
+                                            sib.classList.remove('show');
+                                            const sibToggle = document.querySelector(`[data-menu="${sib.id}"]`);
+                                            if (sibToggle) sibToggle.classList.remove('menu-open');
+                                            sib.querySelectorAll('.sidebar-nested-submenu.show').forEach(nested => {
+                                                nested.classList.remove('show');
+                                                const nt = document.querySelector(`[data-menu="${nested.id}"]`);
+                                                if (nt) nt.classList.remove('menu-open');
+                                            });
+                                        }
+                                    });
+                                }
                             }
 
                             if (isOpen) {

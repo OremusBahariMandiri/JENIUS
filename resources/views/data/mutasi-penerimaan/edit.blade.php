@@ -243,16 +243,7 @@
         }
 
         /* Detail table */
-        .table-detail thead th {
-            background-color: #14532d;
-            color: #fff;
-            border: 1px solid #14532d;
-            padding: 10px 8px;
-            font-weight: 600;
-            font-size: .8rem;
-            text-align: center;
-            vertical-align: middle;
-        }
+        .table-detail thead th{background:#2d3748;color:#fff;font-size:.76rem;padding:10px 12px;font-weight:600;white-space:nowrap;text-align:center;vertical-align:middle;}
 
         .table-detail tbody td {
             border: 1px solid #dee2e6;
@@ -270,13 +261,12 @@
             background-color: #f8f9fa;
         }
 
-        .table-detail tfoot td {
-            background: #14532d;
-            color: #fff;
-            font-weight: 700;
-            padding: 10px 8px;
-            font-size: .875rem;
-        }
+        .table-detail tfoot td{background:#fff;color:#1e3a5f;font-weight:700;padding:10px 12px;font-size:.875rem;border-top:2px solid #e2e8f0;}
+        .currency-group-cell { display:flex; align-items:center; gap:5px; }
+        .currency-label-cell { background-color:#e9ecef; color:#495057; border:1px solid #ced4da; padding:0.2rem 0.5rem; font-size:0.78rem; border-radius:4px; min-width:42px; text-align:center; font-weight:600; white-space:nowrap; }
+        .value-cell { flex:1; text-align:right; font-weight:600; font-size:0.88rem; color:#1e293b; }
+        .currency-label-footer-dark { background-color:#2c3e50; color:#fff; border:1px solid rgba(255,255,255,0.3); padding:0.2rem 0.5rem; font-size:0.78rem; border-radius:4px; min-width:42px; text-align:center; font-weight:600; white-space:nowrap; }
+        .value-footer-cell { flex:1; text-align:right; font-weight:700; font-size:0.88rem; color:#1e293b; }
 
         .table-detail tfoot td.num-cell {
             text-align: right;
@@ -337,15 +327,15 @@
             border: none;
             color: #fff;
             padding: 10px 24px;
-            border-radius: 20px;
+            border-radius: 6px;
             font-weight: 600;
-            box-shadow: 0 4px 15px rgba(22, 163, 74, .4);
+            box-shadow: 0 2px 6px rgba(22, 163, 74, .3);
             transition: all .3s;
         }
 
         .btn-add-purple:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(22, 163, 74, .5);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(22, 163, 74, .4);
             color: #fff;
         }
 
@@ -354,13 +344,13 @@
             border: none;
             color: #fff;
             padding: 10px 24px;
-            border-radius: 20px;
+            border-radius: 6px;
             font-weight: 600;
             transition: all .3s;
         }
 
         .btn-cancel-edit-style:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             color: #fff;
         }
 
@@ -565,6 +555,77 @@
 @endpush
 
 @section('content')
+<style>
+.detail-step-block {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+}
+.detail-step-label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    background: #3b82f6;
+    color: #fff;
+    border-radius: 50%;
+    font-size: .72rem;
+    font-weight: 800;
+    flex-shrink: 0;
+}
+.btn-tipe-pem-new {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: .82rem;
+    font-weight: 600;
+    border: 2px solid;
+    background: #fff;
+    transition: all .15s ease;
+    cursor: pointer;
+}
+.btn-tipe-dp { color: #2563eb; border-color: #93c5fd; }
+.btn-tipe-dp:hover, .btn-tipe-dp.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.btn-tipe-rec { color: #16a34a; border-color: #86efac; }
+.btn-tipe-rec:hover, .btn-tipe-rec.active { background: #16a34a; color: #fff; border-color: #16a34a; }
+.btn-tipe-ref { color: #d97706; border-color: #fcd34d; }
+.btn-tipe-ref:hover, .btn-tipe-ref.active { background: #d97706; color: #fff; border-color: #d97706; }
+.info-chip {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    height: 100%;
+}
+.info-chip-lbl {
+    font-size: .67rem;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: 4px;
+}
+.info-chip-val {
+    font-size: .88rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+</style>
+
     <div id="floatingBadgeAlert" class="floating-badge-alert">
         <i class="fas fa-circle-notch fa-spin" id="alertIcon"></i>
         <div class="alert-text" id="alertText">Processing...</div>
@@ -1288,13 +1349,15 @@
         <div class="table-responsive mt-2">
             <table class="table table-detail table-bordered" id="detailTable-${v.id}">
                 <thead><tr>
+                    <th width="40" class="text-center">No.</th>
                     <th class="text-center" width="80">Type</th>
                     <th class="text-center" width="100">Pmt Type</th>
-                    <th>Cust / Release To</th><th>JO / Kasbon</th><th>Dept / Branch</th>
+                    <th>Cust / Release To</th><th>JO / CA</th><th>Dept / Branch</th>
+                    <th width="130">COA</th>
                     <th style="min-width:140px;" class="text-end">Amount (IDR)</th>
                     <th>Notes</th><th width="80" class="text-center">Action</th>
                 </tr></thead>
-                <tbody id="detailTableBody-${v.id}"><tr><td colspan="8" class="text-center text-muted py-3"><i class="fas fa-inbox fa-2x d-block mb-2"></i>No details yet</td></tr></tbody>
+                <tbody id="detailTableBody-${v.id}"><tr><td colspan="10" class="text-center text-muted py-3"><i class="fas fa-inbox fa-2x d-block mb-2"></i>No details yet</td></tr></tbody>
                 <tfoot id="detailTableFoot-${v.id}"></tfoot>
             </table>
         </div>
@@ -1310,67 +1373,64 @@
         function buildDetailFormHtml(voucherId) {
             const depOpts = (window._depList || []).map(d => `<option value="${d.id}">${escH(d.nama)}</option>`).join('');
             const brOpts = (window._brList || []).map(b => `<option value="${b.id}">${escH(b.nama)}</option>`).join('');
+            const coaOpts = (window._allCoa || []).map(c => `<option value="${c.id}">${escH(c.nomor + ' - ' + c.nama)}</option>`).join('');
 
             return `
 <div class="add-form-section mb-3" id="addDetailSection-${voucherId}">
     <h6 id="detailFormTitle-${voucherId}"><i class="fas fa-plus-square" style="color:#16a34a;"></i> Add Detail</h6>
     <div id="detailAddMode-${voucherId}">
-        <div class="row g-3">
-            <div class="col-12" id="jenisCol-${voucherId}">
-                <label class="form-label fw-semibold required-field">Type</label>
-                <select id="input_jenis-${voucherId}" class="form-select" onchange="onJenisChange(${voucherId})">
-                    <option value="">-- Select --</option>
-                    <option value="tramper">Tramper</option><option value="other">Other</option>
-                    <option value="contract">Contract</option><option value="general">General</option>
-                </select>
+
+        <div class="detail-step-block">
+            <div class="detail-step-label"><span class="step-num">1</span> Payment Type</div>
+            <div class="d-flex gap-2 flex-wrap mt-2">
+                <button type="button" class="btn btn-tipe-pem-new btn-tipe-dp" data-tipe="uang_muka_pembayaran"
+                    onclick="selectTipePembayaran(${voucherId}, 'uang_muka_pembayaran', this)">
+                    <i class="fas fa-file-invoice-dollar"></i><span>Down Payment</span>
+                </button>
+                <button type="button" class="btn btn-tipe-pem-new btn-tipe-rec" data-tipe="penerimaan_pembayaran"
+                    onclick="selectTipePembayaran(${voucherId}, 'penerimaan_pembayaran', this)">
+                    <i class="fas fa-hand-holding-usd"></i><span>Payment Receipt</span>
+                </button>
+                <button type="button" class="btn btn-tipe-pem-new btn-tipe-ref" data-tipe="pengembalian_lebih_bayar"
+                    onclick="selectTipePembayaran(${voucherId}, 'pengembalian_lebih_bayar', this)">
+                    <i class="fas fa-undo-alt"></i><span>Refund</span>
+                </button>
             </div>
-            <div class="col-md-9" id="joCol-${voucherId}" style="display:none;">
-                <label class="form-label fw-semibold required-field">Job Order</label>
-                <select id="input_jo-${voucherId}" class="form-select select2-jo-${voucherId}" data-placeholder="Select JO..." onchange="onJoChange(${voucherId})"><option value=""></option></select>
-            </div>
-            <div class="col-md-9" id="genKasbonCol-${voucherId}" style="display:none;">
-                <label class="form-label fw-semibold required-field">General Cash Advance</label>
-                <select id="input_kasbon_gen-${voucherId}" class="form-select select2-kasbon-gen-${voucherId}" data-placeholder="Select CA..." onchange="onGeneralKasbonChange(${voucherId})"><option value=""></option></select>
-            </div>
+            <input type="hidden" id="input_tipe_pem-${voucherId}" value="">
         </div>
-       <div id="custPanel-${voucherId}" class="mt-3" style="display:none;">
-    <div class="row g-2 mb-3">
-        <div class="col-md-4">
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;">
-                <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Customer</div>
-                <div id="joCustomerName-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div>
-                <input type="hidden" id="input_id_md_cust-${voucherId}" value="">
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;">
-                <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Vessel</div>
-                <div id="joVesselName-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;">
-                <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Port</div>
-                <div id="joPortName-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div>
-                <input type="hidden" id="input_id_md_port-${voucherId}" value="">
-            </div>
-        </div>
-    </div>
-            </div>
-            <div class="row g-3 mb-3">
-                <div class="col-md-12">
-                    <label class="form-label fw-semibold required-field">Payment Type</label>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button type="button" class="btn btn-outline-primary btn-tipe-pem" data-tipe="uang_muka_pembayaran" onclick="selectTipePembayaran(${voucherId}, 'uang_muka_pembayaran', this)"><i class="fas fa-file-invoice-dollar me-1"></i> Down Payment</button>
-                        <button type="button" class="btn btn-outline-success btn-tipe-pem" data-tipe="penerimaan_pembayaran" onclick="selectTipePembayaran(${voucherId}, 'penerimaan_pembayaran', this)"><i class="fas fa-hand-holding-usd me-1"></i> Payment Receipt</button>
-                        <button type="button" class="btn btn-outline-warning btn-tipe-pem" data-tipe="pengembalian_lebih_bayar" onclick="selectTipePembayaran(${voucherId}, 'pengembalian_lebih_bayar', this)"><i class="fas fa-undo-alt me-1"></i> Refund</button>
-                    </div>
-                    <input type="hidden" id="input_tipe_pem-${voucherId}" value="">
+
+        <div id="step2Block-${voucherId}" class="detail-step-block mt-3">
+            <div class="detail-step-label"><span class="step-num">2</span> Transaction</div>
+            <div class="row g-3 mt-1">
+                <div id="jenisCol-${voucherId}" class="col-12">
+                    <label class="form-label fw-semibold required-field">Type</label>
+                    <select id="input_jenis-${voucherId}" class="form-select" onchange="onJenisChange(${voucherId})">
+                        <option value="">-- Select --</option>
+                        <option value="tramper">Tramper</option>
+                        <option value="other">Other</option>
+                        <option value="contract">Contract</option>
+                        <option value="general">General</option>
+                    </select>
+                </div>
+                <div class="col-12" id="joCol-${voucherId}" style="display:none;">
+                    <label class="form-label fw-semibold required-field">Job Order</label>
+                    <select id="input_jo-${voucherId}" class="form-select select2-jo-${voucherId}" data-placeholder="Select JO..." onchange="onJoChange(${voucherId})"><option value=""></option></select>
+                </div>
+                <div class="col-12" id="genKasbonCol-${voucherId}" style="display:none;">
+                    <label class="form-label fw-semibold required-field">General Cash Advance</label>
+                    <select id="input_kasbon_gen-${voucherId}" class="form-select select2-kasbon-gen-${voucherId}" data-placeholder="Select CA..." onchange="onGeneralKasbonChange(${voucherId})"><option value=""></option></select>
+                </div>
+                <div class="col-12" id="kasbonCol-${voucherId}" style="display:none;">
+                    <label class="form-label fw-semibold required-field">Cash Advance</label>
+                    <select id="input_kasbon-${voucherId}" class="form-select select2-kasbon-${voucherId}" data-placeholder="Select CA..." onchange="onKasbonChange(${voucherId})"><option value=""></option></select>
                 </div>
             </div>
         </div>
-        <div id="genKasbonInfoPanel-${voucherId}" class="mt-3" style="display:none;">
-            ${buildKasbonInfoPanelHtml('gen_' + voucherId)}
+
+        <div id="tipePemSection-${voucherId}" style="display:none;"></div>
+        <div id="genKasbonInfoPanel-${voucherId}" class="detail-step-block mt-3" style="display:none;">
+            <div class="detail-step-label"><span class="step-num">3</span> Detail — Refund</div>
+            <div class="mt-3">${buildKasbonInfoPanelHtml('gen_' + voucherId)}</div>
             <div id="genKasbonAlert-${voucherId}" class="mt-2" style="display:none;"></div>
             <div id="genKasbonForm-${voucherId}" style="display:none;">
                 <div class="row g-3 mt-1">
@@ -1388,8 +1448,8 @@
                 </div>
             </div>
         </div>
-        <div id="pengembalianSection-${voucherId}" class="mt-3" style="display:none;">
-            <div class="row g-3"><div class="col-md-6"><label class="form-label fw-semibold required-field">Cash Advance (from JO)</label><select id="input_kasbon-${voucherId}" class="form-select select2-kasbon-${voucherId}" data-placeholder="Select CA..." onchange="onKasbonChange(${voucherId})"><option value=""></option></select></div></div>
+        <div id="pengembalianSection-${voucherId}" class="detail-step-block mt-3" style="display:none;">
+            <div class="detail-step-label"><span class="step-num">3</span> Detail — Refund</div>
             <div id="kasbonInfoPanel-${voucherId}" class="mt-3" style="display:none;">
                 ${buildKasbonInfoPanelHtml('kasbon_' + voucherId)}
                 <div id="kasbonAlert-${voucherId}" class="mt-2" style="display:none;"></div>
@@ -1398,9 +1458,15 @@
 <input type="hidden" id="input_dep-${voucherId}" value="">
 <input type="hidden" id="input_branch-${voucherId}" value="">
 <input type="hidden" id="input_release_to_ref-${voucherId}" value="">
-<div class="col-md-4"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Department</div><div id="display_dep_ref-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
-<div class="col-md-4"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Branch</div><div id="display_branch_ref-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
-<div class="col-md-4"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Release To</div><div id="display_release_to_ref-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
+<div class="col-md-6"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Department</div><div id="display_dep_ref-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
+<div class="col-md-6"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Branch</div><div id="display_branch_ref-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
+<div class="col-md-6"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Release To</div><div id="display_release_to_ref-${voucherId}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
+<div class="col-md-12">
+    <label class="form-label fw-semibold">COA (Chart of Account)</label>
+    <select id="input_coa_ref-${voucherId}" class="form-select select2-coa-ref-${voucherId}" data-placeholder="Select COA...">
+        <option value=""></option>${coaOpts}
+    </select>
+</div>
 <div class="col-md-12"><label class="form-label fw-semibold">Notes</label><input type="text" id="input_ket-${voucherId}" class="form-control" placeholder="Notes..."></div>
                         <div class="col-12 d-flex gap-2 justify-content-end">
                             <button type="button" class="btn btn-cancel-edit-style" onclick="resetDetailForm(${voucherId})"><i class="fas fa-times"></i> Cancel</button>
@@ -1410,12 +1476,47 @@
                 </div>
             </div>
         </div>
-        <div id="manualSection-${voucherId}" class="mt-3" style="display:none;">
-            <div class="row g-3">
-                <div class="col-md-4"><label class="form-label fw-semibold required-field">Department</label><select id="input_dep_manual-${voucherId}" class="form-select select2-dep-manual-${voucherId}" data-placeholder="Select Dept..."><option value=""></option>${depOpts}</select></div>
-                <div class="col-md-4"><label class="form-label fw-semibold required-field">Branch</label><select id="input_branch_manual-${voucherId}" class="form-select select2-branch-manual-${voucherId}" data-placeholder="Select Branch..."><option value=""></option>${brOpts}</select></div>
-                <div class="col-md-4"><label class="form-label fw-semibold required-field">Amount (IDR)</label><input type="text" id="input_nilai-${voucherId}" class="form-control" placeholder="0,00"><input type="hidden" id="input_nilai_raw-${voucherId}" value="0"></div>
-                <div class="col-md-12"><label class="form-label fw-semibold">Notes</label><input type="text" id="input_ket_manual-${voucherId}" class="form-control" placeholder="Notes..."></div>
+        {{-- custPanel dipindah ke luar manualSection agar tetap terlihat saat tipe Refund (manualSection hidden) --}}
+        <div id="custPanel-${voucherId}" class="row g-2 mb-2 mt-3 pt-2" style="display:none; border-top: 1px solid #e2e8f0;">
+            <div class="col-md-4">
+                <div class="info-chip"><div class="info-chip-lbl">Customer</div>
+                <div class="info-chip-val" id="joCustomerName-${voucherId}">—</div>
+                <input type="hidden" id="input_id_md_cust-${voucherId}" value=""></div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-chip"><div class="info-chip-lbl">Vessel</div>
+                <div class="info-chip-val" id="joVesselName-${voucherId}">—</div></div>
+            </div>
+            <div class="col-md-4">
+                <div class="info-chip"><div class="info-chip-lbl">Port</div>
+                <div class="info-chip-val" id="joPortName-${voucherId}">—</div>
+                <input type="hidden" id="input_id_md_port-${voucherId}" value=""></div>
+            </div>
+        </div>
+        <div id="manualSection-${voucherId}" class="detail-step-block mt-3" style="display:none;">
+            <div class="detail-step-label"><span class="step-num">3</span> Detail</div>
+            <div class="row g-3 mt-0" style="margin-top:-10px!important;">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold required-field">Department</label>
+                    <select id="input_dep_manual-${voucherId}" class="form-select select2-dep-manual-${voucherId}" data-placeholder="Select Dept..."><option value=""></option>${depOpts}</select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold required-field">Branch</label>
+                    <select id="input_branch_manual-${voucherId}" class="form-select select2-branch-manual-${voucherId}" data-placeholder="Select Branch..."><option value=""></option>${brOpts}</select>
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold required-field">Amount (IDR)</label>
+                    <input type="text" id="input_nilai-${voucherId}" class="form-control" placeholder="0,00">
+                    <input type="hidden" id="input_nilai_raw-${voucherId}" value="0">
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">COA (Chart of Account)</label>
+                    <select id="input_coa_manual-${voucherId}" class="form-select select2-coa-manual-${voucherId}" data-placeholder="Select COA..."><option value=""></option>${coaOpts}</select>
+                </div>
+                <div class="col-md-12">
+                    <label class="form-label fw-semibold">Notes</label>
+                    <input type="text" id="input_ket_manual-${voucherId}" class="form-control" placeholder="Notes...">
+                </div>
                 <div class="col-12 d-flex gap-2 justify-content-end">
                     <button type="button" class="btn btn-cancel-edit-style" onclick="resetDetailForm(${voucherId})"><i class="fas fa-times"></i> Cancel</button>
                     <button type="button" class="btn btn-add-purple" onclick="saveDetailManual(${voucherId})"><i class="fas fa-plus me-1"></i> Save Detail</button>
@@ -1423,14 +1524,15 @@
             </div>
         </div>
     </div>
-    <div id="detailEditMode-${voucherId}" style="display:none;" class="detail-edit-mode-box">
+    <div id="detailEditMode-${voucherId}" style="display:none;" class="detail-edit-mode-box mb-3">
+        <h6 style="color:#1e40af;font-weight:700;margin-bottom:16px;"><i class="fas fa-edit me-2"></i> Edit Detail</h6>
         <input type="hidden" id="editing_detail_id-${voucherId}" value="">
         <input type="hidden" id="editing_detail_tipe-${voucherId}" value="">
         <div class="edit-info-grid mb-3">
             <div class="edit-info-card"><div class="edit-info-lbl">Type</div><div class="edit-info-val"><span id="edit_jenis_badge-${voucherId}" class="jenis-badge"></span></div></div>
             <div class="edit-info-card"><div class="edit-info-lbl">Payment Type</div><div class="edit-info-val" id="edit_tipe_pem-${voucherId}">—</div></div>
             <div class="edit-info-card"><div class="edit-info-lbl">Customer</div><div class="edit-info-val" id="edit_customer-${voucherId}">—</div></div>
-            <div class="edit-info-card"><div class="edit-info-lbl">JO / Kasbon</div><div class="edit-info-val" id="edit_ref-${voucherId}">—</div></div>
+            <div class="edit-info-card"><div class="edit-info-lbl">JO / CA</div><div class="edit-info-val" id="edit_ref-${voucherId}">—</div></div>
             <div id="edit_nilai_info_card-${voucherId}" class="edit-info-card"><div class="edit-info-lbl">Amount</div><div class="edit-info-val clr-nilai" id="edit_nilai_display-${voucherId}">—</div></div>
         </div>
         {{-- Editable fields: hanya untuk non-refund --}}
@@ -1459,6 +1561,12 @@
     <label class="form-label fw-semibold required-field">Release To</label>
     <input type="text" id="edit_release_to-${voucherId}" class="form-control" placeholder="Release to...">
 </div>
+        <div class="mb-3">
+            <label class="form-label fw-semibold">COA (Chart of Account)</label>
+            <select id="edit_coa-${voucherId}" class="form-select select2-edit-coa-${voucherId}" data-placeholder="Select COA...">
+                <option value=""></option>${coaOpts}
+            </select>
+        </div>
         <div class="mb-3"><label class="form-label fw-semibold">Notes</label><input type="text" id="edit_keterangan-${voucherId}" class="form-control" placeholder="Notes..."></div>
         <div class="d-flex justify-content-end gap-2">
             <button type="button" class="btn btn-cancel-edit-style" onclick="cancelDetailEdit(${voucherId})"><i class="fas fa-times me-1"></i> Cancel</button>
@@ -1479,11 +1587,11 @@
 </button>
 </div>
 <div class="row g-2 mb-2">
-<div class="col-md-3"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">JO No.</div><div id="ki_nomor_jo-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
-<div class="col-md-3"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Customer</div><div id="ki_customer-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div><input type="hidden" id="input_id_md_cust_ki-${pid}" value=""></div></div>
-<div class="col-md-3"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Dept</div><div id="ki_dep-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div><input type="hidden" id="input_id_md_dep_ki-${pid}" value=""></div></div>
-<div class="col-md-3"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Branch</div><div id="ki_branch-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div><input type="hidden" id="input_id_md_branch_ki-${pid}" value=""></div></div>
-<div class="col-md-4"><div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Refund Amount</div><div id="ki_selisih-${pid}" style="font-size:.95rem;font-weight:700;color:#d97706;">—</div><input type="hidden" id="input_nilai_ki-${pid}" value="0"></div></div>
+<div class="col-md-6"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">JO No.</div><div id="ki_nomor_jo-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div></div></div>
+<div class="col-md-6"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Customer</div><div id="ki_customer-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div><input type="hidden" id="input_id_md_cust_ki-${pid}" value=""></div></div>
+<div class="col-md-6"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Department</div><div id="ki_dep-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div><input type="hidden" id="input_id_md_dep_ki-${pid}" value=""></div></div>
+<div class="col-md-6"><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Branch</div><div id="ki_branch-${pid}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div><input type="hidden" id="input_id_md_branch_ki-${pid}" value=""></div></div>
+<div class="col-12"><div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:10px 14px;"><div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Refund Amount</div><div id="ki_selisih-${pid}" style="font-size:.95rem;font-weight:700;color:#d97706;">—</div><input type="hidden" id="input_nilai_ki-${pid}" value="0"></div></div>
 </div>`;
         }
 
@@ -1579,26 +1687,26 @@
         function onJenisChange(voucherId) {
             const jenis = $(`#input_jenis-${voucherId}`).val();
             const $jenisCol = $(`#jenisCol-${voucherId}`);
-            // reset all
-            $(`#joCol-${voucherId}, #genKasbonCol-${voucherId}`).hide();
-            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #manualSection-${voucherId}, #customSection-${voucherId}`).hide();
+            // reset downstream only — jangan hide step2Block atau reset payment type (Step 1)
+            $(`#joCol-${voucherId}`).removeClass('col-md-8').addClass('col-12').hide();
+            $(`#genKasbonCol-${voucherId}`).removeClass('col-md-8').addClass('col-12').hide();
+            $(`#kasbonCol-${voucherId}`).hide();
+            $(`#jenisCol-${voucherId}`).removeClass('col-md-4').addClass('col-12');
+            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #customSection-${voucherId}, #manualSection-${voucherId}`).hide();
             $(`#kasbonInfoPanel-${voucherId}, #genKasbonInfoPanel-${voucherId}`).hide();
-            $(`#input_tipe_pem-${voucherId}`).val('');
-            $(`#addDetailSection-${voucherId} .btn-tipe-pem`).removeClass('active');
             if (!jenis) {
-                $jenisCol.removeClass('col-md-3').addClass('col-12');
+                $jenisCol.removeClass('col-md-4').addClass('col-12');
                 return;
             }
-            $jenisCol.removeClass('col-12').addClass('col-md-3');
+            $jenisCol.removeClass('col-12').addClass('col-md-4');
 
             if (jenis === 'custom') {
                 $(`#customSection-${voucherId}`).show();
-                $jenisCol.removeClass('col-md-3').addClass('col-md-3'); // keep compact
                 return;
             }
 
             if (jenis === 'general') {
-                $(`#genKasbonCol-${voucherId}`).show();
+                $(`#genKasbonCol-${voucherId}`).removeClass('col-12').addClass('col-md-8').show();
                 $(`#input_kasbon_gen-${voucherId}`).html('<option value="">Loading...</option>');
                 $.get(ROUTES.kasbonOptions, {
                     jenis: 'general'
@@ -1611,7 +1719,7 @@
                     $(`#input_kasbon_gen-${voucherId}`).html(opts).trigger('change.select2');
                 });
             } else {
-                $(`#joCol-${voucherId}`).show();
+                $(`#joCol-${voucherId}`).removeClass('col-12').addClass('col-md-8').show();
                 $(`#input_jo-${voucherId}`).html('<option value="">Loading...</option>');
                 $.get(ROUTES.joOptions, {
                     jenis
@@ -1631,9 +1739,7 @@
             const jenis = $(`#input_jenis-${voucherId}`).val();
             const joId = $(`#input_jo-${voucherId}`).val();
             $(`#custPanel-${voucherId}`).hide();
-            $(`#pengembalianSection-${voucherId}, #manualSection-${voucherId}`).hide();
-            $(`#input_tipe_pem-${voucherId}`).val('');
-            $(`#addDetailSection-${voucherId} .btn-tipe-pem`).removeClass('active');
+            $(`#pengembalianSection-${voucherId}`).hide();
             if (!joId) return;
 
             $.get(ROUTES.joInfo, {
@@ -1648,6 +1754,13 @@
                 $(`#joPortName-${voucherId}`).text(d.port || '—');
                 $(`#input_id_md_port-${voucherId}`).val(d.id_md_port || '');
                 $(`#custPanel-${voucherId}`).show();
+                // Jika tipe Refund, load kasbon untuk JO ini
+                const tipe = $(`#input_tipe_pem-${voucherId}`).val();
+                if (tipe === 'pengembalian_lebih_bayar') {
+                    _loadKasbonForRefund(voucherId, jenis, joId);
+                } else {
+                    $(`#manualSection-${voucherId}`).show();
+                }
             });
         }
 
@@ -1672,12 +1785,12 @@
                 // Cek LPJ dan selisih
                 if (!r.data.has_lpj) {
                     $(`#genKasbonAlert-${voucherId}`).html(
-                        `<div class="alert alert-warning py-2 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Kasbon ini belum memiliki data LPJ. Refund tidak dapat dilakukan.</div>`
+                        `<div class="alert alert-warning py-2 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>This cash advance does not have expense report (LPJ) data yet. Refund cannot be processed.</div>`
                     ).show();
                     $(`#genKasbonForm-${voucherId}`).hide();
                 } else if (r.data.selisih <= 0) {
                     $(`#genKasbonAlert-${voucherId}`).html(
-                        `<div class="alert alert-danger py-2 mb-0"><i class="fas fa-times-circle me-2"></i>Tidak ada selisih positif (sisa kasbon ≤ 0). Tidak ada yang perlu dikembalikan.</div>`
+                        `<div class="alert alert-danger py-2 mb-0"><i class="fas fa-times-circle me-2"></i>No positive balance (cash advance balance ≤ 0). There is nothing to refund.</div>`
                     ).show();
                     $(`#genKasbonForm-${voucherId}`).hide();
                 } else {
@@ -1688,35 +1801,50 @@
         }
 
         // Step 3: Tipe pembayaran selected
+        function _loadKasbonForRefund(voucherId, jenis, joId) {
+            // Tampilkan dropdown CA di Step 2 (Transaction card)
+            $(`#kasbonCol-${voucherId}`).show();
+            $(`#pengembalianSection-${voucherId}`).hide();
+            $(`#kasbonInfoPanel-${voucherId}`).hide();
+            $(`#kasbonForm-${voucherId}`).hide();
+            $(`#input_kasbon-${voucherId}`).html('<option value="">Loading...</option>');
+            $.get(ROUTES.kasbonOptions, { jenis, jo_id: joId }, function(r) {
+                let opts = '<option value=""></option>';
+                (r.data || []).forEach(k => {
+                    opts += `<option value="${k.id}">${escH(k.nomor)}${k.label ? ' — ' + escH(k.label) : ''}</option>`;
+                });
+                $(`#input_kasbon-${voucherId}`).html(opts).trigger('change.select2');
+            });
+        }
+
         function selectTipePembayaran(voucherId, tipe, btn) {
-            $(`#addDetailSection-${voucherId} .btn-tipe-pem`).removeClass('active');
+            $(`#addDetailSection-${voucherId} .btn-tipe-pem, #addDetailSection-${voucherId} .btn-tipe-pem-new`).removeClass('active');
             $(btn).addClass('active');
             $(`#input_tipe_pem-${voucherId}`).val(tipe);
-            $(`#pengembalianSection-${voucherId}, #manualSection-${voucherId}`).hide();
             $(`#kasbonInfoPanel-${voucherId}`).hide();
 
             if (tipe === 'pengembalian_lebih_bayar') {
+                // Hide detail form — Step 2 (Transaction) tetap aktif, user pilih JO/CA dulu
+                $(`#manualSection-${voucherId}`).hide();
+                $(`#pengembalianSection-${voucherId}`).hide();
                 $(`#custPanel-${voucherId}`).hide();
-                $(`#pengembalianSection-${voucherId}`).show();
-                // Load kasbon options for this JO
-                const jenis = $(`#input_jenis-${voucherId}`).val();
+                // Kalau JO sudah dipilih sebelumnya, langsung load kasbon
                 const joId = $(`#input_jo-${voucherId}`).val();
-                $(`#input_kasbon-${voucherId}`).html('<option value="">Loading...</option>');
-                $.get(ROUTES.kasbonOptions, {
-                    jenis,
-                    jo_id: joId
-                }, function(r) {
-                    let opts = '<option value=""></option>';
-                    (r.data || []).forEach(k => {
-                        opts +=
-                            `<option value="${k.id}">${escH(k.nomor)}${k.label ? ' — ' + escH(k.label) : ''}</option>`;
-                    });
-                    $(`#input_kasbon-${voucherId}`).html(opts).trigger('change.select2');
-                });
+                const jenis = $(`#input_jenis-${voucherId}`).val();
+                if (joId && jenis !== 'general') {
+                    $(`#custPanel-${voucherId}`).show();
+                    _loadKasbonForRefund(voucherId, jenis, joId);
+                }
             } else {
                 const joId = $(`#input_jo-${voucherId}`).val();
-                if (joId) $(`#custPanel-${voucherId}`).show();
-                $(`#manualSection-${voucherId}`).show();
+                $(`#pengembalianSection-${voucherId}`).hide();
+                if (joId) {
+                    $(`#custPanel-${voucherId}`).show();
+                    $(`#manualSection-${voucherId}`).show();
+                } else {
+                    $(`#custPanel-${voucherId}`).hide();
+                    $(`#manualSection-${voucherId}`).hide();
+                }
             }
         }
 
@@ -1727,7 +1855,12 @@
             $(`#kasbonInfoPanel-${voucherId}`).hide();
             $(`#kasbonAlert-${voucherId}`).hide();
             $(`#kasbonForm-${voucherId}`).hide();
-            if (!kasbonId) return;
+            if (!kasbonId) {
+                $(`#pengembalianSection-${voucherId}`).hide();
+                return;
+            }
+            // Tampilkan section Detail Refund segera
+            $(`#pengembalianSection-${voucherId}`).show();
             const pid = 'kasbon_' + voucherId;
             $.get(ROUTES.kasbonInfo, {
                 jenis,
@@ -1742,12 +1875,12 @@
                 // Cek LPJ dan selisih
                 if (!r.data.has_lpj) {
                     $(`#kasbonAlert-${voucherId}`).html(
-                        `<div class="alert alert-warning py-2 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Kasbon ini belum memiliki data LPJ. Refund tidak dapat dilakukan.</div>`
+                        `<div class="alert alert-warning py-2 mb-0"><i class="fas fa-exclamation-triangle me-2"></i>This cash advance does not have expense report (LPJ) data yet. Refund cannot be processed.</div>`
                     ).show();
                     $(`#kasbonForm-${voucherId}`).hide();
                 } else if (r.data.selisih <= 0) {
                     $(`#kasbonAlert-${voucherId}`).html(
-                        `<div class="alert alert-danger py-2 mb-0"><i class="fas fa-times-circle me-2"></i>Tidak ada selisih positif (sisa kasbon ≤ 0). Tidak ada yang perlu dikembalikan.</div>`
+                        `<div class="alert alert-danger py-2 mb-0"><i class="fas fa-times-circle me-2"></i>No positive balance (cash advance balance ≤ 0). There is nothing to refund.</div>`
                     ).show();
                     $(`#kasbonForm-${voucherId}`).hide();
                 } else {
@@ -1973,32 +2106,44 @@
         // RESET DETAIL FORM
         // ============================================================
         function resetDetailForm(voucherId) {
+            // Step 1 — clear payment type selection
+            $(`#addDetailSection-${voucherId} .btn-tipe-pem-new, #addDetailSection-${voucherId} .btn-tipe-pem`).removeClass('active');
+            $(`#input_tipe_pem-${voucherId}`).val('');
+
+            // Step 2 — reset jenis, clear JO/kasbon options entirely (prevents stale value re-triggering)
             $(`#input_jenis-${voucherId}`).val('');
-            $(`#input_custom_nilai-${voucherId}`).val('');
-            $(`#input_custom_nilai_raw-${voucherId}`).val('0');
-            $(`#input_custom_notes-${voucherId}`).val('');
-            $(`#customSection-${voucherId}`).hide();
-            $(`#joCol-${voucherId}, #genKasbonCol-${voucherId}`).hide();
-            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #manualSection-${voucherId}, #customSection-${voucherId}`).hide();
+            $(`#input_jo-${voucherId}`).html('<option value=""></option>').trigger('change.select2');
+            $(`#input_kasbon-${voucherId}`).html('<option value=""></option>').trigger('change.select2');
+            $(`#input_kasbon_gen-${voucherId}`).html('<option value=""></option>').trigger('change.select2');
+
+            // Step 2 — layout reset
+            $(`#jenisCol-${voucherId}`).removeClass('col-md-4').addClass('col-12');
+            $(`#joCol-${voucherId}`).removeClass('col-md-8').addClass('col-12').hide();
+            $(`#genKasbonCol-${voucherId}`).removeClass('col-md-8').addClass('col-12').hide();
+            $(`#kasbonCol-${voucherId}`).hide();
+
+            // Step 3 — hide all sections
+            $(`#custPanel-${voucherId}, #pengembalianSection-${voucherId}, #customSection-${voucherId}, #manualSection-${voucherId}`).hide();
             $(`#kasbonInfoPanel-${voucherId}, #genKasbonInfoPanel-${voucherId}`).hide();
             $(`#kasbonAlert-${voucherId}, #kasbonForm-${voucherId}`).hide();
             $(`#genKasbonAlert-${voucherId}, #genKasbonForm-${voucherId}`).hide();
-            $(`#input_tipe_pem-${voucherId}`).val('');
-            $(`#addDetailSection-${voucherId} .btn-tipe-pem`).removeClass('active');
-            $(`#input_jo-${voucherId}, #input_kasbon_gen-${voucherId}, #input_kasbon-${voucherId}`)
-                .val('').trigger('change.select2');
+
+            // Clear all input values
             $(`#input_dep-${voucherId}, #input_branch-${voucherId}`).val('').trigger('change.select2');
             $(`#input_dep_gen-${voucherId}, #input_branch_gen-${voucherId}`).val('').trigger('change.select2');
             $(`#input_dep_manual-${voucherId}, #input_branch_manual-${voucherId}`).val('').trigger('change.select2');
             $(`#input_coa_manual-${voucherId}, #input_coa_ref-${voucherId}, #input_coa_gen-${voucherId}`).val('').trigger('change.select2');
             $(`#input_nilai-${voucherId}`).val('');
             $(`#input_ket-${voucherId}, #input_ket_gen-${voucherId}, #input_ket_manual-${voucherId}`).val('');
+            $(`#input_custom_nilai-${voucherId}`).val('');
+            $(`#input_custom_nilai_raw-${voucherId}`).val('0');
+            $(`#input_custom_notes-${voucherId}`).val('');
             $(`#input_dep_gen-${voucherId}`).val('');
             $(`#input_branch_gen-${voucherId}`).val('');
             $(`#input_release_to_gen-${voucherId}`).val('');
-            $(`#display_dep_gen-${voucherId}`).text('—');
-            $(`#display_branch_gen-${voucherId}`).text('—');
-            $(`#display_release_to_gen-${voucherId}`).text('—');
+            $(`#display_dep_gen-${voucherId}, #display_dep_ref-${voucherId}`).text('—');
+            $(`#display_branch_gen-${voucherId}, #display_branch_ref-${voucherId}`).text('—');
+            $(`#display_release_to_gen-${voucherId}, #display_release_to_ref-${voucherId}`).text('—');
         }
 
         // ============================================================
@@ -2015,12 +2160,8 @@
                 const d = r.data;
                 const isRefund = (d.tipe_pembayaran === 'pengembalian_lebih_bayar');
 
-                $(`#detailAddMode-${voucherId}`).hide();
+                $(`#addDetailSection-${voucherId}`).hide();
                 $(`#detailEditMode-${voucherId}`).show();
-                $(`#addDetailSection-${voucherId}`).addClass('edit-mode');
-
-                const editLabel = '<i class="fas fa-edit" style="color:#3b82f6;"></i> Edit Detail';
-                $(`#detailFormTitle-${voucherId}`).html(editLabel);
 
                 $(`#editing_detail_id-${voucherId}`).val(detailId);
                 $(`#editing_detail_tipe-${voucherId}`).val(d.tipe_pembayaran || '');
@@ -2029,6 +2170,19 @@
                 $(`#edit_customer-${voucherId}`).text(d.customer || '—');
                 $(`#edit_ref-${voucherId}`).text(d.nomor_kasbon || d.nomor_jo || '—');
                 $(`#edit_keterangan-${voucherId}`).val(d.keterangan || '');
+
+                // Lazy-init select2 for edit COA
+                const $editCoa = $(`#edit_coa-${voucherId}`);
+                if (!$editCoa.hasClass('select2-hidden-accessible')) {
+                    $editCoa.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: 'Select COA...',
+                        allowClear: true,
+                        width: '100%'
+                    });
+                }
+                $editCoa.val(d.id_md_chart_of_account || null).trigger('change');
+
                 if (d.jenis === 'general') {
                     $(`#edit_release_to_wrap-${voucherId}`).show();
                     $(`#edit_release_to-${voucherId}`).val(d.release_to || '');
@@ -2038,13 +2192,12 @@
                 }
 
                 if (isRefund) {
-                    // Refund: amount hanya info, tidak bisa diedit — tapi dept & branch bisa
-                    $(`#edit_nilai_info_card-${voucherId}`).show();
-                    $(`#edit_nilai_display-${voucherId}`).text('IDR ' + fmt(d.nilai || 0));
-                    $(`#edit_nonrefund_fields-${voucherId}`).show(); // ← tampilkan
-                    $(`#edit_nilai_col-${voucherId}`).hide(); // ← sembunyikan amount saja
+                    // Refund: semua field bisa diedit termasuk amount & COA
+                    $(`#edit_nilai_info_card-${voucherId}`).hide();
+                    $(`#edit_nonrefund_fields-${voucherId}`).show();
+                    $(`#edit_nilai_col-${voucherId}`).show(); // ← amount bisa diedit
 
-                    // Lazy-init select2 untuk dep/branch (sama seperti non-refund)
+                    // Lazy-init select2 untuk dep/branch
                     const $editDep = $(`#edit_dep-${voucherId}`);
                     const $editBranch = $(`#edit_branch-${voucherId}`);
                     if (!$editDep.hasClass('select2-hidden-accessible')) {
@@ -2065,6 +2218,19 @@
                     }
                     $editDep.val(d.id_md_dep || null).trigger('change');
                     $editBranch.val(d.id_md_branch || null).trigger('change');
+
+                    // Set amount (editable)
+                    const nilaiFormatted = fmt(d.nilai || 0);
+                    $(`#edit_nilai_input-${voucherId}`).val(nilaiFormatted);
+                    $(`#edit_nilai_raw-${voucherId}`).val(d.nilai || 0);
+                    const elNilaiInput = document.getElementById(`edit_nilai_input-${voucherId}`);
+                    if (elNilaiInput && !elNilaiInput._rpSetup) {
+                        setupRp(elNilaiInput);
+                        $(`#edit_nilai_input-${voucherId}`).on('input', function() {
+                            $(`#edit_nilai_raw-${voucherId}`).val(parseRp($(this).val()));
+                        });
+                        elNilaiInput._rpSetup = true;
+                    }
                 } else {
                     // Non-refund: tampilkan field editable, sembunyikan info card amount
                     $(`#edit_nilai_info_card-${voucherId}`).hide();
@@ -2112,7 +2278,7 @@
                 }
 
                 $('html,body').animate({
-                    scrollTop: $(`#addDetailSection-${voucherId}`).offset().top - 100
+                    scrollTop: $(`#detailEditMode-${voucherId}`).offset().top - 100
                 }, 400);
             }).fail(() => showFloatingAlert('error', 'Failed to load detail'));
         }
@@ -2120,16 +2286,15 @@
         function cancelDetailEdit(voucherId) {
             $(`#editing_detail_id-${voucherId}`).val('');
             $(`#editing_detail_tipe-${voucherId}`).val('');
-            $(`#detailFormTitle-${voucherId}`).html('<i class="fas fa-plus-square" style="color:#16a34a;"></i> Add Detail');
-            $(`#addDetailSection-${voucherId}`).removeClass('edit-mode');
             $(`#detailEditMode-${voucherId}`).hide();
-            $(`#detailAddMode-${voucherId}`).show();
+            $(`#addDetailSection-${voucherId}`).show();
             // Reset edit fields
             $(`#edit_dep-${voucherId}`).val(null).trigger('change');
             $(`#edit_branch-${voucherId}`).val(null).trigger('change');
             $(`#edit_nilai_input-${voucherId}`).val('');
             $(`#edit_nilai_raw-${voucherId}`).val('0');
             $(`#edit_keterangan-${voucherId}`).val('');
+            $(`#edit_coa-${voucherId}`).val(null).trigger('change');
             $(`#edit_release_to-${voucherId}`).val('');
             $(`#edit_release_to_wrap-${voucherId}`).hide();
             $(`#edit_nonrefund_fields-${voucherId}`).hide();
@@ -2144,9 +2309,11 @@
             const keterangan = $(`#edit_keterangan-${voucherId}`).val();
             const isRefund = (tipe === 'pengembalian_lebih_bayar');
 
+            const coaId = $(`#edit_coa-${voucherId}`).val() || null;
             const payload = {
                 keterangan,
                 release_to: $(`#edit_release_to-${voucherId}`).val() || null,
+                id_md_chart_of_account: coaId,
                 _method: 'PUT',
                 _token: CSRF
             };
@@ -2163,9 +2330,17 @@
                 payload.id_md_branch = branch;
                 payload.nilai = nilai;
             } else {
-                // refund: dep & branch boleh dikirim, nilai tidak
-                payload.id_md_dep = $(`#edit_dep-${voucherId}`).val();
-                payload.id_md_branch = $(`#edit_branch-${voucherId}`).val();
+                // refund: semua field termasuk nilai & COA bisa diedit
+                const dep = $(`#edit_dep-${voucherId}`).val();
+                const branch = $(`#edit_branch-${voucherId}`).val();
+                const nilai = parseFloat($(`#edit_nilai_raw-${voucherId}`).val()) || 0;
+                if (!nilai || nilai <= 0) {
+                    showFloatingAlert('error', 'Amount harus diisi');
+                    return;
+                }
+                payload.id_md_dep = dep;
+                payload.id_md_branch = branch;
+                payload.nilai = nilai;
             }
 
             showFloatingAlert('saving', 'Updating...');
@@ -2227,11 +2402,11 @@
             $.get(ROUTES.voucherDetails + voucherId + '/details', function(r) {
                 if (r.success) renderDetailTable(voucherId, r.data);
                 else $(`#detailTableBody-${voucherId}`).html(
-                    `<tr><td colspan="8" class="text-center text-danger py-3"><i class="fas fa-exclamation-triangle me-1"></i> Failed to load</td></tr>`
+                    `<tr><td colspan="10" class="text-center text-danger py-3"><i class="fas fa-exclamation-triangle me-1"></i> Failed to load</td></tr>`
                 );
             }).fail(() => {
                 $(`#detailTableBody-${voucherId}`).html(
-                    `<tr><td colspan="8" class="text-center text-danger py-3"><i class="fas fa-exclamation-triangle me-1"></i> Failed to load</td></tr>`
+                    `<tr><td colspan="10" class="text-center text-danger py-3"><i class="fas fa-exclamation-triangle me-1"></i> Failed to load</td></tr>`
                 );
             });
         }
@@ -2242,7 +2417,7 @@
 
             if (!details || details.length === 0) {
                 tbody.html(
-                    `<tr><td colspan="8" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>No details yet</td></tr>`
+                    `<tr><td colspan="10" class="text-center text-muted py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>No details yet</td></tr>`
                 );
                 tfoot.html('');
                 $(`.detail-count-badge-${voucherId}`).text('0 detail');
@@ -2256,8 +2431,10 @@
             };
 
             let html = '',
-                totNilai = 0;
+                totNilai = 0,
+                rowNo = 0;
             details.forEach(d => {
+                rowNo++;
                 totNilai += parseFloat(d.nilai || 0);
                 const ref = d.nomor_kasbon ? (d.nomor_jo ? `${escH(d.nomor_jo)} / ${escH(d.nomor_kasbon)}` : escH(d
                     .nomor_kasbon)) : (escH(d.nomor_jo) || '—');
@@ -2267,12 +2444,14 @@
                 const custDisplay = d.jenis === 'general' ? (d.release_to || '—') : (d.customer || '—');
                 html += `
 <tr>
-    <td class="text-center"><span class="jenis-badge jenis-${d.jenis}">${escH(d.jenis)}</span></td>
-    <td class="text-center"><span class="tipe-badge ${tpClass}">${tpLabel}</span></td>
+    <td class="text-center align-middle fw-bold" style="font-size:.8rem;color:#64748b;">${rowNo}</td>
+    <td class="text-center" style="font-size:.8rem;font-weight:600;color:#374151;text-transform:capitalize;">${escH(d.jenis)}</td>
+    <td class="text-center" style="font-size:.8rem;font-weight:600;color:#374151;">${tpLabel}</td>
     <td style="font-size:.82rem;">${escH(custDisplay)}</td>
     <td style="font-size:.82rem;">${ref}</td>
     <td style="font-size:.78rem;">${escH(depBr)}</td>
-    <td class="num-cell" style="font-weight:700;color:#0369a1;">${fmt(d.nilai || 0)}</td>
+    <td style="vertical-align:middle;font-size:.8rem;">${coaTxt !== '—' ? `<span style="font-size:.8rem;color:#374151;">${escH(coaTxt)}</span>` : '<span class="text-muted">-</span>'}</td>
+    <td class="num-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${fmt(d.nilai || 0)}</span></div></td>
     <td style="font-size:.78rem;color:#6c757d;">${escH(d.keterangan || '—')}</td>
     <td class="text-center">
         <button class="btn btn-primary btn-sm d-block mx-auto mb-1" onclick="editDetail('${d.id}',${voucherId})" title="Edit"><i class="fas fa-edit"></i></button>
@@ -2283,8 +2462,8 @@
 
             tbody.html(html);
             tfoot.html(`<tr>
-    <td colspan="5" class="text-end fw-bold">GRAND TOTAL</td>
-    <td class="num-cell" style="white-space:nowrap;"><span class="badge bg-secondary rounded-1 me-1" style="font-size:.62rem;vertical-align:middle;">IDR</span>${fmt(totNilai)}</td>
+    <td colspan="7" class="text-end fw-bold">GRAND TOTAL</td>
+    <td class="num-cell"><div class="currency-group-cell"><span class="currency-label-footer-dark">IDR</span><span class="value-footer-cell">${fmt(totNilai)}</span></div></td>
     <td colspan="2"></td>
 </tr>`);
             $(`.detail-count-badge-${voucherId}`).text(details.length + ' detail');
