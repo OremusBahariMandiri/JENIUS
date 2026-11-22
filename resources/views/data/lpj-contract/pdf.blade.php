@@ -214,25 +214,30 @@
 
                 foreach ($kasbon->items as $kasbonItem) {
                     $lpjItem = $lpj->items->firstWhere('id_kasbon_cont_item', $kasbonItem->id_kasbon_cont_item);
-                    $cat = optional(optional($kasbonItem->joContractItem)->invoice)->invoice_ctg ?? 'Uncategorized';
-                    $invoiceTyp =
-                        optional(optional($kasbonItem->joContractItem)->invoice)->invoice_typ ??
-                        $kasbonItem->id_kasbon_cont_item;
+                    $isTax = ($kasbonItem->item_type ?? 'item') === 'tax';
+
+                    if ($isTax) {
+                        $cat        = 'Tax';
+                        $invoiceTyp = optional($kasbonItem->joContractPajak)->nama_pajak ?? $kasbonItem->id_kasbon_cont_item;
+                    } else {
+                        $cat        = optional(optional($kasbonItem->joContractItem)->invoice)->invoice_ctg ?? 'Uncategorized';
+                        $invoiceTyp = optional(optional($kasbonItem->joContractItem)->invoice)->invoice_typ ?? $kasbonItem->id_kasbon_cont_item;
+                    }
 
                     $nilaiKasbon = (float) $kasbonItem->nilai_kasbon;
-                    $amountLpj = $lpjItem ? (float) $lpjItem->amount_lpj : 0;
+                    $amountLpj   = $lpjItem ? (float) $lpjItem->amount_lpj : 0;
 
                     $totalKasbon += $nilaiKasbon;
-                    $totalLpj += $amountLpj;
+                    $totalLpj    += $amountLpj;
 
                     if (!isset($kasbonGroups[$kNo]['catGroups'][$cat])) {
                         $kasbonGroups[$kNo]['catGroups'][$cat] = [];
                         $kasbonGroups[$kNo]['catOrder'][] = $cat;
                     }
                     $kasbonGroups[$kNo]['catGroups'][$cat][] = [
-                        'typ' => $invoiceTyp,
+                        'typ'    => $invoiceTyp,
                         'kasbon' => $nilaiKasbon,
-                        'lpj' => $amountLpj,
+                        'lpj'    => $amountLpj,
                     ];
                 }
             }
@@ -313,7 +318,7 @@
             <thead>
                 <tr>
                     <th style="width:32%;">Deskripsi</th>
-                    <th style="width:18%;">CA No</th>
+                    <th style="width:18%;">Kasbon No</th>
                     <th style="width:17%;">Kasbon (IDR)</th>
                     <th style="width:17%;">LPJ (IDR)</th>
                     <th style="width:16%;">Selisih (IDR)</th>

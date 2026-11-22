@@ -368,6 +368,34 @@
             border-right: 2px solid #dee2e6;
         }
 
+        .table-lpj tbody tr.row-tax td {
+            background-color: #fffbea !important;
+        }
+        .table-lpj tbody tr.row-tax:hover td {
+            background-color: #fef3c7 !important;
+        }
+        .currency-group-cell {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            justify-content: flex-end;
+        }
+        .currency-label-cell {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.72rem;
+            border-radius: 4px;
+            min-width: 36px;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .value-cell {
+            text-align: right;
+            flex: 1;
+        }
         .table-lpj tbody tr.row-from-lpj td {
             background: #eff6ff !important;
         }
@@ -447,11 +475,11 @@
         .footer-currency-label {
             background: #2c3e50;
             color: #fff;
-            padding: 4px 10px;
-            border-radius: 5px;
-            font-size: .60rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
             font-weight: 700;
-            min-width: 44px;
+            min-width: 36px;
             text-align: center;
             flex-shrink: 0;
         }
@@ -459,7 +487,7 @@
         .footer-value {
             color: #2c3e50;
             font-weight: 700;
-            font-size: .70rem;
+            font-size: .88rem;
             text-align: right;
             flex: 1;
         }
@@ -873,7 +901,7 @@
                             <div class="row g-3 mb-4">
                                 <div class="col-md-12">
                                     <div class="info-field">
-                                        <div class="info-label">CA Number</div>
+                                        <div class="info-label">Kasbon No</div>
                                         <div class="info-value" id="infoKasbonNo">—</div>
                                     </div>
                                 </div>
@@ -954,7 +982,7 @@
                                 <thead>
                                     <tr>
                                         <th class="text-center">No</th>
-                                        <th class="text-center">CA</th>
+                                        <th class="text-center">Kasbon No</th>
                                         <th class="text-center">Category</th>
                                         <th class="text-start">Item</th>
                                         <th class="text-center">HPP (IDR)</th>
@@ -988,8 +1016,8 @@
                                         </td>
                                         <td>
                                             <div class="footer-currency-wrap">
-                                                <span class="footer-currency-label">IDR</span>
-                                                <span class="footer-value" id="footerTotalLpj">0,00</span>
+                                                <span class="footer-currency-label" style="background:#2c3e50;">IDR</span>
+                                                <span class="footer-value" style="color:#212529;font-weight:700;" id="footerTotalLpj">0,00</span>
                                             </div>
                                         </td>
                                         <td colspan="2"></td>
@@ -1003,6 +1031,7 @@
                             <span>Rows highlighted in <strong>blue</strong> are items that were added from an LPJ
                                 page.</span>
                         </div>
+
 
                     </div>
                 </div>
@@ -1466,7 +1495,8 @@
                     items.forEach(item => {
                         const gIdx = mergedItems.indexOf(item);
                         const hasFilled = item.has_lpj && item.amount_lpj > 0;
-                        const isOrigin = !!item.origin_lpj_tram; // ← CEK origin
+                        const isOrigin  = !!item.origin_lpj_tram;
+                        const isTaxRow  = item.item_type === 'tax';
                         if (isOrigin) hasOriginItems = true;
 
                         // ← BADGE "From LPJ"
@@ -1484,25 +1514,24 @@
                         style="font-size:.8rem; font-weight:600; color:#000; border-right:2px solid #dee2e6; vertical-align:middle;">
                         ${kNo}</td>` : '';
 
-                        const catCell = isFirstCatRow ?
-                            `<td class="category-cell" rowspan="${catRowspan}">${category}</td>` :
-                            '';
+                        const rowClass = isOrigin ? 'item-row row-from-lpj' : (isTaxRow ? 'item-row row-tax' : 'item-row');
 
-                        // ← TAMBAH class row-from-lpj jika isOrigin
-                        const rowClass = isOrigin ? 'item-row row-from-lpj' : 'item-row';
-
-                        $tbody.append(`
+                        if (isTaxRow) {
+                            // Tax row: span category column, show "Tax" label
+                            const catCell = isFirstCatRow ?
+                                `<td class="category-cell" rowspan="${catRowspan}" style="background:#fffbea !important; color:#92400e; font-weight:600;">Tax</td>` :
+                                '';
+                            $tbody.append(`
                     <tr class="${rowClass}" id="row_${gIdx}" data-index="${gIdx}">
                         <td class="cell-center fw-bold text-muted">${rowNo++}</td>
                         ${kasbonCell}
                         ${catCell}
                         <td class="text-start">
-                            <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
-                            ${originBadge}
+                            <span class="fw-semibold" style="color:#92400e;">${item.invoice_typ}</span>
                         </td>
-                        <td class="cell-readonly cell-right">${formatNumber(item.nilai_hpp_tram_item)}</td>
-                        <td class="cell-readonly cell-right">${formatNumber(item.nilai_kasbon)}</td>
-                        <td class="cell-right amount-lpj-cell">${formatNumber(item.amount_lpj)}</td>
+                        <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.nilai_hpp_tram_item)}</span></div></td>
+                        <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.nilai_kasbon)}</span></div></td>
+                        <td class="amount-lpj-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell amount-lpj-val">${formatNumber(item.amount_lpj)}</span></div></td>
                         <td class="coa-display-cell text-center">${buildCoaDisplay(gIdx, item.id_md_chart_of_account)}</td>
                         <td class="cell-center">
                             <div class="d-flex gap-1 justify-content-center">
@@ -1514,6 +1543,34 @@
                             </div>
                         </td>
                     </tr>`);
+                        } else {
+                            const catCell = isFirstCatRow ?
+                                `<td class="category-cell" rowspan="${catRowspan}">${category}</td>` :
+                                '';
+                            $tbody.append(`
+                    <tr class="${rowClass}" id="row_${gIdx}" data-index="${gIdx}">
+                        <td class="cell-center fw-bold text-muted">${rowNo++}</td>
+                        ${kasbonCell}
+                        ${catCell}
+                        <td class="text-start">
+                            <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
+                            ${originBadge}
+                        </td>
+                        <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.nilai_hpp_tram_item)}</span></div></td>
+                        <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.nilai_kasbon)}</span></div></td>
+                        <td class="amount-lpj-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell amount-lpj-val">${formatNumber(item.amount_lpj)}</span></div></td>
+                        <td class="coa-display-cell text-center">${buildCoaDisplay(gIdx, item.id_md_chart_of_account)}</td>
+                        <td class="cell-center">
+                            <div class="d-flex gap-1 justify-content-center">
+                                <button type="button" class="btn btn-success btn-sm btn-edit-row"
+                                    onclick="openEditItem(${gIdx})" title="Input LPJ amount">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${clearBtn}
+                            </div>
+                        </td>
+                    </tr>`);
+                        }
 
                         isFirstKasbonRow = false;
                         isFirstCatRow = false;
@@ -2038,5 +2095,6 @@
             });
             renderTable();
         });
+
     </script>
 @endpush

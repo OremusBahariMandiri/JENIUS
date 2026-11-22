@@ -188,14 +188,7 @@
                     @if($catIdx === 0)
                         <td class="paid-to-cell" rowspan="{{ $grp['rowspan'] }}">
                             <div class="paid-to-name">{{ $grp['paid_to'] }}</div>
-                            <div class="paid-to-meta">
-                                @if($grp['jo_nomor'])
-                                    <span class="meta-lbl">JO</span> : {{ $grp['jo_nomor'] }}<br>
-                                @endif
-                                @if($grp['kasbon_nomor'])
-                                    <span class="meta-lbl">CA</span> : {{ $grp['kasbon_nomor'] }}
-                                @endif
-                            </div>
+
                         </td>
                     @endif
                     <td style="font-weight:bold;">{{ strtoupper($cat['name']) }} :</td>

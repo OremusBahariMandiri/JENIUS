@@ -57,4 +57,9 @@ class JoTramper extends Model
     {
         return $this->belongsTo(\App\Models\Master\Vessel::class, 'id_md_vessel', 'id_md_vessel');
     }
+
+    public function pajakItems()
+    {
+        return $this->hasMany(JoTramperPajak::class, 'id_jo_tram', 'id_jo_tram');
+    }
 }

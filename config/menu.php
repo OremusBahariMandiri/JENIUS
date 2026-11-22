@@ -79,6 +79,12 @@ return [
             'icon' => 'fas fa-ellipsis-h',
             'description' => 'Manage job order contract data',
         ],
+        [
+            'key' => 'tracking_jo',
+            'name' => 'Tracking JO',
+            'icon' => 'fas fa-search-location',
+            'description' => 'Track JO item kasbon and LPJ progress',
+        ],
     ],
 
     'permissions' => [

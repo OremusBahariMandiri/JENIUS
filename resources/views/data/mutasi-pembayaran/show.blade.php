@@ -3,454 +3,394 @@
 @section('title', 'Detail Mutasi Pembayaran')
 
 @push('styles')
-    <style>
-        .mutasiShowPage .card {
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.08);
-        }
+<style>
+/* ── Page wrapper ── */
+.mutasiShowPage .card {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0,0,0,.08);
+}
+.mutasiShowPage .card-header {
+    border-radius: 10px 10px 0 0 !important;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+}
 
-        .mutasiShowPage .card-header {
-            border-radius: 10px 10px 0 0 !important;
-            padding: 1rem 1.5rem;
-            font-weight: 600;
-        }
+/* ── Detail table ── */
+.table-detail thead th {
+    background: #2d3748;
+    color: #fff;
+    font-size: .76rem;
+    padding: 10px 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    text-align: center;
+    vertical-align: middle;
+}
+.table-detail tbody td {
+    border: 1px solid #dee2e6;
+    padding: 8px;
+    vertical-align: middle;
+    font-size: .875rem;
+    background-color: #fff;
+}
+.table-detail tbody td.num-cell { text-align: right; }
+.table-detail tbody tr:hover td { background-color: #f8f9fa; }
+.table-detail tfoot td {
+    background: #fff;
+    color: #1e3a5f;
+    font-weight: 700;
+    padding: 10px 12px;
+    font-size: .875rem;
+    border-top: 2px solid #e2e8f0;
+}
+.table-detail tfoot td.num-cell { text-align: right; }
 
-        /* Info rows */
-        .info-row {
-            display: flex;
-            padding: 10px 0;
-            border-bottom: 1px solid #f1f5f9;
-            align-items: flex-start;
-        }
+/* IDR label cells */
+.currency-group-cell  { display:flex; align-items:center; gap:5px; }
+.currency-label-cell  { background-color:#e9ecef; color:#495057; border:1px solid #ced4da; padding:.2rem .5rem; font-size:.78rem; border-radius:4px; min-width:42px; text-align:center; font-weight:600; white-space:nowrap; }
+.value-cell           { flex:1; text-align:right; font-weight:600; font-size:.88rem; color:#1e293b; }
+.currency-label-footer-dark { background-color:#2c3e50; color:#fff; border:1px solid rgba(255,255,255,.3); padding:.2rem .5rem; font-size:.78rem; border-radius:4px; min-width:42px; text-align:center; font-weight:600; white-space:nowrap; }
+.value-footer-cell    { flex:1; text-align:right; font-weight:700; font-size:.88rem; color:#1e293b; }
 
-        .info-row:last-child { border-bottom: none; }
+/* colour states */
+.clr-pos { color:#16a34a !important; }
+.clr-neg { color:#dc2626 !important; }
+.clr-zero { color:#6b7280 !important; }
 
-        .info-label {
-            font-weight: 600;
-            color: #64748b;
-            font-size: 0.875rem;
-            min-width: 180px;
-            flex-shrink: 0;
-        }
+/* ── Jenis badge ── */
+.jenis-badge { padding:3px 8px; border-radius:6px; font-size:.72rem; font-weight:700; white-space:nowrap; }
+.jenis-tramper  { background:#d1fae5; color:#065f46; }
+.jenis-other    { background:#dbeafe; color:#1e40af; }
+.jenis-contract { background:#fef3c7; color:#92400e; }
+.jenis-general  { background:#f3e8ff; color:#6b21a8; }
+.jenis-custom   { background:#fce7f3; color:#9d174d; }
 
-        .info-value {
-            color: #1e293b;
-            font-size: 0.9rem;
-            flex: 1;
-        }
+/* ── Voucher separator ── */
+.voucher-sep {
+    border-left: 4px solid #16a34a;
+    padding: 10px 16px;
+    background: linear-gradient(135deg,#f0fdf4,#dcfce7);
+    border-radius: 0 8px 8px 0;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+.voucher-sep .vno-badge {
+    background:#16a34a; color:#fff;
+    padding:2px 10px; border-radius:20px;
+    font-size:.72rem; font-weight:700; margin-right:8px;
+}
 
-        /* VOUCHER CARD */
-        .voucher-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            overflow: hidden;
-        }
-
-        .voucher-card-header {
-            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
-            padding: 14px 18px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 1px solid #e2e8f0;
-        }
-
-        .voucher-card-header .voucher-title-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .voucher-number-badge {
-            background: #7c3aed;
-            color: white;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-        }
-
-        .voucher-card-body { padding: 16px; }
-
-        /* DETAIL TABLE */
-        .table-detail thead th {
-            background-color: #3b0764;
-            color: white;
-            border: 1px solid #3b0764;
-            padding: 10px 8px;
-            font-weight: 600;
-            font-size: 0.8rem;
-            text-align: center;
-            vertical-align: middle;
-        }
-
-        .table-detail tbody td {
-            border: 1px solid #dee2e6;
-            padding: 8px;
-            vertical-align: middle;
-            font-size: 0.875rem;
-        }
-
-        .table-detail tbody td.num-cell { text-align: right; }
-        .table-detail tbody tr:hover td { background-color: #f8f9fa; }
-
-        .table-detail tfoot td {
-            background: #3b0764;
-            color: white;
-            font-weight: 700;
-            padding: 10px 8px;
-            font-size: 0.875rem;
-        }
-
-        .table-detail tfoot td.num-cell { text-align: right; }
-
-        /* JENIS BADGE */
-        .jenis-badge {
-            padding: 3px 8px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .jenis-tramper  { background: #d1fae5; color: #065f46; }
-        .jenis-other    { background: #dbeafe; color: #1e40af; }
-        .jenis-contract { background: #fef3c7; color: #92400e; }
-        .jenis-general  { background: #f3e8ff; color: #6b21a8; }
-
-        /* SUMMARY TOTALS */
-        .grand-total-section {
-            background: linear-gradient(135deg, #3b0764 0%, #7c3aed 100%);
-            border-radius: 12px;
-            padding: 20px 24px;
-            color: white;
-            margin-top: 16px;
-        }
-
-        .grand-total-section .total-label {
-            font-size: 0.9rem;
-            opacity: 0.85;
-        }
-
-        .grand-total-section .total-value {
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        /* No detail placeholder */
-        .no-detail-placeholder {
-            text-align: center;
-            padding: 30px 20px;
-            color: #94a3b8;
-        }
-    </style>
+/* ── Back bar ── */
+.final-bar {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    padding: 14px 20px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.1);
+    border-radius: 12px 12px 0 0;
+    margin-top: 20px;
+    z-index: 100;
+}
+.btn-final-back {
+    background: linear-gradient(135deg,#868686,#5e5e5e);
+    border: none; color: #fff;
+    padding: 11px 32px; border-radius: 10px;
+    font-weight: 700; font-size: .95rem; transition: all .3s;
+}
+.btn-final-back:hover { transform: translateY(-2px); color: #fff; }
+.btn-to-edit {
+    background: linear-gradient(135deg,#16a34a,#15803d);
+    border: none; color: #fff;
+    padding: 11px 32px; border-radius: 10px;
+    font-weight: 700; font-size: .95rem; transition: all .3s;
+}
+.btn-to-edit:hover { transform: translateY(-2px); color: #fff; }
+</style>
 @endpush
 
 @section('content')
-    <div class="container-fluid mutasiShowPage">
-        <div class="row">
-            <div class="col-lg-12">
 
-                <!-- ==================== PAGE HEADER ==================== -->
-                <div class="card shadow mb-4">
-                    <div class="card-header text-black d-flex justify-content-between align-items-center"
-                        style="background-color: #ede9fe">
-                        <span class="fw-bold">
-                            <i class="fas fa-money-bill-wave me-2"></i>Detail Mutasi Pembayaran
-                        </span>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('mutasi-pembayaran.edit', $mutasiPembayaran->id) }}"
-                                class="btn btn-sm text-white" style="background:#7c3aed;">
-                                <i class="fas fa-edit me-1"></i> Edit
-                            </a>
-                            <a href="{{ route('mutasi-pembayaran.index') }}"
-                                class="btn btn-sm btn-outline-secondary">
-                                <i class="fas fa-arrow-left me-1"></i> Back
-                            </a>
-                        </div>
-                    </div>
-                </div>
+@php
+    $totalDetail = $mp->vouchers->flatMap->details->count();
+    $grandNilai   = $mp->vouchers->flatMap->details->sum('nilai');
+    $grandPj      = $mp->vouchers->flatMap->details->sum('pj');
+    $grandSelisih = $mp->vouchers->flatMap->details->sum('selisih');
+@endphp
 
-                <!-- ==================== HEADER INFO ==================== -->
-                <div class="card shadow mb-4">
-                    <div class="card-header text-black" style="background-color: #ede9fe">
-                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Informasi Mutasi Pembayaran</h6>
-                    </div>
-                    <div class="card-body px-4 py-3">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="info-row">
-                                    <span class="info-label">Nomor Dokumen</span>
-                                    <span class="info-value">
-                                        <span class="badge text-white fs-6 px-3 py-2"
-                                            style="background:#7c3aed; letter-spacing:1px;">
-                                            {{ $mutasiPembayaran->nomor ?? '-' }}
-                                        </span>
-                                    </span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Tanggal</span>
-                                    <span class="info-value">
-                                        {{ $mutasiPembayaran->tanggal
-                                            ? \Carbon\Carbon::parse($mutasiPembayaran->tanggal)->translatedFormat('d F Y')
-                                            : '-' }}
-                                    </span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">No. Cek / BG</span>
-                                    <span class="info-value">{{ $mutasiPembayaran->no_cek ?? '-' }}</span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Kurs</span>
-                                    <span class="info-value">
-                                        @if($mutasiPembayaran->kurs && $mutasiPembayaran->kurs != 0)
-                                            Rp {{ number_format($mutasiPembayaran->kurs, 2, ',', '.') }}
-                                        @else
-                                            -
-                                        @endif
-                                    </span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-row">
-                                    <span class="info-label">Chart of Account</span>
-                                    <span class="info-value">
-                                        @if($mutasiPembayaran->chartOfAccount)
-                                            <span class="badge bg-light text-dark border me-1">
-                                                {{ $mutasiPembayaran->chartOfAccount->kode_akun }}
-                                            </span>
-                                            {{ $mutasiPembayaran->chartOfAccount->nama_akun }}
-                                        @else
-                                            -
-                                        @endif
-                                    </span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Jumlah Voucher</span>
-                                    <span class="info-value">
-                                        <span class="badge bg-secondary">
-                                            {{ $mutasiPembayaran->vouchers->count() }} voucher
-                                        </span>
-                                    </span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Dibuat</span>
-                                    <span class="info-value">
-                                        {{ $mutasiPembayaran->created_at
-                                            ? $mutasiPembayaran->created_at->translatedFormat('d F Y H:i')
-                                            : '-' }}
-                                    </span>
-                                </div>
-                                <div class="info-row">
-                                    <span class="info-label">Terakhir Update</span>
-                                    <span class="info-value">
-                                        {{ $mutasiPembayaran->updated_at
-                                            ? $mutasiPembayaran->updated_at->translatedFormat('d F Y H:i')
-                                            : '-' }}
-                                    </span>
-                                </div>
-                            </div>
-                            @if($mutasiPembayaran->memo)
-                                <div class="col-12">
-                                    <div class="info-row">
-                                        <span class="info-label">Memo</span>
-                                        <span class="info-value">{{ $mutasiPembayaran->memo }}</span>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
-                    </div>
-                </div>
+<div class="container-fluid mutasiShowPage">
+    <div class="row">
+        <div class="col-lg-12">
 
-                <!-- ==================== VOUCHERS ==================== -->
-                <div class="card shadow mb-4">
-                    <div class="card-header text-black d-flex justify-content-between align-items-center"
-                        style="background-color: #ede9fe">
-                        <h6 class="mb-0">
-                            <i class="fas fa-layer-group me-2"></i>Voucher Pembayaran
-                            <span class="badge bg-secondary ms-2">{{ $mutasiPembayaran->vouchers->count() }}</span>
-                        </h6>
-                    </div>
-                    <div class="card-body p-4">
-
-                        @php
-                            $grandNilai   = 0;
-                            $grandPj      = 0;
-                            $grandSelisih = 0;
-                        @endphp
-
-                        @forelse($mutasiPembayaran->vouchers->sortBy('urutan') as $voucher)
-                            @php
-                                $details      = $voucher->details ?? collect([]);
-                                $vNilai       = $details->sum('nilai');
-                                $vPj          = $details->sum('pj');
-                                $vSelisih     = $details->sum('selisih');
-                                $grandNilai   += $vNilai;
-                                $grandPj      += $vPj;
-                                $grandSelisih += $vSelisih;
-                            @endphp
-
-                            <div class="voucher-card">
-                                <div class="voucher-card-header">
-                                    <div class="voucher-title-group">
-                                        <span class="voucher-number-badge">#{{ $voucher->urutan }}</span>
-                                        <strong>{{ $voucher->nomor_voucher }}</strong>
-                                        @if($voucher->keterangan)
-                                            <span class="text-muted small">— {{ $voucher->keterangan }}</span>
-                                        @endif
-                                    </div>
-                                    <div class="text-end small text-muted">
-                                        {{ $details->count() }} detail &nbsp;|&nbsp;
-                                        Total: <strong class="text-dark">
-                                            Rp {{ number_format($vNilai, 2, ',', '.') }}
-                                        </strong>
-                                    </div>
-                                </div>
-
-                                <div class="voucher-card-body">
-                                    @if($details->isEmpty())
-                                        <div class="no-detail-placeholder">
-                                            <i class="fas fa-inbox fa-3x mb-2 d-block"></i>
-                                            <p class="mb-0">Belum ada detail</p>
-                                        </div>
-                                    @else
-                                        <div class="table-responsive">
-                                            <table class="table table-detail table-bordered mb-0">
-                                                <thead>
-                                                    <tr>
-                                                        <th width="4%">No</th>
-                                                        <th width="8%">Jenis</th>
-                                                        <th>JO</th>
-                                                        <th>Kasbon</th>
-                                                        <th class="text-end">Nilai</th>
-                                                        <th class="text-end">PJ</th>
-                                                        <th class="text-end">Selisih</th>
-                                                        <th>Keterangan</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($details->sortBy('id') as $idx => $detail)
-                                                        @php
-                                                            $joText = match($detail->jenis) {
-                                                                'tramper'  => $detail->joTram?->nomor  ?? $detail->joTram?->no_jo  ?? '-',
-                                                                'other'    => $detail->joOther?->nomor ?? $detail->joOther?->no_jo ?? '-',
-                                                                'contract' => $detail->joCont?->nomor  ?? $detail->joCont?->no_jo  ?? '-',
-                                                                default    => '-',
-                                                            };
-                                                            $kasbonText = match($detail->jenis) {
-                                                                'tramper'  => $detail->kasbonTram?->nomor  ?? $detail->kasbonTram?->no_kasbon  ?? '-',
-                                                                'other'    => $detail->kasbonOther?->nomor ?? $detail->kasbonOther?->no_kasbon ?? '-',
-                                                                'contract' => $detail->kasbonCont?->nomor  ?? $detail->kasbonCont?->no_kasbon  ?? '-',
-                                                                'general'  => $detail->kasbonGen?->nomor   ?? $detail->kasbonGen?->no_kasbon   ?? '-',
-                                                                default    => '-',
-                                                            };
-                                                        @endphp
-                                                        <tr>
-                                                            <td class="text-center">{{ $idx + 1 }}</td>
-                                                            <td class="text-center">
-                                                                <span class="jenis-badge jenis-{{ $detail->jenis }}">
-                                                                    {{ $detail->jenis }}
-                                                                </span>
-                                                            </td>
-                                                            <td class="small">{{ $joText }}</td>
-                                                            <td class="small">{{ $kasbonText }}</td>
-                                                            <td class="num-cell">
-                                                                {{ number_format($detail->nilai ?? 0, 2, ',', '.') }}
-                                                            </td>
-                                                            <td class="num-cell">
-                                                                {{ number_format($detail->pj ?? 0, 2, ',', '.') }}
-                                                            </td>
-                                                            <td class="num-cell">
-                                                                {{ number_format($detail->selisih ?? 0, 2, ',', '.') }}
-                                                            </td>
-                                                            <td class="small">{{ $detail->keterangan ?? '-' }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                                <tfoot>
-                                                    <tr>
-                                                        <td colspan="4" class="text-end fw-bold">
-                                                            Subtotal Voucher
-                                                        </td>
-                                                        <td class="num-cell">
-                                                            {{ number_format($vNilai, 2, ',', '.') }}
-                                                        </td>
-                                                        <td class="num-cell">
-                                                            {{ number_format($vPj, 2, ',', '.') }}
-                                                        </td>
-                                                        <td class="num-cell">
-                                                            {{ number_format($vSelisih, 2, ',', '.') }}
-                                                        </td>
-                                                        <td></td>
-                                                    </tr>
-                                                </tfoot>
-                                            </table>
-                                        </div>
-                                    @endif
-                                </div>{{-- end voucher-card-body --}}
-                            </div>{{-- end voucher-card --}}
-                        @empty
-                            <div class="text-center py-5 text-muted">
-                                <i class="fas fa-inbox fa-4x mb-3 d-block"></i>
-                                <p class="fw-bold">Belum ada voucher</p>
-                                <small>Klik "Edit" untuk menambahkan voucher</small>
-                            </div>
-                        @endforelse
-
-                        <!-- GRAND TOTAL -->
-                        @if($mutasiPembayaran->vouchers->count() > 0)
-                            <div class="grand-total-section">
-                                <div class="row text-center">
-                                    <div class="col-md-4">
-                                        <div class="total-label mb-1">Grand Total Nilai</div>
-                                        <div class="total-value">
-                                            Rp {{ number_format($grandNilai, 2, ',', '.') }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="total-label mb-1">Grand Total PJ (Realisasi)</div>
-                                        <div class="total-value">
-                                            Rp {{ number_format($grandPj, 2, ',', '.') }}
-                                        </div>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div class="total-label mb-1">Grand Total Selisih</div>
-                                        <div class="total-value">
-                                            Rp {{ number_format($grandSelisih, 2, ',', '.') }}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endif
-
-                    </div>
-                </div>
-
-                <!-- BOTTOM ACTIONS -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
+            {{-- ── Page Header ── --}}
+            <div class="card shadow mb-4">
+                <div class="card-header text-black d-flex justify-content-between align-items-center"
+                    style="background-color:#dcfce7;">
+                    <span class="fw-bold">
+                        <i class="fas fa-money-bill-wave me-2"></i>Payment Mutation — Detail
+                    </span>
                     <div class="d-flex gap-2">
-                        <a href="{{ route('mutasi-pembayaran.pdf', $mutasiPembayaran->id) }}" target="_blank"
-                            class="btn"
-                            style="padding:12px 32px; border-radius:12px; font-weight:700; font-size:1rem;
-                                   border-color:red; background-color:rgb(255,237,237); color:red;">
-                            <i class="fas fa-file-pdf me-2"></i> Generate PDF
+                        <a href="{{ route('mutasi-pembayaran.index') }}" class="btn btn-light btn-sm">
+                            <i class="fas fa-arrow-left me-1"></i> Back
                         </a>
-                        <a href="{{ route('mutasi-pembayaran.index') }}"
-                            class="btn"
-                            style="background:linear-gradient(135deg,#868686 0%,#5e5e5e 100%); border:none; color:white;
-                                   padding:12px 32px; border-radius:12px; font-weight:700; font-size:1rem;
-                                   box-shadow:0 6px 20px rgba(27,27,27,0.4);">
-                            <i class="fas fa-arrow-left me-2"></i> Back
+                        <a href="{{ route('mutasi-pembayaran.edit', $mp->id) }}" class="btn btn-sm text-white"
+                            style="background:#16a34a;">
+                            <i class="fas fa-edit me-1"></i> Edit
                         </a>
                     </div>
-                    <a href="{{ route('mutasi-pembayaran.edit', $mutasiPembayaran->id) }}"
-                        class="btn text-white px-4 py-2 fw-semibold" style="background:#7c3aed; border-radius:10px;">
-                        <i class="fas fa-edit me-1"></i> Edit Mutasi
-                    </a>
                 </div>
-
             </div>
+
+            {{-- ── Header Info Card ── --}}
+            <div class="card shadow mb-4">
+                <div class="card-header text-black" style="background-color:#dcfce7;">
+                    <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Payment Mutation Info</h6>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        {{-- Document No --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Document No.</label>
+                            <div class="input-group">
+                                <span class="input-group-text" style="background:#16a34a;color:white;">
+                                    <i class="fas fa-hashtag"></i>
+                                </span>
+                                <input type="text" class="form-control fw-bold" disabled
+                                    value="{{ $mp->nomor ?? '—' }}"
+                                    style="background-color:#f0fdf4;color:#14532d;letter-spacing:1px;">
+                            </div>
+                        </div>
+                        {{-- Date --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Date</label>
+                            <input type="text" class="form-control" disabled
+                                value="{{ $mp->tanggal ? \Carbon\Carbon::parse($mp->tanggal)->format('d M Y') : '—' }}">
+                        </div>
+                        {{-- Chart of Account --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Chart of Account</label>
+                            <input type="text" class="form-control" disabled
+                                value="{{ $mp->coa ? '[' . $mp->coa->no_account . '] ' . $mp->coa->account_name : '—' }}">
+                        </div>
+                        {{-- No. Cek --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">No. Cek / BG / Ref</label>
+                            <input type="text" class="form-control" disabled
+                                value="{{ $mp->no_cek ?: '—' }}">
+                        </div>
+                        {{-- Exchange Rate --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Exchange Rate</label>
+                            <input type="text" class="form-control" disabled
+                                value="@if($mp->mata_uang && $mp->mata_uang !== 'IDR'){{ $mp->mata_uang }} @ {{ number_format($mp->kurs, 2, ',', '.') }}{{ $mp->tgl_kurs ? ' · ' . \Carbon\Carbon::parse($mp->tgl_kurs)->format('d/m/Y') : '' }}@else IDR (1:1) @endif">
+                        </div>
+                        {{-- Created At --}}
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label fw-semibold">Created At</label>
+                            <input type="text" class="form-control" disabled
+                                value="{{ $mp->created_at ? $mp->created_at->format('d M Y, H:i') : '—' }}">
+                        </div>
+                        {{-- Memo --}}
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-semibold">Memo</label>
+                            <textarea class="form-control" rows="2" disabled>{{ $mp->memo ?: '—' }}</textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ── Details Card ── --}}
+            <div class="card shadow mb-4">
+                <div class="card-header text-black d-flex justify-content-between align-items-center"
+                    style="background-color:#dcfce7;">
+                    <h6 class="mb-0"><i class="fas fa-list-ul me-2"></i>Payment Details</h6>
+                    <span class="badge" style="background:#16a34a;color:#fff;font-size:.78rem;">
+                        {{ $mp->vouchers->count() }} voucher &nbsp;·&nbsp; {{ $totalDetail }} detail
+                    </span>
+                </div>
+                <div class="card-body p-4">
+
+                    @forelse($mp->vouchers as $voucher)
+                        {{-- Voucher header separator --}}
+                        <div class="voucher-sep mb-3">
+                            <div>
+                                <span class="vno-badge">#{{ $voucher->urutan }}</span>
+                                <strong style="font-size:.9rem;">{{ $voucher->nomor_voucher ?? 'Voucher ' . $voucher->urutan }}</strong>
+                                @if($voucher->keterangan)
+                                    <span class="text-muted small ms-2">— {{ $voucher->keterangan }}</span>
+                                @endif
+                            </div>
+                            <div class="text-muted small">
+                                {{ $voucher->details->count() }} detail
+                            </div>
+                        </div>
+
+                        <div class="table-responsive mb-4" id="tableWrap-{{ $voucher->id }}">
+                            <table class="table table-detail table-bordered mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width:40px;">#</th>
+                                        <th>JO No.</th>
+                                        <th>Cash Advance</th>
+                                        <th>Dept / Branch</th>
+                                        <th style="width:130px;">COA</th>
+                                        <th style="width:170px;" class="num-cell">CA Amount</th>
+                                        <th style="width:170px;" class="num-cell">LPJ Amount</th>
+                                        <th style="width:160px;" class="num-cell">Balance</th>
+                                        <th>Notes</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailBody-{{ $voucher->id }}">
+                                    <tr>
+                                        <td colspan="9" class="text-center text-muted py-5">
+                                            <i class="fas fa-circle-notch fa-spin fa-2x d-block mb-2"></i>
+                                            Loading...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot id="detailFoot-{{ $voucher->id }}"></tfoot>
+                            </table>
+                        </div>
+                    @empty
+                        <div class="text-center py-5 text-muted">
+                            <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                            <p class="fw-bold">No vouchers found</p>
+                        </div>
+                    @endforelse
+
+
+
+                </div>
+            </div>
+
         </div>
     </div>
+</div>
+
+{{-- ── Sticky bottom bar ── --}}
+<div class="final-bar">
+    <div class="d-flex justify-content-between align-items-center">
+        <div class="text-muted" style="font-size:.82rem;">
+            <i class="fas fa-eye me-1"></i> Read-only view
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{{ route('mutasi-pembayaran.index') }}" class="btn btn-final-back">
+                <i class="fas fa-arrow-left me-1"></i> Back
+            </a>
+            <a href="{{ route('mutasi-pembayaran.edit', $mp->id) }}" class="btn btn-to-edit">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+        </div>
+    </div>
+</div>
+
 @endsection
+
+@push('scripts')
+<script>
+function fmt(n) {
+    return Number(n || 0).toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function escH(s) {
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function idrCell(val, colorClass) {
+    const cls = colorClass ? ` ${colorClass}` : '';
+    return `<td class="num-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell${cls}">${fmt(val)}</span></div></td>`;
+}
+function idrFootCell(val, colorClass) {
+    const cls = colorClass ? ` ${colorClass}` : '';
+    return `<td class="num-cell"><div class="currency-group-cell"><span class="currency-label-footer-dark">IDR</span><span class="value-footer-cell${cls}">${fmt(val)}</span></div></td>`;
+}
+
+function loadVoucherDetails(voucherId, url) {
+    $.get(url, function(r) {
+        if (r.success) renderDetails(voucherId, r.data || []);
+        else showErr(voucherId);
+    }).fail(function() { showErr(voucherId); });
+}
+
+function showErr(vid) {
+    $(`#detailBody-${vid}`).html(
+        `<tr><td colspan="9" class="text-center text-danger py-4"><i class="fas fa-exclamation-triangle me-1"></i> Failed to load details</td></tr>`
+    );
+}
+
+function renderDetails(vid, details) {
+    const $body = $(`#detailBody-${vid}`);
+    const $foot = $(`#detailFoot-${vid}`);
+
+    if (!details.length) {
+        $body.html(`<tr><td colspan="9" class="text-center text-muted py-5"><i class="fas fa-inbox fa-2x d-block mb-2"></i>No details</td></tr>`);
+        $foot.html('');
+        return;
+    }
+
+    let html = '', totN = 0, totP = 0, totS = 0, rowNo = 0;
+
+    details.forEach(d => {
+        rowNo++;
+        const nilai   = parseFloat(d.nilai   || 0);
+        const pj      = parseFloat(d.pj      || 0);
+        const selisih = parseFloat(d.selisih  || 0);
+        totN += nilai; totP += pj; totS += selisih;
+
+        const sCls = selisih > 0.001 ? 'clr-pos' : selisih < -0.001 ? 'clr-neg' : 'clr-zero';
+
+        const jenisBadge = `<span class="jenis-badge jenis-${d.jenis}">${escH(d.jenis)}</span>`;
+        const joTxt = d.nomor_jo || '—';
+
+        // Kasbon / CA display
+        let caTxt = d.nomor_kasbon || '—';
+        if (d.jenis === 'custom') {
+            const relNama = d.custom_release_nama || '—';
+            const depNama = d.custom_dep_nama     || '—';
+            const braNama = d.custom_branch_nama  || '—';
+            caTxt = `<span class="text-muted" style="font-size:.8rem;">${escH(relNama)}</span><br><small class="text-muted">${escH(depNama)} / ${escH(braNama)}</small>`;
+        }
+
+        // Dept / Branch
+        const dep = d.departemen || '—';
+        const cab = d.cabang     || '—';
+        const depBr = `<span style="font-size:.78rem;">${escH(dep)}</span><br><small class="text-muted">${escH(cab)}</small>`;
+
+        // COA
+        let coaTxt = '<span class="text-muted">—</span>';
+        if (d.coa_detail) {
+            coaTxt = `<span class="badge bg-light text-dark border" style="font-size:.72rem;">${escH(d.coa_detail.no)}</span><br><small class="text-muted">${escH(d.coa_detail.nama)}</small>`;
+        }
+
+        html += `<tr>
+<td class="text-center align-middle fw-bold" style="font-size:.8rem;color:#64748b;">${rowNo}</td>
+<td style="font-size:.82rem;vertical-align:middle;">${jenisBadge}<br><span style="font-size:.82rem;">${escH(joTxt)}</span></td>
+<td style="font-size:.82rem;vertical-align:middle;">${caTxt}</td>
+<td style="vertical-align:middle;">${depBr}</td>
+<td style="vertical-align:middle;">${coaTxt}</td>
+${idrCell(nilai)}
+${idrCell(pj)}
+${idrCell(selisih, sCls)}
+<td style="font-size:.78rem;color:#6c757d;vertical-align:middle;">${escH(d.keterangan || '—')}</td>
+</tr>`;
+    });
+
+    $body.html(html);
+
+    const tSC = totS > 0.001 ? 'clr-pos' : totS < -0.001 ? 'clr-neg' : 'clr-zero';
+    $foot.html(`<tr>
+<td colspan="5" class="text-end fw-bold">SUBTOTAL</td>
+${idrFootCell(totN)}
+${idrFootCell(totP)}
+${idrFootCell(totS, tSC)}
+<td></td>
+</tr>`);
+}
+
+$(document).ready(function() {
+    @foreach($mp->vouchers as $voucher)
+    loadVoucherDetails({{ $voucher->id }}, '/data/mutasi-pembayaran/voucher/{{ $voucher->id }}/details');
+    @endforeach
+});
+</script>
+@endpush

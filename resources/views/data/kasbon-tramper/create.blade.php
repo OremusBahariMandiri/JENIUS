@@ -545,6 +545,17 @@
                                     </select>
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}">{{ $area->area }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Release To</label>
                                     <select name="id_md_release" id="id_md_release" class="form-select select2-field"
@@ -746,20 +757,20 @@
                                 <thead>
                                     <tr>
                                         <th style="width:5%; text-align:center;">No</th>
-                                        <th>Invoice Type</th>
                                         <th>Category</th>
-                                        <th style="text-align:right;">HPP Ops (IDR)</th>
+                                        <th>Items</th>
                                         <th style="text-align:right;">Selling Price (IDR)</th>
+                                        <th style="text-align:right;">HPP Ops (IDR)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="joItemsModalBody"></tbody>
                                 <tfoot>
                                     <tr>
                                         <td colspan="3" style="text-align:right; font-weight:700;">GRAND TOTAL</td>
-                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;"
-                                            id="joItemsTotalHpp"></td>
                                         <td style="text-align:right; font-weight:700; font-family:monospace;"
                                             id="joItemsTotalSell"></td>
+                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;"
+                                            id="joItemsTotalHpp"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -975,6 +986,8 @@
         });
 
         function loadJoTramperItems(idJoTram) {
+            // Reset pajak cache setiap kali JO berganti
+            joPajakForCreate = [];
             $.ajax({
                 url: '{{ route('kasbon-tramper.jo-items.get') }}',
                 method: 'GET',
@@ -990,9 +1003,12 @@
                                 `<option value="${item.id_jo_tram_item}">${item.invoice_typ} (${item.invoice_ctg})</option>`;
                         });
                         $('#input_jo_tram_item').html(opts);
-                        const n = r.data.length;
-                        $('#joSummaryItemCount').text(n + ' item' + (n !== 1 ? 's' : ''));
+                        // Count will be updated after pajak loaded
+                        $('#joSummaryItemCount').text(r.data.length);
+                        // Load pajak items and merge count
+                        loadJoPajakForCreate(idJoTram);
                     } else {
+                        joTramperItems = [];
                         $('#joSummaryItemCount').text('—');
                     }
                 },
@@ -1003,29 +1019,82 @@
             });
         }
 
+        let joPajakForCreate = [];
+
+        function loadJoPajakForCreate(idJoTram) {
+            $.ajax({
+                url: '{{ route('kasbon-tramper.jo-pajak.get') }}',
+                method: 'GET',
+                data: { id_jo_tram: idJoTram },
+                success: function(response) {
+                    if (response.success) {
+                        joPajakForCreate = response.data;
+                    } else {
+                        joPajakForCreate = [];
+                    }
+                    // Update total count: items + pajak
+                    var total = joTramperItems.length + joPajakForCreate.length;
+                    $('#joSummaryItemCount').text(total + ' item' + (total !== 1 ? 's' : ''));
+                },
+                error: function() { joPajakForCreate = []; }
+            });
+        }
+
         function renderJoItemsModal(items) {
             $('#joItemsModalLoading').hide();
-            if (!items || !items.length) {
+
+            // Merge items + pajak (dari cached joPajakForCreate)
+            let allRows = [];
+            (items || []).forEach(function(item) {
+                allRows.push({ type: 'item', data: item });
+            });
+            (joPajakForCreate || []).forEach(function(pajak) {
+                allRows.push({ type: 'pajak', data: pajak });
+            });
+
+            if (allRows.length === 0) {
                 $('#joItemsModalEmpty').show();
                 return;
             }
+
             let rows = '',
                 totalHpp = 0,
                 totalSell = 0;
-            items.forEach(function(item, idx) {
-                const hpp = parseFloat(item.hpp_ops || 0),
-                    sell = parseFloat(item.hargajual_idr || 0);
-                totalHpp += hpp;
-                totalSell += sell;
-                rows += `<tr><td style="text-align:center;">${idx+1}</td><td style="font-weight:600;">${item.invoice_typ || item.id_jo_tram_item}</td>
-            <td><span style="background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:600;">${item.invoice_ctg || '—'}</span></td>
-            <td style="text-align:right; font-family:monospace;">${formatNumber(hpp)}</td>
-            <td style="text-align:right; font-family:monospace;">${formatNumber(sell)}</td></tr>`;
+
+            allRows.forEach(function(row, idx) {
+                if (row.type === 'item') {
+                    const item = row.data;
+                    const hpp  = parseFloat(item.hpp_ops || 0);
+                    const sell = parseFloat(item.hargajual_idr || 0);
+                    totalHpp  += hpp;
+                    totalSell += sell;
+                    rows += `<tr>
+                        <td style="text-align:center;">${idx + 1}</td>
+                        <td style="font-weight:700; color:#111;">${item.invoice_ctg || '—'}</td>
+                        <td style="font-weight:600;">${item.invoice_typ || item.id_jo_tram_item}</td>
+                        <td style="text-align:right; font-family:monospace;">${formatNumber(sell)}</td>
+                        <td style="text-align:right; font-family:monospace;">${formatNumber(hpp)}</td>
+                    </tr>`;
+                } else {
+                    const pajak        = row.data;
+                    const nominalSell  = parseFloat(pajak.nominal_pajak     || 0);
+                    const nominalHpp   = parseFloat(pajak.nominal_pajak_hpp || 0);
+                    if (pajak.include_selling) totalSell += nominalSell;
+                    if (pajak.include_hpp)     totalHpp  += nominalHpp;
+                    rows += `<tr style="background:#fefce8;">
+                        <td style="text-align:center;">${idx + 1}</td>
+                        <td style="font-weight:700; color:#111;">Tax</td>
+                        <td style="font-weight:600;">${pajak.nama_pajak || '—'} (${pajak.persentase}%)</td>
+                        <td style="text-align:right; font-family:monospace;">${pajak.include_selling ? formatNumber(nominalSell) : '—'}</td>
+                        <td style="text-align:right; font-family:monospace;">${pajak.include_hpp ? formatNumber(nominalHpp) : '—'}</td>
+                    </tr>`;
+                }
             });
+
             $('#joItemsModalBody').html(rows);
             $('#joItemsTotalHpp').text(formatNumber(totalHpp));
             $('#joItemsTotalSell').text(formatNumber(totalSell));
-            $('#joItemsModalCount').text(items.length + ' item' + (items.length !== 1 ? 's' : '') + ' found');
+            $('#joItemsModalCount').text(allRows.length + ' item' + (allRows.length !== 1 ? 's' : '') + ' found');
             $('#joItemsModalContent').show();
         }
 
@@ -1056,6 +1125,7 @@
                     id_jo_tram: idJoTram,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),

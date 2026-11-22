@@ -961,18 +961,23 @@
         }
 
         function parseRp(v) {
-            return parseFloat(String(v).replace(/\./g, '').replace(',', '.')) || 0;
+            const s = String(v).trim();
+            const neg = s.startsWith('-');
+            const abs = parseFloat(s.replace('-','').replace(/\./g, '').replace(',', '.')) || 0;
+            return neg ? -abs : abs;
         }
 
         function formatRupiah(value) {
+            const isNeg = String(value).trim().startsWith('-');
             let number = String(value).replace(/[^\d,]/g, '').replace(/\./g, '');
-            if (number === '') return '';
+            if (number === '') return isNeg ? '-' : '';
             let parts = number.split(',');
             let integerPart = parts[0];
             let decimalPart = parts.length > 1 ? parts[1] : '';
             if (decimalPart.length > 2) decimalPart = decimalPart.substring(0, 2);
             integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-            return parts.length > 1 ? integerPart + ',' + decimalPart : integerPart + ',00';
+            const result = parts.length > 1 ? integerPart + ',' + decimalPart : integerPart + ',00';
+            return isNeg ? '-' + result : result;
         }
 
         // alias lama (kurs display masih pakai fmtRp)
@@ -983,6 +988,8 @@
             el.addEventListener('input', function() {
                 let cursorPosition = this.selectionStart;
                 let beforeCursor = this.value.substring(0, cursorPosition);
+                // Biarkan '-' saja tanpa diformat dulu (user masih mengetik angka)
+                if (this.value.trim() === '-') return;
                 let formatted = formatRupiah(this.value);
                 this.value = formatted;
                 if (!beforeCursor.includes(',')) {
@@ -1647,6 +1654,7 @@
             const el = this;
             let cursorPosition = el.selectionStart;
             let beforeCursor = el.value.substring(0, cursorPosition);
+            if (el.value.trim() === '-') return;
             let formatted = formatRupiah(el.value);
             el.value = formatted;
             if (!beforeCursor.includes(',')) {
@@ -1952,7 +1960,7 @@
             const notes       = $(`#input_custom_notes-${voucherId}`).val();
 
             if (!depId || !branchId) { showFloatingAlert('error', 'Department and Branch are required'); return; }
-            if (!nilaiRaw || nilaiRaw <= 0) { showFloatingAlert('error', 'Amount must be greater than 0'); return; }
+            if (!nilaiRaw || nilaiRaw === 0) { showFloatingAlert('error', 'Amount tidak boleh 0'); return; }
 
             showFloatingAlert('saving', 'Saving...');
             $.ajax({
@@ -2057,7 +2065,7 @@
             const nilai = parseRp($(`#input_nilai-${voucherId}`).val());
             const ket = $(`#input_ket_manual-${voucherId}`).val();
             const custId = $(`#input_id_md_cust-${voucherId}`).val();
-            if (nilai <= 0 || !dep || !branch) {
+            if (nilai === 0 || !dep || !branch) {
                 showFloatingAlert('error', 'Dept, Branch, and amount are required');
                 return;
             }
@@ -2322,7 +2330,7 @@
                 const dep = $(`#edit_dep-${voucherId}`).val();
                 const branch = $(`#edit_branch-${voucherId}`).val();
                 const nilai = parseFloat($(`#edit_nilai_raw-${voucherId}`).val()) || 0;
-                if (!nilai || nilai <= 0) {
+                if (nilai === 0) {
                     showFloatingAlert('error', 'Amount harus diisi');
                     return;
                 }
@@ -2334,7 +2342,7 @@
                 const dep = $(`#edit_dep-${voucherId}`).val();
                 const branch = $(`#edit_branch-${voucherId}`).val();
                 const nilai = parseFloat($(`#edit_nilai_raw-${voucherId}`).val()) || 0;
-                if (!nilai || nilai <= 0) {
+                if (nilai === 0) {
                     showFloatingAlert('error', 'Amount harus diisi');
                     return;
                 }

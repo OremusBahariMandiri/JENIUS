@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Data\LpjTramperExport;
+use App\Traits\LogsActivity;
 
 class LpjTramperController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // INDEX
     // ========================================
@@ -172,6 +175,7 @@ class LpjTramperController extends Controller
                 'joTramper.customer',
                 'joTramper.port',
                 'kasbons.kasbonTramper.items.joTramperItem.invoice',
+                'kasbons.kasbonTramper.items.joTramperPajak',
                 'items',
             ])->findOrFail($id);
 
@@ -195,25 +199,53 @@ class LpjTramperController extends Controller
                 if (!$kasbon) continue;
 
                 foreach ($kasbon->items as $kasbonItem) {
-                    $lpjItem       = $lpjItemsMap->get($kasbonItem->id_kasbon_tram_item);
-                    $mergedItems[] = [
-                        'id_kasbon_tram_item'    => $kasbonItem->id_kasbon_tram_item,
-                        'id_kasbon_tram'         => $kasbonItem->id_kasbon_tram,
-                        'id_jo_tram_item'        => $kasbonItem->id_jo_tram_item,
-                        'id_kasbon_tram_no'      => $kasbon->id_kasbon_tram,
-                        'invoice_typ'            => $kasbonItem->joTramperItem->invoice->invoice_typ ?? '-',
-                        'invoice_ctg'            => $kasbonItem->joTramperItem->invoice->invoice_ctg ?? '-',
-                        'nilai_hpp_tram_item'    => (float) $kasbonItem->nilai_hpp_tram_item,
-                        'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
-                        'total_kasbon'           => (float) $kasbonItem->total_kasbon,
-                        'id_lpj_tram_item'       => $lpjItem?->id ?? null,
-                        'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
-                        'has_lpj'                => $lpjItem !== null,
-                        'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
-                        'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
-                        'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
-                        'origin_lpj_tram'        => $kasbonItem->joTramperItem->origin_lpj_tram ?? null,
-                    ];
+                    $isTaxRow  = ($kasbonItem->item_type ?? 'item') === 'tax';
+                    $joPajak   = $kasbonItem->joTramperPajak;
+                    $lpjItem   = $lpjItemsMap->get($kasbonItem->id_kasbon_tram_item);
+
+                    if ($isTaxRow) {
+                        $mergedItems[] = [
+                            'id_kasbon_tram_item'    => $kasbonItem->id_kasbon_tram_item,
+                            'id_kasbon_tram'         => $kasbonItem->id_kasbon_tram,
+                            'id_jo_tram_item'        => null,
+                            'id_jo_tram_pajak'       => $kasbonItem->id_jo_tram_pajak,
+                            'item_type'              => 'tax',
+                            'id_kasbon_tram_no'      => $kasbon->id_kasbon_tram,
+                            'invoice_typ'            => $joPajak?->nama_pajak ?? $kasbonItem->id_kasbon_tram_item,
+                            'invoice_ctg'            => 'Tax',
+                            'nilai_hpp_tram_item'    => (float) $kasbonItem->nilai_hpp_tram_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'total_kasbon'           => (float) $kasbonItem->total_kasbon,
+                            'id_lpj_tram_item'       => $lpjItem?->id ?? null,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'origin_lpj_tram'        => null,
+                        ];
+                    } else {
+                        $mergedItems[] = [
+                            'id_kasbon_tram_item'    => $kasbonItem->id_kasbon_tram_item,
+                            'id_kasbon_tram'         => $kasbonItem->id_kasbon_tram,
+                            'id_jo_tram_item'        => $kasbonItem->id_jo_tram_item,
+                            'id_jo_tram_pajak'       => null,
+                            'item_type'              => 'item',
+                            'id_kasbon_tram_no'      => $kasbon->id_kasbon_tram,
+                            'invoice_typ'            => $kasbonItem->joTramperItem?->invoice?->invoice_typ ?? '-',
+                            'invoice_ctg'            => $kasbonItem->joTramperItem?->invoice?->invoice_ctg ?? '-',
+                            'nilai_hpp_tram_item'    => (float) $kasbonItem->nilai_hpp_tram_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'total_kasbon'           => (float) $kasbonItem->total_kasbon,
+                            'id_lpj_tram_item'       => $lpjItem?->id ?? null,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'origin_lpj_tram'        => $kasbonItem->joTramperItem?->origin_lpj_tram ?? null,
+                        ];
+                    }
                 }
             }
 
@@ -530,21 +562,36 @@ class LpjTramperController extends Controller
             $detailKasbonId = $request->get('detail_kasbon');
             if ($detailKasbonId) {
                 $kasbon = KasbonTramper::where('id_kasbon_tram', $detailKasbonId)
-                    ->with(['items.joTramperItem.invoice'])
+                    ->with(['items.joTramperItem.invoice', 'items.joTramperPajak'])
                     ->first();
 
                 if ($kasbon) {
                     $response['kasbon_detail'] = [
                         'id_kasbon_tram' => $kasbon->id_kasbon_tram,
                         'tgl_kasbon'     => $kasbon->tgl_kasbon?->format('d/m/Y'),
-                        'items'          => $kasbon->items->map(fn($item) => [
-                            'id_kasbon_tram_item' => $item->id_kasbon_tram_item,
-                            'invoice_typ'         => $item->joTramperItem?->invoice?->invoice_typ ?? '—',
-                            'invoice_ctg'         => $item->joTramperItem?->invoice?->invoice_ctg ?? '—',
-                            'nilai_hpp_tram_item' => (float) $item->nilai_hpp_tram_item,
-                            'nilai_kasbon'        => (float) $item->nilai_kasbon,
-                            'total_kasbon'        => (float) $item->total_kasbon,
-                        ])->values(),
+                        'items'          => $kasbon->items->map(function ($item) {
+                            $isTax = ($item->item_type ?? 'item') === 'tax';
+                            if ($isTax) {
+                                return [
+                                    'id_kasbon_tram_item' => $item->id_kasbon_tram_item,
+                                    'item_type'           => 'tax',
+                                    'invoice_typ'         => $item->joTramperPajak?->nama_pajak ?? $item->id_kasbon_tram_item,
+                                    'invoice_ctg'         => 'Tax',
+                                    'nilai_hpp_tram_item' => (float) $item->nilai_hpp_tram_item,
+                                    'nilai_kasbon'        => (float) $item->nilai_kasbon,
+                                    'total_kasbon'        => (float) $item->total_kasbon,
+                                ];
+                            }
+                            return [
+                                'id_kasbon_tram_item' => $item->id_kasbon_tram_item,
+                                'item_type'           => 'item',
+                                'invoice_typ'         => $item->joTramperItem?->invoice?->invoice_typ ?? '—',
+                                'invoice_ctg'         => $item->joTramperItem?->invoice?->invoice_ctg ?? '—',
+                                'nilai_hpp_tram_item' => (float) $item->nilai_hpp_tram_item,
+                                'nilai_kasbon'        => (float) $item->nilai_kasbon,
+                                'total_kasbon'        => (float) $item->total_kasbon,
+                            ];
+                        })->values(),
                     ];
                 }
             }
@@ -651,22 +698,63 @@ class LpjTramperController extends Controller
             $lpj = LpjTramper::with([
                 'joTramper.customer',
                 'joTramper.port',
-                'kasbons.kasbonTramper',
-                'items.kasbonTramperItem.joTramperItem.invoice',
+                'kasbons.kasbonTramper.items.joTramperItem.invoice',
+                'kasbons.kasbonTramper.items.joTramperPajak',
+                'items.chartOfAccount',
             ])->findOrFail($id);
 
-            $summary = [
-                'total_kasbon'     => $lpj->amount,
-                'total_amount_lpj' => $lpj->items->sum('amount_lpj'),
-                'total_items'      => $lpj->items->count(),
-                'total_kasbons'    => $lpj->kasbons->count(),
-            ];
+            // Build mergedItems the same way as edit()
+            $lpjItemsMap = $lpj->items->keyBy('id_kasbon_tram_item');
+            $mergedItems = [];
 
-            if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'data' => $lpj, 'summary' => $summary]);
+            foreach ($lpj->kasbons as $lpjKasbon) {
+                $kasbon = $lpjKasbon->kasbonTramper;
+                if (!$kasbon) continue;
+
+                foreach ($kasbon->items as $kasbonItem) {
+                    $isTaxRow  = ($kasbonItem->item_type ?? 'item') === 'tax';
+                    $joPajak   = $kasbonItem->joTramperPajak;
+                    $lpjItem   = $lpjItemsMap->get($kasbonItem->id_kasbon_tram_item);
+
+                    if ($isTaxRow) {
+                        $mergedItems[] = [
+                            'id_kasbon_tram_item'    => $kasbonItem->id_kasbon_tram_item,
+                            'id_kasbon_tram_no'      => $kasbon->id_kasbon_tram,
+                            'item_type'              => 'tax',
+                            'invoice_typ'            => $joPajak?->nama_pajak ?? $kasbonItem->id_kasbon_tram_item,
+                            'invoice_ctg'            => 'Tax',
+                            'nilai_hpp_tram_item'    => (float) $kasbonItem->nilai_hpp_tram_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'origin_lpj_tram'        => null,
+                        ];
+                    } else {
+                        $mergedItems[] = [
+                            'id_kasbon_tram_item'    => $kasbonItem->id_kasbon_tram_item,
+                            'id_kasbon_tram_no'      => $kasbon->id_kasbon_tram,
+                            'item_type'              => 'item',
+                            'invoice_typ'            => $kasbonItem->joTramperItem?->invoice?->invoice_typ ?? '-',
+                            'invoice_ctg'            => $kasbonItem->joTramperItem?->invoice?->invoice_ctg ?? '-',
+                            'nilai_hpp_tram_item'    => (float) $kasbonItem->nilai_hpp_tram_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'origin_lpj_tram'        => $kasbonItem->joTramperItem?->origin_lpj_tram ?? null,
+                        ];
+                    }
+                }
             }
 
-            return view('data.lpj-tramper.show', compact('lpj', 'summary'));
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'data' => $lpj]);
+            }
+
+            return view('data.lpj-tramper.show', compact('lpj', 'mergedItems'));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -700,6 +788,7 @@ class LpjTramperController extends Controller
             $lpj->delete();
 
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data LPJ Tramper berhasil dihapus', 'LPJ Tramper');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'LPJ Tramper deleted successfully']);
@@ -726,6 +815,7 @@ class LpjTramperController extends Controller
                 'joTramper.customer',
                 'joTramper.port',
                 'kasbons.kasbonTramper.items.joTramperItem.invoice',
+                'kasbons.kasbonTramper.items.joTramperPajak',
                 'items.kasbonTramperItem',
                 'items.chartOfAccount',
             ])->findOrFail($id);

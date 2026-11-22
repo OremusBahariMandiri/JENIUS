@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
+use App\Traits\LogsActivity;
 
 class UserController extends Controller
 {
+    use LogsActivity;
+
     /**
      * Display a listing of the resource.
      */
@@ -144,6 +147,7 @@ class UserController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data User Management berhasil ditambahkan', 'User Management');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -285,6 +289,7 @@ class UserController extends Controller
             $user->update($updateData);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data User Management berhasil diubah', 'User Management');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -344,6 +349,7 @@ class UserController extends Controller
 
             $user->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data User Management berhasil dihapus', 'User Management');
 
             if ($request->expectsJson()) {
                 return response()->json([

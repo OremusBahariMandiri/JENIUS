@@ -18,10 +18,15 @@ use App\Helpers\IdGenerator;
 use App\Models\Data\KasbonOther;
 use App\Models\Data\KasbonOtherItem;
 use App\Models\Data\LpjOther;
+use App\Models\Data\JoOtherPajak;
+use App\Models\Master\Pajak;
 use App\Models\Data\LpjOtherItem;
+use App\Traits\LogsActivity;
 
 class JoOtherController extends Controller
 {
+    use LogsActivity;
+
     /**
      * Display a listing of the resource.
      */
@@ -311,6 +316,7 @@ class JoOtherController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data JO Other berhasil ditambahkan', 'JO Other');
 
             Log::info('JO Other Transaction Committed Successfully', [
                 'jo_other_id' => $newJoOtherId,
@@ -377,7 +383,8 @@ class JoOtherController extends Controller
                 'customer',
                 'other',
                 'port',
-                'items.invoice'
+                'items.invoice',
+                'pajakItems',
             ])->findOrFail($id);
 
             Log::info('JO Other loaded successfully', [
@@ -386,13 +393,15 @@ class JoOtherController extends Controller
                 'items_count' => $joOther->items->count()
             ]);
 
-            // Calculate summary
+            $pajakItems = $joOther->pajakItems;
+
+            // Calculate summary (include tax in selling & hpp)
             $summary = [
                 'total_items' => $joOther->items->count(),
                 'total_revenue_idr' => $joOther->items->sum('pendapatan_idr'),
                 'total_revenue_usd' => $joOther->items->sum('pendapatan_usd'),
-                'total_hpp_ops' => $joOther->items->sum('hpp_ops'),
-                'total_selling_price' => $joOther->items->sum('hargajual_idr'),
+                'total_hpp_ops' => $joOther->items->sum('hpp_ops') + $pajakItems->where('include_hpp', true)->sum('nominal_pajak_hpp'),
+                'total_selling_price' => $joOther->items->sum('hargajual_idr') + $pajakItems->where('include_selling', true)->sum('nominal_pajak'),
             ];
 
             Log::info('Summary calculated', $summary);
@@ -420,7 +429,7 @@ class JoOtherController extends Controller
 
             Log::info('View exists, rendering...');
 
-            return view('data.jo-other.show', compact('joOther', 'summary'));
+            return view('data.jo-other.show', compact('joOther', 'summary', 'pajakItems'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('JO Other NOT FOUND in database', [
                 'id' => $id,
@@ -475,7 +484,7 @@ class JoOtherController extends Controller
                 'id' => $id
             ]);
 
-            $joOther = JoOther::with(['items.invoice'])->findOrFail($id);
+            $joOther = JoOther::with(['items.invoice', 'pajakItems'])->findOrFail($id);
 
             Log::info('JO Other loaded successfully', [
                 'id' => $joOther->id_jo_other,
@@ -505,7 +514,8 @@ class JoOtherController extends Controller
             }
 
             Log::info('View exists, rendering...');
-            return view('data.jo-other.edit', compact('joOther', 'customers', 'others', 'ports', 'invoices', 'vessels'));
+            $pajakItems = $joOther->pajakItems;
+            return view('data.jo-other.edit', compact('joOther', 'customers', 'others', 'ports', 'invoices', 'vessels', 'pajakItems'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('JO Other NOT FOUND in database', [
                 'id' => $id,
@@ -672,6 +682,7 @@ class JoOtherController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data JO Other berhasil diubah', 'JO Other');
 
             Log::info('JO Other Update Transaction Committed Successfully', [
                 'jo_other_id' => $id,
@@ -761,6 +772,7 @@ class JoOtherController extends Controller
             }
             $joOther->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data JO Other berhasil dihapus', 'JO Other');
 
             Log::info('JO Other Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
@@ -1298,22 +1310,45 @@ class JoOtherController extends Controller
                 'port',
                 'vessel',
                 'items.invoice',
+                'pajakItems',
             ])->findOrFail($id);
 
-            $totalSell = $joOther->items->sum('hargajual_idr');
+            $pajakItems = $joOther->pajakItems;
+            $totalSell = $joOther->items->sum('hargajual_idr')
+                       + $pajakItems->where('include_selling', true)->sum('nominal_pajak');
             $terbilang = $this->toTerbilang((int) round($totalSell)) . ' Rupiah';
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
                 'data.jo-other.pdf',        // resources/views/data/jo-other/pdf.blade.php
-                compact('joOther', 'terbilang')
+                compact('joOther', 'terbilang', 'pajakItems')
             )
                 ->setPaper('a4', 'portrait')
                 ->setOptions([
-                    'isHtml5ParserEnabled' => true,
+                    'isHtml5ParserEnabled' => false,
                     'isRemoteEnabled'      => false,
                     'defaultFont'          => 'Arial',
                     'dpi'                  => 150,
                 ]);
+
+            // Add top margin on page 2+ via Dompdf callback (CSS @page unreliable in Dompdf)
+            $dompdf = $pdf->getDomPDF();
+            $dompdf->setCallbacks([
+                [
+                    'event' => 'begin_page_reflow',
+                    'f'     => function ($frame, $canvas, $fontMetrics) {
+                        if ($canvas->get_page_number() > 1) {
+                            $cb     = $frame->get_containing_block();
+                            $topPts = 56.69; // 20mm in points (1mm = 2.8346pt)
+                            $frame->set_containing_block(
+                                $cb['x'],
+                                $cb['y'] + $topPts,
+                                $cb['w'],
+                                $cb['h'] - $topPts
+                            );
+                        }
+                    },
+                ],
+            ]);
 
             $noJo     = str_replace(['/', '\\'], '-', $joOther->no_jo_other ?? $id);
             $filename = 'JO-Other-' . $noJo . '.pdf';
@@ -1394,7 +1429,7 @@ class JoOtherController extends Controller
                 )
                     ->setPaper('a4', 'landscape')
                     ->setOptions([
-                        'isHtml5ParserEnabled' => true,
+                        'isHtml5ParserEnabled' => false,
                         'isRemoteEnabled'      => false,
                         'defaultFont'          => 'Arial',
                         'dpi'                  => 150,
@@ -1454,6 +1489,120 @@ class JoOtherController extends Controller
         }
 
         return $filters;
+    }
+
+    public function storePajak(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id_jo_other'     => 'required|exists:b05_jo_other,id_jo_other',
+            'id_md_pajak'     => 'required|exists:a14_md_pajak,id_md_pajak',
+            'include_selling' => 'boolean',
+            'include_hpp'     => 'boolean',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $joOther = JoOther::with('items')->findOrFail($request->id_jo_other);
+            $pajak   = Pajak::findOrFail($request->id_md_pajak);
+
+            $existing = JoOtherPajak::where('id_jo_other', $request->id_jo_other)
+                ->where('id_md_pajak', $request->id_md_pajak)
+                ->first();
+
+            if ($existing) {
+                return response()->json(['success' => false, 'message' => 'Pajak ini sudah ditambahkan ke JO tersebut'], 422);
+            }
+
+            $dasarPengenaan    = (float) $joOther->items->sum('hargajual_idr');
+            $dasarPengenaanHpp = (float) $joOther->items->sum('hpp_ops');
+            $nominalPajak      = round($dasarPengenaan    * ($pajak->persentase / 100), 2);
+            $nominalPajakHpp   = round($dasarPengenaanHpp * ($pajak->persentase / 100), 2);
+
+            $record = JoOtherPajak::create([
+                'id_jo_other'         => $request->id_jo_other,
+                'id_md_pajak'         => $pajak->id_md_pajak,
+                'nama_pajak'          => $pajak->nama_pajak,
+                'persentase'          => $pajak->persentase,
+                'dasar_pengenaan'     => $dasarPengenaan,
+                'dasar_pengenaan_hpp' => $dasarPengenaanHpp,
+                'nominal_pajak'       => $nominalPajak,
+                'nominal_pajak_hpp'   => $nominalPajakHpp,
+                'include_selling'     => (bool) $request->input('include_selling', true),
+                'include_hpp'         => (bool) $request->input('include_hpp', false),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'id'                => $record->id_jo_other_pajak,
+                    'id_md_pajak'       => $record->id_md_pajak,
+                    'nama_pajak'        => $record->nama_pajak,
+                    'persentase'        => number_format($record->persentase, 2),
+                    'nominal_pajak'     => $record->nominal_pajak,
+                    'nominal_pajak_hpp' => $record->nominal_pajak_hpp,
+                    'include_selling'   => (bool) $record->include_selling,
+                    'include_hpp'       => (bool) $record->include_hpp,
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updatePajak(Request $request, $id)
+    {
+        try {
+            $record  = JoOtherPajak::findOrFail($id);
+            $joOther = $record->joOther;
+
+            $include_selling = $request->boolean('include_selling');
+            $include_hpp     = $request->boolean('include_hpp');
+
+            $dasarPengenaan    = $include_selling ? (float) $joOther->items->sum('hargajual_idr') : 0;
+            $dasarPengenaanHpp = $include_hpp     ? (float) $joOther->items->sum('hpp_ops')       : 0;
+            $nominalPajak      = round($dasarPengenaan    * ($record->persentase / 100), 2);
+            $nominalPajakHpp   = round($dasarPengenaanHpp * ($record->persentase / 100), 2);
+
+            $record->update([
+                'include_selling'     => $include_selling,
+                'include_hpp'         => $include_hpp,
+                'dasar_pengenaan'     => $dasarPengenaan,
+                'dasar_pengenaan_hpp' => $dasarPengenaanHpp,
+                'nominal_pajak'       => $nominalPajak,
+                'nominal_pajak_hpp'   => $nominalPajakHpp,
+            ]);
+
+            return response()->json(['success' => true, 'data' => [
+                'id'                => $record->id_jo_other_pajak,
+                'nominal_pajak'     => $record->nominal_pajak,
+                'nominal_pajak_hpp' => $record->nominal_pajak_hpp,
+                'include_selling'   => $record->include_selling,
+                'include_hpp'       => $record->include_hpp,
+            ]]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroyPajak(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $record = JoOtherPajak::findOrFail($id);
+            $record->delete();
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Pajak berhasil dihapus']);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function checkRelations($id)

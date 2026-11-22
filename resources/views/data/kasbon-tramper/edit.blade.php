@@ -1216,6 +1216,20 @@
                                     </select>
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}"
+                                                {{ $kasbonTramper->id_md_area == $area->id_md_area ? 'selected' : '' }}>
+                                                {{ $area->area }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 {{-- Release To --}}
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Release To</label>
@@ -2408,6 +2422,7 @@
                     id_jo_tram: idJoTram,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),

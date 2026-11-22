@@ -221,64 +221,71 @@
 
         .add-item-form-section .currency-group {
             display: flex;
-            align-items: center;
-            gap: 5px;
+            align-items: stretch;
+            gap: 0;
         }
 
         .add-item-form-section .currency-label {
             background-color: #2c3e50;
             color: white;
             border: 1px solid #2c3e50;
-            padding: 0.6rem 0.75rem;
+            padding: 0 0.75rem;
             font-size: 0.7rem;
             border-radius: 6px 0 0 6px;
             min-width: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             text-align: center;
             font-weight: 600;
+            white-space: nowrap;
         }
 
         .add-item-form-section .currency-input {
             border-radius: 0 6px 6px 0 !important;
             border-left: none !important;
+            flex: 1;
         }
 
         .btn-add-to-table {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             border: none;
             color: white;
-            padding: 12px 30px;
-            border-radius: 25px;
+            padding: 8px 20px;
+            border-radius: 6px;
             font-weight: 600;
-            font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
-            transition: all 0.3s;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-add-to-table:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5);
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
             color: white;
         }
 
         .btn-add-to-table i {
-            margin-right: 8px;
+            margin-right: 6px;
         }
 
         .btn-edit-item {
-            background: linear-gradient(135deg, #bbbbbb 0%, #5c5c5c 100%);
+            background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
             border: none;
             color: white;
-            padding: 12px 30px;
-            border-radius: 25px;
+            padding: 8px 20px;
+            border-radius: 6px;
             font-weight: 600;
-            font-size: 1rem;
-            box-shadow: 0 4px 15px rgba(153, 153, 153, 0.4);
-            transition: all 0.3s;
+            font-size: 0.875rem;
+            box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
+            transition: all 0.2s;
+            white-space: nowrap;
         }
 
         .btn-edit-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(128, 128, 128, 0.5);
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.4);
             color: white;
         }
 
@@ -319,6 +326,7 @@
             font-weight: 600;
             color: #2c3e50;
             background-color: #ecf0f1 !important;
+            text-align: center;
         }
 
         .table-items .category-cell {
@@ -397,6 +405,7 @@
         .currency-group-footer {
             display: flex;
             align-items: center;
+            justify-content: flex-end;
             gap: 5px;
         }
 
@@ -404,22 +413,50 @@
             background-color: #2c3e50;
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.6rem 0.75rem;
-            font-size: 0.85rem;
-            border-radius: 6px;
-            min-width: 55px;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.78rem;
+            border-radius: 4px;
+            min-width: 42px;
             text-align: center;
             font-weight: 600;
         }
 
         .value-footer {
             flex: 1;
-            color: rgb(0, 0, 0);
-            font-weight: 700;
-            font-size: 0.95rem;
-            padding-left: 10px;
+            color: #000;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding-right: 0;
+            text-align: right;
         }
 
+
+        .currency-group-cell {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .currency-label-cell {
+            background-color: #e9ecef;
+            color: #495057;
+            border: 1px solid #ced4da;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.78rem;
+            border-radius: 4px;
+            min-width: 42px;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .value-cell {
+            flex: 1;
+            text-align: right;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #2c3e50;
+        }
         .no-items-row td {
             text-align: center;
             padding: 50px 20px;
@@ -447,6 +484,11 @@
         }
 
         /* FINAL SAVE BUTTON */
+        /* Remove layout bottom padding so sticky bar is truly last */
+        main.content {
+            padding-bottom: 0 !important;
+        }
+
         .final-save-section {
             position: sticky;
             bottom: 0;
@@ -454,7 +496,7 @@
             padding: 20px;
             box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
             border-radius: 12px 12px 0 0;
-            margin-top: 30px;
+            margin-top: 20px;
             z-index: 100;
         }
 
@@ -563,25 +605,22 @@
                         </div>
                         <div class="card-body p-4">
                             <div class="row">
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label">No. JO</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text bg-success text-white">
-                                                <i class="fas fa-file-alt"></i>
-                                            </span>
-                                            <input type="text" class="form-control fw-bold"
-                                                value="{{ $joContract->no_jo_cont ?? '-' }}" readonly
-                                                style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label required-field">JO date</label>
-                                        <input type="date" name="tgl_jo_cont" id="tgl_jo_cont" class="form-control"
-                                            value="{{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('Y-m-d') : '' }}">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">No. JO</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-success text-white">
+                                            <i class="fas fa-file-alt"></i>
+                                        </span>
+                                        <input type="text" class="form-control fw-bold"
+                                            value="{{ $joContract->no_jo_cont ?? '-' }}" readonly
+                                            style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
                                     </div>
                                 </div>
-
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label required-field">JO Date</label>
+                                    <input type="date" name="tgl_jo_cont" id="tgl_jo_cont" class="form-control"
+                                        value="{{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('Y-m-d') : '' }}">
+                                </div>
                                 <div class="col-md-12 mb-3">
                                     <label class="form-label required-field">Contract</label>
 
@@ -837,8 +876,8 @@
                                         </div>
                                     </div>
 
-                                    <div class="col-md-3 mb-3 d-flex align-items-end gap-2 ms-auto">
-                                        <button type="button" class="btn btn-add-to-table flex-grow-1"
+                                    <div class="col-12 mb-3 d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-add-to-table"
                                             id="btnAddToTable">
                                             <i class="fas fa-arrow-down"></i> Add to Table
                                         </button>
@@ -912,20 +951,40 @@
                                                                 </span>
                                                             @endif
                                                         </td>
-                                                        <td>{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
-                                                        <td>{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
-                                                        <td>{{ number_format($item->hargajual_idr, 2, ',', '.') }}</td>
-                                                        <td>{{ number_format($item->hpp_ops, 2, ',', '.') }}</td>
+                                                        <td>
+                                                            <div class="currency-group-cell">
+                                                                <span class="currency-label-cell">IDR</span>
+                                                                <span class="value-cell">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="currency-group-cell">
+                                                                <span class="currency-label-cell">USD</span>
+                                                                <span class="value-cell">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="currency-group-cell">
+                                                                <span class="currency-label-cell">IDR</span>
+                                                                <span class="value-cell">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div class="currency-group-cell">
+                                                                <span class="currency-label-cell">IDR</span>
+                                                                <span class="value-cell">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
+                                                            </div>
+                                                        </td>
                                                         <td class="text-center">
                                                             <button type="button"
-                                                                class="btn btn-primary btn-sm btn-edit-row"
+                                                                class="btn btn-primary btn-sm btn-edit-row me-1"
                                                                 onclick="editItem('{{ $item->id_jo_cont_item }}')">
                                                                 <i class="fas fa-edit"></i>
                                                             </button>
                                                             <button type="button"
                                                                 class="btn btn-danger btn-sm btn-remove-row"
                                                                 onclick="removeItem(this, '{{ $item->id_jo_cont_item }}')">
-                                                                <i class="fas fa-trash"></i>
+                                                                <i class="fas fa-trash-alt"></i>
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -953,29 +1012,59 @@
                                         <tr class="tax-row"
                                             data-tax-id="{{ $pi->id_jo_cont_pajak }}"
                                             data-raw="{{ $pi->nominal_pajak }}"
+                                            data-raw-hpp="{{ $pi->nominal_pajak_hpp }}"
                                             data-include-selling="{{ $pi->include_selling ? 1 : 0 }}"
                                             data-include-hpp="{{ $pi->include_hpp ? 1 : 0 }}">
-                                            <td class="text-center">{{ $allTaxRowNumber }}</td>
-                                            <td>Tax</td>
-                                            <td>{{ $pi->nama_pajak }}</td>
-                                            <td class="text-end">—</td>
-                                            <td class="text-end">—</td>
+                                            <td class="item-number-cell text-center">{{ $allTaxRowNumber }}</td>
+                                            <td class="category-cell" style="background:#fffbea !important; color:#92400e;">Tax</td>
+                                            <td class="item-text-cell text-start">
+                                                <span class="fw-semibold" style="color:#2c3e50;">{{ $pi->nama_pajak }}</span>
+                                                <small class="text-muted ms-1">({{ $pi->persentase }}%)</small>
+                                            </td>
+                                            <td>
+                                                <div class="currency-group-cell">
+                                                    <span class="currency-label-cell">IDR</span>
+                                                    <span class="value-cell">0,00</span>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="currency-group-cell">
+                                                    <span class="currency-label-cell">USD</span>
+                                                    <span class="value-cell">0,00</span>
+                                                </div>
+                                            </td>
                                             <td class="tax-selling">
                                                 @if($pi->include_selling)
-                                                    {{ number_format($pi->nominal_pajak, 2, ',', '.') }}
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($pi->nominal_pajak, 2, ',', '.') }}</span>
+                                                    </div>
                                                 @else
-                                                    —
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">0,00</span>
+                                                    </div>
                                                 @endif
                                             </td>
                                             <td class="tax-hpp">
                                                 @if($pi->include_hpp)
-                                                    {{ number_format($pi->nominal_pajak, 2, ',', '.') }}
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($pi->nominal_pajak_hpp, 2, ',', '.') }}</span>
+                                                    </div>
                                                 @else
-                                                    —
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">0,00</span>
+                                                    </div>
                                                 @endif
                                             </td>
                                             <td class="text-center">
-                                                <button type="button" class="btn btn-danger btn-xs"
+                                                <button type="button" class="btn btn-primary btn-sm btn-edit-row"
+                                                    onclick="editTax('{{ $pi->id_jo_cont_pajak }}', '{{ $pi->id_md_pajak }}', '{{ addslashes($pi->nama_pajak) }}', {{ $pi->include_selling ? 1 : 0 }}, {{ $pi->include_hpp ? 1 : 0 }}, {{ $pi->persentase }}, {{ $pi->nominal_pajak }}, {{ $pi->nominal_pajak_hpp }})" title="Edit Tax">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-danger btn-sm btn-remove-row"
                                                     onclick="deleteTax(this, '{{ $pi->id_jo_cont_pajak }}')" title="Remove Tax">
                                                     <i class="fas fa-trash-alt"></i>
                                                 </button>
@@ -1019,42 +1108,63 @@
 
                                 {{-- TAX INPUT PANEL --}}
                                 <div id="taxInputPanel" class="mt-3 p-3 rounded-3" style="background:#fffbf0; border:1px solid #ffc107;">
-                                    <div class="d-flex align-items-end gap-3 flex-wrap">
-                                        <div style="flex:1; min-width:220px;">
+                                    {{-- Row 1: Tax Type full width --}}
+                                    <div class="row mb-2">
+                                        <div class="col-12">
                                             <label class="form-label form-label-sm fw-semibold mb-1" style="color:#856404;">
-                                                <i class="fas fa-percent me-1"></i>Tax Type
+                                                <i class="fas fa-percent me-1"></i> Tax Type
                                             </label>
                                             <select id="selectTax" class="form-select form-select-sm">
                                                 <option value="">-- Select Tax --</option>
                                             </select>
                                         </div>
-                                        <div style="min-width:160px;">
-                                            <label class="form-label form-label-sm fw-semibold mb-1" style="color:#28a745;">Tax Amount</label>
-                                            <div class="input-group input-group-sm">
-                                                <span class="input-group-text">IDR</span>
-                                                <input type="text" id="taxAmount" class="form-control text-end fw-bold" readonly style="background:#f0fff4; color:#28a745;">
-                                            </div>
-                                        </div>
-                                        <div class="d-flex flex-column gap-1" style="min-width:170px;">
-                                            <label class="form-label form-label-sm fw-semibold mb-1" style="color:#856404;">Include in</label>
-                                            <div class="d-flex gap-3">
-                                                <div class="form-check form-check-inline mb-0">
+                                    </div>
+                                    {{-- Row 2: Include boxes (4 col each) + Add button --}}
+                                    <div class="row g-2 align-items-center">
+                                        {{-- Include Selling --}}
+                                        <div class="col-4">
+                                            <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-2 h-100" style="background:#fffdf0; border:1px solid #ffe08a;">
+                                                <div class="form-check mb-0 flex-shrink-0">
                                                     <input class="form-check-input" type="checkbox" id="taxIncludeSelling" checked>
-                                                    <label class="form-check-label" for="taxIncludeSelling" style="font-size:0.85rem;">Selling Price</label>
+                                                    <label class="form-check-label fw-semibold" for="taxIncludeSelling" style="font-size:0.82rem; color:#856404;">
+                                                        Include in <span style="color:#2e7d32;">Selling</span>
+                                                    </label>
                                                 </div>
-                                                <div class="form-check form-check-inline mb-0">
-                                                    <input class="form-check-input" type="checkbox" id="taxIncludeHpp">
-                                                    <label class="form-check-label" for="taxIncludeHpp" style="font-size:0.85rem;">HPP</label>
+                                                <div id="wrapTaxAmountSelling" class="input-group input-group-sm flex-nowrap" style="min-width:0;">
+                                                    <span class="input-group-text" style="font-size:0.75rem;">IDR</span>
+                                                    <input type="text" id="taxAmount" class="form-control text-end fw-bold" readonly
+                                                        style="background:#f0fff4; color:#2e7d32; font-size:0.82rem; min-width:0;">
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="d-flex align-items-end" style="padding-bottom:1px;">
-                                            <button type="button" class="btn btn-warning btn-sm fw-bold px-4" id="addTaxBtn">
+                                        {{-- Include HPP --}}
+                                        <div class="col-4">
+                                            <div class="d-flex align-items-center gap-2 px-3 py-2 rounded-2 h-100" style="background:#fff8f0; border:1px solid #ffd0a0;">
+                                                <div class="form-check mb-0 flex-shrink-0">
+                                                    <input class="form-check-input" type="checkbox" id="taxIncludeHpp">
+                                                    <label class="form-check-label fw-semibold" for="taxIncludeHpp" style="font-size:0.82rem; color:#7b3f00;">
+                                                        Include in <span style="color:#c0392b;">HPP</span>
+                                                    </label>
+                                                </div>
+                                                <div id="wrapTaxAmountHpp" class="input-group input-group-sm flex-nowrap" style="min-width:0; display:none !important;">
+                                                    <span class="input-group-text" style="font-size:0.75rem;">IDR</span>
+                                                    <input type="text" id="taxAmountHpp" class="form-control text-end fw-bold" readonly
+                                                        style="background:#fff0e8; color:#c0392b; font-size:0.82rem; min-width:0;">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{-- Add / Update Tax Button --}}
+                                        <div class="col-4 d-flex align-items-center gap-2">
+                                            <input type="hidden" id="editingTaxId" value="">
+                                            <input type="hidden" id="editingTaxPersentase" value="">
+                                            <button type="button" class="btn btn-warning btn-sm fw-bold flex-grow-1" id="addTaxBtn" style="height:36px;">
                                                 <i class="fas fa-plus me-1"></i>Add Tax to Table
+                                            </button>
+                                            <button type="button" class="btn btn-secondary btn-sm fw-bold" id="cancelEditTaxBtn" style="height:36px; display:none;">
+                                                <i class="fas fa-times me-1"></i>Cancel
                                             </button>
                                         </div>
                                     </div>
-                                </div>
                                 {{-- END TAX INPUT PANEL --}}
 
                                 {{-- LPJ origin note — ditampilkan via Blade jika ada, JS akan toggle saat add/remove --}}
@@ -1076,23 +1186,24 @@
                     </div>
                 </form>
 
-                <!-- FINAL SAVE SECTION -->
-                <div class="final-save-section">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div></div>
-                        <div class="d-flex gap-2">
-                            <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}" target="_blank"
-                                class="btn"
-                                style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
-                                       border-color:red; background-color:rgb(255, 237, 237); color:red">
-                                <i class="fas fa-file-pdf me-2"></i> Generate JO
-                            </a>
-                            <a href="{{ route('jo-contract.index') }}" class="btn btn-final-back">
-                                <i class="fas fa-arrow-left me-1"></i> Back
-                            </a>
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINAL SAVE SECTION -->
+    <div class="final-save-section">
+        <div class="d-flex justify-content-between align-items-center">
+            <div></div>
+            <div class="d-flex gap-2">
+                <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}" target="_blank"
+                    class="btn"
+                    style="padding:15px 40px; border-radius:12px; font-weight:700; font-size:1.1rem;
+                           border-color:red; background-color:rgb(255, 237, 237); color:red">
+                    <i class="fas fa-file-pdf me-2"></i> Generate JO
+                </a>
+                <a href="{{ route('jo-contract.index') }}" class="btn btn-final-back">
+                    <i class="fas fa-arrow-left me-1"></i> Back
+                </a>
             </div>
         </div>
     </div>
@@ -1105,7 +1216,7 @@
         // ── GLOBAL: deleteTax — harus di luar document.ready agar onclick bisa memanggil ──
         function deleteTax(btn, id) {
             var row = $(btn).closest('tr');
-            var destroyUrl = '{{ url("jo-contract/pajak/destroy") }}/' + id;
+            var destroyUrl = '/jo-contract/pajak/destroy/' + id;
             var csrf = '{{ csrf_token() }}';
             Swal.fire({
                 title: 'Remove Tax?',
@@ -1120,7 +1231,8 @@
                 if (!result.isConfirmed) return;
                 $.ajax({
                     url: destroyUrl,
-                    method: 'DELETE',
+                    type: 'POST',
+                    data: { _method: 'DELETE', _token: csrf },
                     headers: { 'X-CSRF-TOKEN': csrf },
                     success: function(res) {
                         if (res.success) {
@@ -1141,6 +1253,42 @@
                     }
                 });
             });
+        }
+
+        // ── GLOBAL: editTax — must be global for onclick to reach it ──
+        function editTax(taxId, pajakId, namaP, incSell, incHpp, persentase, nominalJual, nominalHpp) {
+            $('#editingTaxId').val(taxId);
+            // Store persentase in hidden input so recalcPreview can always read it
+            var persen = parseFloat(persentase) || 0;
+            $('#editingTaxPersentase').val(persen);
+            if ($('#selectTax').find('option[value="' + pajakId + '"]').length === 0) {
+                var $opt = new Option(namaP, pajakId, true, true);
+                $('#selectTax').append($opt);
+            }
+            $('#selectTax').val(pajakId).trigger('change');
+            setTimeout(function() {
+                $('#taxIncludeSelling').prop('checked', incSell == 1);
+                $('#taxIncludeHpp').prop('checked', incHpp == 1);
+                // Directly use stored nominal values — no recalculation needed
+                if (incSell == 1) {
+                    $('#wrapTaxAmountSelling').css('display', 'flex');
+                    $('#taxAmount').val((typeof formatNumber === 'function') ? formatNumber(parseFloat(nominalJual) || 0) : (parseFloat(nominalJual) || 0));
+                } else {
+                    $('#wrapTaxAmountSelling').hide();
+                    $('#taxAmount').val('');
+                }
+                if (incHpp == 1) {
+                    $('#wrapTaxAmountHpp').css('display', 'flex');
+                    $('#taxAmountHpp').val((typeof formatNumber === 'function') ? formatNumber(parseFloat(nominalHpp) || 0) : (parseFloat(nominalHpp) || 0));
+                } else {
+                    $('#wrapTaxAmountHpp').hide();
+                    $('#taxAmountHpp').val('');
+                }
+            }, 50);
+            $('#addTaxBtn').removeClass('btn-warning').addClass('btn-success')
+                .html('<i class="fas fa-save me-1"></i>Update Tax');
+            $('#cancelEditTaxBtn').show();
+            $('html, body').animate({ scrollTop: $('#selectTax').offset().top - 150 }, 300);
         }
 
         // ========================================
@@ -1285,7 +1433,7 @@
         function updateRowSellingPrice(row, newHargaJual) {
             const hasCategoryCell = row.find('.category-cell').length > 0;
             const offset = hasCategoryCell ? 0 : -1;
-            row.find('td').eq(5 + offset).text(formatNumber(newHargaJual));
+            row.find('td').eq(5 + offset).find('.value-cell').text(formatNumber(newHargaJual));
         }
 
         // ========================================
@@ -1581,7 +1729,7 @@
                     warning.style.color = '#dc3545';
                     warning.style.fontWeight = '600';
                     warning.innerHTML =
-                        `<i class="fas fa-exclamation-triangle me-1"></i>HPP tidak boleh melebihi Selling Price (${$('#input_harga_jual').val()})`;
+                        `<i class="fas fa-exclamation-triangle me-1"></i>HPP must not exceed Selling Price (${$('#input_harga_jual').val()})`;
                     hppInput.closest('.currency-group').after(warning);
                 }
 
@@ -1706,7 +1854,7 @@
             }
 
             if (hargaJual > 0 && hpp > hargaJual) {
-                showFloatingAlert('error', 'HPP tidak boleh melebihi Selling Price');
+                showFloatingAlert('error', 'HPP must not exceed Selling Price');
                 $('#input_hpp').focus();
                 return;
             }
@@ -1974,7 +2122,7 @@
                 </button>
                 <button type="button" class="btn btn-danger btn-sm btn-remove-row"
                     onclick="removeItem(this, '${itemId}')">
-                    <i class="fas fa-trash"></i>
+                    <i class="fas fa-trash-alt"></i>
                 </button>`;
 
             let newRow;
@@ -1991,10 +2139,10 @@
                         <td class="item-text-cell text-start">
                             <span class="fw-semibold" style="color:#2c3e50;">${itemText}</span>${lpjBadge}
                         </td>
-                        <td>${formatNumber(data.pendapatan_idr)}</td>
-                        <td>${formatNumber(data.pendapatan_usd)}</td>
-                        <td>${formatNumber(data.hargajual_idr)}</td>
-                        <td>${formatNumber(data.hpp_ops)}</td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(data.pendapatan_idr)}</span></div></td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">USD</span><span class="value-cell">${formatNumber(data.pendapatan_usd)}</span></div></td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(data.hargajual_idr)}</span></div></td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(data.hpp_ops)}</span></div></td>
                         <td class="text-center">${actionBtns}</td>
                     </tr>`;
                 insertAfterRow.after(newRow);
@@ -2011,10 +2159,10 @@
                         <td class="item-text-cell text-start">
                             <span class="fw-semibold" style="color:#2c3e50;">${itemText}</span>${lpjBadge}
                         </td>
-                        <td>${formatNumber(data.pendapatan_idr)}</td>
-                        <td>${formatNumber(data.pendapatan_usd)}</td>
-                        <td>${formatNumber(data.hargajual_idr)}</td>
-                        <td>${formatNumber(data.hpp_ops)}</td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(data.pendapatan_idr)}</span></div></td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">USD</span><span class="value-cell">${formatNumber(data.pendapatan_usd)}</span></div></td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(data.hargajual_idr)}</span></div></td>
+                        <td><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(data.hpp_ops)}</span></div></td>
                         <td class="text-center">${actionBtns}</td>
                     </tr>`;
                 $('#itemsTableBody').append(newRow);
@@ -2154,10 +2302,10 @@
                             const hasCategoryCell = row.find('.category-cell').length > 0;
                             const offset = hasCategoryCell ? 0 : -1;
 
-                            row.find('td').eq(3 + offset).text(formatNumber(response.data.pendapatan_idr));
-                            row.find('td').eq(4 + offset).text(formatNumber(response.data.pendapatan_usd));
-                            row.find('td').eq(5 + offset).text(formatNumber(response.data.hargajual_idr));
-                            row.find('td').eq(6 + offset).text(formatNumber(response.data.hpp_ops));
+                            row.find('td').eq(3 + offset).find('.value-cell').text(formatNumber(response.data.pendapatan_idr));
+                            row.find('td').eq(4 + offset).find('.value-cell').text(formatNumber(response.data.pendapatan_usd));
+                            row.find('td').eq(5 + offset).find('.value-cell').text(formatNumber(response.data.hargajual_idr));
+                            row.find('td').eq(6 + offset).find('.value-cell').text(formatNumber(response.data.hpp_ops));
                         }
 
                         updateGrandTotal();
@@ -2187,7 +2335,7 @@
             $('#btnAddToTable').html('<i class="fas fa-arrow-down"></i> Add to Table');
             $('#btnCancelEdit').hide();
 
-            $('#input_category').val('');
+            $('#input_category').val(null).trigger('change');
             $('#input_item').prop('disabled', true).html('<option value="">Select category first</option>');
             $('#input_pendapatan_idr').val('');
             $('#input_pendapatan_usd').val('');
@@ -2491,46 +2639,129 @@
         // RESET ALL ITEMS
         // ========================================
         $('#resetAllBtn').on('click', function() {
-            if (!confirm(
-                    'Are you sure you want to remove all items? This will delete all items from the database.'))
-                return;
+            Swal.fire({
+                title: 'Reset All Items?',
+                text: 'All items and tax entries will be permanently removed from this JO Contract.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Reset All',
+                cancelButtonText: 'Cancel'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
 
-            const itemIds = [];
-            $('.item-row').each(function() {
-                const itemId = $(this).data('item-id');
-                if (itemId && itemId != 0) itemIds.push(itemId);
-            });
+                const csrf = $('meta[name="csrf-token"]').attr('content');
 
-            if (itemIds.length === 0) {
-                showFloatingAlert('error', 'No items to delete');
-                return;
-            }
+                const itemIds = [];
+                $('.item-row').each(function() {
+                    const id = $(this).data('item-id');
+                    if (id && id != 0) itemIds.push(id);
+                });
 
-            showFloatingAlert('saving', 'Deleting all items...');
+                const taxIds = [];
+                $('#taxTableBody tr.tax-row').each(function() {
+                    const id = $(this).data('tax-id');
+                    if (id) taxIds.push(id);
+                });
 
-            Promise.all(itemIds.map(itemId =>
-                $.ajax({
-                    url: `/jo-contract/item/destroy/${itemId}`,
-                    method: 'DELETE',
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content')
+                if (!itemIds.length && !taxIds.length) {
+                    Swal.fire({
+                        icon: 'info',
+                        title: 'Nothing to Remove',
+                        text: 'There are no items or tax entries to delete.',
+                        confirmButtonColor: '#6c757d'
+                    });
+                    return;
+                }
+
+
+                const itemRequests = itemIds.map(id => ({
+                    id,
+                    type: 'item',
+                    promise: $.ajax({ url: `/jo-contract/item/destroy/${id}`, type: 'POST', data: { _method: 'DELETE', _token: csrf } })
+                }));
+
+                const taxRequests = taxIds.map(id => ({
+                    id,
+                    type: 'tax',
+                    promise: $.ajax({ url: `/jo-contract/pajak/destroy/${id}`, type: 'POST', data: { _method: 'DELETE', _token: csrf } })
+                }));
+
+                const allRequests = [...itemRequests, ...taxRequests];
+
+                Promise.allSettled(allRequests.map(r => r.promise)).then(results => {
+                    const failedItems = [];
+                    const succeededIds = { item: [], tax: [] };
+
+                    results.forEach((res, i) => {
+                        const req = allRequests[i];
+                        if (res.status === 'fulfilled') {
+                            succeededIds[req.type].push(req.id);
+                        } else {
+                            failedItems.push(req);
+                        }
+                    });
+
+                    // Remove successfully deleted items from DOM
+                    succeededIds.item.forEach(id => {
+                        const row = $(`.item-row[data-item-id="${id}"]`);
+                        const category = row.data('category');
+                        const categoryRows = $(`.item-row[data-category="${category}"]`);
+                        if (categoryRows.length === 1) {
+                            row.remove();
+                        } else {
+                            const catCell = row.find('.category-cell');
+                            if (catCell.length > 0) {
+                                const nextRow = row.next(`.item-row[data-category="${category}"]`);
+                                if (nextRow.length > 0) {
+                                    const newRowspan = categoryRows.length - 1;
+                                    nextRow.prepend(catCell.clone().attr('rowspan', newRowspan));
+                                }
+                            }
+                            row.remove();
+                        }
+                    });
+                    succeededIds.tax.forEach(id => {
+                        $(`#taxTableBody tr.tax-row[data-tax-id="${id}"]`).remove();
+                    });
+
+                    if ($('.item-row').length === 0) {
+                        $('#itemsTableBody').html(`
+                            <tr class="no-items-row">
+                                <td colspan="8">
+                                    <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
+                                    <p class="mb-0 fw-bold">No data available</p>
+                                    <small class="text-muted">Fill the form above and click "Add to Table"</small>
+                                </td>
+                            </tr>`);
                     }
-                })
-            )).then(() => {
-                showFloatingAlert('success', 'All items deleted successfully!');
-                $('#itemsTableBody').html(`
-                    <tr class="no-items-row">
-                        <td colspan="8">
-                            <i class="fas fa-inbox fa-4x mb-3 d-block text-muted"></i>
-                            <p class="mb-0 fw-bold">No data available</p>
-                            <small class="text-muted">Fill the form above and click "Add to Table"</small>
-                        </td>
-                    </tr>`);
-                globalItemNumber = 0;
-                updateGrandTotal();
-                syncLpjNote();
-            }).catch(() => {
-                showFloatingAlert('error', 'Some items could not be deleted');
+
+                    renumberAllItems();
+                    updateGrandTotal();
+                    if (typeof syncLpjNote === 'function') syncLpjNote();
+
+                    if (failedItems.length === 0) {
+                        showFloatingAlert('success', 'All items and tax entries removed successfully!');
+                    } else {
+                        const totalDone = allRequests.length - failedItems.length;
+                        const failedItemCount = failedItems.filter(r => r.type === 'item').length;
+                        const failedTaxCount = failedItems.filter(r => r.type === 'tax').length;
+
+                        let detailLines = [];
+                        if (failedItemCount > 0) detailLines.push(`• ${failedItemCount} item(s) could not be deleted — they may be linked to another record.`);
+                        if (failedTaxCount > 0) detailLines.push(`• ${failedTaxCount} tax entr${failedTaxCount > 1 ? 'ies' : 'y'} could not be deleted.`);
+
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Partially Completed',
+                            html: `<p>${totalDone} of ${allRequests.length} entr${allRequests.length > 1 ? 'ies' : 'y'} removed successfully.</p>` +
+                                  `<p class="text-start mt-2 mb-0" style="font-size:0.9rem;">${detailLines.join('<br>')}</p>`,
+                            confirmButtonColor: '#f59e0b',
+                            confirmButtonText: 'Understood'
+                        });
+                    }
+                });
             });
         });
 
@@ -2550,16 +2781,17 @@
             $('.item-row').each(function() {
                 const hasCategoryCell = $(this).find('.category-cell').length > 0;
                 const off = hasCategoryCell ? 0 : -1;
-                totalIDR     += parseRupiah($(this).find('td').eq(3 + off).text());
-                totalUSD     += parseRupiah($(this).find('td').eq(4 + off).text());
-                totalSelling += parseRupiah($(this).find('td').eq(5 + off).text());
-                totalHPP     += parseRupiah($(this).find('td').eq(6 + off).text());
+                totalIDR     += parseRupiah($(this).find('td').eq(3 + off).find('.value-cell').text());
+                totalUSD     += parseRupiah($(this).find('td').eq(4 + off).find('.value-cell').text());
+                totalSelling += parseRupiah($(this).find('td').eq(5 + off).find('.value-cell').text());
+                totalHPP     += parseRupiah($(this).find('td').eq(6 + off).find('.value-cell').text());
             });
             // Add tax nominals based on include_selling / include_hpp flags
             $('#taxTableBody tr.tax-row').each(function() {
-                const raw = parseFloat($(this).data('raw')) || 0;
-                if ($(this).data('include-selling') == 1) totalSelling += raw;
-                if ($(this).data('include-hpp')     == 1) totalHPP     += raw;
+                const rawSell = parseFloat($(this).data('raw'))     || 0;
+                const rawHpp  = parseFloat($(this).data('raw-hpp')) || 0;
+                if ($(this).data('include-selling') == 1) totalSelling += rawSell;
+                if ($(this).data('include-hpp')     == 1) totalHPP     += rawHpp;
             });
             $('#footerTotalIDR').text(formatNumber(totalIDR));
             $('#footerTotalUSD').text(formatNumber(totalUSD));
@@ -2604,7 +2836,7 @@
         {
             const joContId   = '{{ $joContract->id_jo_cont }}';
             const storeUrl   = '{{ route("jo-contract.pajak.store") }}';
-            const destroyUrl = (id) => `{{ url("jo-contract/pajak/destroy") }}/${id}`;
+            const destroyUrl = (id) => `/jo-contract/pajak/destroy/${id}`;
             const selectUrl  = '{{ route("pajak.select") }}';
             const csrf       = '{{ csrf_token() }}';
 
@@ -2632,23 +2864,60 @@
                 $('.item-row').each(function() {
                     const hasCat = $(this).find('.category-cell').length > 0;
                     const off = hasCat ? 0 : -1;
-                    total += parseRupiah($(this).find('td').eq(5 + off).text());
+                    total += parseRupiah($(this).find('td').eq(5 + off).find('.value-cell').text());
                 });
                 return total;
             }
 
-            function recalcPreview() {
+            function getItemsHppTotal() {
+                let total = 0;
+                $('.item-row').each(function() {
+                    const hasCat = $(this).find('.category-cell').length > 0;
+                    const off = hasCat ? 0 : -1;
+                    total += parseRupiah($(this).find('td').eq(6 + off).find('.value-cell').text());
+                });
+                return total;
+            }
+
+            function recalcPreview(forcePct) {
                 const sel = $('#selectTax').select2('data');
                 if (!sel || !sel.length || !sel[0].id) {
                     $('#taxAmount').val('');
+                    $('#taxAmountHpp').val('');
                     return;
                 }
-                const pct  = parseFloat(sel[0].persentase) || 0;
-                const base = getItemsSellingTotal();
-                $('#taxAmount').val(formatNumber(Math.round(base * pct / 100 * 100) / 100));
+                const pct      = (forcePct !== undefined) ? forcePct : (parseFloat(sel[0].persentase) || parseFloat($('#editingTaxPersentase').val()) || 0);
+                const baseSell = getItemsSellingTotal();
+                const baseHpp  = getItemsHppTotal();
+                $('#taxAmount').val(formatNumber(Math.round(baseSell * pct / 100 * 100) / 100));
+                $('#taxAmountHpp').val(formatNumber(Math.round(baseHpp  * pct / 100 * 100) / 100));
             }
 
-            $('#selectTax').on('select2:select select2:unselect select2:clear', function() {
+            // Toggle amount fields based on checkboxes
+            function syncAmountVisibility() {
+                if ($('#taxIncludeSelling').is(':checked')) {
+                    $('#wrapTaxAmountSelling').css('display', 'flex');
+                } else {
+                    $('#wrapTaxAmountSelling').hide();
+                    $('#taxAmount').val('');
+                }
+                if ($('#taxIncludeHpp').is(':checked')) {
+                    $('#wrapTaxAmountHpp').css('display', 'flex');
+                } else {
+                    $('#wrapTaxAmountHpp').hide();
+                    $('#taxAmountHpp').val('');
+                }
+                recalcPreview();
+            }
+            $('#taxIncludeSelling').on('change', syncAmountVisibility);
+            $('#taxIncludeHpp').on('change', syncAmountVisibility);
+            syncAmountVisibility();
+
+            $('#selectTax').on('select2:select select2:unselect select2:clear', function(e) {
+                // On fresh AJAX pick, clear override so AJAX persentase is used
+                if (e.type === 'select2:select' && e.params && e.params.data && e.params.data.persentase !== undefined) {
+                    $('#editingTaxPersentase').val('');
+                }
                 recalcPreview();
             });
 
@@ -2659,10 +2928,13 @@
                 return itemCount + taxCount + 1;
             }
 
-            // Add Tax
+            // Add / Update Tax
             $('#addTaxBtn').on('click', function() {
+                const editingId  = $('#editingTaxId').val();
+                const isEditMode = !!editingId;
+
                 const taxId = $('#selectTax').val();
-                if (!taxId) {
+                if (!taxId && !isEditMode) {
                     Swal.fire({ icon: 'warning', title: 'Select Tax', text: 'Please select a tax type first.', confirmButtonColor: '#ffc107' });
                     return;
                 }
@@ -2672,39 +2944,95 @@
                     Swal.fire({ icon: 'warning', title: 'Select Target', text: 'Please check at least one of Selling Price or HPP.', confirmButtonColor: '#ffc107' });
                     return;
                 }
-                const btn = $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Adding...');
-                $.ajax({
-                    url: storeUrl,
-                    method: 'POST',
-                    headers: { 'X-CSRF-TOKEN': csrf },
-                    data: {
-                        id_jo_cont:       joContId,
-                        id_md_pajak:      taxId,
-                        include_selling:  incSelling,
-                        include_hpp:      incHpp
-                    },
-                    success: function(res) {
-                        if (res.success) {
-                            appendTaxRow(res.data, nextRowNumber());
-                            updateGrandTotal();
-                            recalcPreview();
-                            $('#selectTax').val(null).trigger('change');
-                            $('#taxIncludeSelling').prop('checked', true);
-                            $('#taxIncludeHpp').prop('checked', false);
-                        } else {
-                            Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Something went wrong.' });
+
+                const btn = $(this);
+                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>' + (isEditMode ? 'Updating...' : 'Adding...'));
+
+                if (isEditMode) {
+                    // UPDATE existing tax
+                    $.ajax({
+                        url: `/jo-contract/pajak/update/${editingId}`,
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrf },
+                        data: { _method: 'PUT', include_selling: incSelling, include_hpp: incHpp },
+                        success: function(res) {
+                            if (res.success) {
+                                const row = $(`#taxTableBody tr.tax-row[data-tax-id="${editingId}"]`);
+                                row.attr('data-raw', res.data.nominal_pajak)
+                                   .attr('data-raw-hpp', res.data.nominal_pajak_hpp)
+                                   .attr('data-include-selling', res.data.include_selling ? 1 : 0)
+                                   .attr('data-include-hpp', res.data.include_hpp ? 1 : 0);
+
+                                const sellingHtml = res.data.include_selling
+                                    ? '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">' + formatNumber(res.data.nominal_pajak) + '</span></div>'
+                                    : '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">0,00</span></div>';
+                                const hppHtml = res.data.include_hpp
+                                    ? '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">' + formatNumber(res.data.nominal_pajak_hpp) + '</span></div>'
+                                    : '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">0,00</span></div>';
+
+                                row.find('.tax-selling').html(sellingHtml);
+                                row.find('.tax-hpp').html(hppHtml);
+                                updateGrandTotal();
+
+                                // Reset form to Add mode
+                                $('#editingTaxId').val('');
+                                $('#selectTax').val(null).trigger('change');
+                                $('#taxIncludeSelling').prop('checked', true);
+                                $('#taxIncludeHpp').prop('checked', false);
+                                syncAmountVisibility();
+                                btn.removeClass('btn-success').addClass('btn-warning')
+                                   .html('<i class="fas fa-plus me-1"></i>Add Tax to Table');
+                                $('#cancelEditTaxBtn').hide();
+                                showFloatingAlert('success', 'Tax updated successfully!');
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Something went wrong.' });
+                                btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Update Tax');
+                            }
+                        },
+                        error: function(xhr) {
+                            const err = xhr.responseJSON;
+                            Swal.fire({ icon: 'error', title: 'Failed', text: err && err.message ? err.message : 'Request failed.' });
+                            btn.prop('disabled', false).html('<i class="fas fa-save me-1"></i>Update Tax');
                         }
-                    },
-                    error: function(xhr) {
-                        const err = xhr.responseJSON;
-                        const msg = err && err.message ? err.message :
-                            (err && err.errors ? Object.values(err.errors).flat().join(', ') : 'Request failed.');
-                        Swal.fire({ icon: 'error', title: 'Failed', text: msg });
-                    },
-                    complete: function() {
-                        btn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i>Add Tax to Table');
-                    }
-                });
+                    });
+                } else {
+                    // ADD new tax
+                    $.ajax({
+                        url: storeUrl,
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': csrf },
+                        data: {
+                            id_jo_cont:       joContId,
+                            id_md_pajak:      taxId,
+                            include_selling:  incSelling,
+                            include_hpp:      incHpp
+                        },
+                        success: function(res) {
+                            if (res.success) {
+                                appendTaxRow(res.data, nextRowNumber());
+                                updateGrandTotal();
+                                recalcPreview();
+                                $('#selectTax').val(null).trigger('change');
+                                $('#taxIncludeSelling').prop('checked', true);
+                                $('#taxIncludeHpp').prop('checked', false);
+                                syncAmountVisibility();
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Failed', text: res.message || 'Something went wrong.' });
+                            }
+                        },
+                        error: function(xhr) {
+                            const err = xhr.responseJSON;
+                            const msg = err && err.message ? err.message :
+                                (err && err.errors ? Object.values(err.errors).flat().join(', ') : 'Request failed.');
+                            Swal.fire({ icon: 'error', title: 'Failed', text: msg });
+                        },
+                        complete: function() {
+                            if (!$('#editingTaxId').val()) {
+                                btn.prop('disabled', false).html('<i class="fas fa-plus me-1"></i>Add Tax to Table');
+                            }
+                        }
+                    });
+                }
             });
 
             // Delete Tax — handled by global deleteTax() function below
@@ -2716,24 +3044,52 @@
                 });
             }
 
+            // Cancel edit mode
+            $('#cancelEditTaxBtn').on('click', function() {
+                $('#editingTaxId').val('');
+                $('#selectTax').val(null).trigger('change');
+                $('#taxIncludeSelling').prop('checked', true);
+                $('#taxIncludeHpp').prop('checked', false);
+                syncAmountVisibility();
+                $('#addTaxBtn').removeClass('btn-success').addClass('btn-warning')
+                    .html('<i class="fas fa-plus me-1"></i>Add Tax to Table');
+                $(this).hide();
+            });
+
             function appendTaxRow(d, rowNum) {
-                const sellingVal = d.include_selling ? formatNumber(d.nominal_pajak) : '—';
-                const hppVal     = d.include_hpp     ? formatNumber(d.nominal_pajak) : '—';
-                const row = '<tr class="tax-row"' +
-                    ' data-tax-id="' + d.id + '"' +
-                    ' data-raw="' + d.nominal_pajak + '"' +
-                    ' data-include-selling="' + (d.include_selling ? 1 : 0) + '"' +
-                    ' data-include-hpp="' + (d.include_hpp ? 1 : 0) + '">' +
-                    '<td class="text-center">' + rowNum + '</td>' +
-                    '<td>Tax</td>' +
-                    '<td>' + d.nama_pajak + '</td>' +
-                    '<td class="text-end">—</td>' +
-                    '<td class="text-end">—</td>' +
-                    '<td class="tax-selling">' + sellingVal + '</td>' +
-                    '<td class="tax-hpp">' + hppVal + '</td>' +
-                    '<td class="text-center"><button type="button" class="btn btn-danger btn-xs" onclick="deleteTax(this,\'' + d.id + '\')" title="Remove Tax"><i class="fas fa-trash-alt"></i></button></td>' +
-                    '</tr>';
-                $('#taxTableBody').append(row);
+                const sellingVal = d.include_selling
+                    ? '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">' + formatNumber(d.nominal_pajak) + '</span></div>'
+                    : '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">0,00</span></div>';
+                const hppVal = d.include_hpp
+                    ? '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">' + formatNumber(d.nominal_pajak_hpp) + '</span></div>'
+                    : '<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">0,00</span></div>';
+                const taxId   = d.id;
+                const pajakId = d.id_md_pajak;
+                const nama    = d.nama_pajak;
+                const incSell = d.include_selling ? 1 : 0;
+                const incHpp  = d.include_hpp     ? 1 : 0;
+                const $tr = $('<tr class="tax-row"></tr>')
+                    .attr('data-tax-id',         taxId)
+                    .attr('data-raw',             d.nominal_pajak)
+                    .attr('data-raw-hpp',         d.nominal_pajak_hpp)
+                    .attr('data-include-selling', incSell)
+                    .attr('data-include-hpp',     incHpp);
+                $tr.append('<td class="item-number-cell text-center">' + rowNum + '</td>');
+                $tr.append('<td class="category-cell" style="background:#fffbea !important;color:#92400e;">Tax</td>');
+                $tr.append('<td class="item-text-cell text-start"><span class="fw-semibold" style="color:#2c3e50;">' + $('<span>').text(nama).html() + '</span><small class="text-muted ms-1">(' + (parseFloat(d.persentase) || 0) + '%)</small></td>');
+                $tr.append('<td><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">0,00</span></div></td>');
+                $tr.append('<td><div class="currency-group-cell"><span class="currency-label-cell">USD</span><span class="value-cell">0,00</span></div></td>');
+                $tr.append('<td class="tax-selling">' + sellingVal + '</td>');
+                $tr.append('<td class="tax-hpp">' + hppVal + '</td>');
+                const persen   = parseFloat(d.persentase) || 0;
+                const nomJual  = parseFloat(d.nominal_pajak) || 0;
+                const nomHpp   = parseFloat(d.nominal_pajak_hpp) || 0;
+                const $editBtn = $('<button type="button" class="btn btn-primary btn-sm btn-edit-row me-1" title="Edit Tax"><i class="fas fa-edit"></i></button>')
+                    .on('click', function() { editTax(taxId, pajakId, nama, incSell, incHpp, persen, nomJual, nomHpp); });
+                const $delBtn  = $('<button type="button" class="btn btn-danger btn-sm btn-remove-row" title="Remove Tax"><i class="fas fa-trash-alt"></i></button>')
+                    .on('click', function() { deleteTax(this, taxId); });
+                $tr.append($('<td class="text-center"></td>').append($editBtn).append($delBtn));
+                $('#taxTableBody').append($tr);
             }
         } // end TAX block scope
 

@@ -9,9 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class AreaController extends Controller
 {
+    use LogsActivity;
+
     /**
      * Display a listing of the resource.
      */
@@ -113,6 +116,7 @@ class AreaController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Area berhasil ditambahkan', 'Area');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -222,6 +226,7 @@ class AreaController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Area berhasil diubah', 'Area');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -275,6 +280,7 @@ class AreaController extends Controller
 
             $area->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Area berhasil dihapus', 'Area');
 
             if ($request->expectsJson()) {
                 return response()->json([

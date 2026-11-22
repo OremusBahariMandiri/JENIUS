@@ -526,6 +526,17 @@
                                     </select>
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}">{{ $area->area }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label">Release Date</label>
                                     <input type="date" name="tgl_release" id="tgl_release" class="form-control">
@@ -947,9 +958,7 @@
                         });
                         $('#input_jo_other_item').html(opts);
                         const n = r.data.length;
-                        const nTax = r.data.filter(i => i.item_type === 'tax').length;
-                        const nItem = n - nTax;
-                        $('#joSummaryItemCount').text(nItem + ' item' + (nItem !== 1 ? 's' : '') + (nTax > 0 ? ', ' + nTax + ' tax' : ''));
+                        $('#joSummaryItemCount').text(n + ' item' + (n !== 1 ? 's' : ''));
                     } else {
                         $('#joSummaryItemCount').text('—');
                     }
@@ -976,7 +985,7 @@
                 totalHpp += hpp;
                 totalSell += sell;
                 const isTax = item.item_type === 'tax';
-                const ctgStyle = isTax ? 'color:#6366f1; font-weight:600;' : 'font-weight:600;';
+                const ctgStyle = 'font-weight:600; color:#000;';
                 rows += `<tr>
                     <td style="text-align:center;">${idx+1}</td>
                     <td style="${ctgStyle}">${item.invoice_ctg || '—'}</td>
@@ -1018,6 +1027,7 @@
                     id_jo_other: idJoOther,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),

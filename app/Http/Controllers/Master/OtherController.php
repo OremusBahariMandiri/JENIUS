@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class OtherController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -122,6 +125,7 @@ class OtherController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Other berhasil ditambahkan', 'Other');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -232,6 +236,7 @@ class OtherController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Other berhasil diubah', 'Other');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -283,6 +288,7 @@ class OtherController extends Controller
 
             $other->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Other berhasil dihapus', 'Other');
 
             if ($request->expectsJson()) {
                 return response()->json([

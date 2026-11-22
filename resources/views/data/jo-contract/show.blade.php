@@ -76,28 +76,6 @@
             font-weight: 500;
         }
 
-        .kurs-section {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border-radius: 10px;
-            padding: 15px 20px;
-            color: white;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
-
-        .kurs-section .form-label {
-            color: rgba(255, 255, 255, 0.95);
-            font-weight: 600;
-            font-size: 0.875rem;
-            margin-bottom: 0.25rem;
-        }
-
-        .kurs-section .form-control {
-            background: rgba(255, 255, 255, 0.95);
-            border: none;
-            padding: 0.5rem 0.75rem;
-            font-weight: 500;
-        }
-
         .table-items {
             width: 100%;
             margin-bottom: 1rem;
@@ -105,9 +83,9 @@
         }
 
         .table-items thead th {
-            background-color: #f8f9fa;
-            color: #2c3e50;
-            border: 1px solid #dee2e6;
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid #2c3e50;
             padding: 12px 10px;
             font-weight: 600;
             font-size: 0.875rem;
@@ -123,73 +101,31 @@
             padding: 10px;
             vertical-align: middle;
             background-color: #fff;
+            text-align: center;
         }
 
-        .table-items tbody tr:hover td:not(.category-cell) {
+        .table-items tbody tr:hover td {
             background-color: #f8f9fa;
         }
 
-        .category-cell {
-            background: #f1f5f9 !important;
-            color: #2c3e50 !important;
-            font-weight: 600;
-            font-size: 0.875rem;
-            border-right: 2px solid #dee2e6 !important;
-            text-align: center;
-            vertical-align: middle;
-            position: relative;
-            padding: 10px !important;
-        }
-
-        .category-cell .category-content {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .category-cell .category-name {
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: #1e293b;
-        }
-
-        .category-cell .category-count {
-            background: #e2e8f0;
-            color: #475569;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-
-        .currency-group {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .currency-label {
-            background-color: #2c3e50;
-            color: white;
-            border: 1px solid #2c3e50;
-            padding: 0.5rem;
-            font-size: 0.8rem;
-            border-radius: 6px 0 0 6px;
-            min-width: 50px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .currency-value {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-left: none;
-            padding: 0.5rem;
-            border-radius: 0 6px 6px 0;
-            flex: 1;
+        .table-items .item-number-cell {
             font-weight: 600;
             color: #2c3e50;
+            background-color: #ecf0f1 !important;
+        }
+
+        .table-items .category-cell {
+            background: #e8f5e9 !important;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+
+        .table-items tbody tr.tax-row td {
+            background: #fff !important;
+        }
+
+        .table-items tbody tr.tax-row:hover td {
+            background: #f8f9fa !important;
         }
 
         .table-footer {
@@ -198,9 +134,9 @@
             font-weight: 700;
         }
 
-        .table-footer .currency-label {
-            background-color: rgba(255, 255, 255, 0.2);
-            color: white;
+        .table-footer td {
+            padding: 15px 10px;
+            font-size: 0.95rem;
         }
 
         .item-number-cell {
@@ -214,6 +150,38 @@
         .item-type-cell {
             font-weight: 600;
             color: #2c3e50;
+        }
+
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.5rem; font-size: 0.78rem; border-radius: 4px; min-width: 42px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { flex: 1; text-align: right; font-weight: 600; font-size: 0.88rem; color: #2c3e50; }
+
+        .currency-group-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .currency-label-footer {
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.2rem 0.5rem;
+            font-size: 0.78rem;
+            border-radius: 4px;
+            min-width: 42px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .value-footer {
+            flex: 1;
+            color: #000;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding-right: 0;
+            text-align: right;
         }
 
         .action-buttons {
@@ -239,18 +207,18 @@
 @section('content')
     <div class="container-fluid joContractShowPage">
         <div class="row">
-            <!-- Main Content -->
             <div class="col-lg-12">
                 <!-- Page Header Card -->
                 <div class="card shadow mb-4">
-                    <div class="card-header text-black d-flex justify-content-between align-items-center" style="background-color: #d1fae5">
-                        <span class="fw-bold"><i class="fas fa-file-contract me-2"></i>JO Contract Detail</span>
-                        <div class="d-flex gap-2">
+                    <div class="card-header text-black d-flex justify-content-between align-items-center"
+                        style="background-color: #d1fae5">
+                        <span class="fw-bold"><i class="fas fa-eye me-2"></i>Detail JO Contract</span>
+                        <div class="d-flex gap-2 align-items-center">
                             <a href="{{ route('jo-contract.edit', $joContract->id_jo_cont) }}" class="btn btn-warning btn-sm">
-                                <i class="fas fa-edit me-1"></i>Edit
+                                <i class="fas fa-edit me-1"></i> Edit
                             </a>
                             <a href="{{ route('jo-contract.index') }}" class="btn btn-light btn-sm">
-                                <i class="fas fa-arrow-left me-1"></i>Back
+                                <i class="fas fa-arrow-left me-1"></i> Back
                             </a>
                         </div>
                     </div>
@@ -259,62 +227,109 @@
                 <!-- JO Contract Info Card -->
                 <div class="card shadow mb-4">
                     <div class="card-header text-black" style="background-color: #d1fae5">
-                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>JO Contract Information</h6>
+                        <h6 class="mb-0"><i class="fas fa-file-contract me-2"></i>JO Contract Information</h6>
                     </div>
                     <div class="card-body p-4">
-                        <!-- Title -->
-                        <div class="mb-4">
-                            <label class="text-muted small text-uppercase mb-2">Title</label>
-                            <h3 class="mb-0 text-primary">
-                                <i class="fas fa-file-alt me-2"></i>{{ $joContract->title }}
-                            </h3>
+                        <div class="row">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label class="form-label">No. JO</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-success text-white">
+                                            <i class="fas fa-file-alt"></i>
+                                        </span>
+                                        <input type="text" class="form-control fw-bold"
+                                            value="{{ $joContract->no_jo_cont ?? '-' }}" readonly
+                                            style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">JO Date</label>
+                                    <input type="text" class="form-control" readonly
+                                        style="background-color:#e9ecef;"
+                                        value="{{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('d M Y') : '-' }}">
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Contract</label>
+                                <div class="card mt-1">
+                                    <div class="card-header bg-light">
+                                        <strong><i class="fas fa-file-contract me-2"></i>Selected Contract</strong>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <table class="table table-sm table-borderless">
+                                                    <tr>
+                                                        <td width="40%"><strong>No. Contract</strong></td>
+                                                        <td width="5%">:</td>
+                                                        <td>{{ $joContract->contract->no_contract }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Contract</strong></td>
+                                                        <td>:</td>
+                                                        <td>{{ $joContract->contract->contract }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Customer</strong></td>
+                                                        <td>:</td>
+                                                        <td>{{ $joContract->contract->customer->customer ?? '-' }}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <table class="table table-sm table-borderless">
+                                                    <tr>
+                                                        <td width="40%"><strong>Expenditure</strong></td>
+                                                        <td width="5%">:</td>
+                                                        <td>{{ $joContract->contract->expenditure ? 'Rp ' . number_format($joContract->contract->expenditure, 0, ',', '.') : '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Start Date</strong></td>
+                                                        <td>:</td>
+                                                        <td>{{ $joContract->contract->date_start ? \Carbon\Carbon::parse($joContract->contract->date_start)->format('d M Y') : '-' }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>End Date</strong></td>
+                                                        <td>:</td>
+                                                        <td>{{ $joContract->contract->date_end ? \Carbon\Carbon::parse($joContract->contract->date_end)->format('d M Y') : '-' }}</td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        @if ($joContract->contract->note)
+                                            <div class="row">
+                                                <div class="col-12">
+                                                    <hr>
+                                                    <strong>Note:</strong>
+                                                    <p class="mb-0 text-muted">{{ $joContract->contract->note }}</p>
+                                                </div>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-12 mb-3">
+                                <label class="form-label">Area</label>
+                                <input type="text" class="form-select" readonly
+                                    style="background-color:#e9ecef;"
+                                    value="{{ $joContract->area->area }}">
+                            </div>
                         </div>
 
-                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" readonly
+                                style="background-color:#e9ecef;"
+                                value="{{ $joContract->title }}">
+                        </div>
 
-                        <div class="info-card">
-                            <div class="info-row">
-                                <span class="info-label">JO Contract ID</span>
-                                <span class="info-value">
-                                    <span class="badge bg-secondary fs-6 px-3 py-2">#{{ $joContract->id_jo_cont }}</span>
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Contract</span>
-                                <span class="info-value">
-                                    <strong>{{ $joContract->contract->no_contract }}</strong><br>
-                                    <small class="text-muted">{{ $joContract->contract->contract }}</small>
-                                    @if ($joContract->contract->customer)
-                                        <br><small class="text-muted">({{ $joContract->contract->customer->customer }})</small>
-                                    @endif
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Area</span>
-                                <span class="info-value">
-                                    <span class="badge bg-info text-dark fs-6">{{ $joContract->area->area }}</span>
-                                </span>
-                            </div>
-                            @if ($joContract->note)
-                                <div class="info-row">
-                                    <span class="info-label">Note</span>
-                                    <span class="info-value">{{ $joContract->note }}</span>
-                                </div>
-                            @endif
-                            <div class="info-row">
-                                <span class="info-label">Created At</span>
-                                <span class="info-value">
-                                    <i class="fas fa-calendar-plus me-1 text-primary"></i>
-                                    {{ $joContract->created_at->format('d M Y H:i') }}
-                                </span>
-                            </div>
-                            <div class="info-row">
-                                <span class="info-label">Last Updated</span>
-                                <span class="info-value">
-                                    <i class="fas fa-calendar-check me-1 text-success"></i>
-                                    {{ $joContract->updated_at->format('d M Y H:i') }}
-                                </span>
-                            </div>
+                        <div class="mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea class="form-control" rows="3" readonly
+                                style="background-color:#e9ecef;">{{ $joContract->note }}</textarea>
                         </div>
                     </div>
                 </div>
@@ -367,12 +382,12 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 5%;">No</th>
-                                        <th style="width: 12%;">Category</th>
-                                        <th style="width: 18%;">Item / Invoice Type</th>
-                                        <th style="width: 13%;">Pendapatan IDR</th>
-                                        <th style="width: 13%;">Pendapatan USD</th>
-                                        <th style="width: 13%;">HPP (Biaya Ops)</th>
-                                        <th style="width: 13%;">Harga Jual (IDR)</th>
+                                        <th style="width: 13%;">Category</th>
+                                        <th style="width: 13%;">Item</th>
+                                        <th style="width: 12%;">Income (IDR)</th>
+                                        <th style="width: 12%;">Income (USD)</th>
+                                        <th style="width: 12%;">Selling Price (IDR)</th>
+                                        <th style="width: 12%;">HPP (Ops Costs)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -399,78 +414,116 @@
                                                 <td class="item-number-cell">{{ $itemNumber }}</td>
 
                                                 @if ($index === 0)
-                                                    <td class="category-cell" rowspan="{{ count($items) }}">
-                                                        <div class="category-content">
-                                                            <span class="category-name">{{ $category }}</span>
-                                                            <span class="category-count">{{ count($items) }} item{{ count($items) > 1 ? 's' : '' }}</span>
-                                                        </div>
-                                                    </td>
+                                                    <td class="category-cell" rowspan="{{ count($items) }}">{{ $category }}</td>
                                                 @endif
 
-                                                <td class="item-type-cell">
-                                                    {{ $item->invoice->invoice_typ }}
+                                                <td class="text-start">
+                                                    <span class="fw-semibold" style="color:#2c3e50;">
+                                                        {{ $item->invoice->invoice_typ }}
+                                                    </span>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">IDR</span>
-                                                        <span class="currency-value">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">USD</span>
-                                                        <span class="currency-value">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">USD</span>
+                                                        <span class="value-cell">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">IDR</span>
-                                                        <span class="currency-value">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">IDR</span>
-                                                        <span class="currency-value">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                             </tr>
                                         @endforeach
                                     @endforeach
+                                    @if($pajakItems->count() > 0)
+                                        @foreach($pajakItems as $pi)
+                                            @php $itemNumber++; @endphp
+                                            <tr class="tax-row">
+                                                <td class="item-number-cell" style="background-color:#ecf0f1 !important; color:#2c3e50; font-weight:600; text-align:center;">{{ $itemNumber }}</td>
+                                                <td class="category-cell" style="background:#fef9c3 !important; color:#000;">Tax</td>
+                                                <td class="text-start">
+                                                    <span class="fw-semibold" style="color:#2c3e50;">{{ $pi->nama_pajak }}</span>
+                                                    <small class="text-muted ms-1">({{ $pi->persentase }}%)</small>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">USD</span>
+                                                        <span class="value-cell">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td class="tax-selling">
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">
+                                                            @if($pi->include_selling)
+                                                                {{ number_format($pi->nominal_pajak, 2, ',', '.') }}
+                                                            @else
+                                                                0,00
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td class="tax-hpp">
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">
+                                                            @if($pi->include_hpp)
+                                                                {{ number_format($pi->nominal_pajak_hpp, 2, ',', '.') }}
+                                                            @else
+                                                                0,00
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endif
                                 </tbody>
                                 <tfoot class="table-footer">
                                     <tr>
                                         <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">IDR</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_revenue_idr'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">IDR</span>
+                                                <span class="value-footer">{{ number_format($summary['total_revenue_idr'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">USD</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_revenue_usd'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">USD</span>
+                                                <span class="value-footer">{{ number_format($summary['total_revenue_usd'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">IDR</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">IDR</span>
+                                                <span class="value-footer">{{ number_format($summary['total_selling_price'] + $summary['total_tax_selling'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">IDR</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_selling_price'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">IDR</span>
+                                                <span class="value-footer">{{ number_format($summary['total_hpp_ops'] + $summary['total_tax_hpp'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                     </tr>

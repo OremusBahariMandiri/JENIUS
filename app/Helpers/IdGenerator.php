@@ -333,4 +333,46 @@ class IdGenerator
         $newNumber = $last ? ((int) substr($last, -5)) + 1 : 1;
         return $prefix . str_pad($newNumber, 5, '0', STR_PAD_LEFT);
     }
+
+    /**
+     * Generate Nomor Invoice dengan format: xxxx/OBS-INV/[BULAN ROMAWI]/[TAHUN]
+     * Sequence increment lintas semua tabel invoice (contract, tramper, other)
+     * Contoh: 0001/OBS-INV/XI/2026, 0002/OBS-INV/XI/2026, dst
+     */
+    public static function generateInvoiceNo()
+    {
+        $romanMonths = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+        $month  = $romanMonths[(int) date('n') - 1];
+        $year   = date('Y');
+        $suffix = "/OBS-INV/{$month}/{$year}";
+
+        $tables = [
+            'f01_invoice_pembayaran_contract' => 'no_invoice',
+            'f03_invoice_pembayaran_tramper'  => 'no_invoice',
+            'f05_invoice_pembayaran_other'    => 'no_invoice',
+        ];
+
+        $lastNumber = 0;
+
+        foreach ($tables as $tbl => $col) {
+            try {
+                $last = DB::table($tbl)
+                    ->where($col, 'LIKE', '%' . $suffix)
+                    ->orderByRaw("CAST(LEFT({$col}, 4) AS UNSIGNED) DESC")
+                    ->value($col);
+
+                if ($last) {
+                    $num = (int) substr($last, 0, 4);
+                    if ($num > $lastNumber) {
+                        $lastNumber = $num;
+                    }
+                }
+            } catch (\Exception $e) {
+                continue;
+            }
+        }
+
+        $newNumber = $lastNumber + 1;
+        return str_pad($newNumber, 4, '0', STR_PAD_LEFT) . $suffix;
+    }
 }

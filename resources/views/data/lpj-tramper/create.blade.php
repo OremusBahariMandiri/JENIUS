@@ -468,10 +468,14 @@ function showKasbonDetail(kasbonId, idx) {
                 items.forEach((item, i) => {
                     totalHpp    += parseFloat(item.nilai_hpp_tram_item) || 0;
                     totalKasbon += parseFloat(item.nilai_kasbon) || 0;
-                    html += `<tr class="detail-item-row">
+                    const isTax   = item.item_type === 'tax';
+                    const rowStyle = isTax ? 'style="background:#fffbea;"' : '';
+                    const ctgStyle = isTax ? 'style="color:#92400e;font-weight:600;"' : '';
+                    const typStyle = isTax ? 'style="color:#92400e;"' : '';
+                    html += `<tr class="detail-item-row" ${rowStyle}>
                         <td class="text-center text-muted">${i + 1}</td>
-                        <td>${item.invoice_ctg ?? '—'}</td>
-                        <td class="fw-semibold">${item.invoice_typ ?? '—'}</td>
+                        <td ${ctgStyle}>${item.invoice_ctg ?? '—'}</td>
+                        <td class="fw-semibold" ${typStyle}>${item.invoice_typ ?? '—'}</td>
                         <td class="text-end">IDR ${formatNumber(item.nilai_hpp_tram_item)}</td>
                         <td class="text-end">IDR ${formatNumber(item.nilai_kasbon)}</td>
                     </tr>`;

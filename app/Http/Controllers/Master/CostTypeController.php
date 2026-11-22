@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class CostTypeController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -107,6 +110,7 @@ class CostTypeController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Cost Type berhasil ditambahkan', 'Cost Type');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -212,6 +216,7 @@ class CostTypeController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Cost Type berhasil diubah', 'Cost Type');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -250,6 +255,7 @@ class CostTypeController extends Controller
             $costType = CostType::findOrFail($id);
             $costType->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Cost Type berhasil dihapus', 'Cost Type');
 
             if ($request->expectsJson()) {
                 return response()->json([

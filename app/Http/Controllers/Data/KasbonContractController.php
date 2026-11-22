@@ -8,6 +8,7 @@ use App\Models\Data\KasbonContract;
 use App\Models\Data\KasbonContractItem;
 use App\Models\Data\JoContract;
 use App\Models\Data\JoContractItem;
+use App\Models\Master\Area;
 use App\Models\Master\Departemen;
 use App\Models\Master\Branch;
 use App\Models\Master\ReleaseTo;
@@ -16,9 +17,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\Data\LpjContractItem;
+use App\Traits\LogsActivity;
 
 class KasbonContractController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // INDEX
     // ========================================
@@ -26,7 +30,7 @@ class KasbonContractController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = KasbonContract::with(['joContract', 'departemen', 'cabang', 'release', 'items']);
+            $query = KasbonContract::with(['joContract.contract.customer', 'joContract.items', 'joContract.pajakItems', 'departemen', 'cabang', 'release', 'items', 'items.joContractItem', 'pajakItems']);
 
             if ($request->filled('id_jo_cont')) {
                 $query->where('id_jo_cont', $request->id_jo_cont);
@@ -110,6 +114,7 @@ class KasbonContractController extends Controller
             ->get();
         $departemens     = Departemen::orderBy('nama_dep')->get();
         $cabangs         = Branch::orderBy('nama_branch')->get();
+        $areas           = Area::orderBy('area')->get();
         $releases        = ReleaseTo::orderBy('id_md_release')->get();
         $previewNoKasbon = IdGenerator::generateCaNo('c01_kasbon_cont', 'id_kasbon_cont');
 
@@ -117,6 +122,7 @@ class KasbonContractController extends Controller
             'joContracts',
             'departemens',
             'cabangs',
+            'areas',
             'releases',
             'previewNoKasbon'
         ));
@@ -135,6 +141,7 @@ class KasbonContractController extends Controller
                 'id_jo_cont'        => 'required|exists:b01_jo_cont,id_jo_cont',
                 'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
                 'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_area'        => 'nullable|exists:a03_md_area,id_md_area',
                 'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
                 'tgl_kasbon'        => 'required|date',
                 'tgl_release'       => 'nullable|date',
@@ -176,6 +183,7 @@ class KasbonContractController extends Controller
                 'id_jo_cont'        => $request->id_jo_cont,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'nomor'             => $newNomor,
                 'tgl_kasbon'        => $request->tgl_kasbon,
@@ -189,7 +197,7 @@ class KasbonContractController extends Controller
 
             DB::commit();
 
-            $kasbonContract->load(['joContract', 'departemen', 'cabang', 'release']);
+            $kasbonContract->load(['joContract', 'departemen', 'cabang', 'area', 'release']);
 
             Log::info('KasbonContract Header Created', ['id' => $kasbonContract->id, 'id_kasbon_cont' => $idKasbonCont]);
 
@@ -240,6 +248,7 @@ class KasbonContractController extends Controller
                 'id_jo_cont'        => 'required|exists:b01_jo_cont,id_jo_cont',
                 'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
                 'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_area'        => 'nullable|exists:a03_md_area,id_md_area',
                 'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
                 'tgl_kasbon'        => 'required|date',
                 'tgl_release'       => 'nullable|date',
@@ -274,6 +283,7 @@ class KasbonContractController extends Controller
                 'id_jo_cont'        => $request->id_jo_cont,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'tgl_kasbon'        => $request->tgl_kasbon,
                 'tgl_release'       => $request->tgl_release,
@@ -286,7 +296,7 @@ class KasbonContractController extends Controller
 
             DB::commit();
 
-            $kasbonContract->load(['joContract', 'departemen', 'cabang', 'release']);
+            $kasbonContract->load(['joContract', 'departemen', 'cabang', 'area', 'release']);
 
             Log::info('KasbonContract Header Updated', ['id' => $id]);
 
@@ -642,6 +652,7 @@ class KasbonContractController extends Controller
             'id_jo_cont'              => 'required|exists:b01_jo_cont,id_jo_cont',
             'id_md_dep'               => 'required|exists:a08_md_dep,id_md_dep',
             'id_md_cabang'            => 'required|exists:a09_md_branch,id_md_branch',
+            'id_md_area'              => 'nullable|exists:a03_md_area,id_md_area',
             'id_md_release'           => 'required|exists:a10_md_release_to,id_md_release',
             'tgl_kasbon'              => 'required|date',
             'tgl_release'             => 'nullable|date',
@@ -684,6 +695,7 @@ class KasbonContractController extends Controller
                 'id_jo_cont'        => $request->id_jo_cont,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'nomor'             => $newNomor,
                 'tgl_kasbon'        => $request->tgl_kasbon,
@@ -727,6 +739,7 @@ class KasbonContractController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data CA Contract berhasil ditambahkan', 'CA Contract');
 
             Log::info('KasbonContract Store Success', ['id' => $kasbonContract->id, 'total_items' => count($request->items)]);
 
@@ -770,11 +783,14 @@ class KasbonContractController extends Controller
 
         try {
             $kasbonContract = KasbonContract::with([
-                'joContract',
+                'joContract.area',
+                'joContract.items',
                 'departemen',
                 'cabang',
+                'area',
                 'release',
-                'items.joContractItem',
+                'items.joContractItem.invoice',
+                'items.joContractPajak',
             ])->findOrFail($id);
 
             $summary = [
@@ -782,6 +798,7 @@ class KasbonContractController extends Controller
                 'total_hpp'          => $kasbonContract->items->sum('nilai_hpp_cont_item'),
                 'total_nilai_kasbon' => $kasbonContract->items->sum('nilai_kasbon'),
                 'total_kasbon'       => $kasbonContract->items->sum('total_kasbon'),
+                'total_selling'      => $kasbonContract->items->sum(fn($i) => optional($i->joContractItem)->hargajual_idr ?? 0),
             ];
 
             if ($request->expectsJson()) {
@@ -907,6 +924,7 @@ class KasbonContractController extends Controller
         $joContracts = JoContract::orderBy('no_jo_cont')->get();
         $departemens = Departemen::orderBy('nama_dep')->get();
         $cabangs     = Branch::orderBy('nama_branch')->get();
+        $areas       = Area::orderBy('area')->get();
         $releases    = ReleaseTo::orderBy('id_md_release')->get();
 
         return view('data.kasbon-contract.edit', compact(
@@ -914,6 +932,7 @@ class KasbonContractController extends Controller
             'joContracts',
             'departemens',
             'cabangs',
+            'areas',
             'releases',
             'mergedItems'
         ));
@@ -960,6 +979,7 @@ class KasbonContractController extends Controller
                 'id_jo_cont'        => $request->id_jo_cont,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'tgl_kasbon'        => $request->tgl_kasbon,
                 'tgl_release'       => $request->tgl_release,
@@ -1008,6 +1028,7 @@ class KasbonContractController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data CA Contract berhasil diubah', 'CA Contract');
 
             Log::info('KasbonContract Update Success', ['id' => $id]);
 
@@ -1100,6 +1121,7 @@ class KasbonContractController extends Controller
             $kasbonContract->delete();
 
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data CA Contract berhasil dihapus', 'CA Contract');
 
             Log::info('KasbonContract Deleted', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
@@ -1612,8 +1634,10 @@ class KasbonContractController extends Controller
                 'joContract.items.invoice',
                 'departemen',
                 'cabang',
+                'area',
                 'release',
-                'items',
+                'items.joContractPajak',
+                'pajakItems',
             ])->findOrFail($id);
 
             $kasbonLookup = $kasbonContract->items->keyBy('id_jo_cont_item');
@@ -1639,6 +1663,26 @@ class KasbonContractController extends Controller
                     'defaultFont'          => 'Arial',
                     'dpi'                  => 150,
                 ]);
+
+            // Add top margin on page 2+ via Dompdf callback (CSS @page unreliable in Dompdf)
+            $dompdf = $pdf->getDomPDF();
+            $dompdf->setCallbacks([
+                [
+                    'event' => 'begin_page_reflow',
+                    'f'     => function ($frame, $canvas, $fontMetrics) {
+                        if ($canvas->get_page_number() > 1) {
+                            $cb     = $frame->get_containing_block();
+                            $topPts = 56.69; // 20mm in points (1mm = 2.8346pt)
+                            $frame->set_containing_block(
+                                $cb['x'],
+                                $cb['y'] + $topPts,
+                                $cb['w'],
+                                $cb['h'] - $topPts
+                            );
+                        }
+                    },
+                ],
+            ]);
 
             $filename = 'Kasbon-Contract-'
                 . str_replace(['/', '\\'], '-', $kasbonContract->id_kasbon_cont ?? $id)
@@ -1700,7 +1744,7 @@ class KasbonContractController extends Controller
 
     private function buildExportQuery(Request $request)
     {
-        $query = KasbonContract::with(['joContract', 'departemen', 'cabang', 'release', 'items']);
+        $query = KasbonContract::with(['joContract', 'departemen', 'cabang', 'release', 'items', 'pajakItems']);
 
         if ($request->filled('id_jo_cont'))      $query->where('id_jo_cont', $request->id_jo_cont);
         if ($request->filled('id_md_dep'))       $query->where('id_md_dep', $request->id_md_dep);

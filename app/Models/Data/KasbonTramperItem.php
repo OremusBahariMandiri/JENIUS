@@ -16,8 +16,10 @@ class KasbonTramperItem extends Model
 
     protected $fillable = [
         'id_kasbon_tram_item',
+        'item_type',
         'id_kasbon_tram',
         'id_jo_tram_item',
+        'id_jo_tram_pajak',
         'nilai_hpp_tram_item',
         'nilai_kasbon',
         'total_kasbon',
@@ -40,5 +42,10 @@ class KasbonTramperItem extends Model
     public function joTramperItem()
     {
         return $this->belongsTo(JoTramperItem::class, 'id_jo_tram_item', 'id_jo_tram_item');
+    }
+
+    public function joTramperPajak()
+    {
+        return $this->belongsTo(JoTramperPajak::class, 'id_jo_tram_pajak', 'id_jo_tram_pajak');
     }
 }

@@ -18,7 +18,6 @@
                     <form action="{{ route('chart-of-account.store') }}" method="POST" id="coaForm">
                         @csrf
 
-
                         <div class="row">
                             <div class="col-lg-6">
                                 <div class="mb-3">
@@ -81,6 +80,66 @@
                                            placeholder="Enter account name"
                                            required>
                                     @error('account_name')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Invoice Display -->
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Invoice Display</label>
+                                    <input type="text"
+                                           name="invoice_display"
+                                           class="form-control @error('invoice_display') is-invalid @enderror"
+                                           value="{{ old('invoice_display') }}"
+                                           placeholder="e.g. Label tampilan di invoice">
+                                    @error('invoice_display')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- COA Code -->
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">COA Code</label>
+                                    <input type="text"
+                                           name="coa_code"
+                                           class="form-control @error('coa_code') is-invalid @enderror"
+                                           value="{{ old('coa_code') }}"
+                                           placeholder="e.g. COA-001">
+                                    @error('coa_code')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Number -->
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Number</label>
+                                    <input type="text"
+                                           name="number"
+                                           class="form-control @error('number') is-invalid @enderror"
+                                           value="{{ old('number') }}"
+                                           placeholder="e.g. 001">
+                                    @error('number')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Swift Code -->
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Swift Code</label>
+                                    <input type="text"
+                                           name="swift_code"
+                                           class="form-control @error('swift_code') is-invalid @enderror"
+                                           value="{{ old('swift_code') }}"
+                                           placeholder="e.g. BMRIIDJA">
+                                    @error('swift_code')
                                     <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
                                     @enderror
                                 </div>
@@ -179,7 +238,6 @@
 
 @push('scripts')
 <script>
-// Data tipe akun dari parent (di-embed dari controller)
 const parentData = @json($parentAccounts->map(fn($p) => [
     'kode'      => $p->kode_perkiraan,
     'cost_type' => $p->costType?->name ?? '',
@@ -188,14 +246,12 @@ const parentData = @json($parentAccounts->map(fn($p) => [
 $(document).ready(function() {
     $('input[name="account_name"]').focus();
 
-    // Update tipe akun display saat parent dipilih
     $('#parentSelect').on('change', function() {
         const kode     = $(this).val();
         const found    = parentData.find(p => p.kode === kode);
         $('#tipeAkunDisplay').val(found ? found.cost_type : '');
     });
 
-    // Trigger saat load jika ada old value
     $('#parentSelect').trigger('change');
 });
 </script>

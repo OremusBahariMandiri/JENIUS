@@ -17,9 +17,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Models\Data\JoTramperPajak;
+use App\Models\Master\Pajak;
+use App\Traits\LogsActivity;
 
 class JoTramperController extends Controller
 {
+    use LogsActivity;
+
     /**
      * Display a listing of the resource.
      */
@@ -718,6 +723,7 @@ class JoTramperController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data JO Tramper berhasil ditambahkan', 'JO Tramper');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'JO Tramper successfully added', 'data' => $joTramper->load('items')], 201);
@@ -739,22 +745,24 @@ class JoTramperController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $joTramper = JoTramper::with(['customer', 'port', 'vessel', 'items.invoice'])
+            $joTramper = JoTramper::with(['customer', 'port', 'vessel', 'items.invoice', 'pajakItems'])
                 ->where('id_jo_tram', (string) $id)->firstOrFail();
+
+            $pajakItems = $joTramper->pajakItems;
 
             $summary = [
                 'total_items'         => $joTramper->items->count(),
                 'total_revenue_idr'   => $joTramper->items->sum('pendapatan_idr'),
                 'total_revenue_usd'   => $joTramper->items->sum('pendapatan_usd'),
-                'total_hpp_ops'       => $joTramper->items->sum('hpp_ops'),
-                'total_selling_price' => $joTramper->items->sum('hargajual_idr'),
+                'total_hpp_ops'       => $joTramper->items->sum('hpp_ops') + $pajakItems->where('include_hpp', true)->sum('nominal_pajak_hpp'),
+                'total_selling_price' => $joTramper->items->sum('hargajual_idr') + $pajakItems->where('include_selling', true)->sum('nominal_pajak'),
             ];
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'data' => $joTramper, 'summary' => $summary]);
             }
 
-            return view('data.jo-tramper.show', compact('joTramper', 'summary'));
+            return view('data.jo-tramper.show', compact('joTramper', 'summary', 'pajakItems'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => 'JO Tramper not found'], 404);
@@ -776,7 +784,7 @@ class JoTramperController extends Controller
         Log::info('=== JO Tramper Edit Request START ===', ['id' => $id]);
 
         try {
-            $joTramper = JoTramper::with(['items.invoice'])
+            $joTramper = JoTramper::with(['items.invoice', 'pajakItems.masterPajak'])
                 ->where('id_jo_tram', (string) $id)
                 ->firstOrFail();
 
@@ -789,7 +797,8 @@ class JoTramperController extends Controller
                 return back()->with('error', 'View file not found: data.jo-tramper.edit');
             }
 
-            return view('data.jo-tramper.edit', compact('joTramper', 'customers', 'ports', 'invoices', 'vessels'));
+            $pajakItems = $joTramper->pajakItems;
+            return view('data.jo-tramper.edit', compact('joTramper', 'customers', 'ports', 'invoices', 'vessels', 'pajakItems'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return back()->with('error', 'JO Tramper not found in database');
         } catch (\Exception $e) {
@@ -861,6 +870,7 @@ class JoTramperController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data JO Tramper berhasil diubah', 'JO Tramper');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'JO Tramper successfully updated', 'data' => $joTramper->fresh()->load('items')]);
@@ -903,6 +913,7 @@ class JoTramperController extends Controller
             }
             $joTramper->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data JO Tramper berhasil dihapus', 'JO Tramper');
 
             Log::info('JO Tramper Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
@@ -1001,24 +1012,47 @@ class JoTramperController extends Controller
                 'port',
                 'vessel',
                 'items.invoice',
+                'pajakItems',
             ])->where('id_jo_tram', (string) $id)->firstOrFail();
 
             // Terbilang (number-to-words) — uses a helper if available,
             // otherwise falls back to a simple inline conversion.
-            $totalSell = $joTramper->items->sum('hargajual_idr');
+            $pajakItems = $joTramper->pajakItems;
+            $totalSell = $joTramper->items->sum('hargajual_idr')
+                       + $pajakItems->where('include_selling', true)->sum('nominal_pajak');
             $terbilang = $this->toTerbilang((int) round($totalSell)) . ' Rupiah';
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
                 'data.jo-tramper.pdf',          // resources/views/data/jo-tramper/pdf.blade.php
-                compact('joTramper', 'terbilang')
+                compact('joTramper', 'terbilang', 'pajakItems')
             )
                 ->setPaper('a4', 'portrait')
                 ->setOptions([
-                    'isHtml5ParserEnabled' => true,
+                    'isHtml5ParserEnabled' => false,
                     'isRemoteEnabled'      => false,
                     'defaultFont'          => 'Arial',
                     'dpi'                  => 150,
                 ]);
+
+            // Add top margin on page 2+ via Dompdf callback (CSS @page unreliable in Dompdf)
+            $dompdf = $pdf->getDomPDF();
+            $dompdf->setCallbacks([
+                [
+                    'event' => 'begin_page_reflow',
+                    'f'     => function ($frame, $canvas, $fontMetrics) {
+                        if ($canvas->get_page_number() > 1) {
+                            $cb     = $frame->get_containing_block();
+                            $topPts = 56.69; // 20mm in points (1mm = 2.8346pt)
+                            $frame->set_containing_block(
+                                $cb['x'],
+                                $cb['y'] + $topPts,
+                                $cb['w'],
+                                $cb['h'] - $topPts
+                            );
+                        }
+                    },
+                ],
+            ]);
 
             $noJo = str_replace(['/', '\\'], '-', $joTramper->no_jo_tram ?? $id);
             $filename = 'JO-Tramper-' . $noJo . '.pdf';
@@ -1247,6 +1281,135 @@ class JoTramperController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Item not found'], 404);
         } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+    // ========================================
+    // TAX (PAJAK) METHODS
+    // ========================================
+
+    public function updatePajak(Request $request, $id)
+    {
+        try {
+            $record = JoTramperPajak::findOrFail($id);
+            $joTram = $record->joTramper;
+
+            $include_selling = $request->boolean('include_selling');
+            $include_hpp     = $request->boolean('include_hpp');
+
+            $dasarPengenaan    = 0;
+            $dasarPengenaanHpp = 0;
+            if ($include_selling) {
+                $dasarPengenaan = $joTram->items->sum('hargajual_idr');
+            }
+            if ($include_hpp) {
+                $dasarPengenaanHpp = $joTram->items->sum('hpp_ops');
+            }
+
+            $nominalPajak    = round($dasarPengenaan    * ($record->persentase / 100), 2);
+            $nominalPajakHpp = round($dasarPengenaanHpp * ($record->persentase / 100), 2);
+
+            $record->update([
+                'include_selling'     => $include_selling,
+                'include_hpp'         => $include_hpp,
+                'dasar_pengenaan'     => $dasarPengenaan,
+                'dasar_pengenaan_hpp' => $dasarPengenaanHpp,
+                'nominal_pajak'       => $nominalPajak,
+                'nominal_pajak_hpp'   => $nominalPajakHpp,
+            ]);
+
+            return response()->json(['success' => true, 'data' => [
+                'id'              => $record->id_jo_tram_pajak,
+                'nominal_pajak'   => $record->nominal_pajak,
+                'nominal_pajak_hpp' => $record->nominal_pajak_hpp,
+                'include_selling' => $record->include_selling,
+                'include_hpp'     => $record->include_hpp,
+            ]]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function storePajak(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'id_jo_tram'      => 'required|exists:b03_jo_tram,id_jo_tram',
+            'id_md_pajak'     => 'required|exists:a14_md_pajak,id_md_pajak',
+            'include_selling' => 'boolean',
+            'include_hpp'     => 'boolean',
+        ], [
+            'id_md_pajak.required' => 'Pilih jenis pajak',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            $joTramper = JoTramper::with('items')->findOrFail($request->id_jo_tram);
+            $pajak     = Pajak::findOrFail($request->id_md_pajak);
+
+            $existing = JoTramperPajak::where('id_jo_tram', $request->id_jo_tram)
+                ->where('id_md_pajak', $request->id_md_pajak)
+                ->first();
+
+            if ($existing) {
+                return response()->json(['success' => false, 'message' => 'Pajak ini sudah ditambahkan ke JO tersebut'], 422);
+            }
+
+            $dasarPengenaan    = (float) $joTramper->items->sum('hargajual_idr');
+            $dasarPengenaanHpp = (float) $joTramper->items->sum('hpp_ops');
+            $nominalPajak      = round($dasarPengenaan    * ($pajak->persentase / 100), 2);
+            $nominalPajakHpp   = round($dasarPengenaanHpp * ($pajak->persentase / 100), 2);
+
+            $record = JoTramperPajak::create([
+                'id_jo_tram'          => $request->id_jo_tram,
+                'id_md_pajak'         => $pajak->id_md_pajak,
+                'nama_pajak'          => $pajak->nama_pajak,
+                'persentase'          => $pajak->persentase,
+                'dasar_pengenaan'     => $dasarPengenaan,
+                'dasar_pengenaan_hpp' => $dasarPengenaanHpp,
+                'nominal_pajak'       => $nominalPajak,
+                'nominal_pajak_hpp'   => $nominalPajakHpp,
+                'include_selling'     => (bool) $request->input('include_selling', true),
+                'include_hpp'         => (bool) $request->input('include_hpp', false),
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pajak berhasil ditambahkan',
+                'data'    => [
+                    'id'                => $record->id_jo_tram_pajak,
+                    'id_md_pajak'       => $record->id_md_pajak,
+                    'nama_pajak'        => $record->nama_pajak,
+                    'persentase'        => number_format($record->persentase, 2),
+                    'dasar_pengenaan'   => $record->dasar_pengenaan,
+                    'nominal_pajak'     => $record->nominal_pajak,
+                    'nominal_pajak_hpp' => $record->nominal_pajak_hpp,
+                    'include_selling'   => (bool) $record->include_selling,
+                    'include_hpp'       => (bool) $record->include_hpp,
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('storePajak tramper failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function destroyPajak(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $record = JoTramperPajak::findOrFail($id);
+            $record->delete();
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Pajak berhasil dihapus']);
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

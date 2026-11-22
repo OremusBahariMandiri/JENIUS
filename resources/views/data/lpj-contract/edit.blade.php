@@ -396,17 +396,7 @@
             background: #e0eeff !important;
         }
 
-        /* Tax / pajak rows */
-        .table-lpj tbody tr.row-tax td {
-            background: #fffbeb !important;
-        }
-        .table-lpj tbody tr.row-tax:hover td {
-            background: #fef3c7 !important;
-        }
-        .table-lpj tbody tr.row-tax .category-cell {
-            color: #b45309;
-            font-weight: 600;
-        }
+        /* Tax / pajak rows — no special color */
         .table-lpj tbody tr.row-from-lpj .coa-select-cell select {
             background: #eff6ff;
         }
@@ -476,11 +466,11 @@
         .footer-currency-label {
             background: #2c3e50;
             color: #fff;
-            padding: 4px 10px;
-            border-radius: 5px;
-            font-size: .60rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
             font-weight: 700;
-            min-width: 44px;
+            min-width: 36px;
             text-align: center;
             flex-shrink: 0;
         }
@@ -488,10 +478,14 @@
         .footer-value {
             color: #2c3e50;
             font-weight: 700;
-            font-size: .70rem;
+            font-size: .88rem;
             text-align: right;
             flex: 1;
         }
+        /* Match CA contract style */
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.4rem; font-size: 0.72rem; border-radius: 4px; min-width: 36px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { font-size: 0.88rem; font-weight: 600; color: #2c3e50; text-align: right; flex: 1; }
 
         .btn-edit-row {
             background: #10b981;
@@ -1047,8 +1041,8 @@
                                         </td>
                                         <td>
                                             <div class="footer-currency-wrap">
-                                                <span class="footer-currency-label">IDR</span>
-                                                <span class="footer-value" id="footerTotalLpj">0,00</span>
+                                                <span class="footer-currency-label" style="background:#2c3e50;">IDR</span>
+                                                <span class="footer-value" style="color:#212529;font-weight:700;" id="footerTotalLpj">0,00</span>
                                             </div>
                                         </td>
                                         <td colspan="2"></td>
@@ -1722,9 +1716,9 @@
                             <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
                             ${originBadge}
                         </td>
-                        <td class="cell-readonly cell-right">${formatNumber(item.nilai_hpp_cont_item)}</td>
-                        <td class="cell-readonly cell-right">${formatNumber(item.nilai_kasbon)}</td>
-                        <td class="cell-right amount-lpj-cell">${formatNumber(item.amount_lpj)}</td>
+                        <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.nilai_hpp_cont_item)}</span></div></td>
+                        <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.nilai_kasbon)}</span></div></td>
+                        <td class="amount-lpj-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell amount-lpj-val">${formatNumber(item.amount_lpj)}</span></div></td>
                         <td class="coa-display-cell text-center">
     ${buildCoaDisplay(gIdx, item.id_md_chart_of_account)}
 </td><td class="cell-center">
@@ -1753,7 +1747,7 @@
 
         function refreshRow(gIdx, amountLpj, saved) {
             const $row = $(`#row_${gIdx}`);
-            $row.find('.amount-lpj-cell').text(formatNumber(amountLpj));
+            $row.find('.amount-lpj-cell .amount-lpj-val').text(formatNumber(amountLpj));
             $row.find('.btn-clear-row')
                 .prop('disabled', !saved)
                 .attr('title', saved ? 'Clear LPJ amount' : 'No LPJ amount to clear');
@@ -2270,43 +2264,13 @@
             const $cHint = $('#caHint');
             const $lHint = $('#lpjHint');
 
-            // ── 1. HPP vs Selling Price ──────────────────────────
-            if (v.sell > 0 && v.hpp > 0) {
-                if (v.hpp > v.sell) {
-                    setHint($hHint, $hpp,
-                        `⚠ HPP cannot exceed the Selling Price (IDR ${formatNumber(v.sell)}).`,
-                        'danger');
-                } else {
-                    setHint($hHint, $hpp,
-                        ``,
-                        '');
-                }
-            } else if (v.sell > 0) {
-                setHint($hHint, $hpp, ``, 'info');
-                $hpp.removeClass('input-invalid input-valid');
-            } else {
-                setHint($hHint, $hpp, '', '');
-                $hpp.removeClass('input-invalid input-valid');
-            }
+            // ── 1. HPP vs Selling Price — validasi dihapus ──────
+            $hpp.removeClass('input-invalid input-valid');
+            setHint($hHint, $hpp, '', '');
 
-            // ── 2. CA Amount vs HPP ──────────────────────────────
-            if (v.hpp > 0 && v.ca > 0) {
-                if (v.ca > v.hpp) {
-                    setHint($cHint, $ca,
-                        `⚠ CA Amount cannot exceed the HPP (IDR ${formatNumber(v.hpp)}).`,
-                        'danger');
-                } else {
-                    setHint($cHint, $ca,
-                        ``,
-                        '');
-                }
-            } else if (v.hpp > 0) {
-                setHint($cHint, $ca, ``, '');
-                $ca.removeClass('input-invalid input-valid');
-            } else {
-                setHint($cHint, $ca, '', '');
-                $ca.removeClass('input-invalid input-valid');
-            }
+            // ── 2. CA Amount vs HPP — validasi dihapus ──────────
+            $ca.removeClass('input-invalid input-valid');
+            setHint($cHint, $ca, '', '');
 
             // ── 3. LPJ Amount — bebas, hanya info ───────────────
             if (v.lpj > 0) {
@@ -2381,15 +2345,7 @@
                 errors.push('CA Amount wajib diisi.');
             if (amountLpj <= 0)
                 errors.push('LPJ Amount wajib diisi.');
-            if (sellPrice > 0 && hpp > sellPrice)
-                errors.push(
-                    `HPP (IDR ${formatNumber(hpp)}) tidak boleh melebihi Selling Price (IDR ${formatNumber(sellPrice)}).`
-                );
-            if (hpp > 0 && nilaiKasbon > hpp)
-                errors.push(
-                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) tidak boleh melebihi HPP (IDR ${formatNumber(hpp)}).`
-                );
-            // LPJ Amount: tidak ada validasi batas — bebas
+            // Validasi nominal HPP, CA Amount, dan LPJ Amount dihapus — bebas input
 
             if (errors.length) {
                 $('#newItemValidationAlert')

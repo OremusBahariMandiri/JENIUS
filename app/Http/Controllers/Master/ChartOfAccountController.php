@@ -10,9 +10,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class ChartOfAccountController extends Controller
 {
+    use LogsActivity;
+
     const TYPE_OPTIONS = [
         'Asset'     => 'Asset',
         'Liability' => 'Liability',
@@ -242,6 +245,10 @@ HTML;
             'payment_type'    => 'nullable|string|max:100',
             'opening_balance' => 'nullable|numeric',
             'current_balance' => 'nullable|numeric',
+            'invoice_display' => 'nullable|string|max:255',
+            'coa_code'        => 'nullable|string|max:100',
+            'number'          => 'nullable|string|max:100',
+            'swift_code'      => 'nullable|string|max:100',
         ], [
             'account_name.required' => 'Nama akun wajib diisi',
             'no_account.unique'     => 'Nomor akun sudah digunakan',
@@ -269,9 +276,13 @@ HTML;
                 'payment_type'           => $request->payment_type,
                 'opening_balance'        => $request->opening_balance ?? 0,
                 'current_balance'        => $request->current_balance ?? 0,
+                'invoice_display'        => $request->invoice_display,
+                'coa_code'               => $request->coa_code,
+                'number'                 => $request->number,
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Chart of Account berhasil ditambahkan', 'Chart of Account');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -342,6 +353,10 @@ HTML;
             'payment_type'    => 'nullable|string|max:100',
             'opening_balance' => 'nullable|numeric',
             'current_balance' => 'nullable|numeric',
+            'invoice_display' => 'nullable|string|max:255',
+            'coa_code'        => 'nullable|string|max:100',
+            'number'          => 'nullable|string|max:100',
+            'swift_code'      => 'nullable|string|max:100',
         ], [
             'account_name.required' => 'Nama akun wajib diisi',
             'no_account.unique'     => 'Nomor akun sudah digunakan',
@@ -368,9 +383,14 @@ HTML;
                 'payment_type'    => $request->payment_type,
                 'opening_balance' => $request->opening_balance ?? 0,
                 'current_balance' => $request->current_balance ?? 0,
+                'invoice_display' => $request->invoice_display,
+                'coa_code'        => $request->coa_code,
+                'number'          => $request->number,
+                'swift_code'      => $request->swift_code,
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Chart of Account berhasil diubah', 'Chart of Account');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -403,6 +423,7 @@ HTML;
             $account = ChartOfAccount::findOrFail($id);
             $account->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Chart of Account berhasil dihapus', 'Chart of Account');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Chart of Account berhasil dihapus']);

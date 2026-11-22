@@ -16,17 +16,21 @@ class JoContractPajak extends Model
         'nama_pajak',
         'persentase',
         'dasar_pengenaan',
+        'dasar_pengenaan_hpp',
         'nominal_pajak',
+        'nominal_pajak_hpp',
         'include_selling',
         'include_hpp',
     ];
 
     protected $casts = [
-        'persentase'     => 'decimal:2',
-        'dasar_pengenaan'=> 'decimal:2',
-        'nominal_pajak'  => 'decimal:2',
-        'include_selling'=> 'boolean',
-        'include_hpp'    => 'boolean',
+        'persentase'          => 'decimal:2',
+        'dasar_pengenaan'     => 'decimal:2',
+        'dasar_pengenaan_hpp' => 'decimal:2',
+        'nominal_pajak'       => 'decimal:2',
+        'nominal_pajak_hpp'   => 'decimal:2',
+        'include_selling'     => 'boolean',
+        'include_hpp'         => 'boolean',
     ];
 
     public function joContract()

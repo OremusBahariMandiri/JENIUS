@@ -9,6 +9,7 @@ use App\Models\Data\KasbonOtherItem;
 use App\Models\Data\JoOther;
 use App\Models\Data\JoOtherItem;
 use App\Models\Data\JoOtherPajak;
+use App\Models\Master\Area;
 use App\Models\Master\Departemen;
 use App\Models\Master\Branch;
 use App\Models\Master\ReleaseTo;
@@ -16,9 +17,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Traits\LogsActivity;
 
 class KasbonOtherController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // INDEX
     // ========================================
@@ -26,7 +30,7 @@ class KasbonOtherController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = KasbonOther::with(['joOther', 'departemen', 'cabang', 'release', 'items']);
+            $query = KasbonOther::with(['joOther.customer', 'joOther.other', 'joOther.items', 'joOther.pajakItems', 'departemen', 'cabang', 'release', 'items']);
 
             if ($request->filled('id_jo_other')) {
                 $query->where('id_jo_other', $request->id_jo_other);
@@ -108,6 +112,7 @@ class KasbonOtherController extends Controller
         $joOthers        = JoOther::with(['customer', 'port'])->orderBy('no_jo_other')->get();
         $departemens     = Departemen::orderBy('nama_dep')->get();
         $cabangs         = Branch::orderBy('nama_branch')->get();
+        $areas           = Area::orderBy('area')->get();
         $releases        = ReleaseTo::orderBy('id_md_release')->get();
         $previewNoKasbon = IdGenerator::generateCaNo('c05_kasbon_other', 'id_kasbon_other');
 
@@ -115,6 +120,7 @@ class KasbonOtherController extends Controller
             'joOthers',
             'departemens',
             'cabangs',
+            'areas',
             'releases',
             'previewNoKasbon'
         ));
@@ -133,6 +139,7 @@ class KasbonOtherController extends Controller
                 'id_jo_other'      => 'required|exists:b05_jo_other,id_jo_other',
                 'id_md_dep'        => 'required|exists:a08_md_dep,id_md_dep',
                 'id_md_cabang'     => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_area'       => 'nullable|exists:a03_md_area,id_md_area',
                 'id_md_release'    => 'required|exists:a10_md_release_to,id_md_release',
                 'tgl_kasbon'       => 'required|date',
                 'tgl_release'      => 'nullable|date',
@@ -172,6 +179,7 @@ class KasbonOtherController extends Controller
                 'id_jo_other'       => $request->id_jo_other,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'nomor'             => $newNomor,
                 'tgl_kasbon'        => $request->tgl_kasbon,
@@ -185,7 +193,7 @@ class KasbonOtherController extends Controller
 
             DB::commit();
 
-            $kasbonOther->load(['joOther', 'departemen', 'cabang', 'release']);
+            $kasbonOther->load(['joOther', 'departemen', 'cabang', 'area', 'release']);
 
             Log::info('KasbonOther Header Created', ['id' => $kasbonOther->id, 'id_kasbon_other' => $idKasbonOther]);
 
@@ -238,6 +246,7 @@ class KasbonOtherController extends Controller
                 'id_jo_other'       => 'required|exists:b05_jo_other,id_jo_other',
                 'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
                 'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_area'        => 'nullable|exists:a03_md_area,id_md_area',
                 'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
                 'tgl_kasbon'        => 'required|date',
                 'tgl_release'       => 'nullable|date',
@@ -272,6 +281,7 @@ class KasbonOtherController extends Controller
                 'id_jo_other'       => $request->id_jo_other,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'tgl_kasbon'        => $request->tgl_kasbon,
                 'tgl_release'       => $request->tgl_release,
@@ -284,7 +294,7 @@ class KasbonOtherController extends Controller
 
             DB::commit();
 
-            $kasbonOther->load(['joOther', 'departemen', 'cabang', 'release']);
+            $kasbonOther->load(['joOther', 'departemen', 'cabang', 'area', 'release']);
 
             Log::info('KasbonOther Header Updated', ['id' => $id]);
 
@@ -644,6 +654,7 @@ class KasbonOtherController extends Controller
             'id_jo_other'                    => 'required|exists:b05_jo_other,id_jo_other',
             'id_md_dep'                      => 'required|exists:a08_md_dep,id_md_dep',
             'id_md_cabang'                   => 'required|exists:a09_md_branch,id_md_branch',
+            'id_md_area'                     => 'nullable|exists:a03_md_area,id_md_area',
             'id_md_release'                  => 'required|exists:a10_md_release_to,id_md_release',
             'tgl_kasbon'                     => 'required|date',
             'tgl_release'                    => 'nullable|date',
@@ -686,6 +697,7 @@ class KasbonOtherController extends Controller
                 'id_jo_other'       => $request->id_jo_other,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'nomor'             => $newNomor,
                 'tgl_kasbon'        => $request->tgl_kasbon,
@@ -713,6 +725,7 @@ class KasbonOtherController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data CA Other berhasil ditambahkan', 'CA Other');
 
             Log::info('KasbonOther Store Success', ['id' => $kasbonOther->id, 'total_items' => count($request->items)]);
 
@@ -756,17 +769,81 @@ class KasbonOtherController extends Controller
 
         try {
             $kasbonOther = KasbonOther::with([
-                'joOther',
+                'joOther.vessel',
                 'departemen',
                 'cabang',
+                'area',
                 'release',
-                'items.joOtherItem',
+                'items.joOtherItem.invoice',
+                'items.joOtherPajak',
             ])->findOrFail($id);
 
+            // ---- Build merged display rows from JO (all items) + pajak ----
+            $joItems   = $kasbonOther->joOther
+                ? JoOtherItem::where('id_jo_other', $kasbonOther->id_jo_other)
+                    ->with('invoice')
+                    ->get()
+                : collect();
+
+            $pajakRows = $kasbonOther->joOther
+                ? JoOtherPajak::where('id_jo_other', $kasbonOther->id_jo_other)->get()
+                : collect();
+
+            // Map kasbon items by id_jo_other_item (for 'item' rows)
+            $kasbonItemsByJoItem  = $kasbonOther->items
+                ->where('item_type', 'item')
+                ->keyBy('id_jo_other_item');
+
+            // Map kasbon items by id_jo_other_pajak (for 'tax' rows)
+            $kasbonItemsByPajak   = $kasbonOther->items
+                ->where('item_type', 'tax')
+                ->keyBy('id_jo_other_pajak');
+
+            // Build unified displayRows (hanya item yang sudah di-kasbon / nilai_kasbon > 0)
+            $displayRows = collect();
+
+            foreach ($joItems as $joItem) {
+                $kasbonItem  = $kasbonItemsByJoItem->get($joItem->id_jo_other_item);
+                $nilaiKasbon = $kasbonItem->nilai_kasbon ?? null;
+
+                // Hanya tampilkan item yang sudah di-kasbon
+                if (!$nilaiKasbon || (float) $nilaiKasbon <= 0) continue;
+
+                $displayRows->push((object)[
+                    'item_type'          => 'item',
+                    'invoice_ctg'        => optional($joItem->invoice)->invoice_ctg ?? '—',
+                    'invoice_typ'        => optional($joItem->invoice)->invoice_typ ?? '—',
+                    'hargajual_idr'      => $joItem->hargajual_idr ?? 0,
+                    'nilai_hpp'          => $joItem->hpp_ops ?? 0,
+                    'nilai_kasbon'       => $nilaiKasbon,
+                ]);
+            }
+
+            foreach ($pajakRows as $pajak) {
+                $kasbonItem  = $kasbonItemsByPajak->get($pajak->id_jo_other_pajak);
+                $nilaiKasbon = $kasbonItem->nilai_kasbon ?? null;
+
+                // Hanya tampilkan tax yang sudah di-kasbon
+                if (!$nilaiKasbon || (float) $nilaiKasbon <= 0) continue;
+
+                $pct = $pajak->persentase > 0
+                    ? ' (' . rtrim(rtrim(number_format((float)$pajak->persentase, 2, '.', ''), '0'), '.') . '%)'
+                    : '';
+                $displayRows->push((object)[
+                    'item_type'          => 'tax',
+                    'invoice_ctg'        => 'Tax',
+                    'invoice_typ'        => ($pajak->nama_pajak ?? 'Tax') . $pct,
+                    'hargajual_idr'      => $pajak->nominal_pajak ?? 0,
+                    'nilai_hpp'          => $pajak->nominal_pajak ?? 0,
+                    'nilai_kasbon'       => $nilaiKasbon,
+                ]);
+            }
+
             $summary = [
-                'total_items'        => $kasbonOther->items->count(),
-                'total_hpp'          => $kasbonOther->items->sum('nilai_hpp_other_item'),
-                'total_nilai_kasbon' => $kasbonOther->items->sum('nilai_kasbon'),
+                'total_items'        => $displayRows->count(),
+                'total_selling'      => $displayRows->sum('hargajual_idr'),
+                'total_hpp'          => $displayRows->sum('nilai_hpp'),
+                'total_nilai_kasbon' => $displayRows->sum(fn($r) => $r->nilai_kasbon ?? 0),
                 'total_kasbon'       => $kasbonOther->items->sum('total_kasbon'),
             ];
 
@@ -778,7 +855,7 @@ class KasbonOtherController extends Controller
                 return back()->with('error', 'View file not found: data.kasbon-other.show');
             }
 
-            return view('data.kasbon-other.show', compact('kasbonOther', 'summary'));
+            return view('data.kasbon-other.show', compact('kasbonOther', 'summary', 'displayRows'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('KasbonOther Not Found', ['id' => $id]);
             if ($request->expectsJson()) {
@@ -880,7 +957,7 @@ class KasbonOtherController extends Controller
                     'item_type'                => 'tax',
                     'id_jo_other_item'         => null,
                     'id_jo_other_pajak'        => (string) $pajak->id_jo_other_pajak,
-                    'invoice_typ'              => $pajak->nama_pajak,
+                    'invoice_typ'              => $pajak->nama_pajak . ($pajak->persentase > 0 ? ' (' . (float)$pajak->persentase . '%)' : ''),
                     'invoice_ctg'              => 'Tax',
                     'hargajual_idr'            => (float) $pajak->nominal_pajak,
                     'hpp_ops'                  => $nilaiHpp,
@@ -902,6 +979,7 @@ class KasbonOtherController extends Controller
         $joOthers    = JoOther::orderBy('no_jo_other')->get();
         $departemens = Departemen::orderBy('nama_dep')->get();
         $cabangs     = Branch::orderBy('nama_branch')->get();
+        $areas       = Area::orderBy('area')->get();
         $releases    = ReleaseTo::orderBy('id_md_release')->get();
 
         return view('data.kasbon-other.edit', compact(
@@ -909,6 +987,7 @@ class KasbonOtherController extends Controller
             'joOthers',
             'departemens',
             'cabangs',
+            'areas',
             'releases',
             'mergedItems'
         ));
@@ -926,6 +1005,7 @@ class KasbonOtherController extends Controller
             'id_jo_other'              => 'required|exists:b05_jo_other,id_jo_other',
             'id_md_dep'                => 'required|exists:a08_md_dep,id_md_dep',
             'id_md_cabang'             => 'required|exists:a09_md_branch,id_md_branch',
+            'id_md_area'               => 'nullable|exists:a03_md_area,id_md_area',
             'id_md_release'            => 'required|exists:a10_md_release_to,id_md_release',
             'tgl_kasbon'               => 'required|date',
             'tgl_release'              => 'nullable|date',
@@ -955,6 +1035,7 @@ class KasbonOtherController extends Controller
                 'id_jo_other'       => $request->id_jo_other,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'tgl_kasbon'        => $request->tgl_kasbon,
                 'tgl_release'       => $request->tgl_release,
@@ -985,6 +1066,7 @@ class KasbonOtherController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data CA Other berhasil diubah', 'CA Other');
 
             Log::info('KasbonOther Update Success', ['id' => $id]);
 
@@ -1077,6 +1159,7 @@ class KasbonOtherController extends Controller
             $kasbonOther->delete();
 
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data CA Other berhasil dihapus', 'CA Other');
 
             Log::info('KasbonOther Deleted', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
@@ -1195,8 +1278,8 @@ class KasbonOtherController extends Controller
                         'item_type'        => 'tax',
                         'id_jo_other_item' => null,
                         'id_jo_other_pajak'=> (string) $pajak->id_jo_other_pajak,
-                        'text'             => $pajak->nama_pajak,
-                        'invoice_typ'      => $pajak->nama_pajak,
+                        'text'             => $pajak->nama_pajak . ($pajak->persentase > 0 ? ' (' . (float)$pajak->persentase . '%)' : ''),
+                        'invoice_typ'      => $pajak->nama_pajak . ($pajak->persentase > 0 ? ' (' . (float)$pajak->persentase . '%)' : ''),
                         'invoice_ctg'      => 'Tax',
                         'hpp_ops'          => (float) $pajak->nominal_pajak_hpp,
                         'hargajual_idr'    => (float) $pajak->nominal_pajak,
@@ -1405,6 +1488,20 @@ class KasbonOtherController extends Controller
                 return response()->json(['success' => false, 'message' => 'id_jo_other_item is required'], 422);
             }
 
+            // Conflict hanya terjadi jika budget sudah habis (max_allowed = 0).
+            // Jika masih ada sisa budget, item boleh di-kasbon di beberapa CA sekaligus.
+            $joOtherItem    = \App\Models\Data\JoOtherItem::find($idJoOtherItem);
+            $hpp            = $joOtherItem ? (float) $joOtherItem->hpp_ops : 0;
+            $totalPaidOther = (float) KasbonOtherItem::where('id_jo_other_item', $idJoOtherItem)
+                ->where('id_kasbon_other', '!=', $idKasbonOther)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+            $maxAllowed     = max(0.0, $hpp - $totalPaidOther);
+
+            if ($maxAllowed > 0) {
+                return response()->json(['success' => true, 'has_conflict' => false]);
+            }
+
             $conflict = KasbonOtherItem::where('id_jo_other_item', $idJoOtherItem)
                 ->where('id_kasbon_other', '!=', $idKasbonOther)
                 ->where('nilai_kasbon', '>', 0)
@@ -1481,6 +1578,7 @@ class KasbonOtherController extends Controller
                 'joOther.items.invoice',
                 'departemen',
                 'cabang',
+                'area',
                 'release',
                 'items',
             ])->findOrFail($id);
@@ -1574,7 +1672,7 @@ class KasbonOtherController extends Controller
 
     private function buildExportQuery(Request $request)
     {
-        $query = KasbonOther::with(['joOther', 'departemen', 'cabang', 'release', 'items']);
+        $query = KasbonOther::with(['joOther.customer', 'joOther.other', 'joOther.items', 'joOther.pajakItems', 'departemen', 'cabang', 'release', 'items']);
 
         if ($request->filled('id_jo_other'))     $query->where('id_jo_other', $request->id_jo_other);
         if ($request->filled('id_md_dep'))       $query->where('id_md_dep', $request->id_md_dep);

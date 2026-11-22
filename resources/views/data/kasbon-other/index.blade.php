@@ -164,24 +164,28 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive">
-                            <table id="kasbonOtherTable" class="table table-bordered table-striped">
+                        <div>
+                            <table id="kasbonOtherTable" style="width:100%" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
-                                        <th width="4%">No</th>
+                                        <th width="3%">No</th>
                                         <th>CA No</th>
-                                        <th>CA Date</th>
                                         <th>JO No</th>
-                                        <th>Dep</th>
+                                        <th>Customer</th>
+                                        <th>JO Title</th>
+                                        <th>Other Type</th>
                                         <th>Branch</th>
                                         <th>Release To</th>
-                                        <th class="text-center">Items</th>
-                                        <th class="text-end">Total HPP</th>
+                                        <th class="text-end">Selling Price</th>
+                                        <th class="text-end">HPP</th>
                                         <th class="text-end">Total CA</th>
-                                        <th class="text-center">CA PDF</th>
+                                        <th>CA Date</th>
                                         <th class="text-center">Priority</th>
                                         <th class="text-center">Status</th>
-                                        <th class="text-center" width="10%">Action</th>
+                                        <th>Dep.</th>
+                                        <th class="text-center">Items</th>
+                                        <th class="text-center">CA PDF</th>
+                                        <th class="text-center" width="8%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -193,28 +197,33 @@
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $kasbon->id_kasbon_other ?? '-' }}</td>
-                                            <td>{{ $kasbon->tgl_kasbon ? $kasbon->tgl_kasbon->format('d/m/Y') : '-' }}</td>
                                             <td>{{ $kasbon->joOther ? $kasbon->joOther->no_jo_other : '-' }}</td>
-                                            <td>{{ $kasbon->departemen ? $kasbon->departemen->skt_dep : '-' }}</td>
+                                            <td>{{ $kasbon->joOther ? ($kasbon->joOther->customer->customer ?? '-') : '-' }}</td>
+                                            <td>{{ $kasbon->joOther ? ($kasbon->joOther->title ?? '-') : '-' }}</td>
+                                            <td>{{ $kasbon->joOther ? ($kasbon->joOther->other->other ?? '-') : '-' }}</td>
                                             <td>{{ $kasbon->cabang ? $kasbon->cabang->nama_branch : '-' }}</td>
                                             <td>{{ $kasbon->release ? $kasbon->release->nama_release : '-' }}</td>
-                                            <td class="text-center">{{ $kasbon->items->count() }}</td>
+                                            @php
+                                                $jo = $kasbon->joOther;
+                                                $totalSelling = $jo
+                                                    ? $jo->items->sum('hargajual_idr')
+                                                        + $jo->pajakItems->where('include_hpp', true)->sum('nominal_pajak')
+                                                    : 0;
+                                                $totalHpp = $jo
+                                                    ? $jo->items->sum('hpp_ops')
+                                                        + $jo->pajakItems->where('include_hpp', true)->sum('nominal_pajak_hpp')
+                                                    : 0;
+                                            @endphp
                                             <td class="text-end">
-                                                {{ number_format($kasbon->items->sum('nilai_hpp_other_item'), 2, ',', '.') }}
+                                                {{ number_format($totalSelling, 2, ',', '.') }}
+                                            </td>
+                                            <td class="text-end">
+                                                {{ number_format($totalHpp, 2, ',', '.') }}
                                             </td>
                                             <td class="text-end">
                                                 {{ number_format($kasbon->items->sum('nilai_kasbon'), 2, ',', '.') }}
                                             </td>
-
-                                            {{-- CA PDF --}}
-                                            <td class="text-center">
-                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('kasbon-other', 'detail')))
-                                                    <a href="{{ route('kasbon-other.export-pdf', $kasbon->id) }}"
-                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
-                                                        <i class="fas fa-file-pdf"></i>
-                                                    </a>
-                                                @endif
-                                            </td>
+                                            <td>{{ $kasbon->tgl_kasbon ? $kasbon->tgl_kasbon->format('d/m/Y') : '-' }}</td>
 
                                             {{-- Priority --}}
                                             <td class="text-center">
@@ -249,6 +258,18 @@
                                                 @endif
                                             </td>
 
+                                            {{-- Dep / Items / CA PDF (minor) --}}
+                                            <td>{{ $kasbon->departemen ? $kasbon->departemen->skt_dep : '-' }}</td>
+                                            <td class="text-center">{{ $kasbon->items->count() }}</td>
+                                            <td class="text-center">
+                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('kasbon-other', 'detail')))
+                                                    <a href="{{ route('kasbon-other.export-pdf', $kasbon->id) }}"
+                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
+                                                @endif
+                                            </td>
+
                                             {{-- Action --}}
                                             <td class="text-center">
                                                 <div class="d-flex gap-1 justify-content-center">
@@ -278,7 +299,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="14" class="text-center py-5">
+                                            <td colspan="18" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No Kasbon Other Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new Kasbon Other</p>
@@ -539,50 +560,26 @@
                     order: [
                         [2, 'desc']
                     ],
-                    columnDefs: [{
-                            orderable: false,
-                            targets: 0
-                        },
-                        {
-                            orderable: false,
-                            targets: -1
-                        },
-                        {
-                            responsivePriority: 1,
-                            targets: -1
-                        }, // Action
-                        {
-                            responsivePriority: 2,
-                            targets: 1
-                        }, // CA No
-                        {
-                            responsivePriority: 3,
-                            targets: 12
-                        }, // Status
-                        {
-                            responsivePriority: 4,
-                            targets: 11
-                        }, // Priority
-                        {
-                            responsivePriority: 5,
-                            targets: 2
-                        }, // CA Date
-                        {
-                            responsivePriority: 6,
-                            targets: 3
-                        }, // JO No
-                        {
-                            responsivePriority: 10001,
-                            targets: 4
-                        }, // Dep
-                        {
-                            responsivePriority: 10002,
-                            targets: 5
-                        }, // Branch
-                        {
-                            responsivePriority: 10003,
-                            targets: 6
-                        }, // Release To
+                    columnDefs: [
+                        { orderable: false, targets: 0 },
+                        { orderable: false, targets: -1 },
+                        // === Responsive Priority (lower = shown first) ===
+                        { responsivePriority: 1,     targets: 17 }, // Action
+                        { responsivePriority: 2,     targets: 1  }, // CA No
+                        { responsivePriority: 3,     targets: 13 }, // Status
+                        { responsivePriority: 4,     targets: 12 }, // Priority
+                        { responsivePriority: 5,     targets: 2  }, // JO No
+                        { responsivePriority: 6,     targets: 3  }, // Customer
+                        { responsivePriority: 7,     targets: 7  }, // Release To
+                        { responsivePriority: 8,     targets: 10 }, // Total CA
+                        { responsivePriority: 9,     targets: 16 }, // CA PDF
+                        { responsivePriority: 10,    targets: 4  }, // JO Title
+                        { responsivePriority: 11,    targets: 5  }, // Other Type
+                        { responsivePriority: 12,    targets: 8  }, // Selling Price
+                        { responsivePriority: 13,    targets: 9  }, // HPP
+                        { responsivePriority: 14,    targets: 6  }, // Branch
+                        { responsivePriority: 10001, targets: 15 }, // Items (minor)
+                        { responsivePriority: 10002, targets: 14 }, // Dep (minor)
                     ],
                     language: {
                         search: 'Search:',

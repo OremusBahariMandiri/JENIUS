@@ -6,6 +6,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>JO Tramper - {{ $joTramper->no_jo_tram ?? '-' }}</title>
     <style>
+        @php echo '@page { size: A4 portrait; margin: 20mm 15mm 15mm 15mm; }'; @endphp
+
         * {
             margin: 0;
             padding: 0;
@@ -20,7 +22,7 @@
         }
 
         .page {
-            padding: 15mm 15mm 15mm 15mm;
+            padding: 0 15mm 15mm 15mm;
         }
 
         /* ── Title ── */
@@ -170,7 +172,7 @@
         .kop-surat {
             width: 100%;
             margin-bottom: 15px;
-            margin-top: -50px;
+            margin-top: 0;
         }
 
         .kop-surat img {
@@ -291,11 +293,7 @@
                                 <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
                                 <td style="font-size:9pt; padding:1.5px 0;">{{ $joTramper->title ?? '-' }}</td>
                             </tr>
-                            <tr>
-                                <td style="white-space:nowrap; font-size:9pt; padding:1.5px 0;">Note</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">{{ $joTramper->note ?? '-' }}</td>
-                            </tr>
+
                         </table>
                     </td>
                 </tr>
@@ -339,9 +337,7 @@
                             <tr>
                                 <td class="text-left">
                                     {{ $item->invoice->invoice_typ }}
-                                    @if (!empty($item->note))
-                                        <div class="item-note">{!! nl2br(e($item->note)) !!}</div>
-                                    @endif
+
                                 </td>
                                 <td class="text-right">
                                     {{ number_format($item->pendapatan_idr, 2, ',', '.') }}
@@ -357,6 +353,29 @@
                                 </td>
                             </tr>
                         @endforeach
+                    @endforeach
+
+                    @if ($pajakItems->count() > 0)
+                        <tr class="row-category">
+                            <td colspan="5"><strong>TAX</strong></td>
+                        </tr>
+                    @endif
+                    @foreach ($pajakItems as $tax)
+                        @php
+                            $taxSell = $tax->include_selling ? $tax->nominal_pajak     : null;
+                            $taxHpp  = $tax->include_hpp     ? $tax->nominal_pajak_hpp : null;
+                            if ($taxSell !== null) $totalSell += $taxSell;
+                            if ($taxHpp  !== null) $totalHPP  += $taxHpp;
+                        @endphp
+                        <tr>
+                            <td class="text-left">
+                                {{ $tax->nama_pajak }} <span style="color:#888;">({{ $tax->persentase }}%)</span>
+                            </td>
+                            <td class="text-right">0,00</td>
+                            <td class="text-right">0,00</td>
+                            <td class="text-right">{{ $taxSell !== null ? number_format($taxSell, 2, ',', '.') : '0,00' }}</td>
+                            <td class="text-right">{{ $taxHpp !== null ? number_format($taxHpp, 2, ',', '.') : '0,00' }}</td>
+                        </tr>
                     @endforeach
                 </tbody>
                 <tfoot>

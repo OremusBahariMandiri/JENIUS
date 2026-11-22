@@ -3,7 +3,6 @@
 namespace App\Models\Data;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Master\ChartOfAccount;
 
 class MutasiPenerimaan extends Model
 {

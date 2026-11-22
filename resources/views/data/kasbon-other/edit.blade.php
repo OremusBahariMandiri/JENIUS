@@ -396,6 +396,11 @@
             border-right: 2px solid #dee2e6;
         }
 
+        .table-kasbon .category-cell-tax {
+            background: #fffbea !important;
+            color: #92400e !important;
+        }
+
         .cell-right {
             text-align: right;
         }
@@ -409,6 +414,10 @@
             color: #495057;
             font-weight: 500;
         }
+
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; justify-content: space-between; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.4rem; font-size: 0.88rem; border-radius: 4px; min-width: 36px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { font-size: 0.88rem; font-weight: 600; color: #2c3e50; text-align: right; flex: 1; }
 
         .table-kasbon tfoot td {
             background-color: #ffffff;
@@ -1108,6 +1117,20 @@
                                     </select>
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}"
+                                                {{ $kasbonOther->id_md_area == $area->id_md_area ? 'selected' : '' }}>
+                                                {{ $area->area }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label">Release Date</label>
                                     <input type="date" name="tgl_release" id="tgl_release" class="form-control"
@@ -1163,21 +1186,30 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="card shadow mb-4" id="itemsCard">
-                            <div class="card-header text-black d-flex justify-content-between align-items-center"
-                                style="background-color:#d1fae5">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-list me-2"></i>
-                                    Cash Advance Items
-                                    <span class="items-count-badge" id="itemsCountBadge">0</span>
-                                </h6>
-                                <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
-                                    style="border-radius:8px;">
-                                    <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
-                                </button>
-                            </div>
-                            <div class="card-body p-4">
+                    <div class="card shadow mb-4" id="itemsCard">
+                        <div class="card-header text-black d-flex justify-content-between align-items-center"
+                            style="background-color:#d1fae5">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Cash Advance Items
+                                <span class="items-count-badge" id="itemsCountBadge">0</span>
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
+                                style="border-radius:8px;">
+                                <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-4 py-2"
+                            style="background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+                            <i class="fas fa-bolt" style="color:#2563eb; font-size:.8rem; flex-shrink:0;"></i>
+                            <span style="font-size:.8rem; color:#1e40af;">
+                                <strong>Auto-saved.</strong>
+                                Items and amounts are saved instantly — once they appear in the table, they're already recorded.
+                            </span>
+                        </div>
+                        <div class="card-body p-4">
 
                                 <div class="input-item-card" id="inputItemCard">
                                     <div class="card-title-bar">
@@ -1265,9 +1297,9 @@
                                             <tr>
                                                 <th style="width:4%;">No</th>
                                                 <th style="width:13%;">Category</th>
-                                                <th class="text-start" style="min-width:200px;">Description</th>
+                                                <th class="text-start" style="min-width:200px;">Item</th>
                                                 <th style="width:15%;">Selling Price (IDR)</th>
-                                                <th style="width:15%;">Total CA / HPP (IDR)</th>
+                                                <th style="width:15%;">HPP (IDR)</th>
                                                 <th style="width:15%;">CA Amount (IDR)</th>
                                                 <th style="width:10%;">Action</th>
                                             </tr>
@@ -1313,16 +1345,25 @@
                                         page.</span>
                                 </div>
 
-                            </div>
                         </div>
+                    </div>
 
                 </form>
 
                 <div class="final-save-section">
-                    <div class="d-flex justify-content-end">
-                        <a href="{{ route('kasbon-other.index') }}" class="btn btn-final-back">
-                            <i class="fas fa-arrow-left me-1"></i> Back to List
-                        </a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div></div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('kasbon-other.export-pdf', $kasbonOther->id) }}" target="_blank"
+                                class="btn"
+                                style="padding:13px 35px; border-radius:10px; font-weight:700; font-size:1rem;
+                                       border-color:red; background-color:rgb(255,237,237); color:red">
+                                <i class="fas fa-file-pdf me-2"></i> Generate CA
+                            </a>
+                            <a href="{{ route('kasbon-other.index') }}" class="btn btn-final-back">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -1719,9 +1760,7 @@
         function renderTable() {
             const $tbody = $('#kasbonItemsBody');
             $tbody.empty();
-            const taxCount = mergedItems.filter(i => i.item_type === 'tax').length;
-            const itemCount = mergedItems.length - taxCount;
-            $('#itemsCountBadge').text(taxCount > 0 ? `${itemCount} items, ${taxCount} tax` : mergedItems.length);
+            $('#itemsCountBadge').text(mergedItems.length);
 
             if (!mergedItems.length) {
                 $tbody.html(`<tr class="no-items-row"><td colspan="7">
@@ -1765,28 +1804,30 @@
     ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
     <i class="fas fa-trash"></i></button>`;
 
+                    const isTaxRow    = item.item_type === 'tax';
+                    const catClass    = isTaxRow ? 'category-cell category-cell-tax' : 'category-cell';
+                    const rowStyle    = isTaxRow ? ' style="background:#fefce8;"' : '';
                     const categoryCell = catIndex === 0 ?
-                        `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
+                        `<td class="${catClass}" rowspan="${rowspan}">${category}</td>` :
                         '';
 
                     const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
 
                     $tbody.append(`
-                        <tr class="${rowClass}" id="row_${globalIndex}"
+                        <tr class="${rowClass}" id="row_${globalIndex}"${rowStyle}
                             data-index="${globalIndex}"
                             data-jo-item="${item.id_jo_other_item}"
                             data-category="${category}">
                             <td class="cell-center fw-bold text-muted">${rowNo++}</td>
                             ${categoryCell}
                             <td class="text-start">
-                                <span class="fw-semibold" style="color:${item.item_type === 'tax' ? '#6366f1' : '#2c3e50'};">${item.invoice_typ}</span>
-                                ${item.item_type === 'tax' ? '<span class="badge ms-1" style="background:#6366f1; font-size:.62rem;">Tax</span>' : ''}
+                                <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
                                 ${lpjBadge}
                                 ${statusBadge}
                             </td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                            <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                            <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hargajual_idr)}</span></div></td>
+                            <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hpp_ops)}</span></div></td>
+                            <td class="nilai-kasbon-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell nilai-kasbon-val">${formatNumber(item.nilai_kasbon)}</span></div></td>
                             <td class="cell-center">
                                 <div class="d-flex gap-1 justify-content-center">
                                     <button type="button" class="btn btn-success btn-sm btn-edit-row"
@@ -1806,7 +1847,7 @@
 
         function refreshRowAfterSave(globalIndex, nilaiKasbon, saved) {
             const $row = $(`#row_${globalIndex}`);
-            $row.find('.nilai-kasbon-cell').text(formatNumber(nilaiKasbon));
+            $row.find('.nilai-kasbon-cell').html(`<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell nilai-kasbon-val">${formatNumber(nilaiKasbon)}</span></div>`);
             $row.find('.badge.bg-success, .badge.bg-secondary')
                 .removeClass('bg-success bg-secondary')
                 .addClass(saved ? 'bg-success' : 'bg-secondary')
@@ -1824,7 +1865,7 @@
             $('#infoHpp').text(formatNumber(item.hpp_ops));
             $('#infoPaidOther').text(formatNumber(item.total_paid_other_kasbons || 0));
             $('#infoMaxAllowed').text(formatNumber(item.max_allowed || 0));
-            $('#infoCurrentKasbon').text(item.has_kasbon && item.nilai_kasbon > 0 ? formatNumber(item.nilai_kasbon) : '—');
+            $('#infoCurrentKasbon').text(formatNumber(item.nilai_kasbon || 0));
             $('#activeMaxAllowed').val(item.max_allowed || 0);
             $('#activeItemType').val(item.item_type || 'item');
             $('#activeJoOtherPajakId').val(item.id_jo_other_pajak || '');
@@ -1895,32 +1936,9 @@
 
             $('#btnSaveItemInput').prop('disabled', true);
 
-            if (itemType === 'tax') {
-                // Tax items don't need conflict check
-                doSaveItemFull(joOtherItemId, joOtherPajakId, itemType, rowIndex, nilaiKasbon);
-                return;
-            }
-
-            $.ajax({
-                url: checkConflictUrl,
-                method: 'GET',
-                data: {
-                    id_jo_other_item: joOtherItemId,
-                    id_kasbon_other: currentKasbonOtherStr
-                },
-                success: function(res) {
-                    if (res.success && res.has_conflict)
-                        showConflictModal(res.conflict.id_kasbon_other, res.conflict.nilai_kasbon,
-                            function() {
-                                executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, true);
-                            });
-                    else
-                        executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
-                },
-                error: function() {
-                    executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
-                }
-            });
+            // No conflict check needed — multiple kasbons per item are allowed
+            // as long as total does not exceed HPP (enforced by maxAllowed validation above).
+            doSaveItemFull(joOtherItemId, joOtherPajakId, itemType, rowIndex, nilaiKasbon);
         }
 
         function clearItem(index) {
@@ -2066,6 +2084,7 @@
                     id_jo_other: idJoOther,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),

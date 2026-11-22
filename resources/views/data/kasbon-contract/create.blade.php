@@ -391,6 +391,7 @@
         #joItemsModal table thead th {
             background: #2c3e50;
             color: white;
+            vertical-align: middle;
             border-color: #2c3e50;
             font-size: .85rem;
             padding: 10px;
@@ -633,6 +634,17 @@
                                     </select>
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}">{{ $area->area }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 {{-- Release To --}}
                                 <div class="col-md-6">
                                     <label class="form-label required-field">Release To</label>
@@ -767,11 +779,11 @@
                                     <thead>
                                         <tr>
                                             <th style="width:5%;">No</th>
-                                            <th>JO Item</th>
-                                            <th>Category</th>
-                                            <th style="width:18%;">HPP (IDR)</th>
-                                            <th style="width:18%;">CA Amount (IDR)</th>
-                                            <th style="width:18%;">Remaining (IDR)</th>
+                                            <th style="width:12%;">Category</th>
+                                            <th>Item</th>
+                                            <th style="width:16%;">Selling Price (IDR)</th>
+                                            <th style="width:16%;">HPP (IDR)</th>
+                                            <th style="width:16%;">CA Amount (IDR)</th>
                                             <th style="width:8%;">Action</th>
                                         </tr>
                                     </thead>
@@ -861,20 +873,20 @@
                                 <thead>
                                     <tr>
                                         <th style="width:5%; text-align:center;">No</th>
-                                        <th>Invoice Type</th>
                                         <th>Category</th>
-                                        <th style="text-align:right;">HPP Ops (IDR)</th>
-                                        <th style="text-align:right;">Selling Price (IDR)</th>
+                                        <th>Item</th>
+                                        <th style="text-align:center;">Selling Price (IDR)</th>
+                                        <th style="text-align:center;">HPP Ops (IDR)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="joItemsModalBody"></tbody>
                                 <tfoot>
                                     <tr>
                                         <td colspan="3" style="text-align:right; font-weight:700;">GRAND TOTAL</td>
-                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;"
-                                            id="joItemsTotalHpp"></td>
-                                        <td style="text-align:right; font-weight:700; font-family:monospace;"
+                                        <td style="text-align:center; font-weight:700; font-family:monospace;"
                                             id="joItemsTotalSell"></td>
+                                        <td style="text-align:center; font-weight:700; font-family:monospace;"
+                                            id="joItemsTotalHpp"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -1070,6 +1082,7 @@
 
             // ── JO Contract change → show summary card + load items ──
             $('#id_jo_cont').on('change', function() {
+                $('#id_jo_cont').select2('close');
                 const idJoCont = $(this).val();
                 const $opt = $(this).find('option:selected');
 
@@ -1177,7 +1190,16 @@
         function renderJoItemsModal(items) {
             $('#joItemsModalLoading').hide();
 
-            if (!items || items.length === 0) {
+            // Merge items + pajak (from cached joPajakForCreate)
+            let allRows = [];
+            (items || []).forEach(function(item) {
+                allRows.push({ type: 'item', data: item });
+            });
+            (joPajakForCreate || []).forEach(function(pajak) {
+                allRows.push({ type: 'pajak', data: pajak });
+            });
+
+            if (allRows.length === 0) {
                 $('#joItemsModalEmpty').show();
                 return;
             }
@@ -1186,36 +1208,76 @@
                 totalHpp = 0,
                 totalSell = 0;
 
-            items.forEach(function(item, idx) {
-                const hpp = parseFloat(item.hpp_ops || 0);
-                const sell = parseFloat(item.hargajual_idr || 0);
-                totalHpp += hpp;
-                totalSell += sell;
-
-                rows += `
+            allRows.forEach(function(row, idx) {
+                if (row.type === 'item') {
+                    const item = row.data;
+                    const hpp = parseFloat(item.hpp_ops || 0);
+                    const sell = parseFloat(item.hargajual_idr || 0);
+                    totalHpp += hpp;
+                    totalSell += sell;
+                    rows += `
         <tr>
             <td style="text-align:center;">${idx + 1}</td>
+            <td style="font-weight:700; color:#111;">${item.invoice_ctg || '—'}</td>
             <td style="font-weight:600;">${item.invoice_typ || item.id_jo_cont_item}</td>
-            <td>
-                <span style="background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:600;">
-                    ${item.invoice_ctg || '—'}
-                </span>
-            </td>
-            <td style="text-align:right; font-family:monospace;">${formatNumber(hpp)}</td>
-            <td style="text-align:right; font-family:monospace;">${formatNumber(sell)}</td>
+            <td style="text-align:center; font-family:monospace;">${formatNumber(sell)}</td>
+            <td style="text-align:center; font-family:monospace;">${formatNumber(hpp)}</td>
         </tr>`;
+                } else {
+                    const pajak = row.data;
+                    const nominal = parseFloat(pajak.nominal_pajak || 0);
+                    if (pajak.include_selling) totalSell += nominal;
+                    if (pajak.include_hpp) totalHpp += nominal;
+                    rows += `
+        <tr style="background:#fefce8;">
+            <td style="text-align:center;">${idx + 1}</td>
+            <td style="font-weight:700; color:#111;">Tax</td>
+            <td style="font-weight:600;">${pajak.nama_pajak || '—'} (${pajak.persentase}%)</td>
+            <td style="text-align:center; font-family:monospace;">${pajak.include_selling ? formatNumber(nominal) : '—'}</td>
+            <td style="text-align:center; font-family:monospace;">${pajak.include_hpp ? formatNumber(nominal) : '—'}</td>
+        </tr>`;
+                }
             });
 
             $('#joItemsModalBody').html(rows);
             $('#joItemsTotalHpp').text(formatNumber(totalHpp));
             $('#joItemsTotalSell').text(formatNumber(totalSell));
-            $('#joItemsModalCount').text(items.length + ' item' + (items.length !== 1 ? 's' : '') + ' found');
+            $('#joItemsModalCount').text(allRows.length + ' item' + (allRows.length !== 1 ? 's' : '') + ' found');
             $('#joItemsModalContent').show();
         }
 
         // =============================================
         // LOAD JO CONTRACT ITEMS (for the CA item dropdown)
         // =============================================
+        function loadJoContractItems(idJoCont) {
+            $.ajax({
+                url: '{{ route('kasbon-contract.jo-items.get') }}',
+                method: 'GET',
+                data: { id_jo_cont: idJoCont },
+                success: function(r) {
+                    if (r.success) {
+                        joContractItems = r.data;
+                        // Update Total Items count in JO info card (items + pajak loaded after)
+                        $('#joSummaryItemCount').text(r.data.length);
+
+                        // Repopulate item dropdown
+                        var $sel = $('#input_jo_cont_item');
+                        $sel.empty().append('<option value="">-- Select JO Contract Item --</option>');
+                        r.data.forEach(function(item) {
+                            $sel.append(new Option(item.invoice_typ || item.id_jo_cont_item, item.id_jo_cont_item));
+                        });
+                    } else {
+                        joContractItems = [];
+                        $('#joSummaryItemCount').text('0');
+                    }
+                },
+                error: function() {
+                    joContractItems = [];
+                    $('#joSummaryItemCount').text('0');
+                }
+            });
+        }
+
         // =============================================
         // LOAD JO PAJAK (for create: stored in memory, appended to item table after header save)
         // =============================================
@@ -1232,6 +1294,9 @@
                     } else {
                         joPajakForCreate = [];
                     }
+                    // Update total count: items + pajak
+                    var total = joContractItems.length + joPajakForCreate.length;
+                    $('#joSummaryItemCount').text(total);
                 },
                 error: function() { joPajakForCreate = []; }
             });
@@ -1266,6 +1331,7 @@
                     id_jo_cont:         idJoCont,
                     id_md_dep:          idDep,
                     id_md_cabang:       idCabang,
+                    id_md_area:         $('#id_md_area').val(),
                     id_md_release:      idRelease,
                     tgl_kasbon:         tglKasbon,
                     tgl_release:        $('#tgl_release').val(),
@@ -1354,11 +1420,11 @@
             const row = `
     <tr class="item-row" data-item-id="${d.id_kasbon_cont_item}">
         <td class="item-number-cell">${globalItemNumber}</td>
+        <td style="font-weight:700; color:#111;">${joItem.invoice_ctg || '-'}</td>
         <td class="text-start">${joItem.invoice_typ || d.id_jo_cont_item}</td>
-        <td>${joItem.invoice_ctg || '-'}</td>
-        <td>${formatNumber(d.nilai_hpp_cont_item)}</td>
-        <td>${formatNumber(d.nilai_kasbon)}</td>
-        <td>${formatNumber(d.total_kasbon)}</td>
+        <td style="text-align:center; font-family:monospace;">${formatNumber(joItem.hargajual_idr || 0)}</td>
+        <td style="text-align:center; font-family:monospace;">${formatNumber(d.nilai_hpp_cont_item)}</td>
+        <td style="text-align:center; font-family:monospace;">${formatNumber(d.nilai_kasbon)}</td>
         <td class="text-center">
             <button type="button" class="btn btn-danger btn-sm btn-remove-row"
                 onclick="removeItem(this, '${d.id_kasbon_cont_item}')">

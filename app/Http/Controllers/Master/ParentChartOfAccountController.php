@@ -8,9 +8,12 @@ use App\Models\Master\CostType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\LogsActivity;
 
 class ParentChartOfAccountController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -101,6 +104,7 @@ class ParentChartOfAccountController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Parent COA berhasil ditambahkan', 'Parent COA');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -198,6 +202,7 @@ class ParentChartOfAccountController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Parent COA berhasil diubah', 'Parent COA');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -229,6 +234,7 @@ class ParentChartOfAccountController extends Controller
             $parentCoa = ParentChartOfAccount::findOrFail($id);
             $parentCoa->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Parent COA berhasil dihapus', 'Parent COA');
 
             if ($request->expectsJson()) {
                 return response()->json([

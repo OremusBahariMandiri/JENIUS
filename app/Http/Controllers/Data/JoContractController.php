@@ -17,13 +17,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Traits\LogsActivity;
 
 class JoContractController extends Controller
 {
+    use LogsActivity;
+
     public function index(Request $request)
     {
         try {
-            $query = JoContract::with(['contract.customer', 'area', 'items']);
+            $query = JoContract::with(['contract.customer', 'area', 'items', 'pajakItems']);
 
             if ($request->filled('no_jo')) {
                 $query->where('no_jo_cont', 'like', '%' . $request->no_jo . '%');
@@ -618,6 +621,7 @@ class JoContractController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data JO Contract berhasil ditambahkan', 'JO Contract');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'JO Contract successfully added', 'data' => $joContract->load('items')], 201);
@@ -641,14 +645,17 @@ class JoContractController extends Controller
         Log::info('=== JO Contract Show Request START ===', ['id' => $id, 'url' => $request->fullUrl(), 'method' => $request->method(), 'user_id' => auth()->id() ?? 'guest', 'ip' => $request->ip()]);
 
         try {
-            $joContract = JoContract::with(['contract.customer', 'area', 'items.invoice'])->findOrFail($id);
+            $joContract = JoContract::with(['contract.customer', 'area', 'items.invoice', 'pajakItems'])->findOrFail($id);
 
+            $pajakItems = $joContract->pajakItems;
             $summary = [
                 'total_items'         => $joContract->items->count(),
                 'total_revenue_idr'   => $joContract->items->sum('pendapatan_idr'),
                 'total_revenue_usd'   => $joContract->items->sum('pendapatan_usd'),
                 'total_hpp_ops'       => $joContract->items->sum('hpp_ops'),
                 'total_selling_price' => $joContract->items->sum('hargajual_idr'),
+                'total_tax_selling'   => $pajakItems->where('include_selling', 1)->sum('nominal_pajak'),
+                'total_tax_hpp'       => $pajakItems->where('include_hpp', 1)->sum('nominal_pajak'),
             ];
 
             if ($request->expectsJson()) {
@@ -659,7 +666,7 @@ class JoContractController extends Controller
                 return back()->with('error', 'View file not found: data.jo-contract.show');
             }
 
-            return view('data.jo-contract.show', compact('joContract', 'summary'));
+            return view('data.jo-contract.show', compact('joContract', 'summary', 'pajakItems'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             if ($request->expectsJson()) return response()->json(['success' => false, 'message' => 'JO Contract not found'], 404);
             return back()->with('error', 'JO Contract not found');
@@ -769,6 +776,7 @@ class JoContractController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data JO Contract berhasil diubah', 'JO Contract');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'JO Contract successfully updated', 'data' => $joContract->fresh()->load('items')]);
@@ -799,6 +807,7 @@ class JoContractController extends Controller
 
             $joContract->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data JO Contract berhasil dihapus', 'JO Contract');
 
             Log::info('JO Contract Deleted Successfully', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
@@ -950,13 +959,33 @@ class JoContractController extends Controller
     public function exportPdf($id)
     {
         try {
-            $joContract = JoContract::with(['contract.customer', 'area', 'items.invoice'])->findOrFail($id);
+            $joContract = JoContract::with(['contract.customer', 'area', 'items.invoice', 'pajakItems'])->findOrFail($id);
             $totalSell  = $joContract->items->sum('hargajual_idr');
             $terbilang  = $this->toTerbilang((int) round($totalSell)) . ' Rupiah';
 
             $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('data.jo-contract.pdf', compact('joContract', 'terbilang'))
                 ->setPaper('a4', 'portrait')
-                ->setOptions(['isHtml5ParserEnabled' => true, 'isRemoteEnabled' => false, 'defaultFont' => 'Arial', 'dpi' => 150]);
+                ->setOptions(['isHtml5ParserEnabled' => false, 'isRemoteEnabled' => false, 'defaultFont' => 'Arial', 'dpi' => 150]);
+
+            // Add top margin on page 2+ via Dompdf callback (CSS @page unreliable in Dompdf)
+            $dompdf = $pdf->getDomPDF();
+            $dompdf->setCallbacks([
+                [
+                    'event' => 'begin_page_reflow',
+                    'f'     => function ($frame, $canvas, $fontMetrics) {
+                        if ($canvas->get_page_number() > 1) {
+                            $cb     = $frame->get_containing_block();
+                            $topPts = 56.69; // 20mm in points (1mm = 2.8346pt)
+                            $frame->set_containing_block(
+                                $cb['x'],
+                                $cb['y'] + $topPts,
+                                $cb['w'],
+                                $cb['h'] - $topPts
+                            );
+                        }
+                    },
+                ],
+            ]);
 
             $noJo     = str_replace(['/', '\\'], '-', $joContract->no_jo_cont ?? $id);
             $filename = 'JO-Contract-' . $noJo . '.pdf';
@@ -995,7 +1024,7 @@ class JoContractController extends Controller
 
     private function buildExportQuery(Request $request)
     {
-        $query = \App\Models\Data\JoContract::with(['contract.customer', 'area', 'items']);
+        $query = \App\Models\Data\JoContract::with(['contract.customer', 'area', 'items', 'pajakItems']);
 
         if ($request->filled('no_jo'))        $query->where('no_jo_cont', 'like', '%' . $request->no_jo . '%');
         if ($request->filled('no_contract'))  $query->whereHas('contract', fn($q) => $q->where('no_contract', 'like', '%' . $request->no_contract . '%'));
@@ -1217,19 +1246,23 @@ class JoContractController extends Controller
                 return response()->json(['success' => false, 'message' => 'Pajak ini sudah ditambahkan ke JO tersebut'], 422);
             }
 
-            // Dasar pengenaan = total selling price dari items
-            $dasarPengenaan = (float) $joContract->items->sum('hargajual_idr');
-            $nominalPajak   = round($dasarPengenaan * ($pajak->persentase / 100), 2);
+            // Dasar pengenaan selling = total hargajual_idr; HPP = total hpp_ops
+            $dasarPengenaan    = (float) $joContract->items->sum('hargajual_idr');
+            $dasarPengenaanHpp = (float) $joContract->items->sum('hpp_ops');
+            $nominalPajak      = round($dasarPengenaan    * ($pajak->persentase / 100), 2);
+            $nominalPajakHpp   = round($dasarPengenaanHpp * ($pajak->persentase / 100), 2);
 
             $record = JoContractPajak::create([
-                'id_jo_cont'      => $request->id_jo_cont,
-                'id_md_pajak'     => $pajak->id_md_pajak,
-                'nama_pajak'      => $pajak->nama_pajak,
-                'persentase'      => $pajak->persentase,
-                'dasar_pengenaan' => $dasarPengenaan,
-                'nominal_pajak'   => $nominalPajak,
-                'include_selling' => (bool) $request->input('include_selling', true),
-                'include_hpp'     => (bool) $request->input('include_hpp', false),
+                'id_jo_cont'          => $request->id_jo_cont,
+                'id_md_pajak'         => $pajak->id_md_pajak,
+                'nama_pajak'          => $pajak->nama_pajak,
+                'persentase'          => $pajak->persentase,
+                'dasar_pengenaan'     => $dasarPengenaan,
+                'dasar_pengenaan_hpp' => $dasarPengenaanHpp,
+                'nominal_pajak'       => $nominalPajak,
+                'nominal_pajak_hpp'   => $nominalPajakHpp,
+                'include_selling'     => (bool) $request->input('include_selling', true),
+                'include_hpp'         => (bool) $request->input('include_hpp', false),
             ]);
 
             DB::commit();
@@ -1238,19 +1271,69 @@ class JoContractController extends Controller
                 'success' => true,
                 'message' => 'Pajak berhasil ditambahkan',
                 'data'    => [
-                    'id'              => $record->id_jo_cont_pajak,
-                    'id_md_pajak'     => $record->id_md_pajak,
-                    'nama_pajak'      => $record->nama_pajak,
-                    'persentase'      => number_format($record->persentase, 2),
-                    'dasar_pengenaan' => $record->dasar_pengenaan,
-                    'nominal_pajak'   => $record->nominal_pajak,
-                    'include_selling' => (bool) $record->include_selling,
-                    'include_hpp'     => (bool) $record->include_hpp,
+                    'id'                => $record->id_jo_cont_pajak,
+                    'id_md_pajak'       => $record->id_md_pajak,
+                    'nama_pajak'        => $record->nama_pajak,
+                    'persentase'        => number_format($record->persentase, 2),
+                    'dasar_pengenaan'   => $record->dasar_pengenaan,
+                    'nominal_pajak'     => $record->nominal_pajak,
+                    'nominal_pajak_hpp' => $record->nominal_pajak_hpp,
+                    'include_selling'   => (bool) $record->include_selling,
+                    'include_hpp'       => (bool) $record->include_hpp,
                 ],
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('storePajak contract failed', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    public function updatePajak(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'include_selling' => 'boolean',
+            'include_hpp'     => 'boolean',
+        ]);
+        if ($validator->fails()) {
+            return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+        DB::beginTransaction();
+        try {
+            $record = JoContractPajak::findOrFail($id);
+            $joContract = JoContract::with('items')->findOrFail($record->id_jo_cont);
+
+            $dasarPengenaan    = (float) $joContract->items->sum('hargajual_idr');
+            $dasarPengenaanHpp = (float) $joContract->items->sum('hpp_ops');
+            $nominalPajak      = round($dasarPengenaan    * ($record->persentase / 100), 2);
+            $nominalPajakHpp   = round($dasarPengenaanHpp * ($record->persentase / 100), 2);
+
+            $record->update([
+                'dasar_pengenaan'     => $dasarPengenaan,
+                'dasar_pengenaan_hpp' => $dasarPengenaanHpp,
+                'nominal_pajak'       => $nominalPajak,
+                'nominal_pajak_hpp'   => $nominalPajakHpp,
+                'include_selling'     => (bool) $request->input('include_selling', true),
+                'include_hpp'         => (bool) $request->input('include_hpp', false),
+            ]);
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'message' => 'Tax updated successfully',
+                'data'    => [
+                    'id'                => $record->id_jo_cont_pajak,
+                    'id_md_pajak'       => $record->id_md_pajak,
+                    'nama_pajak'        => $record->nama_pajak,
+                    'persentase'        => number_format($record->persentase, 2),
+                    'nominal_pajak'     => $record->nominal_pajak,
+                    'nominal_pajak_hpp' => $record->nominal_pajak_hpp,
+                    'include_selling'   => (bool) $record->include_selling,
+                    'include_hpp'       => (bool) $record->include_hpp,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }

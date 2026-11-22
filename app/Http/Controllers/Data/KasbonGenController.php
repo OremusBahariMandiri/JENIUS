@@ -20,9 +20,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use App\Traits\LogsActivity;
 
 class KasbonGenController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // HELPER: recompute LpjGen.amount
     // Dipanggil setiap kali nilai_kasbon berubah/bertambah/berkurang
@@ -55,7 +58,7 @@ class KasbonGenController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = KasbonGen::with(['departemen', 'cabang', 'release', 'items.invoice']);
+            $query = KasbonGen::with(['departemen', 'cabang', 'release', 'items.invoice', 'pajakItems']);
 
             if ($request->filled('id_md_dep'))        $query->where('id_md_dep', $request->id_md_dep);
             if ($request->filled('id_md_cabang'))     $query->where('id_md_cabang', $request->id_md_cabang);
@@ -585,14 +588,19 @@ class KasbonGenController extends Controller
     public function show(Request $request, $id)
     {
         try {
-            $kasbonGen = KasbonGen::with(['departemen', 'cabang', 'area', 'release', 'items.invoice', 'pajakItems'])->findOrFail($id);
-            $summary   = [
+            $kasbonGen  = KasbonGen::with(['departemen', 'cabang', 'area', 'release', 'items.invoice', 'pajakItems'])->findOrFail($id);
+            $totalCA    = $kasbonGen->items->sum('nilai_kasbon');
+            $totalPajak = $kasbonGen->pajakItems->sum('nominal_pajak');
+            $grandTotal = $totalCA + $totalPajak;
+            $summary    = [
                 'total_items'        => $kasbonGen->items->count(),
-                'total_nilai_kasbon' => $kasbonGen->items->sum('nilai_kasbon'),
+                'total_nilai_kasbon' => $totalCA,
+                'total_pajak'        => $totalPajak,
+                'grand_total'        => $grandTotal,
             ];
 
             if ($request->expectsJson()) return response()->json(['success' => true, 'data' => $kasbonGen, 'summary' => $summary]);
-            return view('data.kasbon-gen.show', compact('kasbonGen', 'summary'));
+            return view('data.kasbon-gen.show', compact('kasbonGen', 'summary', 'grandTotal', 'totalCA', 'totalPajak'));
         } catch (\Exception $e) {
             if ($request->expectsJson()) return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
             return back()->with('error', 'Error: ' . $e->getMessage());
@@ -672,6 +680,7 @@ class KasbonGenController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data CA General berhasil ditambahkan', 'CA General');
             if ($request->expectsJson()) return response()->json(['success' => true, 'message' => 'Kasbon General successfully added', 'data' => $kasbonGen->load('items')], 201);
             return redirect()->route('kasbon-gen.index')->with('success', 'Kasbon General successfully added');
         } catch (\Exception $e) {
@@ -734,6 +743,7 @@ class KasbonGenController extends Controller
             $this->recomputeLpjAmounts($kasbonGen->id_kasbon_gen);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data CA General berhasil diubah', 'CA General');
             if ($request->expectsJson()) return response()->json(['success' => true, 'message' => 'Kasbon General successfully updated', 'data' => $kasbonGen->fresh()->load('items')]);
             return redirect()->route('kasbon-gen.index')->with('success', 'Kasbon General successfully updated');
         } catch (\Exception $e) {
@@ -788,6 +798,7 @@ class KasbonGenController extends Controller
 
             $kasbonGen->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data CA General berhasil dihapus', 'CA General');
 
             Log::info('KasbonGen Deleted', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 

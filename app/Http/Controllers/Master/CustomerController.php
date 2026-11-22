@@ -9,9 +9,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class CustomerController extends Controller
 {
+    use LogsActivity;
+
 
     public function __construct()
     {
@@ -270,6 +273,7 @@ HTML;
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Customer berhasil ditambahkan', 'Customer');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Customer berhasil ditambahkan', 'data' => $customer], 201);
@@ -356,6 +360,7 @@ HTML;
                 'note'    => $request->note,
             ]);
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Customer berhasil diubah', 'Customer');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Customer berhasil diupdate', 'data' => $customer]);
@@ -386,6 +391,7 @@ HTML;
 
             $customer->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Customer berhasil dihapus', 'Customer');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Customer berhasil dihapus']);
@@ -413,6 +419,7 @@ HTML;
             }
             $customer->restore();
             DB::commit();
+            \App\Models\ActivityLog::record('restore', 'Data Customer berhasil di-restore', 'Customer');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Customer berhasil dipulihkan', 'data' => $customer]);

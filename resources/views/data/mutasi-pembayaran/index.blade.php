@@ -68,6 +68,34 @@
                             </div>
                         @endif
 
+                        {{-- Summary Bar --}}
+                        @if($mutasiPembayarans->count() > 0)
+                        @php
+                            $totalAll = $mutasiPembayarans->sum(fn($m) => $m->details->sum('nilai'));
+                            $totalDocs = $mutasiPembayarans->count();
+                            $totalVouchers = $mutasiPembayarans->sum(fn($m) => $m->vouchers->count());
+                        @endphp
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <div class="summary-card">
+                                    <div class="summary-label"><i class="fas fa-file-invoice me-1"></i> Total Documents</div>
+                                    <div class="summary-value">{{ number_format($totalDocs) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="summary-card">
+                                    <div class="summary-label"><i class="fas fa-receipt me-1"></i> Total Vouchers</div>
+                                    <div class="summary-value">{{ number_format($totalVouchers) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="summary-card summary-card--green">
+                                    <div class="summary-label"><i class="fas fa-coins me-1"></i> Grand Total Amount</div>
+                                    <div class="summary-value">{{ number_format($totalAll, 2, ',', '.') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                         <div class="table-responsive">
                             <table id="mutasiPembayaranTable" class="table table-bordered table-striped">
@@ -76,15 +104,22 @@
                                         <th width="4%">No</th>
                                         <th>Number</th>
                                         <th>Date</th>
+                                        <th>Account (COA)</th>
                                         <th>Check No.</th>
-                                        <th class="text-end">Rate</th>
-                                        <th>Memo</th>
-                                        <th class="text-center">Vouchers</th>
+                                        <th class="text-end">Total Amount</th>
+                                        <th>Notes</th>
+                                        <th class="text-center">Items</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($mutasiPembayarans as $mutasi)
+                                        @php
+                                            $totalAmount = $mutasi->details->sum('nilai');
+                                            $coaLabel = $mutasi->coa
+                                                ? ($mutasi->coa->kode_akun ?? $mutasi->coa->no_account ?? '') . ' - ' . ($mutasi->coa->nama_akun ?? $mutasi->coa->account_name ?? '')
+                                                : '-';
+                                        @endphp
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
@@ -93,8 +128,13 @@
                                                 </span>
                                             </td>
                                             <td>{{ $mutasi->tanggal ? \Carbon\Carbon::parse($mutasi->tanggal)->format('d/m/Y') : '-' }}</td>
+                                            <td>
+                                                <small>{{ $coaLabel }}</small>
+                                            </td>
                                             <td>{{ $mutasi->no_cek ?? '-' }}</td>
-                                            <td class="text-end">{{ $mutasi->kurs ? number_format($mutasi->kurs, 2, ',', '.') : '-' }}</td>
+                                            <td class="text-end fw-semibold">
+                                                {{ $totalAmount > 0 ? number_format($totalAmount, 2, ',', '.') : '-' }}
+                                            </td>
                                             <td>
                                                 <small class="text-muted">{{ Str::limit($mutasi->memo, 60) }}</small>
                                             </td>
@@ -171,7 +211,7 @@
                                     @foreach ($chartOfAccounts as $coa)
                                         <option value="{{ $coa->id }}"
                                             {{ request('id_md_chart_of_account') == $coa->id ? 'selected' : '' }}>
-                                            {{ $coa->kode_akun }} - {{ $coa->nama_akun }}
+                                            {{ $coa->kode_akun ?? $coa->no_account }} - {{ $coa->nama_akun ?? $coa->account_name }}
                                         </option>
                                     @endforeach
                                 </select>
@@ -275,6 +315,36 @@
         .modal .select2-container .select2-selection--single .select2-selection__arrow {
             height: 100% !important;
         }
+
+        /* Summary cards */
+        .summary-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .summary-card--green {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        .summary-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+        .summary-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .summary-card--green .summary-value {
+            color: #059669;
+        }
     </style>
 @endpush
 
@@ -290,6 +360,7 @@
         $(document).ready(function() {
 
             // ===== DATATABLE =====
+            // Cols: 0=No, 1=Number, 2=Date, 3=COA, 4=CheckNo, 5=Total, 6=Notes, 7=Items, 8=Action
             var hasData = $('#mutasiPembayaranTable tbody tr').length > 0 &&
                 !$('#mutasiPembayaranTable tbody tr td[colspan]').length;
 
@@ -300,7 +371,7 @@
 
                 var table = $('#mutasiPembayaranTable').DataTable({
                     responsive: true,
-                    pageLength: 10,
+                    pageLength: 25,
                     lengthMenu: [
                         [10, 25, 50, -1],
                         [10, 25, 50, 'All']
@@ -310,15 +381,15 @@
                     ],
                     columnDefs: [
                         { orderable: false, targets: 0 },
-                        { orderable: false, targets: -1 },
-                        { responsivePriority: 1, targets: -1 },
-                        { responsivePriority: 2, targets: 1 },  // Number
-                        { responsivePriority: 3, targets: 7 },  // Vouchers
-                        { responsivePriority: 4, targets: 2 },  // Date
-                        { responsivePriority: 5, targets: 3 },  // COA
-                        { responsivePriority: 10001, targets: 4 }, // Check No
-                        { responsivePriority: 10002, targets: 5 }, // Rate
-                        { responsivePriority: 10003, targets: 6 }, // Memo
+                        { orderable: false, targets: 8 },
+                        { responsivePriority: 1, targets: 8 },   // Action
+                        { responsivePriority: 2, targets: 1 },   // Number
+                        { responsivePriority: 3, targets: 2 },   // Date
+                        { responsivePriority: 4, targets: 5 },   // Total Amount
+                        { responsivePriority: 5, targets: 3 },   // COA
+                        { responsivePriority: 6, targets: 7 },   // Items
+                        { responsivePriority: 7, targets: 4 },   // Check No
+                        { responsivePriority: 8, targets: 6 },   // Notes
                     ],
                     language: {
                         search: 'Search:',

@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Data\LpjContractExport;
+use App\Traits\LogsActivity;
 
 class LpjContractController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // INDEX
     // ========================================
@@ -27,7 +30,7 @@ class LpjContractController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = LpjContract::with(['joContract', 'kasbons.kasbonContract', 'items']);
+            $query = LpjContract::with(['joContract.contract.customer', 'kasbons.kasbonContract', 'items']);
 
             if ($request->filled('id_jo_cont'))  $query->where('id_jo_cont', $request->id_jo_cont);
             if ($request->filled('no_lpj_cont')) $query->where('no_lpj_cont', 'like', '%' . $request->no_lpj_cont . '%');
@@ -345,22 +348,6 @@ class LpjContractController extends Controller
                 $isTaxRow   = ($itemData['item_type'] ?? 'item') === 'tax';
                 $joContItem = $isTaxRow ? null : ($itemData['id_jo_cont_item'] ?? null);
 
-                // ── Validasi amount hanya untuk item biasa (bukan pajak) ──
-                if (!$isTaxRow && $amountLpj > 0) {
-                    $kasbonItem = KasbonContractItem::where('id_kasbon_cont_item', $itemData['id_kasbon_cont_item'])->first();
-                    if ($kasbonItem) {
-                        $nilaiKasbon = (float) $kasbonItem->nilai_kasbon;
-                        if ($amountLpj > $nilaiKasbon) {
-                            DB::rollBack();
-                            return response()->json([
-                                'success' => false,
-                                'message' => 'LPJ amount (' . number_format($amountLpj, 2, ',', '.') . ') '
-                                    . 'melebihi nilai kasbon item (' . number_format($nilaiKasbon, 2, ',', '.') . ').',
-                                'item_id' => $itemData['id_kasbon_cont_item'],
-                            ], 422);
-                        }
-                    }
-                }
 
                 $existing = LpjContractItem::where('id_lpj_cont', $lpj->id_lpj_cont)
                     ->where('id_kasbon_cont_item', $itemData['id_kasbon_cont_item'])
@@ -427,15 +414,6 @@ class LpjContractController extends Controller
             return response()->json(['success' => false, 'message' => 'Validation failed', 'errors' => $validator->errors()], 422);
         }
 
-        // Validasi: amount_lpj tidak boleh melebihi nilai_kasbon
-        $nilaiKasbon = (float) $request->nilai_kasbon;
-        $amountLpj   = (float) $request->amount_lpj;
-        if ($amountLpj > $nilaiKasbon) {
-            return response()->json([
-                'success' => false,
-                'message' => 'LPJ amount tidak boleh melebihi nilai kasbon (' . number_format($nilaiKasbon, 2, ',', '.') . ').',
-            ], 422);
-        }
 
         try {
             $lpj = LpjContract::findOrFail($id);
@@ -727,14 +705,61 @@ class LpjContractController extends Controller
             $lpj = LpjContract::with([
                 'joContract.contract.customer',
                 'joContract.area',
-                'kasbons.kasbonContract',
-                'items.kasbonContractItem.joContractItem.invoice',
+                'kasbons.kasbonContract.items.joContractItem.invoice',
+                'kasbons.kasbonContract.items.joContractPajak',
+                'items.chartOfAccount',
             ])->findOrFail($id);
+
+            // Build mergedItems sama seperti edit — dipakai blade show
+            $lpjItemsMap = $lpj->items->keyBy('id_kasbon_cont_item');
+            $mergedItems = [];
+
+            foreach ($lpj->kasbons as $lpjKasbon) {
+                $kasbon = $lpjKasbon->kasbonContract;
+                if (!$kasbon) continue;
+
+                foreach ($kasbon->items as $kasbonItem) {
+                    $isTaxRow   = ($kasbonItem->item_type ?? 'item') === 'tax';
+                    $joContItem = $kasbonItem->joContractItem;
+                    $joPajak    = $kasbonItem->joContractPajak;
+                    $lpjItem    = $lpjItemsMap->get($kasbonItem->id_kasbon_cont_item);
+
+                    if ($isTaxRow) {
+                        $mergedItems[] = [
+                            'id_kasbon_cont_no'   => $kasbon->id_kasbon_cont,
+                            'invoice_ctg'         => 'Tax',
+                            'invoice_typ'         => $joPajak?->nama_pajak ?? $kasbonItem->id_kasbon_cont_item,
+                            'item_type'           => 'tax',
+                            'nilai_hpp_cont_item' => (float) $kasbonItem->nilai_hpp_cont_item,
+                            'nilai_kasbon'        => (float) $kasbonItem->nilai_kasbon,
+                            'amount_lpj'          => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
+                            'has_lpj'             => $lpjItem !== null,
+                            'coa_no'              => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'            => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'is_orphaned'         => false,
+                        ];
+                    } else {
+                        $mergedItems[] = [
+                            'id_kasbon_cont_no'   => $kasbon->id_kasbon_cont,
+                            'invoice_ctg'         => $joContItem?->invoice?->invoice_ctg ?? '-',
+                            'invoice_typ'         => $joContItem?->invoice?->invoice_typ ?? '-',
+                            'item_type'           => 'item',
+                            'nilai_hpp_cont_item' => (float) $kasbonItem->nilai_hpp_cont_item,
+                            'nilai_kasbon'        => (float) $kasbonItem->nilai_kasbon,
+                            'amount_lpj'          => $lpjItem ? (float) $lpjItem->amount_lpj : 0.0,
+                            'has_lpj'             => $lpjItem !== null,
+                            'coa_no'              => $lpjItem?->chartOfAccount?->no_account ?? null,
+                            'coa_name'            => $lpjItem?->chartOfAccount?->account_name ?? null,
+                            'is_orphaned'         => $joContItem === null,
+                        ];
+                    }
+                }
+            }
 
             $summary = [
                 'total_kasbon'     => $lpj->amount,
                 'total_amount_lpj' => $lpj->items->sum('amount_lpj'),
-                'total_items'      => $lpj->items->count(),
+                'total_items'      => count($mergedItems),
                 'total_kasbons'    => $lpj->kasbons->count(),
             ];
 
@@ -742,7 +767,7 @@ class LpjContractController extends Controller
                 return response()->json(['success' => true, 'data' => $lpj, 'summary' => $summary]);
             }
 
-            return view('data.lpj-contract.show', compact('lpj', 'summary'));
+            return view('data.lpj-contract.show', compact('lpj', 'summary', 'mergedItems'));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -777,6 +802,7 @@ class LpjContractController extends Controller
             $lpj->delete();
 
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data LPJ Contract berhasil dihapus', 'LPJ Contract');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'LPJ Contract deleted successfully']);
@@ -803,6 +829,7 @@ class LpjContractController extends Controller
                 'joContract.contract',
                 'joContract.area',
                 'kasbons.kasbonContract.items.joContractItem.invoice',
+                'kasbons.kasbonContract.items.joContractPajak',
                 'items.kasbonContractItem',
                 'items.chartOfAccount',
             ])->findOrFail($id);
@@ -821,6 +848,26 @@ class LpjContractController extends Controller
                     'defaultFont'          => 'Arial',
                     'dpi'                  => 150,
                 ]);
+
+            // Add top margin on page 2+ via Dompdf callback (CSS @page unreliable in Dompdf)
+            $dompdf = $pdf->getDomPDF();
+            $dompdf->setCallbacks([
+                [
+                    'event' => 'begin_page_reflow',
+                    'f'     => function ($frame, $canvas, $fontMetrics) {
+                        if ($canvas->get_page_number() > 1) {
+                            $cb     = $frame->get_containing_block();
+                            $topPts = 56.69; // 20mm in points (1mm = 2.8346pt)
+                            $frame->set_containing_block(
+                                $cb['x'],
+                                $cb['y'] + $topPts,
+                                $cb['w'],
+                                $cb['h'] - $topPts
+                            );
+                        }
+                    },
+                ],
+            ]);
 
             $filename = 'LPJ-Contract-'
                 . str_replace(['/', '\\'], '-', $lpj->no_lpj_cont ?? $id)
