@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class PortController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -162,6 +165,7 @@ class PortController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Port berhasil ditambahkan', 'Port');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -298,6 +302,7 @@ class PortController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Port berhasil diubah', 'Port');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -349,6 +354,7 @@ class PortController extends Controller
 
             $port->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Port berhasil dihapus', 'Port');
 
             if ($request->expectsJson()) {
                 return response()->json([

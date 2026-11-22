@@ -16,12 +16,14 @@ class KasbonOtherItem extends Model
 
     protected $fillable = [
         'id_kasbon_other_item',
+        'item_type',
         'id_kasbon_other',
         'id_jo_other_item',
+        'id_jo_other_pajak',
         'nilai_hpp_other_item',
         'nilai_kasbon',
         'total_kasbon',
-        'origin_lpj_other',    
+        'origin_lpj_other',
     ];
 
     protected $casts = [
@@ -41,5 +43,10 @@ class KasbonOtherItem extends Model
     public function joOtherItem()
     {
         return $this->belongsTo(JoOtherItem::class, 'id_jo_other_item', 'id_jo_other_item');
+    }
+
+    public function joOtherPajak()
+    {
+        return $this->belongsTo(JoOtherPajak::class, 'id_jo_other_pajak', 'id_jo_other_pajak');
     }
 }

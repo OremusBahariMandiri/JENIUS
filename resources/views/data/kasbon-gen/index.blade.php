@@ -169,7 +169,11 @@
                                             <td>{{ $kasbon->release ? $kasbon->release->nama_release : '-' }}</td>
                                             <td class="text-center">{{ $kasbon->items->count() }}</td>
                                             <td class="text-end">
-                                                {{ number_format($kasbon->items->sum('nilai_kasbon'), 2, ',', '.') }}
+                                                @php
+                                                    $totalCA = $kasbon->items->sum('nilai_kasbon')
+                                                             + $kasbon->pajakItems->sum('nominal_pajak');
+                                                @endphp
+                                                {{ number_format($totalCA, 2, ',', '.') }}
                                             </td>
 
                                             {{-- CA PDF --}}

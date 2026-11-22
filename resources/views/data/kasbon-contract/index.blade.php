@@ -179,18 +179,21 @@
 
                         <div class="table-responsive">
                             <table id="kasbonContractTable" class="table table-bordered table-striped">
-                                <thead class="table-light">
+                                <thead class="table-light" style="vertical-align:middle;">
                                     <tr>
                                         <th width="4%">No</th>
                                         <th>CA No</th>
-                                        <th>CA Date</th>
                                         <th>JO No</th>
+                                        <th>JO Title</th>
+                                        <th>Customer</th>
+                                        <th>CA Date</th>
                                         <th>Dep</th>
                                         <th>Branch</th>
                                         <th>Release To</th>
                                         <th class="text-center">Items</th>
-                                        <th class="text-end">Total HPP</th>
-                                        <th class="text-end">Total CA</th>
+                                        <th class="text-center">Selling Price</th>
+                                        <th class="text-center">HPP</th>
+                                        <th class="text-center">Total CA</th>
                                         <th class="text-center">CA PDF</th>
                                         <th class="text-center">Priority</th>
                                         <th class="text-center">Status</th>
@@ -206,17 +209,39 @@
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $kasbon->id_kasbon_cont ?? '-' }}</td>
-                                            <td>{{ $kasbon->tgl_kasbon ? $kasbon->tgl_kasbon->format('d/m/Y') : '-' }}</td>
                                             <td>{{ $kasbon->joContract ? $kasbon->joContract->no_jo_cont : '-' }}</td>
+                                            <td>{{ $kasbon->joContract ? $kasbon->joContract->title : '-' }}</td>
+                                            <td>{{ $kasbon->joContract->contract->customer->customer ?? '-' }}</td>
+                                            <td>{{ $kasbon->tgl_kasbon ? $kasbon->tgl_kasbon->format('d/m/Y') : '-' }}</td>
                                             <td>{{ $kasbon->departemen ? $kasbon->departemen->skt_dep : '-' }}</td>
                                             <td>{{ $kasbon->cabang ? $kasbon->cabang->nama_branch : '-' }}</td>
                                             <td>{{ $kasbon->release ? $kasbon->release->nama_release : '-' }}</td>
                                             <td class="text-center">{{ $kasbon->items->count() }}</td>
                                             <td class="text-end">
-                                                {{ number_format($kasbon->items->sum('nilai_hpp_cont_item'), 2, ',', '.') }}
+                                                @php
+                                                    // Selling Price & HPP: dari JO Contract (semua items + pajak)
+                                                    // referensi index JO Contract — bukan dari kasbon items (subset)
+                                                    $joItems      = optional($kasbon->joContract)->items ?? collect();
+                                                    $joPajakItems = optional($kasbon->joContract)->pajakItems ?? collect();
+
+                                                    $totalSelling = $joItems->sum('hargajual_idr');
+                                                    $totalHPP     = $joItems->sum('hpp_ops');
+                                                    foreach ($joPajakItems as $pj) {
+                                                        if ($pj->include_selling) $totalSelling += (float) $pj->nominal_pajak;
+                                                        if ($pj->include_hpp)     $totalHPP     += (float) $pj->nominal_pajak_hpp;
+                                                    }
+
+                                                    // CA Amount: c02 items (regular + tax) + c03 pajakItems (legacy)
+                                                    $totalCA = $kasbon->items->sum('nilai_kasbon')
+                                                             + $kasbon->pajakItems->sum('nilai_kasbon_pajak');
+                                                @endphp
+                                                {{ number_format($totalSelling, 2, ',', '.') }}
                                             </td>
                                             <td class="text-end">
-                                                {{ number_format($kasbon->items->sum('nilai_kasbon'), 2, ',', '.') }}
+                                                {{ number_format($totalHPP, 2, ',', '.') }}
+                                            </td>
+                                            <td class="text-end">
+                                                {{ number_format($totalCA, 2, ',', '.') }}
                                             </td>
 
                                             {{-- Invoice / PDF --}}
@@ -292,7 +317,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="14" class="text-center py-5">
+                                            <td colspan="17" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No Kasbon Contract Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new Kasbon Contract</p>

@@ -15,8 +15,8 @@ class JoOther extends Model
 
     protected $table = 'b05_jo_other';
     protected $primaryKey = 'id_jo_other';
-    public $incrementing = false; // Auto-increment
-    protected $keyType = 'int'; // Type integer
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     protected $fillable = [
         'id_jo_other',
@@ -66,5 +66,10 @@ class JoOther extends Model
     public function vessel()
     {
         return $this->belongsTo(Vessel::class, 'id_md_vessel', 'id_md_vessel');
+    }
+
+    public function pajakItems()
+    {
+        return $this->hasMany(JoOtherPajak::class, 'id_jo_other', 'id_jo_other');
     }
 }

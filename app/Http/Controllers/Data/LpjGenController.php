@@ -15,9 +15,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Data\LpjGenExport;
+use App\Traits\LogsActivity;
 
 class LpjGenController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // INDEX
     // ========================================
@@ -587,6 +590,7 @@ class LpjGenController extends Controller
             $lpj->delete();
 
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data LPJ General berhasil dihapus', 'LPJ General');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'LPJ General deleted successfully']);

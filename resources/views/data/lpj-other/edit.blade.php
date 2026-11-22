@@ -7,10 +7,12 @@
         fn($i) => [
             'id_kasbon_other_item' => $i['id_kasbon_other_item'],
             'id_kasbon_other' => $i['id_kasbon_other'],
-            'id_jo_other_item' => $i['id_jo_other_item'],
+            'id_jo_other_item' => $i['id_jo_other_item'] ?? null,
             'id_kasbon_other_no' => $i['id_kasbon_other_no'],
+            'item_type' => $i['item_type'] ?? 'item',
             'invoice_typ' => $i['invoice_typ'],
             'invoice_ctg' => $i['invoice_ctg'],
+            'id_jo_other_pajak' => $i['id_jo_other_pajak'] ?? null,
             'nilai_hpp_other_item' => $i['nilai_hpp_other_item'],
             'nilai_kasbon' => $i['nilai_kasbon'],
             'total_kasbon' => $i['total_kasbon'],
@@ -414,6 +416,33 @@
             border: 1px solid #dee2e6;
         }
 
+        .row-tax td {
+            background-color: #fffbea !important;
+        }
+
+        .currency-group-cell {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .currency-label-cell {
+            background: #64748b;
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: .62rem;
+            font-weight: 700;
+            min-width: 30px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .value-cell {
+            text-align: right;
+            flex: 1;
+        }
+
         .footer-currency-wrap {
             display: flex;
             align-items: center;
@@ -426,7 +455,7 @@
             color: #fff;
             padding: 4px 10px;
             border-radius: 5px;
-            font-size: .60rem;
+            font-size: .72rem;
             font-weight: 700;
             min-width: 44px;
             text-align: center;
@@ -436,7 +465,7 @@
         .footer-value {
             color: #2c3e50;
             font-weight: 700;
-            font-size: .70rem;
+            font-size: .88rem;
             text-align: right;
             flex: 1;
         }
@@ -1396,6 +1425,7 @@
                         const gIdx = mergedItems.indexOf(item);
                         const hasFilled = item.has_lpj && item.amount_lpj > 0;
                         const isOrigin = !!item.origin_lpj_other;
+                        const isTaxRow = item.item_type === 'tax';
                         if (isOrigin) hasOriginItems = true;
 
                         const originBadge = isOrigin ?
@@ -1414,10 +1444,12 @@
                             '';
 
                         const catCell = isFirstCatRow ?
-                            `<td class="category-cell" rowspan="${catRowspan}">${category}</td>` :
+                            `<td class="category-cell" rowspan="${catRowspan}"
+                                ${isTaxRow ? 'style="color:#92400e;font-weight:700;"' : ''}>${category}</td>` :
                             '';
 
-                        const rowClass = isOrigin ? 'item-row row-from-lpj' : 'item-row';
+                        const rowClass = isTaxRow ? 'item-row row-tax' : (isOrigin ? 'item-row row-from-lpj' : 'item-row');
+                        const typStyle = isTaxRow ? 'color:#92400e;font-weight:700;' : 'color:#2c3e50;';
 
                         $tbody.append(`
                             <tr class="${rowClass}" id="row_${gIdx}" data-index="${gIdx}">
@@ -1425,12 +1457,27 @@
                                 ${kasbonCell}
                                 ${catCell}
                                 <td class="text-start">
-                                    <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
+                                    <span class="fw-semibold" style="${typStyle}">${item.invoice_typ}</span>
                                     ${originBadge}
                                 </td>
-                                <td class="cell-readonly cell-right">${formatNumber(item.nilai_hpp_other_item)}</td>
-                                <td class="cell-readonly cell-right">${formatNumber(item.nilai_kasbon)}</td>
-                                <td class="cell-right amount-lpj-cell">${formatNumber(item.amount_lpj)}</td>
+                                <td class="cell-readonly cell-right">
+                                    <div class="currency-group-cell">
+                                        <span class="currency-label-cell">IDR</span>
+                                        <span class="value-cell">${formatNumber(item.nilai_hpp_other_item)}</span>
+                                    </div>
+                                </td>
+                                <td class="cell-readonly cell-right">
+                                    <div class="currency-group-cell">
+                                        <span class="currency-label-cell">IDR</span>
+                                        <span class="value-cell">${formatNumber(item.nilai_kasbon)}</span>
+                                    </div>
+                                </td>
+                                <td class="cell-right amount-lpj-cell">
+                                    <div class="currency-group-cell">
+                                        <span class="currency-label-cell">IDR</span>
+                                        <span class="value-cell">${formatNumber(item.amount_lpj)}</span>
+                                    </div>
+                                </td>
                                 <td class="coa-display-cell text-center">${buildCoaDisplay(gIdx, item.id_md_chart_of_account)}</td>
                                 <td class="cell-center">
                                     <div class="d-flex gap-1 justify-content-center">

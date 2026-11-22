@@ -39,20 +39,20 @@
                 <table id="invoiceContractTable" class="table table-bordered table-striped table-hover align-middle small">
                     <thead class="table-light">
                         <tr>
-                            <th class="text-center" width="3%">No</th>
-                            <th>Inv. No</th>
-                            <th>JO No</th>
+                            <th class="text-center" width="3%">#</th>
+                            <th>Invoice No.</th>
+                            <th>JO No.</th>
                             <th>Customer</th>
-                            <th class="text-center">Tgl Invoice</th>
-                            <th class="text-center">Jatuh Tempo</th>
-                            <th class="text-end">DPP</th>
-                            <th class="text-end">PPN</th>
+                            <th class="text-center">Invoice Date</th>
+                            <th class="text-center">Due Date</th>
+                            <th class="text-end">Base Amount</th>
+                            <th class="text-end">VAT</th>
                             <th class="text-end">Reimbursement</th>
                             <th class="text-end">Total Invoice</th>
-                            <th class="text-center">Diterima</th>
+                            <th class="text-end">Amount Received</th>
                             <th>Close Note</th>
                             <th>Reopen Note</th>
-                            <th class="text-center" width="8%">Action</th>
+                            <th class="text-center" width="8%">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -117,6 +117,10 @@
                             <td class="small text-muted" style="max-width:120px;white-space:normal">{{ $row['reopen_note'] ?? '-' }}</td>
                             <td class="text-center">
                                 <div class="d-flex gap-1 justify-content-center">
+                                    <a href="{{ route('invoice-contract.show', $row['id']) }}"
+                                       class="btn btn-sm btn-outline-info" title="View">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                     <a href="{{ route('invoice-contract.edit', $row['id']) }}"
                                        class="btn btn-sm btn-outline-primary" title="Edit">
                                         <i class="fas fa-pencil-alt"></i>
@@ -132,7 +136,7 @@
                         @empty
                         <tr>
                             <td colspan="14" class="text-center text-muted py-4">
-                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>Belum ada invoice.
+                                <i class="fas fa-inbox fa-2x mb-2 d-block"></i>No invoices found.
                             </td>
                         </tr>
                         @endforelse
@@ -149,19 +153,19 @@
         <div class="modal-content">
             <form method="GET" action="{{ route('invoice-contract.index') }}">
                 <div class="modal-header" style="background-color:#d1fae5">
-                    <h5 class="modal-title fw-bold"><i class="fas fa-filter me-2"></i>Filter Invoice</h5>
+                    <h5 class="modal-title fw-bold"><i class="fas fa-filter me-2"></i>Filter Invoices</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Nomor Invoice</label>
+                        <label class="form-label fw-semibold">Invoice Number</label>
                         <input type="text" name="no_invoice" class="form-control"
-                               value="{{ $currentFilters['no_invoice'] ?? '' }}" placeholder="Cari nomor invoice...">
+                               value="{{ $currentFilters['no_invoice'] ?? '' }}" placeholder="Search invoice number...">
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Customer</label>
                         <select name="id_md_cust" class="form-select s2-cust">
-                            <option value="">-- Semua Customer --</option>
+                            <option value="">-- All Customers --</option>
                             @foreach($customers as $c)
                                 <option value="{{ $c->id_md_cust }}"
                                     {{ ($currentFilters['id_md_cust'] ?? '') == $c->id_md_cust ? 'selected' : '' }}>
@@ -173,7 +177,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Status</label>
                         <select name="status" class="form-select">
-                            <option value="">-- Semua Status --</option>
+                            <option value="">-- All Statuses --</option>
                             <option value="draft"  {{ ($currentFilters['status'] ?? '') === 'draft'  ? 'selected' : '' }}>Draft</option>
                             <option value="sent"   {{ ($currentFilters['status'] ?? '') === 'sent'   ? 'selected' : '' }}>Sent</option>
                             <option value="closed" {{ ($currentFilters['status'] ?? '') === 'closed' ? 'selected' : '' }}>Closed</option>
@@ -185,7 +189,7 @@
                         <i class="fas fa-times me-1"></i>Reset
                     </a>
                     <button type="submit" class="btn btn-success">
-                        <i class="fas fa-search me-1"></i>Terapkan
+                        <i class="fas fa-search me-1"></i>Apply Filter
                     </button>
                 </div>
             </form>
@@ -211,13 +215,26 @@ $(document).ready(function(){
         responsive: true,
         order: [[4, 'desc']],
         columnDefs: [{ orderable: false, targets: [13] }],
-        language: { search: 'Cari:', lengthMenu: 'Tampilkan _MENU_', paginate: { next: '›', previous: '‹' } },
+        language: {
+            search: 'Search:',
+            lengthMenu: 'Show _MENU_ entries',
+            info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+            infoEmpty: 'No entries to show',
+            infoFiltered: '(filtered from _MAX_ total entries)',
+            zeroRecords: 'No matching records found',
+            paginate: { next: '›', previous: '‹' },
+        },
     });
-    $('.s2-cust').select2({ theme: 'bootstrap-5', placeholder: '-- Semua --', allowClear: true, dropdownParent: $('#filterModal') });
+    $('.s2-cust').select2({
+        theme: 'bootstrap-5',
+        placeholder: '-- All --',
+        allowClear: true,
+        dropdownParent: $('#filterModal'),
+    });
 });
 
 function confirmDelete(id, no) {
-    if (!confirm('Hapus invoice ' + no + '? Semua item terkait akan ikut terhapus.')) return;
+    if (!confirm('Delete invoice ' + no + '? All related items will also be removed.')) return;
     const form = document.getElementById('deleteForm');
     form.action = '/rekap/invoice-contract/' + id;
     form.submit();

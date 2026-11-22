@@ -68,14 +68,16 @@
                                     <tr>
                                         <th width="4%">No</th>
                                         <th>No. LPJ</th>
+                                        <th>No. JO</th>
+                                        <th>JO Title</th>
+                                        <th>Customer</th>
+                                        <th class="text-center">CA</th>
+                                        <th class="text-center">Total Items</th>
                                         <th>Date</th>
-                                        <th>Job Order</th>
-                                        <th class="text-center">Kasbon</th>
-                                        <th class="text-center">Items</th>
-                                        <th class="text-end">Total Kasbon (IDR)</th>
+                                        <th class="text-end">Total CA (IDR)</th>
                                         <th class="text-end">Total LPJ (IDR)</th>
                                         <th class="text-center">Evidence</th>
-                                        <th class="text-center">LPJ PDF</th>
+                                        <th class="text-center">Generate</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
@@ -84,10 +86,12 @@
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td class="fw-semibold">{{ $lpj->no_lpj_cont ?? '-' }}</td>
-                                            <td>{{ $lpj->date ? $lpj->date->format('d/m/Y') : '-' }}</td>
                                             <td>{{ $lpj->joContract ? $lpj->joContract->no_jo_cont : '-' }}</td>
+                                            <td>{{ $lpj->joContract ? $lpj->joContract->title : '-' }}</td>
+                                            <td>{{ $lpj->joContract->contract->customer->customer ?? '-' }}</td>
                                             <td class="text-center">{{ $lpj->kasbons->count() }}</td>
                                             <td class="text-center">{{ $lpj->items->count() }}</td>
+                                            <td>{{ $lpj->date ? $lpj->date->format('d/m/Y') : '-' }}</td>
                                             <td class="text-end">{{ number_format($lpj->amount, 2, ',', '.') }}</td>
                                             <td class="text-end">
                                                 {{ number_format($lpj->items->sum('amount_lpj'), 2, ',', '.') }}</td>
@@ -137,7 +141,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="11" class="text-center py-5">
+                                            <td colspan="13" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No LPJ Contract Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new LPJ Contract</p>

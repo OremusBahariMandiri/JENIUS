@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class ReleaseToController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -103,6 +106,7 @@ class ReleaseToController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Release To berhasil ditambahkan', 'Release To');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Release To berhasil ditambahkan', 'data' => $release], 201);
@@ -177,6 +181,7 @@ class ReleaseToController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Release To berhasil diubah', 'Release To');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Release To berhasil diupdate', 'data' => $release]);
@@ -198,6 +203,7 @@ class ReleaseToController extends Controller
             $release = ReleaseTo::findOrFail($id);
             $release->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Release To berhasil dihapus', 'Release To');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Release To berhasil dihapus']);

@@ -36,19 +36,19 @@
     <input type="hidden" id="input_dep-{{ $vid }}" value="">
     <input type="hidden" id="input_branch-{{ $vid }}" value="">
     <input type="hidden" id="input_release_to_ref-{{ $vid }}" value="">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;">
             <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Department</div>
             <div id="display_dep_ref-{{ $vid }}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;">
             <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Branch</div>
             <div id="display_branch_ref-{{ $vid }}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div>
         </div>
     </div>
-    <div class="col-md-4">
+    <div class="col-md-6">
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px 14px;">
             <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Release To</div>
             <div id="display_release_to_ref-{{ $vid }}" style="font-size:.88rem;font-weight:700;color:#1e293b;">—</div>
@@ -91,10 +91,10 @@
     </div>
     @endif
 
-    {{-- Refund Amount (Selisih LPJ) — selalu di bawah --}}
+    {{-- Refund Amount — selalu di bawah --}}
     <div class="col-12">
         <div style="background:#fefce8;border:1px solid #fde047;border-radius:8px;padding:10px 14px;">
-            <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Refund Amount (Selisih LPJ)</div>
+            <div style="font-size:.67rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px;">Refund Amount</div>
             <div id="ki_selisih-{{ $pid }}" style="font-size:.95rem;font-weight:700;color:#d97706;">—</div>
             <input type="hidden" id="input_nilai_ki-{{ $pid }}" value="0">
         </div>

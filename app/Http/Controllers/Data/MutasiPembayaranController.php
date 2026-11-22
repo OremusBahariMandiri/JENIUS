@@ -19,6 +19,8 @@ use App\Models\Data\KasbonOther;
 use App\Models\Data\KasbonOtherItem;
 use App\Models\Data\KasbonContract;
 use App\Models\Data\KasbonContractItem;
+use App\Models\Data\KasbonContractPajak;
+use App\Models\Data\KasbonGenPajak;
 use App\Models\Data\KasbonGen;
 use App\Models\Data\KasbonGenItem;
 
@@ -41,9 +43,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\LogsActivity;
 
 class MutasiPembayaranController extends Controller
 {
+    use LogsActivity;
+
     // ═══════════════════════════════════════════════════════
     //  HEADER
     // ═══════════════════════════════════════════════════════
@@ -51,14 +56,14 @@ class MutasiPembayaranController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = MutasiPembayaran::with(['vouchers']);
+            $query = MutasiPembayaran::with(['vouchers.details', 'coa']);
 
             if ($request->filled('nomor'))
                 $query->where('nomor', 'like', '%' . $request->nomor . '%');
-            if ($request->filled('tanggal_dari'))
-                $query->whereDate('tanggal', '>=', $request->tanggal_dari);
-            if ($request->filled('tanggal_sampai'))
-                $query->whereDate('tanggal', '<=', $request->tanggal_sampai);
+            if ($request->filled('tanggal_from'))
+                $query->whereDate('tanggal', '>=', $request->tanggal_from);
+            if ($request->filled('tanggal_to'))
+                $query->whereDate('tanggal', '<=', $request->tanggal_to);
             if ($request->filled('id_md_chart_of_account'))
                 $query->where('id_md_chart_of_account', $request->id_md_chart_of_account);
             if ($request->filled('search')) {
@@ -82,8 +87,8 @@ class MutasiPembayaranController extends Controller
                 ->orderBy('no_account')->get();
             $currentFilters  = [
                 'nomor'                  => $request->get('nomor', ''),
-                'tanggal_dari'           => $request->get('tanggal_dari', ''),
-                'tanggal_sampai'         => $request->get('tanggal_sampai', ''),
+                'tanggal_from'           => $request->get('tanggal_from', ''),
+                'tanggal_to'             => $request->get('tanggal_to', ''),
                 'id_md_chart_of_account' => $request->get('id_md_chart_of_account', ''),
             ];
 
@@ -157,6 +162,7 @@ class MutasiPembayaranController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Multi-Payment berhasil ditambahkan', 'Multi-Payment');
 
             if ($request->expectsJson())
                 return response()->json([
@@ -297,6 +303,7 @@ class MutasiPembayaranController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Multi-Payment berhasil diubah', 'Multi-Payment');
 
             $responseData = ['success' => true, 'message' => 'Header berhasil diupdate'];
             if ($request->filled('new_nomor')) {
@@ -333,6 +340,7 @@ class MutasiPembayaranController extends Controller
             $mp->vouchers()->delete();
             $mp->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Multi-Payment berhasil dihapus', 'Multi-Payment');
 
             if ($request->expectsJson())
                 return response()->json(['success' => true, 'message' => 'Mutasi Pembayaran berhasil dihapus']);
@@ -782,51 +790,78 @@ class MutasiPembayaranController extends Controller
             // ── GENERAL ──────────────────────────────────────────────────────────
             if ($jenis === 'general') {
                 $kasbonId = $request->get('kasbon_id');
-                if (!$kasbonId) {
-                    return response()->json(['success' => false, 'message' => 'Parameter kasbon_id wajib diisi'], 422);
+
+                // Jika kasbon_id diberikan, kembalikan satu kasbon saja (backward compat)
+                // Jika tidak, kembalikan SEMUA kasbon general yang tersedia
+                $usedGen = MutasiPembayaranDetail::whereNotNull('id_kasbon_gen')
+                    ->pluck('id_kasbon_gen');
+
+                $query = KasbonGen::with(['departemen', 'cabang', 'release', 'items.invoice', 'pajakItems']);
+
+                if ($kasbonId) {
+                    $query->where('id', $kasbonId);
+                } else {
+                    $query->whereNotIn('id', $usedGen);
                 }
 
-                $k = KasbonGen::with(['departemen', 'cabang', 'release', 'items.invoice'])
-                    ->findOrFail($kasbonId);
+                $kasbons = $query->get();
 
-                $items = $k->items->map(function ($item) use ($k) {
-                    $inv    = $item->invoice;
+                $result = $kasbons->map(function ($k) use ($usedGen) {
                     $lpjIds = LpjGenKasbon::where('id_kasbon_gen', $k->id_kasbon_gen)->pluck('id_lpj_gen');
-                    $pj     = LpjGenItem::whereIn('id_lpj_gen', $lpjIds)
-                        ->where('id_kasbon_gen_item', $item->id_kasbon_gen_item)
-                        ->sum('amount_lpj');
+
+                    $items = $k->items->map(function ($item) use ($lpjIds) {
+                        $inv = $item->invoice;
+                        $pj  = LpjGenItem::whereIn('id_lpj_gen', $lpjIds)
+                            ->where('id_kasbon_gen_item', $item->id_kasbon_gen_item)
+                            ->sum('amount_lpj');
+                        return [
+                            'id'           => $item->id_kasbon_gen_item,
+                            'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $item->id_kasbon_gen_item,
+                            'kategori'     => $inv?->invoice_ctg ?? '—',
+                            'nilai_kasbon' => (float) $item->nilai_kasbon,
+                            'pj'           => (float) $pj,
+                            'selisih'      => (float) $item->nilai_kasbon - (float) $pj,
+                            'akun'         => '',
+                        ];
+                    });
+
+                    $taxItems = $k->pajakItems->map(function ($pajak) {
+                        return [
+                            'id'           => $pajak->id_kasbon_gen_pajak,
+                            'label'        => $pajak->nama_pajak,
+                            'kategori'     => 'Tax',
+                            'nilai_kasbon' => (float) $pajak->nominal_pajak,
+                            'pj'           => 0.0,
+                            'selisih'      => (float) $pajak->nominal_pajak,
+                            'akun'         => '',
+                        ];
+                    });
+
+                    $allItems   = $items->concat($taxItems);
+                    $totalNilai = (float) $allItems->sum('nilai_kasbon');
+                    $totalPj    = (float) $allItems->sum('pj');
+
+                    // sudah_dipakai: cek apakah id kasbon ini ada di detail
+                    $sudahDipakai = $usedGen->contains((string) $k->id)
+                        || $usedGen->contains($k->id);
+
                     return [
-                        'id'           => $item->id_kasbon_gen_item,
-                        'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $item->id_kasbon_gen_item,
-                        'kategori'     => $inv?->invoice_ctg ?? '—',
-                        'nilai_kasbon' => (float) $item->nilai_kasbon,
-                        'pj'           => (float) $pj,
-                        'selisih'      => (float) $item->nilai_kasbon - (float) $pj,
-                        'akun'         => '',
+                        'id_kasbon'     => $k->id,
+                        'nomor'         => $k->id_kasbon_gen ?? $k->nomor ?? 'C07-' . $k->id,
+                        'nilai'         => $totalNilai,
+                        'pj'            => $totalPj,
+                        'selisih'       => $totalNilai - $totalPj,
+                        'departemen'    => $k->departemen?->nama_dep   ?? '—',
+                        'cabang'        => $k->cabang?->nama_branch    ?? '—',
+                        'release'       => $k->release?->nama_release  ?? '—',
+                        'tgl_kasbon'    => optional($k->tgl_kasbon)->format('d/m/Y')  ?? '',
+                        'tgl_release'   => optional($k->tgl_release)->format('d/m/Y') ?? '',
+                        'sudah_dipakai' => $sudahDipakai,
+                        'items'         => $allItems->values()->toArray(),
                     ];
                 });
 
-                $totalNilai = (float) $items->sum('nilai_kasbon');
-                $totalPj    = (float) $items->sum('pj');
-
-                $sudahDipakai = MutasiPembayaranDetail::whereNotNull('id_kasbon_gen')
-                    ->pluck('id_kasbon_gen')
-                    ->contains($k->id);
-
-                return response()->json(['success' => true, 'data' => [[
-                    'id_kasbon'     => $k->id,
-                    'nomor'         => $k->id_kasbon_gen ?? $k->nomor,
-                    'nilai'         => $totalNilai,
-                    'pj'            => $totalPj,
-                    'selisih'       => $totalNilai - $totalPj,
-                    'departemen'    => $k->departemen?->nama_dep   ?? '—',
-                    'cabang'        => $k->cabang?->nama_branch    ?? '—',
-                    'release'       => $k->release?->nama_release  ?? '—',
-                    'tgl_kasbon'    => optional($k->tgl_kasbon)->format('d/m/Y')  ?? '',
-                    'tgl_release'   => optional($k->tgl_release)->format('d/m/Y') ?? '',
-                    'sudah_dipakai' => $sudahDipakai,
-                    'items'         => $items->values()->toArray(),
-                ]]]);
+                return response()->json(['success' => true, 'data' => $result->values()->toArray()]);
             }
 
             // ── TRAMPER / OTHER / CONTRACT ────────────────────────────────────────
@@ -1037,7 +1072,7 @@ class MutasiPembayaranController extends Controller
 
     private function kasbonItemSummaryTramper($joId, $usedIds): \Illuminate\Support\Collection
     {
-        return KasbonTramper::with(['departemen', 'cabang', 'release', 'items'])
+        return KasbonTramper::with(['departemen', 'cabang', 'release', 'items.joTramperPajak'])
             ->where('id_jo_tram', $joId)->get()
             ->map(function ($k) use ($usedIds) {
                 // JoTramperItem tidak pakai SoftDeletes, query biasa sudah cukup
@@ -1049,8 +1084,23 @@ class MutasiPembayaranController extends Controller
 
                 $lpjIds = LpjKasbonTramper::where('id_kasbon_tram', $k->id_kasbon_tram)->pluck('id_lpj_tram');
                 $items  = $k->items->map(function ($item) use ($lpjIds, $joItemMap) {
+                    $isTax = ($item->item_type ?? 'item') === 'tax';
                     $pj    = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
                         ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)->sum('amount_lpj');
+
+                    if ($isTax) {
+                        $pajak = $item->joTramperPajak;
+                        return [
+                            'id'           => $item->id_kasbon_tram_item,
+                            'label'        => $pajak?->nama_pajak ?? ('Tax #' . $item->id),
+                            'kategori'     => 'Tax',
+                            'nilai_kasbon' => (float) $item->nilai_kasbon,
+                            'pj'           => (float) $pj,
+                            'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                            'akun'         => '',
+                        ];
+                    }
+
                     $jo    = $joItemMap->get($item->id_jo_tram_item);
                     $inv   = $jo?->invoice;
                     $coa   = ChartOfAccount::whereIn(
@@ -1075,7 +1125,7 @@ class MutasiPembayaranController extends Controller
 
     private function kasbonItemSummaryOther($joId, $usedIds): \Illuminate\Support\Collection
     {
-        return KasbonOther::with(['departemen', 'cabang', 'release', 'items'])
+        return KasbonOther::with(['departemen', 'cabang', 'release', 'items.joOtherPajak'])
             ->where('id_jo_other', $joId)->get()
             ->map(function ($k) use ($usedIds) {
                 // Load JO other items langsung (withTrashed) untuk menghindari masalah soft-delete
@@ -1087,8 +1137,23 @@ class MutasiPembayaranController extends Controller
 
                 $lpjIds = LpjKasbonOther::where('id_kasbon_other', $k->id_kasbon_other)->pluck('id_lpj_other');
                 $items  = $k->items->map(function ($item) use ($lpjIds, $joItemMap) {
+                    $isTax = ($item->item_type ?? 'item') === 'tax';
                     $pj    = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
                         ->where('id_kasbon_other_item', $item->id_kasbon_other_item)->sum('amount_lpj');
+
+                    if ($isTax) {
+                        $pajak = $item->joOtherPajak;
+                        return [
+                            'id'           => $item->id_kasbon_other_item,
+                            'label'        => $pajak?->nama_pajak ?? ('Tax #' . $item->id),
+                            'kategori'     => 'Tax',
+                            'nilai_kasbon' => (float) $item->nilai_kasbon,
+                            'pj'           => (float) $pj,
+                            'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                            'akun'         => '',
+                        ];
+                    }
+
                     $jo    = $joItemMap->get($item->id_jo_other_item);
                     $inv   = $jo?->invoice;
                     $coa   = ChartOfAccount::whereIn(
@@ -1174,10 +1239,23 @@ class MutasiPembayaranController extends Controller
 
                 $lpjIds = LpjKasbonTramper::where('id_kasbon_tram', $kasbon->id_kasbon_tram)->pluck('id_lpj_tram');
 
-                return KasbonTramperItem::where('id_kasbon_tram', $kasbon->id_kasbon_tram)->get()
+                return KasbonTramperItem::where('id_kasbon_tram', $kasbon->id_kasbon_tram)
+                    ->with('joTramperPajak')->get()
                     ->map(function ($item) use ($kasbon, $joItemMap, $lpjIds) {
-                        $pj  = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
+                        $pj     = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
                             ->where('id_kasbon_tram_item', $item->id_kasbon_tram_item)->sum('amount_lpj');
+                        $isTax  = ($item->item_type ?? 'item') === 'tax';
+                        if ($isTax) {
+                            $pajak = $item->joTramperPajak;
+                            return [
+                                'label'        => $pajak?->nama_pajak ?? ('Tax #' . $item->id),
+                                'kategori'     => 'Tax',
+                                'nilai_kasbon' => (float) $item->nilai_kasbon,
+                                'pj'           => (float) $pj,
+                                'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                                'akun'         => '',
+                            ];
+                        }
                         $jo  = $joItemMap->get($item->id_jo_tram_item);
                         $inv = $jo?->invoice;
                         $coa = ChartOfAccount::whereIn(
@@ -1208,10 +1286,23 @@ class MutasiPembayaranController extends Controller
 
                 $lpjIds = LpjKasbonOther::where('id_kasbon_other', $kasbon->id_kasbon_other)->pluck('id_lpj_other');
 
-                return KasbonOtherItem::where('id_kasbon_other', $kasbon->id_kasbon_other)->get()
+                return KasbonOtherItem::where('id_kasbon_other', $kasbon->id_kasbon_other)
+                    ->with('joOtherPajak')->get()
                     ->map(function ($item) use ($kasbon, $joItemMap, $lpjIds) {
-                        $pj  = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
+                        $pj     = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
                             ->where('id_kasbon_other_item', $item->id_kasbon_other_item)->sum('amount_lpj');
+                        $isTax  = ($item->item_type ?? 'item') === 'tax';
+                        if ($isTax) {
+                            $pajak = $item->joOtherPajak;
+                            return [
+                                'label'        => $pajak?->nama_pajak ?? ('Tax #' . $item->id),
+                                'kategori'     => 'Tax',
+                                'nilai_kasbon' => (float) $item->nilai_kasbon,
+                                'pj'           => (float) $pj,
+                                'selisih'      => (float) ($item->nilai_kasbon - $pj),
+                                'akun'         => '',
+                            ];
+                        }
                         $jo  = $joItemMap->get($item->id_jo_other_item);
                         $inv = $jo?->invoice;
                         $coa = ChartOfAccount::whereIn(
@@ -1268,23 +1359,40 @@ class MutasiPembayaranController extends Controller
                     ];
                 })->toArray(),
 
-            'general' => KasbonGenItem::with('invoice')
-                ->where('id_kasbon_gen', $kasbon->id_kasbon_gen)->get()
-                ->map(function ($item) use ($kasbon) {
-                    $inv    = $item->invoice;
+            'general' => (function () use ($kasbon) {
                     $lpjIds = LpjGenKasbon::where('id_kasbon_gen', $kasbon->id_kasbon_gen)->pluck('id_lpj_gen');
-                    $pj     = LpjGenItem::whereIn('id_lpj_gen', $lpjIds)
-                        ->where('id_kasbon_gen_item', $item->id_kasbon_gen_item)
-                        ->sum('amount_lpj');
-                    return [
-                        'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $item->id_kasbon_gen_item,
-                        'kategori'     => $inv?->invoice_ctg ?? '—',
-                        'nilai_kasbon' => (float) $item->nilai_kasbon,
-                        'pj'           => (float) $pj,
-                        'selisih'      => (float) $item->nilai_kasbon - (float) $pj,
-                        'akun'         => '',
-                    ];
-                })->toArray(),
+
+                    $regularItems = KasbonGenItem::with('invoice')
+                        ->where('id_kasbon_gen', $kasbon->id_kasbon_gen)->get()
+                        ->map(function ($item) use ($lpjIds) {
+                            $inv = $item->invoice;
+                            $pj  = LpjGenItem::whereIn('id_lpj_gen', $lpjIds)
+                                ->where('id_kasbon_gen_item', $item->id_kasbon_gen_item)
+                                ->sum('amount_lpj');
+                            return [
+                                'label'        => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $item->id_kasbon_gen_item,
+                                'kategori'     => $inv?->invoice_ctg ?? '—',
+                                'nilai_kasbon' => (float) $item->nilai_kasbon,
+                                'pj'           => (float) $pj,
+                                'selisih'      => (float) $item->nilai_kasbon - (float) $pj,
+                                'akun'         => '',
+                            ];
+                        });
+
+                    $taxItems = KasbonGenPajak::where('id_kasbon_gen', $kasbon->id_kasbon_gen)->get()
+                        ->map(function ($pajak) {
+                            return [
+                                'label'        => $pajak->nama_pajak,
+                                'kategori'     => 'Tax',
+                                'nilai_kasbon' => (float) $pajak->nominal_pajak,
+                                'pj'           => 0.0,
+                                'selisih'      => (float) $pajak->nominal_pajak,
+                                'akun'         => '',
+                            ];
+                        });
+
+                    return $regularItems->concat($taxItems)->values()->toArray();
+                })(),
 
             default => [],
         };
@@ -1510,33 +1618,326 @@ class MutasiPembayaranController extends Controller
 
     public function exportMutasiPdf(int $id)
     {
-        $mutasi = \App\Models\Data\MutasiPembayaran::with(['coa', 'vouchers.details'])->findOrFail($id);
-
-        $pdfRows = [];
+        $mutasi     = \App\Models\Data\MutasiPembayaran::with(['coa', 'vouchers.details.customRelease'])->findOrFail($id);
         $allDetails = $mutasi->vouchers->flatMap(fn($v) => $v->details);
 
+        // ── Step 1: group all details by JO (jenis||jo_id) ───────────────────
+        $joGroups = [];
+
         foreach ($allDetails as $detail) {
-            $jenis      = $detail->jenis;
-            $kasbonDbId = match ($jenis) {
-                'tramper'  => $detail->id_kasbon_tram  ?? null,
-                'other'    => $detail->id_kasbon_other ?? null,
-                'contract' => $detail->id_kasbon_cont  ?? null,
-                'general'  => $detail->id_kasbon_gen   ?? null,
-                default    => null,
-            };
+            $jenis = $detail->jenis;
 
-            if (!$kasbonDbId && $jenis !== 'custom') continue;
+            switch ($jenis) {
+                case 'tramper':
+                    if (!$detail->id_kasbon_tram) continue 2;
+                    $kasbon      = KasbonTramper::with('release', 'joTramper')->find($detail->id_kasbon_tram);
+                    if (!$kasbon) continue 2;
+                    $joId        = $kasbon->id_jo_tram;
+                    $joNomor     = $kasbon->joTramper?->no_jo_tram ?? null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'tram_' . $kasbon->id_kasbon_tram;
+                    break;
 
-            $row = match ($jenis) {
-                'tramper'  => $this->voucherPdfRowTramper($kasbonDbId),
-                'other'    => $this->voucherPdfRowOther($kasbonDbId),
-                'contract' => $this->voucherPdfRowContract($kasbonDbId),
-                'general'  => $this->voucherPdfRowGen($kasbonDbId),
-                default    => ['paid_to' => null, 'items' => []],
-            };
+                case 'other':
+                    if (!$detail->id_kasbon_other) continue 2;
+                    $kasbon      = KasbonOther::with('release', 'joOther')->find($detail->id_kasbon_other);
+                    if (!$kasbon) continue 2;
+                    $joId        = $kasbon->id_jo_other;
+                    $joNomor     = $kasbon->joOther?->no_jo_other ?? null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'other_' . $kasbon->id_kasbon_other;
+                    break;
 
-            if (!empty($row['paid_to']) || !empty($row['items'])) {
-                $pdfRows[] = $row;
+                case 'contract':
+                    if (!$detail->id_kasbon_cont) continue 2;
+                    $kasbon      = KasbonContract::with('release', 'joContract')->find($detail->id_kasbon_cont);
+                    if (!$kasbon) continue 2;
+                    $joId        = $kasbon->id_jo_cont;
+                    $joNomor     = $kasbon->joContract?->no_jo_cont ?? null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'cont_' . $kasbon->id_kasbon_cont;
+                    break;
+
+                case 'general':
+                    if (!$detail->id_kasbon_gen) continue 2;
+                    $kasbon      = KasbonGen::with('release')->find($detail->id_kasbon_gen);
+                    if (!$kasbon) continue 2;
+                    $joId        = null;
+                    $joNomor     = null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'gen_' . $kasbon->id;  // pakai integer PK, bukan id_kasbon_gen (string)
+                    break;
+
+                case 'custom':
+                    // custom type: tidak ada kasbon, langsung pakai nilai dari detail
+                    $joId        = null;
+                    $joNomor     = null;
+                    $releaseName = $detail->customRelease?->nama_release ?? null;
+                    $kasbonKey   = 'custom_' . $detail->id;
+                    break;
+
+                default:
+                    continue 2;
+            }
+
+            $groupKey = $jenis . '||' . ($joId ?? $kasbonKey);
+
+            if (!isset($joGroups[$groupKey])) {
+                $joGroups[$groupKey] = [
+                    'jenis'      => $jenis,
+                    'jo_id'      => $joId,
+                    'jo_nomor'   => $joNomor,
+                    'kasbon_ids' => [],
+                    'releases'   => [],
+                ];
+            }
+            if (!in_array($kasbonKey, $joGroups[$groupKey]['kasbon_ids'], true)) {
+                $joGroups[$groupKey]['kasbon_ids'][] = $kasbonKey;
+            }
+            if ($releaseName && !in_array($releaseName, $joGroups[$groupKey]['releases'], true)) {
+                $joGroups[$groupKey]['releases'][] = $releaseName;
+            }
+        }
+
+        // ── Step 2: build PDF rows — items from JO master, amounts summed across kasbons ──
+        $pdfRows = [];
+
+        foreach ($joGroups as $group) {
+            $jenis     = $group['jenis'];
+            $joId      = $group['jo_id'];
+            $joNomor   = $group['jo_nomor'];
+            $paidTo    = implode(', ', $group['releases']);
+            $kasbonIds = array_map(fn($k) => (int) substr($k, strpos($k, '_') + 1), $group['kasbon_ids']);
+
+            if ($jenis === 'general') {
+                $items = [];
+                foreach ($kasbonIds as $kasbonId) {
+                    $kas = KasbonGen::with('items.invoice')->find($kasbonId);
+                    if (!$kas) continue;
+                    foreach ($kas->items as $ki) {
+                        $amount = (float) ($ki->nilai_kasbon ?? 0);
+                        if ($amount <= 0) continue;
+                        $inv   = $ki->invoice;
+                        $cat   = $inv?->invoice_ctg ?? $ki->kategori ?? 'General';
+                        $label = $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $ki->keterangan ?? $ki->description ?? ('Item #' . ($ki->id_kasbon_gen_item ?? $ki->id));
+                        $found = false;
+                        foreach ($items as &$ex) {
+                            if ($ex['category'] === $cat && $ex['label'] === $label) { $ex['amount'] += $amount; $found = true; break; }
+                        }
+                        unset($ex);
+                        if (!$found) $items[] = ['category' => $cat, 'label' => $label, 'amount' => $amount];
+                    }
+                }
+                // pajak for general kasbon in separate table c09_kasbon_gen_pajak
+                foreach ($kasbonIds as $kasbonId) {
+                    $kas = KasbonGen::find($kasbonId);
+                    if (!$kas) continue;
+                    foreach ($kas->pajakItems as $kp) {
+                        $amount = (float) ($kp->nominal_pajak ?? 0);
+                        if ($amount <= 0) continue;
+                        $label = $kp->nama_pajak ?? ('Pajak #' . $kp->id_kasbon_gen_pajak);
+                        $found = false;
+                        foreach ($items as &$ex) {
+                            if ($ex['category'] === 'Tax' && $ex['label'] === $label) { $ex['amount'] += $amount; $found = true; break; }
+                        }
+                        unset($ex);
+                        if (!$found) $items[] = ['category' => 'Tax', 'label' => $label, 'amount' => $amount];
+                    }
+                }
+                if (!empty($items)) {
+                    $pdfRows[] = ['paid_to' => $paidTo, 'jo_nomor' => null, 'items' => $items];
+                }
+                continue;
+            }
+
+            if ($jenis === 'tramper') {
+                $jo = JoTramper::with('items.invoice', 'pajakItems')->find($joId);
+                if (!$jo) continue;
+                $sums      = [];   // non-pajak: keyed by id_jo_tram_item
+                $pajSums   = [];   // pajak:     keyed by id_jo_tram_pajak
+                // id_kasbon_tram adalah string biz key (CA/xxxx/xxxxx), bukan integer
+                $tramBizKeys = array_map(fn($k) => substr($k, strpos($k, '_') + 1), $group['kasbon_ids']);
+                foreach (KasbonTramperItem::whereIn('id_kasbon_tram', $tramBizKeys)->get() as $ki) {
+                    $amount = (float) ($ki->nilai_kasbon ?? 0);
+                    if ($amount <= 0) continue;
+                    if ($ki->item_type === 'tax') {
+                        if ($ki->id_jo_tram_pajak) {
+                            $pajSums[$ki->id_jo_tram_pajak] = ($pajSums[$ki->id_jo_tram_pajak] ?? 0) + $amount;
+                        } else {
+                            // pajak tanpa link JO → masukkan sebagai fallback tax
+                            $pajFallbackTram[] = [
+                                'label'  => $ki->joTramperPajak?->nama_pajak ?? 'Tax',
+                                'amount' => $amount,
+                            ];
+                        }
+                    } else {
+                        if (!$ki->id_jo_tram_item) continue;
+                        $sums[$ki->id_jo_tram_item] = ($sums[$ki->id_jo_tram_item] ?? 0) + $amount;
+                    }
+                }
+                $items = [];
+                foreach ($jo->items as $joItem) {
+                    $amount = $sums[$joItem->id_jo_tram_item] ?? 0;
+                    if ($amount <= 0) continue;
+                    $inv     = $joItem->invoice;
+                    $items[] = [
+                        'category' => $inv?->invoice_ctg ?? 'General',
+                        'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $joItem->id_jo_tram_item),
+                        'amount'   => $amount,
+                    ];
+                }
+                foreach ($jo->pajakItems as $pj) {
+                    $amount = $pajSums[$pj->id_jo_tram_pajak] ?? 0;
+                    if ($amount <= 0) continue;
+                    $items[] = [
+                        'category' => 'Tax',
+                        'label'    => $pj->nama_pajak ?? ('Pajak #' . $pj->id_jo_tram_pajak),
+                        'amount'   => $amount,
+                    ];
+                }
+                // fallback: pajak kasbon tanpa link ke JO pajak
+                foreach ($pajFallbackTram ?? [] as $pf) {
+                    $items[] = ['category' => 'Tax', 'label' => $pf['label'], 'amount' => $pf['amount']];
+                }
+
+            } elseif ($jenis === 'other') {
+                $jo = JoOther::with('items.invoice', 'pajakItems')->find($joId);
+                if (!$jo) continue;
+                $sums    = [];
+                $pajSums = [];
+                // id_kasbon_other adalah string biz key (CA/xxxx/xxxxx), bukan integer
+                $otherBizKeys = array_map(fn($k) => substr($k, strpos($k, '_') + 1), $group['kasbon_ids']);
+                foreach (KasbonOtherItem::whereIn('id_kasbon_other', $otherBizKeys)->get() as $ki) {
+                    $amount = (float) ($ki->nilai_kasbon ?? 0);
+                    if ($amount <= 0) continue;
+                    if ($ki->item_type === 'tax') {
+                        if ($ki->id_jo_other_pajak) {
+                            $pajSums[$ki->id_jo_other_pajak] = ($pajSums[$ki->id_jo_other_pajak] ?? 0) + $amount;
+                        } else {
+                            // pajak tanpa link JO → masukkan sebagai fallback tax
+                            $pajFallbackOther[] = [
+                                'label'  => $ki->joOtherPajak?->nama_pajak ?? 'Tax',
+                                'amount' => $amount,
+                            ];
+                        }
+                    } else {
+                        if (!$ki->id_jo_other_item) continue;
+                        $sums[$ki->id_jo_other_item] = ($sums[$ki->id_jo_other_item] ?? 0) + $amount;
+                    }
+                }
+                $items = [];
+                foreach ($jo->items as $joItem) {
+                    $amount = $sums[$joItem->id_jo_other_item] ?? 0;
+                    if ($amount <= 0) continue;
+                    $inv     = $joItem->invoice;
+                    $items[] = [
+                        'category' => $inv?->invoice_ctg ?? 'General',
+                        'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $joItem->id_jo_other_item),
+                        'amount'   => $amount,
+                    ];
+                }
+                foreach ($jo->pajakItems as $pj) {
+                    $amount = $pajSums[$pj->id_jo_other_pajak] ?? 0;
+                    if ($amount <= 0) continue;
+                    $items[] = [
+                        'category' => 'Tax',
+                        'label'    => $pj->nama_pajak ?? ('Pajak #' . $pj->id_jo_other_pajak),
+                        'amount'   => $amount,
+                    ];
+                }
+                // fallback: pajak kasbon tanpa link ke JO pajak
+                foreach ($pajFallbackOther ?? [] as $pf) {
+                    $items[] = ['category' => 'Tax', 'label' => $pf['label'], 'amount' => $pf['amount']];
+                }
+
+            } elseif ($jenis === 'contract') {
+                $jo = JoContract::with('items.invoice', 'pajakItems')->find($joId);
+                if (!$jo) continue;
+                $sums    = [];
+                $pajSums = [];
+                foreach (KasbonContractItem::whereIn('id_kasbon_cont', $kasbonIds)->get() as $ki) {
+                    $amount = (float) ($ki->nilai_kasbon ?? 0);
+                    if ($amount <= 0) continue;
+                    if ($ki->item_type === 'tax') {
+                        // Tax item disimpan di KasbonContractItem (item_type='tax') dgn id_jo_cont_pajak
+                        if ($ki->id_jo_cont_pajak) {
+                            $pajSums[$ki->id_jo_cont_pajak] = ($pajSums[$ki->id_jo_cont_pajak] ?? 0) + $amount;
+                        } else {
+                            $pajFallbackCont[] = ['label' => 'Tax', 'amount' => $amount];
+                        }
+                        continue;
+                    }
+                    if ($ki->item_type === 'pajak') continue;
+                    if (!$ki->id_jo_cont_item) continue;
+                    $sums[$ki->id_jo_cont_item] = ($sums[$ki->id_jo_cont_item] ?? 0) + $amount;
+                }
+                // pajak contract dari tabel terpisah c03_kasbon_cont_pajak
+                // gunakan string business key (bukan int) agar query benar
+                $contBizKeys = array_map(fn($k) => substr($k, strpos($k, '_') + 1), $group['kasbon_ids']);
+                foreach (KasbonContractPajak::whereIn('id_kasbon_cont', $contBizKeys)->get() as $kp) {
+                    $amount = (float) ($kp->nilai_kasbon_pajak ?? 0);
+                    if ($amount <= 0) continue;
+                    if ($kp->id_jo_cont_pajak) {
+                        $pajSums[$kp->id_jo_cont_pajak] = ($pajSums[$kp->id_jo_cont_pajak] ?? 0) + $amount;
+                    } else {
+                        // pajak tanpa link JO → fallback
+                        $pajFallbackCont[] = [
+                            'label'  => $kp->nama_pajak ?? 'Tax',
+                            'amount' => $amount,
+                        ];
+                    }
+                }
+                $items = [];
+                foreach ($jo->items as $joItem) {
+                    $amount = $sums[$joItem->id_jo_cont_item] ?? 0;
+                    if ($amount <= 0) continue;
+                    $inv     = $joItem->invoice;
+                    $items[] = [
+                        'category' => $inv?->invoice_ctg ?? 'General',
+                        'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $joItem->id_jo_cont_item),
+                        'amount'   => $amount,
+                    ];
+                }
+                foreach ($jo->pajakItems as $pj) {
+                    $amount = $pajSums[$pj->id_jo_cont_pajak] ?? 0;
+                    if ($amount <= 0) continue;
+                    $items[] = [
+                        'category' => 'Tax',
+                        'label'    => $pj->nama_pajak ?? ('Pajak #' . $pj->id_jo_cont_pajak),
+                        'amount'   => $amount,
+                    ];
+                }
+                // fallback: pajak kasbon tanpa link ke JO pajak
+                foreach ($pajFallbackCont ?? [] as $pf) {
+                    $items[] = ['category' => 'Tax', 'label' => $pf['label'], 'amount' => $pf['amount']];
+                }
+
+            } elseif ($jenis === 'custom') {
+                // custom detail: nilai dan pajak langsung dari kolom custom_nilai / custom_pj
+                // Ambil detail original berdasarkan kasbonKey
+                $detailId = (int) substr(array_values($group['kasbon_ids'])[0] ?? '0', strpos(array_values($group['kasbon_ids'])[0] ?? '0', '_') + 1);
+                $origDetail = \App\Models\Data\MutasiPembayaranDetail::find($detailId);
+                if (!$origDetail) {
+                    continue;
+                }
+                $customNilai = (float) ($origDetail->custom_nilai ?? $origDetail->nilai ?? 0);
+                $customPj    = (float) ($origDetail->custom_pj ?? 0);
+                $customLabel = $origDetail->keterangan ?? 'Custom Item';
+                $customCat   = 'General';
+                $items = [];
+                if ($customNilai > 0) {
+                    $items[] = ['category' => $customCat, 'label' => $customLabel, 'amount' => $customNilai];
+                }
+                if ($customPj > 0) {
+                    $items[] = ['category' => 'Tax', 'label' => 'Tax (' . $customLabel . ')', 'amount' => $customPj];
+                }
+
+            } else {
+                continue;
+            }
+
+            if (!empty($items)) {
+                $pdfRows[] = ['paid_to' => $paidTo, 'jo_nomor' => $joNomor, 'items' => $items];
             }
         }
 
@@ -1549,6 +1950,7 @@ class MutasiPembayaranController extends Controller
         return $pdf->stream($filename);
     }
 
+
     public function exportVoucherPdf($voucherId)
     {
         $voucher = MutasiPembayaranVoucher::with(['details', 'coa'])->findOrFail($voucherId);
@@ -1556,33 +1958,247 @@ class MutasiPembayaranController extends Controller
             ->find($voucher->id_mutasi_pembayaran);
         $voucher->setRelation('mutasi', $mutasi);
 
-        $pdfRows = [];
+        // ── Step 1: group voucher details by JO (jenis||jo_id) ───────────────
+        // Multiple kasbons on the same JO are merged into ONE row.
+        $joGroups = [];
+
         foreach ($voucher->details as $detail) {
-            $jenis      = $detail->jenis;
-            $kasbonDbId = match ($jenis) {
-                'tramper'  => $detail->id_kasbon_tram  ?? null,
-                'other'    => $detail->id_kasbon_other ?? null,
-                'contract' => $detail->id_kasbon_cont  ?? null,
-                'general'  => $detail->id_kasbon_gen   ?? null,
-                default    => null,
-            };
-            if (!$kasbonDbId) continue;
+            $jenis = $detail->jenis;
 
-            $row = match ($jenis) {
-                'tramper'  => $this->voucherPdfRowTramper($kasbonDbId),
-                'other'    => $this->voucherPdfRowOther($kasbonDbId),
-                'contract' => $this->voucherPdfRowContract($kasbonDbId),
-                'general'  => $this->voucherPdfRowGen($kasbonDbId),
-                default    => ['paid_to' => null, 'items' => []],
-            };
+            switch ($jenis) {
+                case 'tramper':
+                    if (!$detail->id_kasbon_tram) continue 2;
+                    $kasbon      = KasbonTramper::with('release', 'joTramper')->find($detail->id_kasbon_tram);
+                    if (!$kasbon) continue 2;
+                    $joId        = $kasbon->id_jo_tram;
+                    $joNomor     = $kasbon->joTramper?->no_jo_tram ?? null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'tram_' . $kasbon->id_kasbon_tram;
+                    break;
 
-            if (!empty($row['paid_to']) || !empty($row['items'])) {
-                $pdfRows[] = $row;
+                case 'other':
+                    if (!$detail->id_kasbon_other) continue 2;
+                    $kasbon      = KasbonOther::with('release', 'joOther')->find($detail->id_kasbon_other);
+                    if (!$kasbon) continue 2;
+                    $joId        = $kasbon->id_jo_other;
+                    $joNomor     = $kasbon->joOther?->no_jo_other ?? null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'other_' . $kasbon->id_kasbon_other;
+                    break;
+
+                case 'contract':
+                    if (!$detail->id_kasbon_cont) continue 2;
+                    $kasbon      = KasbonContract::with('release', 'joContract')->find($detail->id_kasbon_cont);
+                    if (!$kasbon) continue 2;
+                    $joId        = $kasbon->id_jo_cont;
+                    $joNomor     = $kasbon->joContract?->no_jo_cont ?? null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'cont_' . $kasbon->id_kasbon_cont;
+                    break;
+
+                case 'general':
+                    if (!$detail->id_kasbon_gen) continue 2;
+                    $kasbon      = KasbonGen::with('release')->find($detail->id_kasbon_gen);
+                    if (!$kasbon) continue 2;
+                    $joId        = null;
+                    $joNomor     = null;
+                    $releaseName = $kasbon->release->nama_release ?? null;
+                    $kasbonKey   = 'gen_' . $kasbon->id;  // pakai integer PK
+                    break;
+
+                default:
+                    continue 2;
+            }
+
+            // General: each kasbon is its own group; others: group by JO
+            $groupKey = $jenis . '||' . ($joId ?? $kasbonKey);
+
+            if (!isset($joGroups[$groupKey])) {
+                $joGroups[$groupKey] = [
+                    'jenis'      => $jenis,
+                    'jo_id'      => $joId,
+                    'jo_nomor'   => $joNomor,
+                    'kasbon_ids' => [],
+                    'releases'   => [],
+                ];
+            }
+            if (!in_array($kasbonKey, $joGroups[$groupKey]['kasbon_ids'], true)) {
+                $joGroups[$groupKey]['kasbon_ids'][] = $kasbonKey;
+            }
+            if ($releaseName && !in_array($releaseName, $joGroups[$groupKey]['releases'], true)) {
+                $joGroups[$groupKey]['releases'][] = $releaseName;
             }
         }
+
+        // ── Step 2: build PDF rows — items come from JO master, amounts summed across kasbons ──
+        $pdfRows = [];
+
+        foreach ($joGroups as $group) {
+            $jenis   = $group['jenis'];
+            $joId    = $group['jo_id'];
+            $joNomor = $group['jo_nomor'];
+            $paidTo  = implode(', ', $group['releases']);
+
+            // Extract integer IDs from prefixed keys (e.g. "tram_42" → 42)
+            $kasbonIds = array_map(fn($k) => (int) substr($k, strpos($k, '_') + 1), $group['kasbon_ids']);
+
+            if ($jenis === 'general') {
+                $items = [];
+                foreach ($kasbonIds as $kasbonId) {
+                    $kas = KasbonGen::with('items.invoice')->find($kasbonId);
+                    if (!$kas) continue;
+                    foreach ($kas->items as $ki) {
+                        $amount = (float) ($ki->nilai_kasbon ?? 0);
+                        if ($amount <= 0) continue;
+                        $inv   = $ki->invoice;
+                        $cat   = $inv?->invoice_ctg ?? $ki->kategori ?? 'General';
+                        $label = $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $ki->keterangan ?? $ki->description ?? ('Item #' . ($ki->id_kasbon_gen_item ?? $ki->id));
+                        $found = false;
+                        foreach ($items as &$ex) {
+                            if ($ex['category'] === $cat && $ex['label'] === $label) { $ex['amount'] += $amount; $found = true; break; }
+                        }
+                        unset($ex);
+                        if (!$found) $items[] = ['category' => $cat, 'label' => $label, 'amount' => $amount];
+                    }
+                }
+                // pajak for general kasbon in separate table c09_kasbon_gen_pajak
+                foreach ($kasbonIds as $kasbonId) {
+                    $kas = KasbonGen::find($kasbonId);
+                    if (!$kas) continue;
+                    foreach ($kas->pajakItems as $kp) {
+                        $amount = (float) ($kp->nominal_pajak ?? 0);
+                        if ($amount <= 0) continue;
+                        $label = $kp->nama_pajak ?? ('Pajak #' . $kp->id_kasbon_gen_pajak);
+                        $found = false;
+                        foreach ($items as &$ex) {
+                            if ($ex['category'] === 'Tax' && $ex['label'] === $label) { $ex['amount'] += $amount; $found = true; break; }
+                        }
+                        unset($ex);
+                        if (!$found) $items[] = ['category' => 'Tax', 'label' => $label, 'amount' => $amount];
+                    }
+                }
+                if (!empty($items)) {
+                    $pdfRows[] = ['paid_to' => $paidTo, 'jo_nomor' => null, 'items' => $items];
+                }
+                continue;
+            }
+
+            // tramper / other / contract: items come from JO master
+            if ($jenis === 'tramper') {
+                $jo = JoTramper::with('items.invoice', 'pajakItems')->find($joId);
+                if (!$jo) continue;
+                $sums    = [];
+                $pajSums = [];
+                // id_kasbon_tram adalah string biz key (CA/xxxx/xxxxx), bukan integer
+                $tramBizKeys = array_map(fn($k) => substr($k, strpos($k, '_') + 1), $group['kasbon_ids']);
+                foreach (KasbonTramperItem::whereIn('id_kasbon_tram', $tramBizKeys)->get() as $ki) {
+                    $amount = (float) ($ki->nilai_kasbon ?? 0);
+                    if ($amount <= 0) continue;
+                    if ($ki->item_type === 'tax') {
+                        if (!$ki->id_jo_tram_pajak) continue;
+                        $pajSums[$ki->id_jo_tram_pajak] = ($pajSums[$ki->id_jo_tram_pajak] ?? 0) + $amount;
+                    } else {
+                        if (!$ki->id_jo_tram_item) continue;
+                        $sums[$ki->id_jo_tram_item] = ($sums[$ki->id_jo_tram_item] ?? 0) + $amount;
+                    }
+                }
+                $items = [];
+                foreach ($jo->items as $joItem) {
+                    $amount = $sums[$joItem->id_jo_tram_item] ?? 0;
+                    if ($amount <= 0) continue;
+                    $inv   = $joItem->invoice;
+                    $items[] = [
+                        'category' => $inv?->invoice_ctg ?? 'General',
+                        'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $joItem->id_jo_tram_item),
+                        'amount'   => $amount,
+                    ];
+                }
+                foreach ($jo->pajakItems as $pj) {
+                    $amount = $pajSums[$pj->id_jo_tram_pajak] ?? 0;
+                    if ($amount <= 0) continue;
+                    $items[] = ['category' => 'Tax', 'label' => $pj->nama_pajak ?? ('Pajak #' . $pj->id_jo_tram_pajak), 'amount' => $amount];
+                }
+
+            } elseif ($jenis === 'other') {
+                $jo = JoOther::with('items.invoice', 'pajakItems')->find($joId);
+                if (!$jo) continue;
+                $sums    = [];
+                $pajSums = [];
+                // id_kasbon_other adalah string biz key (CA/xxxx/xxxxx), bukan integer
+                $otherBizKeys = array_map(fn($k) => substr($k, strpos($k, '_') + 1), $group['kasbon_ids']);
+                foreach (KasbonOtherItem::whereIn('id_kasbon_other', $otherBizKeys)->get() as $ki) {
+                    $amount = (float) ($ki->nilai_kasbon ?? 0);
+                    if ($amount <= 0) continue;
+                    if ($ki->item_type === 'tax') {
+                        if (!$ki->id_jo_other_pajak) continue;
+                        $pajSums[$ki->id_jo_other_pajak] = ($pajSums[$ki->id_jo_other_pajak] ?? 0) + $amount;
+                    } else {
+                        if (!$ki->id_jo_other_item) continue;
+                        $sums[$ki->id_jo_other_item] = ($sums[$ki->id_jo_other_item] ?? 0) + $amount;
+                    }
+                }
+                $items = [];
+                foreach ($jo->items as $joItem) {
+                    $amount = $sums[$joItem->id_jo_other_item] ?? 0;
+                    if ($amount <= 0) continue;
+                    $inv   = $joItem->invoice;
+                    $items[] = [
+                        'category' => $inv?->invoice_ctg ?? 'General',
+                        'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $joItem->id_jo_other_item),
+                        'amount'   => $amount,
+                    ];
+                }
+                foreach ($jo->pajakItems as $pj) {
+                    $amount = $pajSums[$pj->id_jo_other_pajak] ?? 0;
+                    if ($amount <= 0) continue;
+                    $items[] = ['category' => 'Tax', 'label' => $pj->nama_pajak ?? ('Pajak #' . $pj->id_jo_other_pajak), 'amount' => $amount];
+                }
+
+            } elseif ($jenis === 'contract') {
+                $jo = JoContract::with('items.invoice', 'pajakItems')->find($joId);
+                if (!$jo) continue;
+                $sums    = [];
+                $pajSums = [];
+                foreach (KasbonContractItem::whereIn('id_kasbon_cont', $kasbonIds)->get() as $ki) {
+                    $amount = (float) ($ki->nilai_kasbon ?? 0);
+                    if ($amount <= 0 || $ki->item_type === 'pajak') continue;
+                    if (!$ki->id_jo_cont_item) continue;
+                    $sums[$ki->id_jo_cont_item] = ($sums[$ki->id_jo_cont_item] ?? 0) + $amount;
+                }
+                // pajak contract stored in separate table c03_kasbon_cont_pajak
+                foreach (KasbonContractPajak::whereIn('id_kasbon_cont', $kasbonIds)->get() as $kp) {
+                    $amount = (float) ($kp->nilai_kasbon_pajak ?? 0);
+                    if ($amount <= 0 || !$kp->id_jo_cont_pajak) continue;
+                    $pajSums[$kp->id_jo_cont_pajak] = ($pajSums[$kp->id_jo_cont_pajak] ?? 0) + $amount;
+                }
+                $items = [];
+                foreach ($jo->items as $joItem) {
+                    $amount = $sums[$joItem->id_jo_cont_item] ?? 0;
+                    if ($amount <= 0) continue;
+                    $inv   = $joItem->invoice;
+                    $items[] = [
+                        'category' => $inv?->invoice_ctg ?? 'General',
+                        'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? ('Item #' . $joItem->id_jo_cont_item),
+                        'amount'   => $amount,
+                    ];
+                }
+                foreach ($jo->pajakItems as $pj) {
+                    $amount = $pajSums[$pj->id_jo_cont_pajak] ?? 0;
+                    if ($amount <= 0) continue;
+                    $items[] = ['category' => 'Tax', 'label' => $pj->nama_pajak ?? ('Pajak #' . $pj->id_jo_cont_pajak), 'amount' => $amount];
+                }
+
+            } else {
+                continue;
+            }
+
+            if (!empty($items)) {
+                $pdfRows[] = ['paid_to' => $paidTo, 'jo_nomor' => $joNomor, 'items' => $items];
+            }
+        }
+
         $voucher->setAttribute('pdfRows', $pdfRows);
 
-        // ← GANTI return view() lama dengan ini:
         $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView(
             'data.mutasi-pembayaran.voucher-pdf',
             ['voucher' => $voucher, 'mutasi' => $mutasi]
@@ -1592,69 +2208,34 @@ class MutasiPembayaranController extends Controller
         return $pdf->stream($filename);
     }
 
+
     // ─── TRAMPER ───────────────────────────────────────────────────
 
     private function voucherPdfRowTramper(int $id): array
     {
         $kasbon = KasbonTramper::with([
             'release',
-            'items',                           // kasbon items (id_kasbon_tram_item, id_jo_tram_item)
-            'joTramper.items.invoice',         // jo items → invoice for category/type
+            'joTramper',
+            'items.joTramperItem.invoice',   // direct: kasbon item → jo item → invoice
         ])->find($id);
 
         if (!$kasbon) return ['paid_to' => null, 'items' => []];
 
-        // Map kasbon items by jo_tram_item id
-        $kasbonLookup = $kasbon->items->keyBy('id_jo_tram_item');
+        $items = [];
+        foreach ($kasbon->items as $kasbonItem) {
+            if (($kasbonItem->item_type ?? '') === 'pajak') continue;
 
-        // Get all LPJ items for this kasbon (across any LPJ document)
-        $kasbonItemIds = $kasbon->items->pluck('id_kasbon_tram_item')->filter();
-
-        // Collect lpj amounts keyed by id_kasbon_tram_item
-        $lpjAmounts = collect();
-        if ($kasbonItemIds->isNotEmpty()) {
-            $lpjIds = LpjKasbonTramper::where('id_kasbon_tram', $kasbon->id_kasbon_tram)
-                ->pluck('id_lpj_tram');
-
-            if ($lpjIds->isNotEmpty()) {
-                $lpjAmounts = LpjTramperItem::whereIn('id_lpj_tram', $lpjIds)
-                    ->whereIn('id_kasbon_tram_item', $kasbonItemIds)
-                    ->get()
-                    ->groupBy('id_kasbon_tram_item')
-                    ->map(fn($rows) => $rows->sum('amount_lpj'));
-            }
-        }
-
-        // Build flat items from JO items (for category + label)
-        $joItems = $kasbon->joTramper ? $kasbon->joTramper->items : collect();
-        $items   = [];
-
-        foreach ($joItems as $joItem) {
-            $kasbonItem = $kasbonLookup->get($joItem->id_jo_tram_item ?? $joItem->id);
-            if (!$kasbonItem) continue;
-
-            $amount = (float) ($lpjAmounts->get($kasbonItem->id_kasbon_tram_item) ?? 0);
+            $amount = (float) ($kasbonItem->nilai_kasbon ?? $kasbonItem->total_kasbon ?? 0);
             if ($amount <= 0) continue;
 
-            $invoice  = $joItem->invoice ?? null;
-            $items[]  = [
-                'category' => $invoice->invoice_ctg ?? 'General',
-                'label'    => $invoice->invoice_typ ?? ('Item #' . $kasbonItem->id_kasbon_tram_item),
+            $joItem  = $kasbonItem->joTramperItem;
+            $invoice = $joItem?->invoice;
+
+            $items[] = [
+                'category' => $invoice?->invoice_ctg ?? 'General',
+                'label'    => $invoice?->invoice_typ ?? $invoice?->id_md_invoice ?? ('Item #' . ($kasbonItem->id_kasbon_tram_item ?? $kasbonItem->id)),
                 'amount'   => $amount,
             ];
-        }
-
-        // Fallback: no JO structure, just list by kasbon item
-        if (empty($items) && $lpjAmounts->isNotEmpty()) {
-            foreach ($kasbon->items as $kasbonItem) {
-                $amount = (float) ($lpjAmounts->get($kasbonItem->id_kasbon_tram_item) ?? 0);
-                if ($amount <= 0) continue;
-                $items[] = [
-                    'category' => 'Tramper',
-                    'label'    => 'Item #' . $kasbonItem->id_kasbon_tram_item,
-                    'amount'   => $amount,
-                ];
-            }
         }
 
         return [
@@ -1671,63 +2252,33 @@ class MutasiPembayaranController extends Controller
     {
         $kasbon = KasbonOther::with([
             'release',
-            'items',                          // id_kasbon_other_item, id_jo_other_item
-            'joOther.items.invoice',
+            'joOther',
+            'items.joOtherItem.invoice',     // direct: kasbon item → jo item → invoice
         ])->find($id);
 
         if (!$kasbon) return ['paid_to' => null, 'items' => []];
 
-        $kasbonLookup  = $kasbon->items->keyBy('id_jo_other_item');
-        $kasbonItemIds = $kasbon->items->pluck('id_kasbon_other_item')->filter();
+        $items = [];
+        foreach ($kasbon->items as $kasbonItem) {
+            if (($kasbonItem->item_type ?? '') === 'pajak') continue;
 
-        $lpjAmounts = collect();
-        if ($kasbonItemIds->isNotEmpty()) {
-            $lpjIds = LpjKasbonOther::where('id_kasbon_other', $kasbon->id_kasbon_other)
-                ->pluck('id_lpj_other');
-
-            if ($lpjIds->isNotEmpty()) {
-                $lpjAmounts = LpjOtherItem::whereIn('id_lpj_other', $lpjIds)
-                    ->whereIn('id_kasbon_other_item', $kasbonItemIds)
-                    ->get()
-                    ->groupBy('id_kasbon_other_item')
-                    ->map(fn($rows) => $rows->sum('amount_lpj'));
-            }
-        }
-
-        $joItems = $kasbon->joOther ? $kasbon->joOther->items : collect();
-        $items   = [];
-
-        foreach ($joItems as $joItem) {
-            $kasbonItem = $kasbonLookup->get($joItem->id_jo_other_item ?? $joItem->id);
-            if (!$kasbonItem) continue;
-
-            $amount = (float) ($lpjAmounts->get($kasbonItem->id_kasbon_other_item) ?? 0);
+            $amount = (float) ($kasbonItem->nilai_kasbon ?? $kasbonItem->total_kasbon ?? 0);
             if ($amount <= 0) continue;
 
-            $invoice = $joItem->invoice ?? null;
+            $joItem  = $kasbonItem->joOtherItem;
+            $invoice = $joItem?->invoice;
+
             $items[] = [
-                'category' => $invoice->invoice_ctg ?? 'General',
-                'label'    => $invoice->invoice_typ ?? ('Item #' . $kasbonItem->id_kasbon_other_item),
+                'category' => $invoice?->invoice_ctg ?? 'General',
+                'label'    => $invoice?->invoice_typ ?? $invoice?->id_md_invoice ?? ('Item #' . ($kasbonItem->id_kasbon_other_item ?? $kasbonItem->id)),
                 'amount'   => $amount,
             ];
         }
 
-        if (empty($items) && $lpjAmounts->isNotEmpty()) {
-            foreach ($kasbon->items as $kasbonItem) {
-                $amount = (float) ($lpjAmounts->get($kasbonItem->id_kasbon_other_item) ?? 0);
-                if ($amount <= 0) continue;
-                $items[] = [
-                    'category' => 'Other',
-                    'label'    => 'Item #' . $kasbonItem->id_kasbon_other_item,
-                    'amount'   => $amount,
-                ];
-            }
-        }
-
         return [
             'paid_to'      => $kasbon->release->nama_release ?? null,
-            'jo_nomor'     => $kasbon->joContract?->no_jo_cont ?? null,
-            'kasbon_nomor' => $kasbon->id_kasbon_cont ?? null,
+            'jo_nomor'     => $kasbon->joOther?->no_jo_other ?? null,
+            'kasbon_nomor' => $kasbon->id_kasbon_other ?? null,
             'items'        => $items,
         ];
     }
@@ -1736,60 +2287,29 @@ class MutasiPembayaranController extends Controller
 
     private function voucherPdfRowContract(int $id): array
     {
-        // Adjust model/relationship names to match your codebase
         $kasbon = KasbonContract::with([
             'release',
-            'items',                          // id_kasbon_cont_item, id_jo_cont_item
-            'joContract.items.invoice',
+            'joContract',
+            'items.joContractItem.invoice',  // direct: kasbon item → jo item → invoice
         ])->find($id);
 
         if (!$kasbon) return ['paid_to' => null, 'items' => []];
 
-        $kasbonLookup  = $kasbon->items->keyBy('id_jo_cont_item');
-        $kasbonItemIds = $kasbon->items->pluck('id_kasbon_cont_item')->filter();
+        $items = [];
+        foreach ($kasbon->items as $kasbonItem) {
+            if (($kasbonItem->item_type ?? '') === 'pajak') continue;
 
-        $lpjAmounts = collect();
-        if ($kasbonItemIds->isNotEmpty()) {
-            $lpjIds = LpjKasbon::where('id_kasbon_cont', $kasbon->id_kasbon_cont)
-                ->pluck('id_lpj_cont');
-
-            if ($lpjIds->isNotEmpty()) {
-                $lpjAmounts = LpjContractItem::whereIn('id_lpj_cont', $lpjIds)
-                    ->whereIn('id_kasbon_cont_item', $kasbonItemIds)
-                    ->get()
-                    ->groupBy('id_kasbon_cont_item')
-                    ->map(fn($rows) => $rows->sum('amount_lpj'));
-            }
-        }
-
-        $joItems = $kasbon->joContract ? $kasbon->joContract->items : collect();
-        $items   = [];
-
-        foreach ($joItems as $joItem) {
-            $kasbonItem = $kasbonLookup->get($joItem->id_jo_cont_item ?? $joItem->id);
-            if (!$kasbonItem) continue;
-
-            $amount = (float) ($lpjAmounts->get($kasbonItem->id_kasbon_cont_item) ?? 0);
+            $amount = (float) ($kasbonItem->nilai_kasbon ?? $kasbonItem->total_kasbon ?? 0);
             if ($amount <= 0) continue;
 
-            $invoice = $joItem->invoice ?? null;
+            $joItem  = $kasbonItem->joContractItem;
+            $invoice = $joItem?->invoice;
+
             $items[] = [
-                'category' => $invoice->invoice_ctg ?? 'General',
-                'label'    => $invoice->invoice_typ ?? ('Item #' . $kasbonItem->id_kasbon_cont_item),
+                'category' => $invoice?->invoice_ctg ?? 'General',
+                'label'    => $invoice?->invoice_typ ?? $invoice?->id_md_invoice ?? ('Item #' . ($kasbonItem->id_kasbon_cont_item ?? $kasbonItem->id)),
                 'amount'   => $amount,
             ];
-        }
-
-        if (empty($items) && $lpjAmounts->isNotEmpty()) {
-            foreach ($kasbon->items as $kasbonItem) {
-                $amount = (float) ($lpjAmounts->get($kasbonItem->id_kasbon_cont_item) ?? 0);
-                if ($amount <= 0) continue;
-                $items[] = [
-                    'category' => 'Contract',
-                    'label'    => 'Item #' . $kasbonItem->id_kasbon_cont_item,
-                    'amount'   => $amount,
-                ];
-            }
         }
 
         return [
@@ -1806,35 +2326,21 @@ class MutasiPembayaranController extends Controller
     {
         $kasbon = KasbonGen::with([
             'release',
-            'items.invoice',                  // id_kasbon_gen_item + invoice for label/category
+            'items.invoice',                 // kasbon gen item → invoice directly
         ])->find($id);
 
         if (!$kasbon) return ['paid_to' => null, 'items' => []];
 
-        $kasbonItemIds = $kasbon->items->pluck('id_kasbon_gen_item')->filter();
-
-        $lpjAmounts = collect();
-        if ($kasbonItemIds->isNotEmpty()) {
-            $lpjIds = LpjGenKasbon::where('id_kasbon_gen', $kasbon->id_kasbon_gen)
-                ->pluck('id_lpj_gen');
-
-            if ($lpjIds->isNotEmpty()) {
-                $lpjAmounts = LpjGenItem::whereIn('id_lpj_gen', $lpjIds)
-                    ->whereIn('id_kasbon_gen_item', $kasbonItemIds)
-                    ->get()
-                    ->groupBy('id_kasbon_gen_item')
-                    ->map(fn($rows) => $rows->sum('amount_lpj'));
-            }
-        }
-
         $items = [];
         foreach ($kasbon->items as $kasbonItem) {
-            $amount = (float) ($lpjAmounts->get($kasbonItem->id_kasbon_gen_item) ?? 0);
+            $amount = (float) ($kasbonItem->nilai_kasbon ?? 0);
             if ($amount <= 0) continue;
+
             $inv = $kasbonItem->invoice;
+
             $items[] = [
                 'category' => $inv?->invoice_ctg ?? $kasbonItem->kategori ?? 'General',
-                'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $kasbonItem->keterangan ?? $kasbonItem->description ?? ('Item #' . $kasbonItem->id_kasbon_gen_item),
+                'label'    => $inv?->invoice_typ ?? $inv?->id_md_invoice ?? $kasbonItem->keterangan ?? $kasbonItem->description ?? ('Item #' . ($kasbonItem->id_kasbon_gen_item ?? $kasbonItem->id)),
                 'amount'   => $amount,
             ];
         }

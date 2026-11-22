@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class DepartemenController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -88,6 +91,7 @@ class DepartemenController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Departemen berhasil ditambahkan', 'Departemen');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Departemen berhasil ditambahkan', 'data' => $departemen], 201);
@@ -155,6 +159,7 @@ class DepartemenController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Departemen berhasil diubah', 'Departemen');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Departemen berhasil diupdate', 'data' => $departemen]);
@@ -176,6 +181,7 @@ class DepartemenController extends Controller
             $departemen = Departemen::findOrFail($id);
             $departemen->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Departemen berhasil dihapus', 'Departemen');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Departemen berhasil dihapus']);

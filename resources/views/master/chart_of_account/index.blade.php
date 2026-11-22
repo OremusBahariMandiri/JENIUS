@@ -88,7 +88,10 @@
                                     <th>Account Name</th>
                                     <th width="12%">Tipe Akun</th>
                                     <th width="10%">Payment Type</th>
-                                    <th class="text-end" width="11%">Opening Balance</th>
+                                    <th width="12%">Invoice Display</th>
+                                    <th width="8%">COA Code</th>
+                                    <th width="8%">Number</th>
+                                    <th class="text-end" width="9%">Opening Balance</th>
                                     <th class="text-end" width="11%">Current Balance</th>
                                     <th class="text-center" width="10%">Action</th>
                                 </tr>
@@ -129,8 +132,11 @@
                                     </td>
                                     <td>{{ $account->parentAccount?->costType?->name ?? '-' }}</td>
                                     <td>{{ $account->payment_type ?? '-' }}</td>
+                                    <td>{{ $account->invoice_display ?? '-' }}</td>
+                                    <td>{{ $account->coa_code ?? '-' }}</td>
+                                    <td>{{ $account->number ?? '-' }}</td>
                                     <td class="text-end">{{ number_format($account->opening_balance, 2) }}</td>
-                                    <td class="text-end">{{ number_format($account->current_balance, 2) }}</td>
+                                    <td class="text-end">{{ number_format($account->opening_balance + $account->current_balance, 2) }}</td>
                                     <td>
                                         <div class="d-flex gap-1 justify-content-center">
                                             @if(auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('chart_of_account', 'detail')))

@@ -87,6 +87,66 @@
                                 </div>
                             </div>
 
+                            <!-- Invoice Display -->
+                            <div class="col-lg-6">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Invoice Display</label>
+                                    <input type="text"
+                                           name="invoice_display"
+                                           class="form-control @error('invoice_display') is-invalid @enderror"
+                                           value="{{ old('invoice_display', $account->invoice_display) }}"
+                                           placeholder="e.g. Label tampilan di invoice">
+                                    @error('invoice_display')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- COA Code -->
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">COA Code</label>
+                                    <input type="text"
+                                           name="coa_code"
+                                           class="form-control @error('coa_code') is-invalid @enderror"
+                                           value="{{ old('coa_code', $account->coa_code) }}"
+                                           placeholder="e.g. COA-001">
+                                    @error('coa_code')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Number -->
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Number</label>
+                                    <input type="text"
+                                           name="number"
+                                           class="form-control @error('number') is-invalid @enderror"
+                                           value="{{ old('number', $account->number) }}"
+                                           placeholder="e.g. 001">
+                                    @error('number')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Swift Code -->
+                            <div class="col-lg-3">
+                                <div class="mb-3">
+                                    <label class="form-label fw-semibold">Swift Code</label>
+                                    <input type="text"
+                                           name="swift_code"
+                                           class="form-control @error('swift_code') is-invalid @enderror"
+                                           value="{{ old('swift_code', $account->swift_code) }}"
+                                           placeholder="e.g. BMRIIDJA">
+                                    @error('swift_code')
+                                    <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
+                                    @enderror
+                                </div>
+                            </div>
+
                             <!-- Payment Type -->
                             <div class="col-lg-12">
                                 <div class="mb-3">
@@ -127,18 +187,20 @@
                             <!-- Current Balance -->
                             <div class="col-lg-6">
                                 <div class="mb-3">
-                                    <label class="form-label fw-semibold">Current Balance</label>
+                                    <label class="form-label fw-semibold">Current Balance
+                                        <small class="text-muted fw-normal">(Opening + Transaksi)</small>
+                                    </label>
                                     <div class="input-group">
                                         <span class="input-group-text">Rp</span>
-                                        <input type="number"
-                                               name="current_balance"
-                                               class="form-control @error('current_balance') is-invalid @enderror"
-                                               value="{{ old('current_balance', $account->current_balance) }}"
-                                               step="0.01" min="0">
-                                        @error('current_balance')
-                                        <div class="invalid-feedback"><i class="fas fa-exclamation-circle me-1"></i>{{ $message }}</div>
-                                        @enderror
+                                        <input type="text"
+                                               class="form-control bg-light"
+                                               value="{{ number_format($account->opening_balance + $account->current_balance, 2, ',', '.') }}"
+                                               readonly>
                                     </div>
+                                    <small class="text-muted">
+                                        Opening: {{ number_format($account->opening_balance, 2, ',', '.') }} &nbsp;|&nbsp;
+                                        Delta: {{ number_format($account->current_balance, 2, ',', '.') }}
+                                    </small>
                                 </div>
                             </div>
                         </div>
@@ -192,7 +254,6 @@ $(document).ready(function() {
         $('#tipeAkunDisplay').val(found ? found.cost_type : '');
     });
 
-    // Trigger saat load untuk tampilkan tipe akun existing
     $('#parentSelect').trigger('change');
 });
 </script>

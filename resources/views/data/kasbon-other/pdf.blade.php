@@ -80,12 +80,19 @@
     $logoBase64 = base64_encode(file_get_contents($logoPath));
     $logoSrc    = 'data:image/png;base64,' . $logoBase64;
 
-    // Lookup kasbon items by jo_other_item id
-    $kasbonLookup = $kasbonOther->items->keyBy('id_jo_other_item');
+    // Lookup kasbon items by jo_other_item id (regular) and id_jo_other_pajak (tax)
+    $kasbonLookup      = $kasbonOther->items->where('item_type', '!=', 'tax')->keyBy('id_jo_other_item');
+    $kasbonTaxLookup   = $kasbonOther->items->where('item_type', 'tax')->keyBy('id_jo_other_pajak');
 
     // Sumber baris = seluruh JO Other items
     $joItems = $kasbonOther->joOther
         ? $kasbonOther->joOther->items
+        : collect();
+
+    // Pajak rows (include_hpp = true)
+    $pajakItems = $kasbonOther->joOther
+        ? \App\Models\Data\JoOtherPajak::where('id_jo_other', $kasbonOther->id_jo_other)
+            ->where('include_hpp', true)->get()
         : collect();
 
     $groupedItems = $joItems->groupBy(
@@ -98,15 +105,37 @@
     foreach ($groupedItems as $cat => $items) {
         foreach ($items as $joItem) {
             $kasbonItem  = $kasbonLookup->get($joItem->id_jo_other_item);
-            $invoiceTyp  = optional($joItem->invoice)->invoice_typ ?? $joItem->id_jo_other_item;
             $nilaiKasbon = $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0;
+
+            // Skip item yang tidak di-kasbon
+            if ($nilaiKasbon <= 0) continue;
+
+            $invoiceTyp  = optional($joItem->invoice)->invoice_typ ?? $joItem->id_jo_other_item;
             $totalCA += $nilaiKasbon;
             $flatItems->push([
-                'category' => $cat,
-                'typ'      => $invoiceTyp,
-                'amount'   => $nilaiKasbon,
+                'category'  => $cat,
+                'typ'       => $invoiceTyp,
+                'amount'    => $nilaiKasbon,
+                'item_type' => 'item',
             ]);
         }
+    }
+
+    // Tambahkan pajak rows
+    foreach ($pajakItems as $pajak) {
+        $kasbonTaxItem = $kasbonTaxLookup->get($pajak->id_jo_other_pajak);
+        $nilaiKasbon   = $kasbonTaxItem ? (float) $kasbonTaxItem->nilai_kasbon : 0;
+
+        // Skip tax item yang tidak di-kasbon
+        if ($nilaiKasbon <= 0) continue;
+
+        $totalCA += $nilaiKasbon;
+        $flatItems->push([
+            'category'  => 'Tax',
+            'typ'       => $pajak->nama_pajak . ($pajak->persentase > 0 ? ' (' . (float)$pajak->persentase . '%)' : ''),
+            'amount'    => $nilaiKasbon,
+            'item_type' => 'tax',
+        ]);
     }
 
     $blankNeeded = max(0, 8 - $flatItems->count());
@@ -144,8 +173,8 @@
 
     {{-- ── AREA | TGL | NAMA | BAGIAN ── --}}
     <tr>
-        <td style="width:22%;">AREA : <strong>{{ $kasbonOther->joOther && $kasbonOther->joOther->customer ? $kasbonOther->joOther->customer->customer : '-' }}</strong></td>
-        <td style="width:18%;">TGL : <strong>{{ $kasbonOther->tgl_release ? $kasbonOther->tgl_release->format('d/m/Y') : '-' }}</strong></td>
+        <td style="width:22%;">AREA : <strong>{{ $kasbonOther->area->area ?? ($kasbonOther->joOther?->customer?->customer ?? '-') }}</strong></td>
+        <td style="width:18%;">TGL : <strong>{{ $kasbonOther->tgl_kasbon ? $kasbonOther->tgl_kasbon->format('d/m/Y') : '-' }}</strong></td>
         <td colspan="2" style="width:28%;">NAMA : <strong>{{ $kasbonOther->release->nama_release ?? '-' }}</strong></td>
         <td style="width:32%;">BAGIAN : <strong>{{ $kasbonOther->departemen->nama_dep ?? '-' }}</strong></td>
     </tr>
@@ -206,40 +235,49 @@
         <td colspan="5" style="height:20px; border:none; padding:0;"></td>
     </tr>
 
-    {{-- ── TTD HEADER ── --}}
+    {{-- ── TTD SECTION (tabel terpisah agar kolom bisa rata 20%) ── --}}
     <tr>
-        <td class="ttd-header">TANDA TANGAN<br>PEMOHON :</td>
-        <td class="ttd-header">MENYETUJUI :</td>
-        <td class="ttd-header">MENYETUJUI</td>
-        <td class="ttd-header">DIBAYARKAN OLEH :</td>
-        <td class="ttd-header">DITERIMA OLEH:</td>
-    </tr>
-
-    {{-- ── TTD SPACE ── --}}
-    <tr>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-        <td class="ttd-space">&nbsp;</td>
-    </tr>
-
-    {{-- ── NAMA TTD (kosong) ── --}}
-    <tr>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-        <td class="ttd-bottom">&nbsp;</td>
-    </tr>
-
-    {{-- ── TGL ROW ── --}}
-    <tr>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
-        <td class="ttd-bottom">TGL :</td>
+        <td colspan="5" style="padding:0; border:none;">
+            <table style="width:100%; border-collapse:collapse; table-layout:fixed;">
+                <colgroup>
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                    <col style="width:20%;">
+                </colgroup>
+                <tbody>
+                    <tr>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">TANDA TANGAN<br>PEMOHON :</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">MENYETUJUI :</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">MENYETUJUI</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">DIBAYARKAN OLEH :</td>
+                        <td class="ttd-header" style="border:1px solid #000; padding:5px 10px;">DITERIMA OLEH:</td>
+                    </tr>
+                    <tr>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                        <td style="border:1px solid #000; height:65px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                        <td class="ttd-bottom" style="border:1px solid #000; padding:5px 10px;">TGL :</td>
+                    </tr>
+                </tbody>
+            </table>
+        </td>
     </tr>
 
     {{-- ── FOOTER NOTE ── --}}

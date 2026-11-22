@@ -22,6 +22,7 @@ use App\Http\Controllers\Data\MutasiPembayaranController;
 use App\Http\Controllers\Data\MutasiPenerimaanController;
 use App\Http\Controllers\Master\BranchController;
 use App\Http\Controllers\Master\ChartOfAccountController;
+use App\Http\Controllers\Master\CompanyProfileController;
 use App\Http\Controllers\Master\CostTypeController;
 use App\Http\Controllers\Master\DepartemenController;
 use App\Http\Controllers\Master\OtherController;
@@ -29,10 +30,17 @@ use App\Http\Controllers\Master\ParentChartOfAccountController;
 use App\Http\Controllers\Master\PortController;
 use App\Http\Controllers\Master\ReleaseToController;
 use App\Http\Controllers\Rekap\RekapPiutangContractController;
+use App\Http\Controllers\Rekap\RekapPiutangTramperController;
+use App\Http\Controllers\Rekap\RekapPiutangOtherController;
 use App\Http\Controllers\Rekap\InvoicePembayaranContractController;
+use App\Http\Controllers\Rekap\InvoicePembayaranTramperController;
+use App\Http\Controllers\Rekap\InvoicePembayaranOtherController;
+use App\Http\Controllers\Rekap\StatementOfAccountController;
 use App\Http\Controllers\Master\PajakController;
 use App\Http\Controllers\Master\VesselController;
 use App\Http\Controllers\ThemeController;
+use App\Http\Controllers\Tracking\TrackingJoController;
+use App\Http\Controllers\Settings\ActivityLogController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn() => redirect()->route('login'));
@@ -45,6 +53,7 @@ Route::middleware('auth')->patch('/user/theme', [ThemeController::class, 'update
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+    Route::get('/home/chart-data', [App\Http\Controllers\HomeController::class, 'chartData'])->name('home.chart-data');
 
     // ── Admin ─────────────────────────────────────────────────
     Route::prefix('admin')->middleware(['auth'])->group(function () {
@@ -233,6 +242,12 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('data')->group(function () {
 
         //================= JO TRAMPER ROUTE GROUP =================//
+        Route::post('jo-tramper/pajak/store', [JoTramperController::class, 'storePajak'])->name('jo-tramper.pajak.store');
+        Route::delete('jo-tramper/pajak/destroy/{id}', [JoTramperController::class, 'destroyPajak'])->name('jo-tramper.pajak.destroy');
+        Route::put('jo-tramper/pajak/update/{id}', [JoTramperController::class, 'updatePajak'])->name('jo-tramper.pajak.update');
+        Route::post('jo-other/pajak/store', [JoOtherController::class, 'storePajak'])->name('jo-other.pajak.store');
+        Route::delete('jo-other/pajak/destroy/{id}', [JoOtherController::class, 'destroyPajak'])->name('jo-other.pajak.destroy');
+        Route::put('jo-other/pajak/update/{id}', [JoOtherController::class, 'updatePajak'])->name('jo-other.pajak.update');
         Route::get(
             'jo-tramper/item/check-relations/{id}',
             [JoTramperController::class, 'checkRelations']
@@ -334,6 +349,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk-delete', [JoContractController::class, 'bulkDelete'])->name('bulk-delete');
         // Pajak routes
         Route::post('/pajak/store', [JoContractController::class, 'storePajak'])->name('pajak.store');
+        Route::put('/pajak/update/{id}', [JoContractController::class, 'updatePajak'])->name('pajak.update');
         Route::delete('/pajak/destroy/{id}', [JoContractController::class, 'destroyPajak'])->name('pajak.destroy');
         Route::post('/pajak/recalc/{joContId}', [JoContractController::class, 'recalcPajak'])->name('pajak.recalc');
     });
@@ -401,6 +417,8 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-tramper.items.get');
     Route::get('kasbon-tramper/jo-items', [KasbonTramperController::class, 'getJoTramperItems'])
         ->name('kasbon-tramper.jo-items.get');
+    Route::get('kasbon-tramper/jo-pajak', [KasbonTramperController::class, 'getJoPajakItems'])
+        ->name('kasbon-tramper.jo-pajak.get');
     Route::get('kasbon-tramper/item/check-conflict', [KasbonTramperController::class, 'checkItemConflict'])
         ->name('kasbon-tramper.item.check-conflict');
     Route::post('kasbon-tramper/item/clear-conflict', [KasbonTramperController::class, 'clearConflictItem'])
@@ -470,6 +488,12 @@ Route::middleware(['auth'])->group(function () {
         ->name('kasbon-gen.item.destroy');
     Route::get('kasbon-gen/{id}/items', [KasbonGenController::class, 'getItems'])
         ->name('kasbon-gen.items.get');
+    Route::post('kasbon-gen/pajak/store', [KasbonGenController::class, 'storePajak'])
+        ->name('kasbon-gen.pajak.store');
+    Route::put('kasbon-gen/pajak/update/{id}', [KasbonGenController::class, 'updatePajak'])
+        ->name('kasbon-gen.pajak.update');
+    Route::delete('kasbon-gen/pajak/destroy/{id}', [KasbonGenController::class, 'destroyPajak'])
+        ->name('kasbon-gen.pajak.destroy');
     Route::resource('kasbon-gen', KasbonGenController::class);
     Route::get('kasbon-gen-select', [KasbonGenController::class, 'getForSelect'])
         ->name('kasbon-gen.select');
@@ -678,6 +702,10 @@ Route::middleware(['auth'])->group(function () {
     });
 
     //================= MASTER PAJAK =================//
+    // Company Profile
+    Route::get('master/company-profile', [CompanyProfileController::class, 'edit'])->name('company-profile.edit');
+    Route::put('master/company-profile', [CompanyProfileController::class, 'update'])->name('company-profile.update');
+
     Route::prefix('master/pajak')->name('pajak.')->group(function () {
         Route::get('/', [PajakController::class, 'index'])->name('index');
         Route::get('/create', [PajakController::class, 'create'])->name('create');
@@ -694,6 +722,8 @@ Route::middleware(['auth'])->group(function () {
     //================= REKAP PIUTANG CUSTOMER =================//
     Route::prefix('rekap')->group(function () {
         Route::get('piutang-contract', [RekapPiutangContractController::class, 'index'])->name('rekap-piutang-contract.index');
+        Route::get('piutang-tramper',  [RekapPiutangTramperController::class,  'index'])->name('rekap-piutang-tramper.index');
+        Route::get('piutang-other',    [RekapPiutangOtherController::class,    'index'])->name('rekap-piutang-other.index');
         Route::get('proforma-invoice-contract/create/{id_jo_cont}', [InvoicePembayaranContractController::class, 'create'])->name('proforma-invoice-contract.create');
         Route::post('proforma-invoice-contract', [InvoicePembayaranContractController::class, 'store'])->name('proforma-invoice-contract.store');
 
@@ -702,14 +732,100 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/',           [InvoicePembayaranContractController::class, 'index'])->name('index');
             Route::get('/create',     [InvoicePembayaranContractController::class, 'create'])->name('create');
             Route::post('/',          [InvoicePembayaranContractController::class, 'store'])->name('store');
+            Route::get('/jo-info',           [InvoicePembayaranContractController::class, 'getJoInfoCreate'])->name('jo.info.create');
+            Route::get('/{id}',      [InvoicePembayaranContractController::class, 'show'])->name('show');
             Route::get('/{id}/edit',  [InvoicePembayaranContractController::class, 'edit'])->name('edit');
             Route::put('/{id}',       [InvoicePembayaranContractController::class, 'update'])->name('update');
             Route::delete('/{id}',    [InvoicePembayaranContractController::class, 'destroy'])->name('destroy');
             Route::post('/{id}/header',      [InvoicePembayaranContractController::class, 'updateHeader'])->name('header.update');
             Route::post('/{id}/items/bulk',  [InvoicePembayaranContractController::class, 'bulkSaveItems'])->name('items.bulk-save');
+            Route::get('/{id}/jo-info',      [InvoicePembayaranContractController::class, 'getJoInfo'])->name('jo.info');
+            Route::post('/{id}/change-jo',   [InvoicePembayaranContractController::class, 'changeJo'])->name('jo.change');
+            Route::get('/{id}/export-vda',     [InvoicePembayaranContractController::class, 'exportVda'])->name('export.vda');
+            Route::get('/{id}/export-invoice',       [InvoicePembayaranContractController::class, 'exportInvoice'])->name('export.invoice');
+            Route::get('/{id}/export-reimbursement', [InvoicePembayaranContractController::class, 'exportReimbursement'])->name('export.reimbursement');
+            Route::get('/{id}/export-kwitansi',         [InvoicePembayaranContractController::class, 'exportKwitansi'])->name('export.kwitansi');
+            Route::get('/{id}/export-all',           [InvoicePembayaranContractController::class, 'exportAll'])->name('export.all');
+        });
+
+        Route::prefix('invoice-tramper')->name('invoice-tramper.')->group(function () {
+            Route::get('/',           [InvoicePembayaranTramperController::class, 'index'])->name('index');
+            Route::get('/create',     [InvoicePembayaranTramperController::class, 'create'])->name('create');
+            Route::post('/',          [InvoicePembayaranTramperController::class, 'store'])->name('store');
+            Route::get('/jo-info',           [InvoicePembayaranTramperController::class, 'getJoInfoCreate'])->name('jo.info.create');
+            Route::get('/{id}',      [InvoicePembayaranTramperController::class, 'show'])->name('show');
+            Route::get('/{id}/edit',  [InvoicePembayaranTramperController::class, 'edit'])->name('edit');
+            Route::put('/{id}',       [InvoicePembayaranTramperController::class, 'update'])->name('update');
+            Route::delete('/{id}',    [InvoicePembayaranTramperController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/header',      [InvoicePembayaranTramperController::class, 'updateHeader'])->name('header.update');
+            Route::post('/{id}/items/bulk',  [InvoicePembayaranTramperController::class, 'bulkSaveItems'])->name('items.bulk-save');
+            Route::get('/{id}/jo-info',      [InvoicePembayaranTramperController::class, 'getJoInfo'])->name('jo.info');
+            Route::post('/{id}/change-jo',   [InvoicePembayaranTramperController::class, 'changeJo'])->name('jo.change');
+            Route::get('/{id}/export-vda',          [InvoicePembayaranTramperController::class, 'exportVda'])->name('export.vda');
+            Route::get('/{id}/export-invoice',      [InvoicePembayaranTramperController::class, 'exportInvoice'])->name('export.invoice');
+            Route::get('/{id}/export-reimbursement',[InvoicePembayaranTramperController::class, 'exportReimbursement'])->name('export.reimbursement');
+            Route::get('/{id}/export-kwitansi',     [InvoicePembayaranTramperController::class, 'exportKwitansi'])->name('export.kwitansi');
+            Route::get('/{id}/export-all',          [InvoicePembayaranTramperController::class, 'exportAll'])->name('export.all');
+        });
+
+        Route::prefix('invoice-other')->name('invoice-other.')->group(function () {
+            Route::get('/',           [InvoicePembayaranOtherController::class, 'index'])->name('index');
+            Route::get('/create',     [InvoicePembayaranOtherController::class, 'create'])->name('create');
+            Route::post('/',          [InvoicePembayaranOtherController::class, 'store'])->name('store');
+            Route::get('/jo-info',           [InvoicePembayaranOtherController::class, 'getJoInfoCreate'])->name('jo.info.create');
+            Route::get('/{id}',      [InvoicePembayaranOtherController::class, 'show'])->name('show');
+            Route::get('/{id}/edit',  [InvoicePembayaranOtherController::class, 'edit'])->name('edit');
+            Route::put('/{id}',       [InvoicePembayaranOtherController::class, 'update'])->name('update');
+            Route::delete('/{id}',    [InvoicePembayaranOtherController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/header',      [InvoicePembayaranOtherController::class, 'updateHeader'])->name('header.update');
+            Route::post('/{id}/items/bulk',  [InvoicePembayaranOtherController::class, 'bulkSaveItems'])->name('items.bulk-save');
+            Route::get('/{id}/jo-info',      [InvoicePembayaranOtherController::class, 'getJoInfo'])->name('jo.info');
+            Route::post('/{id}/change-jo',   [InvoicePembayaranOtherController::class, 'changeJo'])->name('jo.change');
+            Route::get('/{id}/export-vda',          [InvoicePembayaranOtherController::class, 'exportVda'])->name('export.vda');
+            Route::get('/{id}/export-invoice',      [InvoicePembayaranOtherController::class, 'exportInvoice'])->name('export.invoice');
+            Route::get('/{id}/export-reimbursement',[InvoicePembayaranOtherController::class, 'exportReimbursement'])->name('export.reimbursement');
+            Route::get('/{id}/export-kwitansi',     [InvoicePembayaranOtherController::class, 'exportKwitansi'])->name('export.kwitansi');
+            Route::get('/{id}/export-all',          [InvoicePembayaranOtherController::class, 'exportAll'])->name('export.all');
         });
     });
+    //================= STATEMENT OF ACCOUNT =================//
+    Route::prefix('statement-of-account')->name('soa.')->group(function () {
+        Route::get('/',      [StatementOfAccountController::class, 'index'])->name('index');
+        Route::get('/{id}',      [StatementOfAccountController::class, 'show'])->name('show');
+            Route::get('/{id}/pdf', [StatementOfAccountController::class, 'exportPdf'])->name('pdf');
+    });
+    //================= END STATEMENT OF ACCOUNT =================//
+
     //================= END REKAP PIUTANG CUSTOMER =================//
+
+    //================= TRACKING ROUTES =================//
+    Route::prefix("tracking")->name("tracking-")->group(function () {
+        Route::get("jo",         [\App\Http\Controllers\Tracking\TrackingJoController::class, "index"])->name("jo.index");
+        Route::get("jo/data",    [\App\Http\Controllers\Tracking\TrackingJoController::class, "getData"])->name("jo.data");
+        Route::get("jo/jo-list", [\App\Http\Controllers\Tracking\TrackingJoController::class, "getJoList"])->name("jo.jo-list");
+    });
+    //================= END TRACKING ROUTES =================//
+
+
+    //================= SETTINGS ROUTES =================//
+    Route::prefix('settings')->middleware(['auth'])->group(function () {
+        // Activity Log
+        Route::get('activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+        Route::get('activity-log/{activityLog}', [ActivityLogController::class, 'show'])->name('activity-log.show');
+        Route::delete('activity-log/{activityLog}', [ActivityLogController::class, 'destroy'])->name('activity-log.destroy');
+        Route::delete('activity-log', [ActivityLogController::class, 'destroyAll'])->name('activity-log.destroy-all');
+    });
+    //================= END SETTINGS ROUTES =================//
+    //================= TRIAL BALANCE =================//
+    Route::prefix('trial-balance')->name('trial-balance.')->group(function () {
+        Route::get('/',       [App\Http\Controllers\Finance\TrialBalanceController::class, 'index'])->name('index');
+        Route::get('/export', [App\Http\Controllers\Finance\TrialBalanceController::class, 'export'])->name('export');
+        Route::get('/{coaId}',  [App\Http\Controllers\Finance\TrialBalanceController::class, 'show'])->name('show');
+        Route::post('/sync',  [App\Http\Controllers\Finance\TrialBalanceController::class, 'syncBalance'])->name('sync');
+    });
+    //================= END TRIAL BALANCE =================//
+
+
 
 });
 

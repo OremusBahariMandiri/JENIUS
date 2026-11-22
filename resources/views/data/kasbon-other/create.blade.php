@@ -526,6 +526,17 @@
                                     </select>
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}">{{ $area->area }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label">Release Date</label>
                                     <input type="date" name="tgl_release" id="tgl_release" class="form-control">
@@ -710,20 +721,20 @@
                                 <thead>
                                     <tr>
                                         <th style="width:5%; text-align:center;">No</th>
-                                        <th>Invoice Type</th>
                                         <th>Category</th>
-                                        <th style="text-align:right;">HPP Ops (IDR)</th>
+                                        <th>Item</th>
                                         <th style="text-align:right;">Selling Price (IDR)</th>
+                                        <th style="text-align:right;">HPP Ops (IDR)</th>
                                     </tr>
                                 </thead>
                                 <tbody id="joItemsModalBody"></tbody>
                                 <tfoot>
                                     <tr>
                                         <td colspan="3" style="text-align:right; font-weight:700;">GRAND TOTAL</td>
-                                        <td style="text-align:right; font-weight:700; color:#059669; font-family:monospace;"
-                                            id="joItemsTotalHpp"></td>
-                                        <td style="text-align:right; font-weight:700; font-family:monospace;"
+                                        <td style="text-align:right; font-weight:700; font-family:monospace; color:#000;"
                                             id="joItemsTotalSell"></td>
+                                        <td style="text-align:right; font-weight:700; font-family:monospace; color:#000;"
+                                            id="joItemsTotalHpp"></td>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -973,14 +984,19 @@
                     sell = parseFloat(item.hargajual_idr || 0);
                 totalHpp += hpp;
                 totalSell += sell;
-                rows += `<tr><td style="text-align:center;">${idx+1}</td><td style="font-weight:600;">${item.invoice_typ || item.id_jo_other_item}</td>
-            <td><span style="background:#d1fae5; color:#065f46; padding:3px 10px; border-radius:20px; font-size:.78rem; font-weight:600;">${item.invoice_ctg || '—'}</span></td>
-            <td style="text-align:right; font-family:monospace;">${formatNumber(hpp)}</td>
-            <td style="text-align:right; font-family:monospace;">${formatNumber(sell)}</td></tr>`;
+                const isTax = item.item_type === 'tax';
+                const ctgStyle = 'font-weight:600; color:#000;';
+                rows += `<tr>
+                    <td style="text-align:center;">${idx+1}</td>
+                    <td style="${ctgStyle}">${item.invoice_ctg || '—'}</td>
+                    <td>${item.invoice_typ || item.id_jo_other_item}</td>
+                    <td style="text-align:right; font-family:monospace;">${formatNumber(sell)}</td>
+                    <td style="text-align:right; font-family:monospace;">${formatNumber(hpp)}</td>
+                </tr>`;
             });
             $('#joItemsModalBody').html(rows);
-            $('#joItemsTotalHpp').text(formatNumber(totalHpp));
             $('#joItemsTotalSell').text(formatNumber(totalSell));
+            $('#joItemsTotalHpp').text(formatNumber(totalHpp));
             $('#joItemsModalCount').text(items.length + ' item' + (items.length !== 1 ? 's' : '') + ' found');
             $('#joItemsModalContent').show();
         }
@@ -1011,6 +1027,7 @@
                     id_jo_other: idJoOther,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),

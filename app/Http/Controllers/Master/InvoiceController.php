@@ -9,9 +9,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
 use App\Exports\DataMaster\InvoiceExport;
+use App\Traits\LogsActivity;
 
 class InvoiceController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -130,6 +133,7 @@ class InvoiceController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Item List berhasil ditambahkan', 'Item List');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -238,6 +242,7 @@ class InvoiceController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Item List berhasil diubah', 'Item List');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Invoice berhasil diupdate', 'data' => $invoice]);
@@ -279,6 +284,7 @@ class InvoiceController extends Controller
 
             $invoice->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Item List berhasil dihapus', 'Item List');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Invoice berhasil dihapus']);

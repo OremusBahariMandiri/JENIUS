@@ -36,9 +36,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\LogsActivity;
 
 class MutasiPenerimaanController extends Controller
 {
+    use LogsActivity;
+
     // ═══════════════════════════════════════════════════════
     //  HEADER
     // ═══════════════════════════════════════════════════════
@@ -46,7 +49,7 @@ class MutasiPenerimaanController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = MutasiPenerimaan::with(['vouchers']);
+            $query = MutasiPenerimaan::with(['vouchers.details']);
 
             if ($request->filled('nomor'))
                 $query->where('nomor', 'like', '%' . $request->nomor . '%');
@@ -151,6 +154,7 @@ class MutasiPenerimaanController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Multi-Receipt berhasil ditambahkan', 'Multi-Receipt');
 
             if ($request->expectsJson())
                 return response()->json([
@@ -191,7 +195,9 @@ class MutasiPenerimaanController extends Controller
             if ($request->expectsJson())
                 return response()->json(['success' => true, 'data' => $mp, 'summary' => $summary]);
 
-            return view('data.mutasi-penerimaan.show', compact('mp', 'summary'));
+            $singleVoucher = $mp->vouchers()->orderBy('urutan')->first();
+
+            return view('data.mutasi-penerimaan.show', compact('mp', 'summary', 'singleVoucher'));
         } catch (\Exception $e) {
             if ($request->expectsJson())
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -303,6 +309,7 @@ class MutasiPenerimaanController extends Controller
                 'memo'    => $request->memo,
             ]);
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Multi-Receipt berhasil diubah', 'Multi-Receipt');
 
             if ($request->expectsJson())
                 return response()->json([
@@ -331,6 +338,7 @@ class MutasiPenerimaanController extends Controller
             $mp->vouchers()->delete();
             $mp->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Multi-Receipt berhasil dihapus', 'Multi-Receipt');
 
             if ($request->expectsJson())
                 return response()->json(['success' => true, 'message' => 'Mutasi Penerimaan berhasil dihapus']);
@@ -505,7 +513,7 @@ class MutasiPenerimaanController extends Controller
             'id_kasbon_gen'          => 'nullable|exists:c07_kasbon_gen,id',
             'id_md_dep'              => 'nullable|exists:a08_md_dep,id_md_dep',
             'id_md_branch'           => 'nullable|exists:a09_md_branch,id_md_branch',
-            'nilai'                  => 'nullable|numeric|min:0',
+            'nilai'                  => 'nullable|numeric',
             'keterangan'             => 'nullable|string|max:255',
             'release_to'             => 'nullable|string|max:255',
             'id_md_chart_of_account' => 'nullable|string|max:50',
@@ -575,6 +583,17 @@ class MutasiPenerimaanController extends Controller
 
             $this->applyBalanceChange($request->id_mutasi_voucher, $nilai, 'add');
 
+            // Auto-close invoice contract jika penerimaan sudah mencukupi
+            if ($request->jenis === 'contract' && $request->id_jo_cont) {
+                $this->checkAndAutoCloseInvoiceContracts($request->id_jo_cont);
+            }
+            if ($request->jenis === 'tramper' && $request->id_jo_tram) {
+                $this->checkAndAutoCloseInvoiceTrampers($request->id_jo_tram);
+            }
+            if ($request->jenis === 'other' && $request->id_jo_other) {
+                $this->checkAndAutoCloseInvoiceOthers($request->id_jo_other);
+            }
+
             DB::commit();
             return response()->json([
                 'success' => true,
@@ -604,7 +623,7 @@ class MutasiPenerimaanController extends Controller
             'keterangan'    => 'nullable|string|max:255',
             'id_md_dep'     => 'nullable|string|max:50',
             'id_md_branch'  => 'nullable|string|max:50',
-            'nilai'         => 'nullable|numeric|min:0',
+            'nilai'         => 'nullable|numeric',
             'id_md_chart_of_account' => 'nullable|string|max:50',
         ]);
         if ($validator->fails())
@@ -643,9 +662,28 @@ class MutasiPenerimaanController extends Controller
                     }
                 }
             } else {
-                // Refund: dep & branch boleh diedit, nilai tidak berubah
+                // Refund: semua boleh diedit termasuk nilai
+                $oldNilai = (float) $detail->nilai;
+                $newNilai = $request->has('nilai') ? (float) $request->nilai : $oldNilai;
+
                 $updateData['id_md_dep']    = $request->id_md_dep    ?: $detail->id_md_dep;
                 $updateData['id_md_branch'] = $request->id_md_branch ?: $detail->id_md_branch;
+                $updateData['nilai']        = $newNilai;
+
+                // Sesuaikan balance COA voucher jika nilai berubah
+                if ($newNilai !== $oldNilai) {
+                    $diff = $newNilai - $oldNilai;
+                    $voucher = MutasiPenerimaanVoucher::find($detail->id_mutasi_voucher);
+                    if ($voucher && $voucher->id_md_chart_of_account) {
+                        if ($diff > 0) {
+                            ChartOfAccount::where('id_md_chart_of_account', $voucher->id_md_chart_of_account)
+                                ->increment('current_balance', abs($diff));
+                        } elseif ($diff < 0) {
+                            ChartOfAccount::where('id_md_chart_of_account', $voucher->id_md_chart_of_account)
+                                ->decrement('current_balance', abs($diff));
+                        }
+                    }
+                }
             }
 
             if ($detail->jenis === 'general') {
@@ -653,6 +691,18 @@ class MutasiPenerimaanController extends Controller
             }
 
             $detail->update($updateData);
+
+            // Auto-close invoice contract jika penerimaan sudah mencukupi
+            if ($detail->jenis === 'contract' && $detail->id_jo_cont) {
+                $this->checkAndAutoCloseInvoiceContracts($detail->id_jo_cont);
+            }
+            if ($detail->jenis === 'tramper' && $detail->id_jo_tram) {
+                $this->checkAndAutoCloseInvoiceTrampers($detail->id_jo_tram);
+            }
+            if ($detail->jenis === 'other' && $detail->id_jo_other) {
+                $this->checkAndAutoCloseInvoiceOthers($detail->id_jo_other);
+            }
+
             DB::commit();
             return response()->json([
                 'success' => true,
@@ -670,8 +720,23 @@ class MutasiPenerimaanController extends Controller
         DB::beginTransaction();
         try {
             $detail = MutasiPenerimaanDetail::findOrFail($id);
+            $joContId  = ($detail->jenis === 'contract') ? $detail->id_jo_cont : null;
+            $joTramId  = ($detail->jenis === 'tramper')  ? $detail->id_jo_tram  : null;
+            $joOtherId = ($detail->jenis === 'other')    ? $detail->id_jo_other : null;
             $this->applyBalanceChange($detail->id_mutasi_voucher, (float) $detail->nilai, 'reverse');
             $detail->delete();
+
+            // Re-check status invoice jika penerimaan berkurang
+            if ($joContId) {
+                $this->checkAndAutoCloseInvoiceContracts($joContId);
+            }
+            if ($joTramId) {
+                $this->checkAndAutoCloseInvoiceTrampers($joTramId);
+            }
+            if ($joOtherId) {
+                $this->checkAndAutoCloseInvoiceOthers($joOtherId);
+            }
+
             DB::commit();
             return response()->json(['success' => true, 'message' => 'Detail berhasil dihapus']);
         } catch (\Exception $e) {
@@ -690,17 +755,17 @@ class MutasiPenerimaanController extends Controller
             $data = match ($request->get('jenis')) {
                 'tramper'  => JoTramper::orderBy('created_at', 'desc')->get()->map(fn($j) => [
                     'id' => $j->id_jo_tram,
-                    'nomor' => $j->no_jo ?? $j->id_jo_tram,
+                    'nomor' => $j->no_jo_tram ?? $j->id_jo_tram,
                     'label' => $j->title ?? $j->keterangan ?? '',
                 ]),
                 'other'    => JoOther::orderBy('created_at', 'desc')->get()->map(fn($j) => [
                     'id' => $j->id_jo_other,
-                    'nomor' => $j->no_jo ?? $j->id_jo_other,
+                    'nomor' => $j->no_jo_other ?? $j->id_jo_other,
                     'label' => $j->title ?? $j->keterangan ?? '',
                 ]),
                 'contract' => JoContract::orderBy('created_at', 'desc')->get()->map(fn($j) => [
                     'id' => $j->id_jo_cont,
-                    'nomor' => $j->no_jo_cont ?? $j->no_jo ?? $j->id_jo_cont,
+                    'nomor' => $j->no_jo_cont ?? $j->id_jo_cont,
                     'label' => $j->title ?? $j->keterangan ?? '',
                 ]),
                 default    => collect(),
@@ -830,7 +895,7 @@ class MutasiPenerimaanController extends Controller
         if (!$jo) return null;
         return [
             'jo_id'      => $jo->id_jo_tram,
-            'nomor_jo'   => $jo->no_jo ?? $jo->id_jo_tram,
+            'nomor_jo'   => $jo->no_jo_tram ?? $jo->id_jo_tram,
             'id_md_cust' => $jo->id_md_cust ?? null,
             'customer'   => $jo->customer?->customer ?? null,
             'vessel'     => $jo->vessel?->vessel_name ?? null,
@@ -910,7 +975,7 @@ class MutasiPenerimaanController extends Controller
             'id_kasbon'    => $k->id,
             'nomor'        => $k->id_kasbon_tram ?? $k->nomor,
             'id_jo'        => $k->id_jo_tram,
-            'nomor_jo'     => $k->joTramper?->no_jo ?? $k->id_jo_tram,
+            'nomor_jo'     => $k->joTramper?->no_jo_tram ?? $k->id_jo_tram,
             'id_md_cust'   => $k->joTramper?->id_md_cust ?? null,
             'customer'     => $k->joTramper?->customer?->customer ?? null,
             'tgl_kasbon'   => optional($k->tgl_kasbon)->format('d/m/Y'),
@@ -941,7 +1006,7 @@ class MutasiPenerimaanController extends Controller
             'id_kasbon'    => $k->id,
             'nomor'        => $k->id_kasbon_other ?? $k->nomor,
             'id_jo'        => $k->id_jo_other,
-            'nomor_jo'     => $k->joOther?->no_jo ?? $k->id_jo_other,
+            'nomor_jo'     => $k->joOther?->no_jo_other ?? $k->id_jo_other,
             'id_md_cust'   => $k->joOther?->id_md_cust ?? null,
             'customer'     => $k->joOther?->customer?->customer ?? null,
             'tgl_kasbon'   => optional($k->tgl_kasbon)->format('d/m/Y'),
@@ -1121,6 +1186,13 @@ class MutasiPenerimaanController extends Controller
             'nomor_jo'                => $joNomor,
             'nomor_kasbon'            => $kasbonNomor,
             'release_to'              => $detail->release_to,
+            'id_md_chart_of_account'  => $detail->id_md_chart_of_account,
+            'coa_display'             => $detail->id_md_chart_of_account
+                ? (function() use ($detail) {
+                    $coa = ChartOfAccount::find($detail->id_md_chart_of_account);
+                    return $coa ? $coa->no_account . ' - ' . $coa->account_name : null;
+                })()
+                : null,
         ];
     }
 
@@ -1129,16 +1201,181 @@ class MutasiPenerimaanController extends Controller
         $voucher = MutasiPenerimaanVoucher::find($voucherId);
         if (!$voucher?->id_md_chart_of_account) return;
         $coaId = $voucher->id_md_chart_of_account;
-        if ($direction === 'add')
-            ChartOfAccount::where('id_md_chart_of_account', $coaId)->increment('current_balance', $nilai);
-        elseif ($direction === 'reverse')
-            ChartOfAccount::where('id_md_chart_of_account', $coaId)->decrement('current_balance', $nilai);
+        // Nilai negatif (misal potongan PPh): efeknya kebalikan dari nilai positif di COA
+        if ($direction === 'add') {
+            if ($nilai >= 0)
+                ChartOfAccount::where('id_md_chart_of_account', $coaId)->increment('current_balance', $nilai);
+            else
+                ChartOfAccount::where('id_md_chart_of_account', $coaId)->decrement('current_balance', abs($nilai));
+        } elseif ($direction === 'reverse') {
+            if ($nilai >= 0)
+                ChartOfAccount::where('id_md_chart_of_account', $coaId)->decrement('current_balance', $nilai);
+            else
+                ChartOfAccount::where('id_md_chart_of_account', $coaId)->increment('current_balance', abs($nilai));
+        }
     }
 
     private function reverseVoucherBalance(MutasiPenerimaanVoucher $voucher): void
     {
         foreach ($voucher->details as $detail) {
             $this->applyBalanceChange($voucher->id, (float) $detail->nilai, 'reverse');
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  AUTO-CLOSE INVOICE TRAMPER
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Cek setiap invoice tramper milik JO ini.
+     * - Jika total penerimaan (DP + Payment) >= total invoice → status = 'closed'
+     * - Jika total penerimaan < total invoice dan status saat ini 'closed' (otomatis) → status = 'sent'
+     */
+    private function checkAndAutoCloseInvoiceTrampers($joTramId): void
+    {
+        if (!$joTramId) return;
+
+        $totalDiterima = MutasiPenerimaanDetail::where('id_jo_tram', $joTramId)
+            ->where('jenis', 'tramper')
+            ->whereIn('tipe_pembayaran', [
+                MutasiPenerimaanDetail::TIPE_UANG_MUKA,
+                MutasiPenerimaanDetail::TIPE_PENERIMAAN,
+            ])
+            ->sum('nilai');
+
+        $invoices = \App\Models\Data\InvoicePembayaranTramper::with('items')
+            ->where('id_jo_tram', $joTramId)
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $dpp   = (float) $invoice->items->where('item_type', 'item')->where('is_reimbursement', false)->sum('nominal_invoice');
+            $ppn   = (float) $invoice->items->where('item_type', 'tax')->sum('nominal_invoice');
+            $reimb = (float) $invoice->items->where('is_reimbursement', true)->sum('nominal_invoice');
+            $total = $dpp + $ppn + $reimb;
+
+            if ($total <= 0) continue;
+
+            if ((float) $totalDiterima >= $total) {
+                if ($invoice->status !== 'closed') {
+                    $invoice->update([
+                        'status'     => 'closed',
+                        'close_note' => ($invoice->close_note ?? '') !== ''
+                            ? $invoice->close_note
+                            : 'Auto-closed: payment has reached the invoice amount.',
+                    ]);
+                }
+            } else {
+                if ($invoice->status === 'closed') {
+                    $invoice->update([
+                        'status'      => 'sent',
+                        'reopen_note' => 'Auto-reopened: total payment has not yet reached the invoice amount.',
+                        'close_note'  => null,
+                    ]);
+                }
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════
+    //  AUTO-CLOSE INVOICE CONTRACT
+    // ═══════════════════════════════════════════════════════
+
+    /**
+     * Cek setiap invoice contract milik JO ini.
+     * - Jika total penerimaan (DP + Payment) >= total invoice → status = 'closed'
+     * - Jika total penerimaan < total invoice dan status saat ini 'closed' (otomatis) → status = 'sent'
+     */
+    private function checkAndAutoCloseInvoiceOthers($joOtherId): void
+    {
+        if (!$joOtherId) return;
+
+        $totalDiterima = MutasiPenerimaanDetail::where('id_jo_other', $joOtherId)
+            ->where('jenis', 'other')
+            ->whereIn('tipe_pembayaran', [
+                MutasiPenerimaanDetail::TIPE_UANG_MUKA,
+                MutasiPenerimaanDetail::TIPE_PENERIMAAN,
+            ])
+            ->sum('nilai');
+
+        $invoices = \App\Models\Data\InvoicePembayaranOther::with('items')
+            ->where('id_jo_other', $joOtherId)
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $dpp   = (float) $invoice->items->where('item_type', 'item')->where('is_reimbursement', false)->sum('nominal_invoice');
+            $ppn   = (float) $invoice->items->where('item_type', 'tax')->sum('nominal_invoice');
+            $reimb = (float) $invoice->items->where('is_reimbursement', true)->sum('nominal_invoice');
+            $total = $dpp + $ppn + $reimb;
+
+            if ($total <= 0) continue;
+
+            if ((float) $totalDiterima >= $total) {
+                if ($invoice->status !== 'closed') {
+                    $invoice->update([
+                        'status'     => 'closed',
+                        'close_note' => ($invoice->close_note ?? '') !== ''
+                            ? $invoice->close_note
+                            : 'Auto-closed: payment has reached the invoice amount.',
+                    ]);
+                }
+            } else {
+                if ($invoice->status === 'closed') {
+                    $invoice->update([
+                        'status'      => 'sent',
+                        'reopen_note' => 'Auto-reopened: total payment has not yet reached the invoice amount.',
+                        'close_note'  => null,
+                    ]);
+                }
+            }
+        }
+    }
+
+    private function checkAndAutoCloseInvoiceContracts(?string $joContId): void
+    {
+        if (!$joContId) return;
+
+        // Hitung total yang sudah diterima untuk JO ini (DP + Penerimaan, exclude refund)
+        $totalDiterima = MutasiPenerimaanDetail::where('id_jo_cont', $joContId)
+            ->where('jenis', 'contract')
+            ->whereIn('tipe_pembayaran', [
+                MutasiPenerimaanDetail::TIPE_UANG_MUKA,
+                MutasiPenerimaanDetail::TIPE_PENERIMAAN,
+            ])
+            ->sum('nilai');
+
+        // Ambil semua invoice contract untuk JO ini (kecuali draft)
+        $invoices = \App\Models\Data\InvoicePembayaranContract::with('items')
+            ->where('id_jo_cont', $joContId)
+            ->get();
+
+        foreach ($invoices as $invoice) {
+            $dpp   = (float) $invoice->items->where('item_type', 'item')->where('is_reimbursement', false)->sum('nominal_invoice');
+            $ppn   = (float) $invoice->items->where('item_type', 'tax')->sum('nominal_invoice');
+            $reimb = (float) $invoice->items->where('is_reimbursement', true)->sum('nominal_invoice');
+            $total = $dpp + $ppn + $reimb;
+
+            if ($total <= 0) continue; // skip invoice kosong / belum diisi
+
+            if ((float) $totalDiterima >= $total) {
+                // Sudah terbayar penuh atau lebih → auto close
+                if ($invoice->status !== 'closed') {
+                    $invoice->update([
+                        'status'     => 'closed',
+                        'close_note' => ($invoice->close_note ?? '') !== ''
+                            ? $invoice->close_note
+                            : 'Auto-closed: payment has reached the invoice amount.',
+                    ]);
+                }
+            } else {
+                // Belum terbayar penuh → jika sebelumnya auto-closed, kembalikan ke 'sent'
+                if ($invoice->status === 'closed') {
+                    $invoice->update([
+                        'status'       => 'sent',
+                        'reopen_note'  => 'Auto-reopened: total payment has not yet reached the invoice amount.',
+                        'close_note'   => null,
+                    ]);
+                }
+            }
         }
     }
 }

@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\Master\Departemen;
 use App\Models\Master\Branch;
 use App\Models\Master\ReleaseTo;
+use App\Models\Master\Area;
+use App\Models\Data\KasbonGenPajak;
 
 class KasbonGen extends Model
 {
@@ -21,6 +23,7 @@ class KasbonGen extends Model
         'id_kasbon_gen',
         'id_md_dep',
         'id_md_cabang',
+        'id_md_area',
         'id_md_release',
         'nomor',
         'tgl_kasbon',
@@ -55,6 +58,16 @@ class KasbonGen extends Model
     public function release()
     {
         return $this->belongsTo(ReleaseTo::class, 'id_md_release', 'id_md_release');
+    }
+
+    public function area()
+    {
+        return $this->belongsTo(Area::class, 'id_md_area', 'id_md_area');
+    }
+
+    public function pajakItems()
+    {
+        return $this->hasMany(KasbonGenPajak::class, 'id_kasbon_gen', 'id_kasbon_gen');
     }
 
     public function items()

@@ -8,6 +8,7 @@ use App\Models\Data\KasbonTramper;
 use App\Models\Data\KasbonTramperItem;
 use App\Models\Data\JoTramper;
 use App\Models\Data\JoTramperItem;
+use App\Models\Master\Area;
 use App\Models\Master\Departemen;
 use App\Models\Master\Branch;
 use App\Models\Master\ReleaseTo;
@@ -17,9 +18,12 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
 use App\Models\Data\LpjKasbonTramper;
 use App\Models\Data\LpjTramper;
+use App\Traits\LogsActivity;
 
 class KasbonTramperController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // INDEX
     // ========================================
@@ -27,7 +31,7 @@ class KasbonTramperController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = KasbonTramper::with(['joTramper', 'departemen', 'cabang', 'release', 'items']);
+            $query = KasbonTramper::with(['joTramper.customer', 'joTramper.items', 'joTramper.pajakItems', 'departemen', 'cabang', 'release', 'items']);
 
             if ($request->filled('id_jo_tram')) {
                 $query->where('id_jo_tram', $request->id_jo_tram);
@@ -109,6 +113,7 @@ class KasbonTramperController extends Controller
         $joTrampers      = JoTramper::with(['customer', 'port'])->orderBy('no_jo_tram')->get();
         $departemens     = Departemen::orderBy('nama_dep')->get();
         $cabangs         = Branch::orderBy('nama_branch')->get();
+        $areas           = Area::orderBy('area')->get();
         $releases        = ReleaseTo::orderBy('id_md_release')->get();
         $previewNoKasbon = IdGenerator::generateCaNo('c03_kasbon_tram', 'id_kasbon_tram');
 
@@ -116,6 +121,7 @@ class KasbonTramperController extends Controller
             'joTrampers',
             'departemens',
             'cabangs',
+            'areas',
             'releases',
             'previewNoKasbon'
         ));
@@ -134,6 +140,7 @@ class KasbonTramperController extends Controller
                 'id_jo_tram'        => 'required|exists:b03_jo_tram,id_jo_tram',
                 'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
                 'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_area'        => 'nullable|exists:a03_md_area,id_md_area',
                 'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
                 'tgl_kasbon'        => 'required|date',
                 'tgl_release'       => 'nullable|date',
@@ -175,6 +182,7 @@ class KasbonTramperController extends Controller
                 'id_jo_tram'        => $request->id_jo_tram,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'nomor'             => $newNomor,
                 'tgl_kasbon'        => $request->tgl_kasbon,
@@ -188,7 +196,7 @@ class KasbonTramperController extends Controller
 
             DB::commit();
 
-            $kasbonTramper->load(['joTramper', 'departemen', 'cabang', 'release']);
+            $kasbonTramper->load(['joTramper', 'departemen', 'cabang', 'area', 'release']);
 
             Log::info('KasbonTramper Header Created', ['id' => $kasbonTramper->id, 'id_kasbon_tram' => $idKasbonTram]);
 
@@ -241,6 +249,7 @@ class KasbonTramperController extends Controller
                 'id_jo_tram'        => 'required|exists:b03_jo_tram,id_jo_tram',
                 'id_md_dep'         => 'required|exists:a08_md_dep,id_md_dep',
                 'id_md_cabang'      => 'required|exists:a09_md_branch,id_md_branch',
+                'id_md_area'        => 'nullable|exists:a03_md_area,id_md_area',
                 'id_md_release'     => 'required|exists:a10_md_release_to,id_md_release',
                 'tgl_kasbon'        => 'required|date',
                 'tgl_release'       => 'nullable|date',
@@ -275,6 +284,7 @@ class KasbonTramperController extends Controller
                 'id_jo_tram'        => $request->id_jo_tram,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'tgl_kasbon'        => $request->tgl_kasbon,
                 'tgl_release'       => $request->tgl_release,
@@ -287,7 +297,7 @@ class KasbonTramperController extends Controller
 
             DB::commit();
 
-            $kasbonTramper->load(['joTramper', 'departemen', 'cabang', 'release']);
+            $kasbonTramper->load(['joTramper', 'departemen', 'cabang', 'area', 'release']);
 
             Log::info('KasbonTramper Header Updated', ['id' => $id]);
 
@@ -343,10 +353,31 @@ class KasbonTramperController extends Controller
 
             $newIdKasbonTramItem = (string) (((int) $maxId) + 1);
 
-            $joTramItem = JoTramperItem::find($request->id_jo_tram_item);
-            $nilaiHpp   = $joTramItem ? (float) $joTramItem->hpp_ops : 0;
-
+            $joTramItem  = JoTramperItem::find($request->id_jo_tram_item);
+            $nilaiHpp    = $joTramItem ? (float) $joTramItem->hpp_ops : 0;
             $nilaiKasbon = (float) $request->nilai_kasbon;
+
+            // ── Validasi budget: total semua kasbon untuk item ini ≤ HPP ──
+            $totalPaidOther = KasbonTramperItem::where('id_jo_tram_item', $request->id_jo_tram_item)
+                ->where('id_kasbon_tram', '!=', $request->id_kasbon_tram)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            $maxAllowed = $nilaiHpp - (float) $totalPaidOther;
+
+            if ($nilaiKasbon > $maxAllowed) {
+                DB::rollBack();
+                $invoiceTyp = $joTramItem?->invoice?->invoice_typ ?? $request->id_jo_tram_item;
+                return response()->json([
+                    'success'          => false,
+                    'message'          => "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                        . "Paid in other CAs: IDR " . number_format((float) $totalPaidOther, 2, ',', '.')
+                        . ". Max allowed: IDR " . number_format($maxAllowed, 2, ',', '.'),
+                    'max_allowed'      => $maxAllowed,
+                    'total_paid_other' => (float) $totalPaidOther,
+                ], 422);
+            }
+
             $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
             $item = KasbonTramperItem::create([
@@ -395,9 +426,8 @@ class KasbonTramperController extends Controller
     public function bulkSaveItems(Request $request, $id)
     {
         $validator = Validator::make($request->all(), [
-            'items'                   => 'required|array',
-            'items.*.id_jo_tram_item' => 'required|exists:b04_jo_tram_item,id_jo_tram_item',
-            'items.*.nilai_kasbon'    => 'required|numeric|min:0',
+            'items'                => 'required|array',
+            'items.*.nilai_kasbon' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -414,36 +444,129 @@ class KasbonTramperController extends Controller
             DB::beginTransaction();
 
             foreach ($request->items as $itemData) {
-                $joTramItem  = JoTramperItem::find($itemData['id_jo_tram_item']);
-                $nilaiHpp    = $joTramItem ? (float) $joTramItem->hpp_ops : 0;
+                $itemType    = $itemData['item_type'] ?? 'item';
                 $nilaiKasbon = (float) $itemData['nilai_kasbon'];
-                $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
-                $existing = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
-                    ->where('id_jo_tram_item', $itemData['id_jo_tram_item'])
-                    ->first();
+                if ($itemType === 'tax') {
+                    // ── Tax row: keyed by id_jo_tram_pajak ──
+                    $joTramPajak = \App\Models\Data\JoTramperPajak::find($itemData['id_jo_tram_pajak'] ?? null);
+                    $nilaiHpp    = $joTramPajak && $joTramPajak->include_hpp ? (float) $joTramPajak->nominal_pajak_hpp : 0;
+                    $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
-                if ($existing) {
-                    $existing->update([
-                        'nilai_hpp_tram_item' => $nilaiHpp,
-                        'nilai_kasbon'        => $nilaiKasbon,
-                        'total_kasbon'        => $totalKasbon,
-                    ]);
-                } else {
-                    if ($nilaiKasbon > 0) {
-                        // ── FIX: CAST ke UNSIGNED ──
-                        $maxId = DB::table('c04_kasbon_tram_item')
-                            ->selectRaw('MAX(CAST(id_kasbon_tram_item AS UNSIGNED)) as max_id')
-                            ->value('max_id');
+                    $existing = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
+                        ->where('item_type', 'tax')
+                        ->where('id_jo_tram_pajak', $itemData['id_jo_tram_pajak'])
+                        ->first();
 
-                        KasbonTramperItem::create([
-                            'id_kasbon_tram_item' => (string) (((int) $maxId) + 1),
-                            'id_kasbon_tram'      => $kasbonTramper->id_kasbon_tram,
-                            'id_jo_tram_item'     => $itemData['id_jo_tram_item'],
+                    if ($existing) {
+                        $existing->update([
                             'nilai_hpp_tram_item' => $nilaiHpp,
                             'nilai_kasbon'        => $nilaiKasbon,
                             'total_kasbon'        => $totalKasbon,
                         ]);
+                    } else {
+                        if ($nilaiKasbon > 0) {
+                            $maxId = DB::table('c04_kasbon_tram_item')
+                                ->selectRaw('MAX(CAST(id_kasbon_tram_item AS UNSIGNED)) as max_id')
+                                ->value('max_id');
+
+                            KasbonTramperItem::create([
+                                'id_kasbon_tram_item' => (string) (((int) $maxId) + 1),
+                                'item_type'           => 'tax',
+                                'id_kasbon_tram'      => $kasbonTramper->id_kasbon_tram,
+                                'id_jo_tram_item'     => null,
+                                'id_jo_tram_pajak'    => $itemData['id_jo_tram_pajak'],
+                                'nilai_hpp_tram_item' => $nilaiHpp,
+                                'nilai_kasbon'        => $nilaiKasbon,
+                                'total_kasbon'        => $totalKasbon,
+                            ]);
+                        }
+                    }
+                } else {
+                    // ── Regular item row ──
+                    $joTramItem  = JoTramperItem::find($itemData['id_jo_tram_item'] ?? null);
+                    $nilaiHpp    = $joTramItem ? (float) $joTramItem->hpp_ops : 0;
+                    $totalKasbon = $nilaiHpp - $nilaiKasbon;
+
+                    $existing = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
+                        ->where('item_type', 'item')
+                        ->where('id_jo_tram_item', $itemData['id_jo_tram_item'])
+                        ->first();
+
+                    if (!$existing) {
+                        // fallback: match by id_jo_tram_item without item_type filter (backward compat)
+                        $existing = KasbonTramperItem::where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
+                            ->where('id_jo_tram_item', $itemData['id_jo_tram_item'])
+                            ->whereNull('item_type')
+                            ->orWhere(fn($q) => $q->where('id_kasbon_tram', $kasbonTramper->id_kasbon_tram)
+                                ->where('id_jo_tram_item', $itemData['id_jo_tram_item'])
+                                ->where('item_type', 'item'))
+                            ->first();
+                    }
+
+                    // ── Validasi budget kumulatif ──
+                    $totalPaidOther = (float) KasbonTramperItem::where('id_jo_tram_item', $itemData['id_jo_tram_item'])
+                        ->where('id_kasbon_tram', '!=', $kasbonTramper->id_kasbon_tram)
+                        ->whereNull('deleted_at')
+                        ->sum('nilai_kasbon');
+
+                    $maxAllowed = $nilaiHpp - $totalPaidOther;
+
+                    if ($nilaiKasbon > 0 && $nilaiKasbon > $maxAllowed) {
+                        DB::rollBack();
+                        $invoiceTyp = $joTramItem?->invoice?->invoice_typ ?? $itemData['id_jo_tram_item'];
+                        return response()->json([
+                            'success'          => false,
+                            'message'          => "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                                . "Paid in other CAs: IDR " . number_format($totalPaidOther, 2, ',', '.')
+                                . ". Max allowed for this CA: IDR " . number_format($maxAllowed, 2, ',', '.'),
+                            'max_allowed'      => $maxAllowed,
+                            'total_paid_other' => $totalPaidOther,
+                        ], 422);
+                    }
+
+                    // ── Blokir clear jika item masih dipakai LPJ ──
+                    if ($nilaiKasbon == 0 && $existing) {
+                        $lpjCount = \App\Models\Data\LpjTramperItem::where(
+                            'id_kasbon_tram_item',
+                            $existing->id_kasbon_tram_item
+                        )
+                            ->where('amount_lpj', '>', 0)
+                            ->count();
+
+                        if ($lpjCount > 0) {
+                            DB::rollBack();
+                            $invoiceTyp = $joTramItem?->invoice?->invoice_typ ?? $itemData['id_jo_tram_item'];
+                            return response()->json([
+                                'success' => false,
+                                'message' => "Cannot clear CA amount for \"{$invoiceTyp}\" because it is still used in {$lpjCount} LPJ item(s). Please remove the LPJ amount first."
+                            ], 422);
+                        }
+                    }
+
+                    if ($existing) {
+                        $existing->update([
+                            'item_type'           => 'item',
+                            'nilai_hpp_tram_item' => $nilaiHpp,
+                            'nilai_kasbon'        => $nilaiKasbon,
+                            'total_kasbon'        => $totalKasbon,
+                        ]);
+                    } else {
+                        if ($nilaiKasbon > 0) {
+                            $maxId = DB::table('c04_kasbon_tram_item')
+                                ->selectRaw('MAX(CAST(id_kasbon_tram_item AS UNSIGNED)) as max_id')
+                                ->value('max_id');
+
+                            KasbonTramperItem::create([
+                                'id_kasbon_tram_item' => (string) (((int) $maxId) + 1),
+                                'item_type'           => 'item',
+                                'id_kasbon_tram'      => $kasbonTramper->id_kasbon_tram,
+                                'id_jo_tram_item'     => $itemData['id_jo_tram_item'],
+                                'nilai_hpp_tram_item' => $nilaiHpp,
+                                'nilai_kasbon'        => $nilaiKasbon,
+                                'total_kasbon'        => $totalKasbon,
+                            ]);
+                        }
                     }
                 }
             }
@@ -506,12 +629,32 @@ class KasbonTramperController extends Controller
 
             DB::beginTransaction();
 
-            $item = KasbonTramperItem::findOrFail($id);
-
+            $item       = KasbonTramperItem::findOrFail($id);
             $joTramItem = JoTramperItem::find($request->id_jo_tram_item);
-            $nilaiHpp   = $joTramItem ? (float)$joTramItem->hpp_ops : (float)$item->nilai_hpp_tram_item;
+            $nilaiHpp   = $joTramItem ? (float) $joTramItem->hpp_ops : (float) $item->nilai_hpp_tram_item;
 
-            $nilaiKasbon = (float)$request->nilai_kasbon;
+            $nilaiKasbon = (float) $request->nilai_kasbon;
+
+            // ── Validasi budget ──
+            $totalPaidOther = KasbonTramperItem::where('id_jo_tram_item', $request->id_jo_tram_item)
+                ->where('id_kasbon_tram', '!=', $item->id_kasbon_tram)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            $maxAllowed = $nilaiHpp - (float) $totalPaidOther;
+
+            if ($nilaiKasbon > $maxAllowed) {
+                DB::rollBack();
+                $invoiceTyp = $joTramItem?->invoice?->invoice_typ ?? $request->id_jo_tram_item;
+                return response()->json([
+                    'success'          => false,
+                    'message'          => "CA amount for \"{$invoiceTyp}\" exceeds the remaining budget. "
+                        . "Max allowed: IDR " . number_format($maxAllowed, 2, ',', '.'),
+                    'max_allowed'      => $maxAllowed,
+                    'total_paid_other' => (float) $totalPaidOther,
+                ], 422);
+            }
+
             $totalKasbon = $nilaiHpp - $nilaiKasbon;
 
             $item->update([
@@ -639,6 +782,7 @@ class KasbonTramperController extends Controller
             'id_jo_tram'                   => 'required|exists:b03_jo_tram,id_jo_tram',
             'id_md_dep'                    => 'required|exists:a08_md_dep,id_md_dep',
             'id_md_cabang'                 => 'required|exists:a09_md_branch,id_md_branch',
+            'id_md_area'                   => 'nullable|exists:a03_md_area,id_md_area',
             'id_md_release'                => 'required|exists:a10_md_release_to,id_md_release',
             'tgl_kasbon'                   => 'required|date',
             'tgl_release'                  => 'nullable|date',
@@ -683,6 +827,7 @@ class KasbonTramperController extends Controller
                 'id_jo_tram'        => $request->id_jo_tram,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'nomor'             => $newNomor,
                 'tgl_kasbon'        => $request->tgl_kasbon,
@@ -710,6 +855,7 @@ class KasbonTramperController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data CA Tramper berhasil ditambahkan', 'CA Tramper');
 
             Log::info('KasbonTramper Store Success', ['id' => $kasbonTramper->id, 'total_items' => count($request->items)]);
 
@@ -753,25 +899,75 @@ class KasbonTramperController extends Controller
 
         try {
             $kasbonTramper = KasbonTramper::with([
-                'joTramper',
+                'joTramper.vessel',
                 'departemen',
                 'cabang',
+                'area',
                 'release',
-                'items.joTramperItem',
+                'items.joTramperItem.invoice',
+                'items.joTramperPajak',
             ])->findOrFail($id);
 
+            // Build $displayRows: all JO items + pajak, merged with kasbon amounts
+            $joItems   = \App\Models\Data\JoTramperItem::where('id_jo_tram', $kasbonTramper->id_jo_tram)
+                            ->with('invoice')->get();
+            $pajakRows = \App\Models\Data\JoTramperPajak::where('id_jo_tram', $kasbonTramper->id_jo_tram)->get();
+
+            $kasbonItemsByJoItem = $kasbonTramper->items->where('item_type', 'item')
+                                        ->keyBy('id_jo_tram_item');
+            $kasbonItemsByPajak  = $kasbonTramper->items->where('item_type', 'tax')
+                                        ->keyBy('id_jo_tram_pajak');
+
+            $displayRows = collect();
+
+            foreach ($joItems as $joItem) {
+                $kasbonItem  = $kasbonItemsByJoItem->get($joItem->id_jo_tram_item);
+                $nilaiKasbon = $kasbonItem ? $kasbonItem->nilai_kasbon : null;
+
+                // Hanya tampilkan item yang sudah di-kasbon (nilai_kasbon > 0)
+                if (!$nilaiKasbon || (float) $nilaiKasbon <= 0) continue;
+
+                $displayRows->push((object)[
+                    'type'          => 'item',
+                    'id'            => $joItem->id_jo_tram_item,
+                    'name'          => optional($joItem->invoice)->invoice_typ ?? '-',
+                    'category'      => optional($joItem->invoice)->invoice_ctg ?? '-',
+                    'hargajual_idr' => $joItem->hargajual_idr ?? 0,
+                    'nilai_hpp'     => $joItem->hpp_ops ?? 0,
+                    'nilai_kasbon'  => $nilaiKasbon,
+                ]);
+            }
+
+            foreach ($pajakRows as $pajak) {
+                $kasbonItem  = $kasbonItemsByPajak->get($pajak->id_jo_tram_pajak);
+                $nilaiKasbon = $kasbonItem ? $kasbonItem->nilai_kasbon : null;
+
+                // Hanya tampilkan tax yang sudah di-kasbon (nilai_kasbon > 0)
+                if (!$nilaiKasbon || (float) $nilaiKasbon <= 0) continue;
+
+                $displayRows->push((object)[
+                    'type'          => 'tax',
+                    'id'            => $pajak->id_jo_tram_pajak,
+                    'name'          => ($pajak->nama_pajak ?? 'Tax') . ' (' . ($pajak->persentase ?? 0) . '%)',
+                    'category'      => 'Tax',
+                    'hargajual_idr' => $pajak->nominal_pajak ?? 0,
+                    'nilai_hpp'     => $pajak->nominal_pajak_hpp ?? 0,
+                    'nilai_kasbon'  => $nilaiKasbon,
+                ]);
+            }
+
             $summary = [
-                'total_items'        => $kasbonTramper->items->count(),
-                'total_hpp'          => $kasbonTramper->items->sum('nilai_hpp_tram_item'),
-                'total_nilai_kasbon' => $kasbonTramper->items->sum('nilai_kasbon'),
-                'total_kasbon'       => $kasbonTramper->items->sum('total_kasbon'),
+                'total_items'        => $displayRows->count(),
+                'total_selling'      => $displayRows->sum('hargajual_idr'),
+                'total_hpp'          => $displayRows->sum('nilai_hpp'),
+                'total_nilai_kasbon' => $displayRows->sum(fn($r) => $r->nilai_kasbon ?? 0),
             ];
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'data' => $kasbonTramper, 'summary' => $summary]);
             }
 
-            return view('data.kasbon-tramper.show', compact('kasbonTramper', 'summary'));
+            return view('data.kasbon-tramper.show', compact('kasbonTramper', 'summary', 'displayRows'));
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             Log::error('KasbonTramper Not Found', ['id' => $id]);
             if ($request->expectsJson()) {
@@ -815,32 +1011,87 @@ class KasbonTramperController extends Controller
                     ->exists();
             }
 
+            $hpp = (float) $joItem->hpp_ops;
+
+            // ── Total yang sudah dibayar di kasbon LAIN untuk item ini ──
+            $totalPaidOther = (float) KasbonTramperItem::where('id_jo_tram_item', $joItem->id_jo_tram_item)
+                ->where('id_kasbon_tram', '!=', $kasbonTramper->id_kasbon_tram)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            // ── Sisa yang boleh diisi di kasbon INI ──
+            $maxAllowed = max(0.0, $hpp - $totalPaidOther);
+
             return [
-                'id_jo_tram_item'     => $joItem->id_jo_tram_item,
-                'invoice_typ'         => $joItem->invoice->invoice_typ ?? $joItem->id_jo_tram_item,
-                'invoice_ctg'         => $joItem->invoice->invoice_ctg ?? '-',
-                'hargajual_idr'       => (float) $joItem->hargajual_idr,
-                'hpp_ops'             => (float) $joItem->hpp_ops,
-                'id_kasbon_tram_item' => $kasbonItem?->id_kasbon_tram_item ?? null,
-                'nilai_hpp_tram_item' => $kasbonItem ? (float) $kasbonItem->nilai_hpp_tram_item : (float) $joItem->hpp_ops,
-                'nilai_kasbon'        => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
-                'total_kasbon'        => $kasbonItem ? (float) $kasbonItem->total_kasbon : (float) $joItem->hpp_ops,
-                'has_kasbon'          => $kasbonItem ? $kasbonItem->nilai_kasbon > 0 : false,
-                'has_lpj_amount'      => $hasLpjAmount,   // ← TAMBAH
-                'origin_lpj_tram'     => $kasbonItem?->joTramperItem?->origin_lpj_tram ?? null,
+                'id_jo_tram_item'          => $joItem->id_jo_tram_item,
+                'invoice_typ'              => $joItem->invoice->invoice_typ ?? $joItem->id_jo_tram_item,
+                'invoice_ctg'              => $joItem->invoice->invoice_ctg ?? '-',
+                'hargajual_idr'            => (float) $joItem->hargajual_idr,
+                'hpp_ops'                  => $hpp,
+                'id_kasbon_tram_item'      => $kasbonItem?->id_kasbon_tram_item ?? null,
+                'nilai_hpp_tram_item'      => $kasbonItem ? (float) $kasbonItem->nilai_hpp_tram_item : $hpp,
+                'nilai_kasbon'             => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
+                'total_kasbon'             => $kasbonItem ? (float) $kasbonItem->total_kasbon : $hpp,
+                'has_kasbon'               => $kasbonItem !== null && $kasbonItem->nilai_kasbon > 0,
+                'has_lpj_amount'           => $hasLpjAmount,
+                'origin_lpj_tram'          => $joItem->origin_lpj_tram ?? null,
+                'total_paid_other_kasbons' => $totalPaidOther,
+                'max_allowed'              => $maxAllowed,
             ];
         });
 
         $joTrampers  = JoTramper::orderBy('no_jo_tram')->get();
         $departemens = Departemen::orderBy('nama_dep')->get();
         $cabangs     = Branch::orderBy('nama_branch')->get();
+        $areas       = Area::orderBy('area')->get();
         $releases    = ReleaseTo::orderBy('id_md_release')->get();
+
+        // Merge pajak items (editable tax rows) into mergedItems
+        $joTramperPajakItems = \App\Models\Data\JoTramperPajak::where('id_jo_tram', $kasbonTramper->id_jo_tram)->get();
+        $pajakKasbonItems    = $kasbonTramper->items->where('item_type', 'tax');
+
+        $pajakMerged = $joTramperPajakItems->map(function ($pajak) use ($kasbonTramper, $pajakKasbonItems) {
+            $kasbonItem = $pajakKasbonItems->first(
+                fn($i) => $i->id_jo_tram_pajak == $pajak->id_jo_tram_pajak
+            );
+            $nilaiHpp = $pajak->include_hpp ? (float) $pajak->nominal_pajak_hpp : 0;
+
+            // ── Total yang sudah dibayar di kasbon LAIN untuk pajak ini ──
+            $totalPaidOtherPajak = (float) KasbonTramperItem::where('id_jo_tram_pajak', $pajak->id_jo_tram_pajak)
+                ->where('id_kasbon_tram', '!=', $kasbonTramper->id_kasbon_tram)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+
+            $maxAllowedPajak = max(0.0, $nilaiHpp - $totalPaidOtherPajak);
+
+            return [
+                'id_jo_tram_item'          => null,
+                'item_type'                => 'tax',
+                'id_jo_tram_pajak'         => $pajak->id_jo_tram_pajak,
+                'invoice_typ'              => $pajak->nama_pajak . ($pajak->persentase > 0 ? ' (' . (float)$pajak->persentase . '%)' : ''),
+                'invoice_ctg'              => 'Tax',
+                'hargajual_idr'            => $pajak->include_selling ? (float) $pajak->nominal_pajak : 0,
+                'hpp_ops'                  => $nilaiHpp,
+                'id_kasbon_tram_item'      => $kasbonItem?->id_kasbon_tram_item ?? null,
+                'nilai_hpp_tram_item'      => $nilaiHpp,
+                'nilai_kasbon'             => $kasbonItem ? (float) $kasbonItem->nilai_kasbon : 0,
+                'total_kasbon'             => $kasbonItem ? (float) $kasbonItem->total_kasbon : $nilaiHpp,
+                'has_kasbon'               => $kasbonItem !== null && $kasbonItem->nilai_kasbon > 0,
+                'has_lpj_amount'           => false,
+                'origin_lpj_tram'          => null,
+                'total_paid_other_kasbons' => $totalPaidOtherPajak,
+                'max_allowed'              => $maxAllowedPajak,
+            ];
+        });
+
+        $mergedItems = $mergedItems->concat($pajakMerged)->values();
 
         return view('data.kasbon-tramper.edit', compact(
             'kasbonTramper',
             'joTrampers',
             'departemens',
             'cabangs',
+            'areas',
             'releases',
             'mergedItems'
         ));
@@ -858,6 +1109,7 @@ class KasbonTramperController extends Controller
             'id_jo_tram'                   => 'required|exists:b03_jo_tram,id_jo_tram',
             'id_md_dep'                    => 'required|exists:a08_md_dep,id_md_dep',
             'id_md_cabang'                 => 'required|exists:a09_md_branch,id_md_branch',
+            'id_md_area'                   => 'nullable|exists:a03_md_area,id_md_area',
             'id_md_release'                => 'required|exists:a10_md_release_to,id_md_release',
             'tgl_kasbon'                   => 'required|date',
             'tgl_release'                  => 'nullable|date',
@@ -886,6 +1138,7 @@ class KasbonTramperController extends Controller
                 'id_jo_tram'        => $request->id_jo_tram,
                 'id_md_dep'         => $request->id_md_dep,
                 'id_md_cabang'      => $request->id_md_cabang,
+                'id_md_area'        => $request->id_md_area ?: null,
                 'id_md_release'     => $request->id_md_release,
                 'tgl_kasbon'        => $request->tgl_kasbon,
                 'tgl_release'       => $request->tgl_release,
@@ -916,6 +1169,7 @@ class KasbonTramperController extends Controller
             }
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data CA Tramper berhasil diubah', 'CA Tramper');
 
             Log::info('KasbonTramper Update Success', ['id' => $id]);
 
@@ -973,6 +1227,7 @@ class KasbonTramperController extends Controller
             }
             $kasbonTramper->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data CA Tramper berhasil dihapus', 'CA Tramper');
 
             Log::info('KasbonTramper Deleted', ['id' => $id, 'deleted_items_count' => $itemsCount]);
 
@@ -1065,6 +1320,39 @@ class KasbonTramperController extends Controller
     }
 
     // ========================================
+    // GET JO TRAMPER PAJAK ITEMS (API — untuk create/edit page)
+    // ========================================
+
+    public function getJoPajakItems(Request $request)
+    {
+        try {
+            $idJoTram = $request->get('id_jo_tram');
+
+            if (!$idJoTram) {
+                return response()->json(['success' => false, 'message' => 'id_jo_tram is required'], 422);
+            }
+
+            $items = \App\Models\Data\JoTramperPajak::where('id_jo_tram', $idJoTram)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id_jo_tram_pajak' => $item->id_jo_tram_pajak,
+                        'nama_pajak'       => $item->nama_pajak,
+                        'persentase'       => (float) $item->persentase,
+                        'nominal_pajak'    => (float) $item->nominal_pajak,
+                        'nominal_pajak_hpp'=> (float) $item->nominal_pajak_hpp,
+                        'include_selling'  => (bool) $item->include_selling,
+                        'include_hpp'      => (bool) $item->include_hpp,
+                    ];
+                });
+
+            return response()->json(['success' => true, 'data' => $items]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Error retrieving JO tramper pajak items: ' . $e->getMessage()], 500);
+        }
+    }
+
+    // ========================================
     // BULK DELETE
     // ========================================
 
@@ -1107,6 +1395,7 @@ class KasbonTramperController extends Controller
                 'joTramper.items.invoice',   // semua JO items (sumber baris tabel)
                 'departemen',
                 'cabang',
+                'area',
                 'release',
                 'items',                     // kasbon items (lookup nilai_kasbon)
             ])->findOrFail($id);
@@ -1283,6 +1572,23 @@ class KasbonTramperController extends Controller
                 return response()->json(['success' => false, 'message' => 'id_jo_tram_item is required'], 422);
             }
 
+            // Conflict hanya terjadi jika budget sudah habis (max_allowed = 0).
+            // Jika masih ada sisa budget, item boleh di-kasbon di beberapa CA sekaligus
+            // (seperti perilaku CA Contract).
+            $joTramItem     = \App\Models\Data\JoTramperItem::find($idJoTramItem);
+            $hpp            = $joTramItem ? (float) $joTramItem->hpp_ops : 0;
+            $totalPaidOther = (float) KasbonTramperItem::where('id_jo_tram_item', $idJoTramItem)
+                ->where('id_kasbon_tram', '!=', $idKasbonTram)
+                ->whereNull('deleted_at')
+                ->sum('nilai_kasbon');
+            $maxAllowed     = max(0.0, $hpp - $totalPaidOther);
+
+            // Jika masih ada ruang → tidak conflict
+            if ($maxAllowed > 0) {
+                return response()->json(['success' => true, 'has_conflict' => false]);
+            }
+
+            // Budget habis → cari kasbon lain yang bisa di-clear
             $conflict = KasbonTramperItem::where('id_jo_tram_item', $idJoTramItem)
                 ->where('id_kasbon_tram', '!=', $idKasbonTram)
                 ->where('nilai_kasbon', '>', 0)

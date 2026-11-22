@@ -11,10 +11,13 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 
 class ContractController extends Controller
 {
+    use LogsActivity;
+
 
     public function __construct()
     {
@@ -161,6 +164,7 @@ class ContractController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Contract berhasil ditambahkan', 'Contract');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -299,6 +303,7 @@ class ContractController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Contract berhasil diubah', 'Contract');
 
             if ($request->expectsJson()) {
                 return response()->json([
@@ -352,6 +357,7 @@ class ContractController extends Controller
 
             $contract->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Contract berhasil dihapus', 'Contract');
 
             if ($request->expectsJson()) {
                 return response()->json([

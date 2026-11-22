@@ -6,6 +6,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>JO Other - {{ $joOther->no_jo_other ?? '-' }}</title>
     <style>
+        @php echo '@page { size: A4 portrait; margin: 20mm 15mm 15mm 15mm; }'; @endphp
         * {
             margin: 0;
             padding: 0;
@@ -20,7 +21,7 @@
         }
 
         .page {
-            padding: 15mm 15mm 15mm 15mm;
+            padding: 0 15mm 15mm 15mm;
         }
 
         /* ── Title ── */
@@ -170,7 +171,7 @@
         .kop-surat {
             width: 100%;
             margin-bottom: 15px;
-            margin-top: -50px;
+            margin-top: 0;
         }
 
         .kop-surat img {
@@ -305,11 +306,7 @@
                                 <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
                                 <td style="font-size:9pt; padding:1.5px 0;">{{ $joOther->title ?? '-' }}</td>
                             </tr>
-                            <tr>
-                                <td style="width:1%; white-space:nowrap; font-size:9pt; padding:1.5px 0;">Note</td>
-                                <td style="width:8px; text-align:center; font-size:9pt; padding:1.5px 4px;">:</td>
-                                <td style="font-size:9pt; padding:1.5px 0;">{{ $joOther->note ?? '-' }}</td>
-                            </tr>
+
                         </table>
                     </td>
                 </tr>
@@ -352,9 +349,7 @@
                             <tr>
                                 <td class="text-left">
                                     {{ $item->invoice->invoice_typ }}
-                                    @if (!empty($item->note))
-                                        <div class="item-note">{!! nl2br(e($item->note)) !!}</div>
-                                    @endif
+
                                 </td>
                                 <td class="text-right">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</td>
                                 <td class="text-right">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</td>
@@ -363,6 +358,32 @@
                             </tr>
                         @endforeach
                     @endforeach
+
+                    {{-- TAX ROWS --}}
+                    @if(isset($pajakItems) && $pajakItems->count() > 0)
+                        <tr class="row-category">
+                            <td colspan="5"><strong>TAX</strong></td>
+                        </tr>
+                        @foreach ($pajakItems as $pajak)
+                            @php
+                                if ($pajak->include_selling) $totalSell += $pajak->nominal_pajak;
+                            @endphp
+                            <tr>
+                                <td class="text-left">
+                                    {{ $pajak->nama_pajak }}
+                                    ({{ number_format($pajak->persentase, 2, ',', '.') }}%)
+                                </td>
+                                <td class="text-right">0,00</td>
+                                <td class="text-right">0,00</td>
+                                <td class="text-right">
+                                    {{ number_format($pajak->include_selling ? $pajak->nominal_pajak : 0, 2, ',', '.') }}
+                                </td>
+                                <td class="text-right">
+                                    {{ number_format($pajak->include_hpp ? $pajak->nominal_pajak_hpp : 0, 2, ',', '.') }}
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
                 <tfoot>
                     <tr>

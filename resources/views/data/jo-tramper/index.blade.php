@@ -79,16 +79,16 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th width="4%">No</th>
-                                        <th>JO Date</th>
                                         <th>JO Number</th>
+                                        <th>JO Title</th>
                                         <th>Customer</th>
                                         <th>Vessel</th>
                                         <th>Port</th>
                                         <th>Period</th>
-                                        <th>Title</th>
                                         <th class="text-center">Items</th>
-                                        <th class="text-center">Total</th>
-                                        <th class="text-center">Invoice</th>
+                                        <th class="text-end">Selling Price</th>
+                                        <th class="text-end">HPP</th>
+                                        <th class="text-center">JO Pdf</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
@@ -96,10 +96,8 @@
                                     @forelse($joTrampers as $joTramper)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
-                                            <td>
-                                                {{ $joTramper->tgl_jo_tram ? $joTramper->tgl_jo_tram->format('d/m/y') : '-' }}
-                                            </td>
                                             <td>{{ $joTramper->no_jo_tram ?? '-' }}</td>
+                                            <td>{{ $joTramper->title }}</td>
                                             <td>{{ $joTramper->customer ? $joTramper->customer->customer : '-' }}</td>
                                             <td>{{ $joTramper->vessel ? $joTramper->vessel->vessel_name : '-' }}</td>
                                             <td>{{ $joTramper->port ? $joTramper->port->name_port : '-' }}</td>
@@ -110,11 +108,17 @@
                                                     {{ $joTramper->date_end ? $joTramper->date_end->format('d/m/y') : '-' }}
                                                 </small>
                                             </td>
-                                            <td>{{ $joTramper->title }}</td>
                                             <td class="text-center">{{ $joTramper->items->count() }}</td>
-                                            <td class="text-end">
-                                                {{ number_format($joTramper->items->sum('hargajual_idr'), 2, ',', '.') }}
-                                            </td>
+                                            @php
+                                                $totalSelling = $joTramper->items->sum('hargajual_idr');
+                                                $totalHPP     = $joTramper->items->sum('hpp_ops');
+                                                foreach ($joTramper->pajakItems as $pj) {
+                                                    if ($pj->include_selling) $totalSelling += $pj->nominal_pajak;
+                                                    if ($pj->include_hpp)     $totalHPP     += $pj->nominal_pajak_hpp;
+                                                }
+                                            @endphp
+                                            <td class="text-end">{{ number_format($totalSelling, 2, ',', '.') }}</td>
+                                            <td class="text-end">{{ number_format($totalHPP, 2, ',', '.') }}</td>
                                             <td class="text-center">
                                                 @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-tramper', 'detail')))
                                                     <a href="{{ route('jo-tramper.export-pdf', $joTramper->id_jo_tram) }}"

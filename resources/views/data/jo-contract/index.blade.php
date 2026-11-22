@@ -79,16 +79,17 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th width="4%">No</th>
-                                        <th>JO Date</th>
                                         <th>JO Number</th>
+                                        <th>Title</th>
+                                        <th>JO Date</th>
                                         <th>Contract No</th>
                                         <th>Contract Name</th>
                                         <th>Customer</th>
                                         <th>Period</th>
                                         <th>Area</th>
-                                        <th>Title</th>
                                         <th class="text-center">Items</th>
-                                        <th class="text-center">Total</th>
+                                        <th class="text-end">Selling Price</th>
+                                        <th class="text-end">HPP</th>
                                         <th class="text-center">JO PDF</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
@@ -97,10 +98,11 @@
                                     @forelse($joContracts as $joContract)
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $joContract->no_jo_cont ?? '-' }}</td>
+                                            <td>{{ $joContract->title }}</td>
                                             <td>
                                                 {{ $joContract->tgl_jo_cont ? $joContract->tgl_jo_cont->format('d/m/y') : '-' }}
                                             </td>
-                                            <td>{{ $joContract->no_jo_cont ?? '-' }}</td>
                                             <td>{{ $joContract->contract ? $joContract->contract->no_contract : '-' }}</td>
                                             <td>{{ $joContract->contract ? $joContract->contract->contract : '-' }}</td>
                                             <td>
@@ -114,11 +116,17 @@
                                                 </small>
                                             </td>
                                             <td>{{ $joContract->area ? $joContract->area->area : '-' }}</td>
-                                            <td>{{ $joContract->title }}</td>
                                             <td class="text-center">{{ $joContract->items->count() }}</td>
-                                            <td class="text-end">
-                                                {{ number_format($joContract->items->sum('hargajual_idr'), 2, ',', '.') }}
-                                            </td>
+                                            @php
+                                                $totalSelling = $joContract->items->sum('hargajual_idr');
+                                                $totalHPP     = $joContract->items->sum('hpp_ops');
+                                                foreach ($joContract->pajakItems as $pj) {
+                                                    if ($pj->include_selling) $totalSelling += $pj->nominal_pajak;
+                                                    if ($pj->include_hpp)     $totalHPP     += $pj->nominal_pajak_hpp;
+                                                }
+                                            @endphp
+                                            <td class="text-end">{{ number_format($totalSelling, 2, ',', '.') }}</td>
+                                            <td class="text-end">{{ number_format($totalHPP, 2, ',', '.') }}</td>
                                             <td class="text-center">
                                                 @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('jo-contract', 'detail')))
                                                     <a href="{{ route('jo-contract.export-pdf', $joContract->id_jo_cont) }}"
@@ -155,7 +163,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="13" class="text-center py-5">
+                                            <td colspan="14" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No JO Contract Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new JO Contract</p>
@@ -484,7 +492,7 @@
                         },
                         {
                             responsivePriority: 1,
-                            targets: 12
+                            targets: 13
                         },
                         {
                             responsivePriority: 2,

@@ -185,10 +185,15 @@
 
                 foreach ($kasbon->items as $kasbonItem) {
                     $lpjItem = $lpj->items->firstWhere('id_kasbon_tram_item', $kasbonItem->id_kasbon_tram_item);
-                    $cat = optional(optional($kasbonItem->joTramperItem)->invoice)->invoice_ctg ?? 'Uncategorized';
-                    $invoiceTyp =
-                        optional(optional($kasbonItem->joTramperItem)->invoice)->invoice_typ ??
-                        $kasbonItem->id_kasbon_tram_item;
+                    $isTax = ($kasbonItem->item_type ?? 'item') === 'tax';
+
+                    if ($isTax) {
+                        $cat        = 'Tax';
+                        $invoiceTyp = optional($kasbonItem->joTramperPajak)->nama_pajak ?? $kasbonItem->id_kasbon_tram_item;
+                    } else {
+                        $cat        = optional(optional($kasbonItem->joTramperItem)->invoice)->invoice_ctg ?? 'Uncategorized';
+                        $invoiceTyp = optional(optional($kasbonItem->joTramperItem)->invoice)->invoice_typ ?? $kasbonItem->id_kasbon_tram_item;
+                    }
 
                     $nilaiKasbon = (float) $kasbonItem->nilai_kasbon;
                     $amountLpj = $lpjItem ? (float) $lpjItem->amount_lpj : 0;
@@ -275,7 +280,7 @@
             <thead>
                 <tr>
                     <th style="width:32%;">Deskripsi</th>
-                    <th style="width:18%;">CA No</th>
+                    <th style="width:18%;">Kasbon No</th>
                     <th style="width:17%;">Kasbon (IDR)</th>
                     <th style="width:17%;">LPJ (IDR)</th>
                     <th style="width:16%;">Selisih (IDR)</th>

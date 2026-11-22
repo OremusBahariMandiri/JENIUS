@@ -36,6 +36,35 @@
                             </div>
                         @endif
 
+                        {{-- Summary Bar --}}
+                        @if($mutasiPenerimaans->count() > 0)
+                        @php
+                            $totalAll      = $mutasiPenerimaans->sum(fn($m) => $m->details->sum('nilai'));
+                            $totalDocs     = $mutasiPenerimaans->count();
+                            $totalVouchers = $mutasiPenerimaans->sum(fn($m) => $m->vouchers->count());
+                        @endphp
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-4">
+                                <div class="summary-card">
+                                    <div class="summary-label"><i class="fas fa-file-invoice me-1"></i> Total Documents</div>
+                                    <div class="summary-value">{{ number_format($totalDocs) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="summary-card">
+                                    <div class="summary-label"><i class="fas fa-receipt me-1"></i> Total Items</div>
+                                    <div class="summary-value">{{ number_format($totalVouchers) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="summary-card summary-card--green">
+                                    <div class="summary-label"><i class="fas fa-coins me-1"></i> Grand Total Amount</div>
+                                    <div class="summary-value">{{ number_format($totalAll, 2, ',', '.') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         <div class="table-responsive">
                             <table id="mutasiPenerimaanTable" class="table table-bordered table-striped">
                                 <thead class="table-light">
@@ -43,15 +72,18 @@
                                         <th width="4%">No</th>
                                         <th>Number</th>
                                         <th>Date</th>
-                                        <th>No. Cek / Ref</th>
-                                        <th class="text-end">Rate</th>
-                                        <th>Memo</th>
-                                        <th class="text-center">Vouchers</th>
+                                        <th>Check No. / Ref</th>
+                                        <th class="text-end">Total Amount</th>
+                                        <th>Notes</th>
+                                        <th class="text-center">Items</th>
                                         <th class="text-center" width="12%">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     @forelse($mutasiPenerimaans as $mutasi)
+                                        @php
+                                            $totalAmount = $mutasi->details->sum('nilai');
+                                        @endphp
                                         <tr>
                                             <td>{{ $loop->iteration }}</td>
                                             <td>
@@ -61,7 +93,9 @@
                                             </td>
                                             <td>{{ $mutasi->tanggal ? \Carbon\Carbon::parse($mutasi->tanggal)->format('d/m/Y') : '-' }}</td>
                                             <td>{{ $mutasi->no_cek ?? '-' }}</td>
-                                            <td class="text-end">{{ $mutasi->kurs ? number_format($mutasi->kurs, 2, ',', '.') : '-' }}</td>
+                                            <td class="text-end fw-semibold">
+                                                {{ $totalAmount > 0 ? number_format($totalAmount, 2, ',', '.') : '-' }}
+                                            </td>
                                             <td><small class="text-muted">{{ Str::limit($mutasi->memo, 50) }}</small></td>
                                             <td class="text-center">
                                                 <span class="badge bg-secondary">{{ $mutasi->vouchers->count() }}</span>
@@ -127,7 +161,7 @@
                                     value="{{ request('nomor', '') }}" placeholder="Search document number...">
                             </div>
                             <div class="col-md-6">
-                                <label class="form-label fw-semibold">No. Cek / Ref</label>
+                                <label class="form-label fw-semibold">Check No. / Ref</label>
                                 <input type="text" class="form-control" name="search"
                                     value="{{ request('search', '') }}" placeholder="Search ref number...">
                             </div>
@@ -171,6 +205,36 @@
             background: #059669 !important; color: white !important; border: 1px solid #059669 !important; }
         .mutasiPenerimaanPage .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
             background: #059669 !important; color: white !important; border: 1px solid #059669 !important; }
+
+        /* Summary cards */
+        .summary-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .summary-card--green {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+        .summary-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 0.25rem;
+        }
+        .summary-value {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .summary-card--green .summary-value {
+            color: #059669;
+        }
     </style>
 @endpush
 
@@ -182,21 +246,34 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         $(document).ready(function () {
+            // Cols: 0=No, 1=Number, 2=Date, 3=CheckNo, 4=Total, 5=Notes, 6=Items, 7=Action
             var hasData = $('#mutasiPenerimaanTable tbody tr').length > 0
                 && !$('#mutasiPenerimaanTable tbody tr td[colspan]').length;
 
             if (hasData) {
                 $('#mutasiPenerimaanTable').DataTable({
-                    responsive: true, pageLength: 10,
+                    responsive: true,
+                    pageLength: 25,
                     lengthMenu: [[10, 25, 50, -1], [10, 25, 50, 'All']],
                     order: [[2, 'desc']],
-                    columnDefs: [{ orderable: false, targets: [0, -1] }],
+                    columnDefs: [
+                        { orderable: false, targets: 0 },
+                        { orderable: false, targets: 7 },
+                        { responsivePriority: 1, targets: 7 },  // Action
+                        { responsivePriority: 2, targets: 1 },  // Number
+                        { responsivePriority: 3, targets: 2 },  // Date
+                        { responsivePriority: 4, targets: 4 },  // Total Amount
+                        { responsivePriority: 5, targets: 6 },  // Items
+                        { responsivePriority: 6, targets: 3 },  // Check No
+                        { responsivePriority: 7, targets: 5 },  // Notes
+                    ],
                     drawCallback: function (settings) {
                         var api = this.api();
                         var start = api.page.info().start;
                         api.column(0, { page: 'current' }).nodes().each(function (cell, i) {
                             cell.innerHTML = start + i + 1;
                         });
+                        api.columns.adjust();
                     }
                 });
             }

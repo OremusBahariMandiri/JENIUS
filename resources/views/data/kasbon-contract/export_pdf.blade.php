@@ -49,17 +49,24 @@
                 <th width="10%">CA No</th>
                 <th width="7%"  class="center">CA Date</th>
                 <th width="10%">JO Number</th>
-                <th width="13%">Departemen</th>
-                <th width="11%">Branch</th>
-                <th width="12%">Release To</th>
-                <th width="7%"  class="center">Release Date</th>
+                <th width="12%">Departemen</th>
+                <th width="10%">Branch</th>
+                <th width="11%">Release To</th>
+                <th width="6%"  class="center">Release Date</th>
                 <th width="4%"  class="center">Items</th>
+                <th width="4%"  class="center">Pajak</th>
                 <th width="11%" class="right">Total HPP (IDR)</th>
                 <th width="12%" class="right">Total CA (IDR)</th>
             </tr>
         </thead>
         <tbody>
             @forelse($kasbonContracts as $i => $kasbon)
+                @php
+                    $totalHpp   = $kasbon->items    ? $kasbon->items->sum('nilai_hpp_cont_item') : 0;
+                    $totalItems = $kasbon->items    ? $kasbon->items->sum('nilai_kasbon')        : 0;
+                    $totalPajak = $kasbon->pajakItems ? $kasbon->pajakItems->sum('nilai_kasbon_pajak') : 0;
+                    $totalCA    = $totalItems + $totalPajak;
+                @endphp
                 <tr>
                     <td class="center">{{ $i + 1 }}</td>
                     <td>{{ $kasbon->id_kasbon_cont ?? '-' }}</td>
@@ -70,20 +77,28 @@
                     <td>{{ $kasbon->release ? $kasbon->release->nama_release : '-' }}</td>
                     <td class="center">{{ $kasbon->tgl_release ? $kasbon->tgl_release->format('d/m/y') : '-' }}</td>
                     <td class="center">{{ $kasbon->items ? $kasbon->items->count() : 0 }}</td>
-                    <td class="right">{{ number_format($kasbon->items ? $kasbon->items->sum('nilai_hpp_cont_item') : 0, 2, ',', '.') }}</td>
-                    <td class="right">{{ number_format($kasbon->items ? $kasbon->items->sum('nilai_kasbon') : 0, 2, ',', '.') }}</td>
+                    <td class="center">{{ $kasbon->pajakItems ? $kasbon->pajakItems->count() : 0 }}</td>
+                    <td class="right">{{ number_format($totalHpp, 2, ',', '.') }}</td>
+                    <td class="right">{{ number_format($totalCA, 2, ',', '.') }}</td>
                 </tr>
             @empty
-                <tr><td colspan="11" class="center">No data available</td></tr>
+                <tr><td colspan="12" class="center">No data available</td></tr>
             @endforelse
         </tbody>
         @if($kasbonContracts->count() > 0)
         <tfoot>
             <tr>
+                @php
+                    $grandTotalHpp  = $kasbonContracts->sum(fn($k) => $k->items    ? $k->items->sum('nilai_hpp_cont_item')           : 0);
+                    $grandTotalItem = $kasbonContracts->sum(fn($k) => $k->items    ? $k->items->sum('nilai_kasbon')                   : 0);
+                    $grandTotalPjk  = $kasbonContracts->sum(fn($k) => $k->pajakItems ? $k->pajakItems->sum('nilai_kasbon_pajak')      : 0);
+                    $grandTotalCA   = $grandTotalItem + $grandTotalPjk;
+                @endphp
                 <td colspan="8" style="text-align:right;">Total</td>
                 <td class="center">{{ $kasbonContracts->sum(fn($k) => $k->items ? $k->items->count() : 0) }}</td>
-                <td class="right">{{ number_format($kasbonContracts->sum(fn($k) => $k->items ? $k->items->sum('nilai_hpp_cont_item') : 0), 2, ',', '.') }}</td>
-                <td class="right">{{ number_format($kasbonContracts->sum(fn($k) => $k->items ? $k->items->sum('nilai_kasbon') : 0), 2, ',', '.') }}</td>
+                <td class="center">{{ $kasbonContracts->sum(fn($k) => $k->pajakItems ? $k->pajakItems->count() : 0) }}</td>
+                <td class="right">{{ number_format($grandTotalHpp, 2, ',', '.') }}</td>
+                <td class="right">{{ number_format($grandTotalCA,  2, ',', '.') }}</td>
             </tr>
         </tfoot>
         @endif

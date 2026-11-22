@@ -364,6 +364,11 @@
             border-right: 2px solid #dee2e6;
         }
 
+        .table-kasbon .category-cell-tax {
+            background: #fffbea !important;
+            color: #92400e !important;
+        }
+
         .cell-right {
             text-align: right;
         }
@@ -378,6 +383,14 @@
             font-weight: 500;
         }
 
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.4rem; font-size: 0.72rem; border-radius: 4px; min-width: 36px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { font-size: 0.88rem; font-weight: 600; color: #2c3e50; text-align: right; flex: 1; }
+
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.4rem; font-size: 0.72rem; border-radius: 4px; min-width: 36px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { font-size: 0.88rem; font-weight: 600; color: #2c3e50; text-align: right; flex: 1; }
+
         .table-kasbon tfoot td {
             background-color: #ffffff;
             color: #2C3E50;
@@ -391,25 +404,26 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            gap: 5px;
             width: 100%;
         }
 
         .footer-currency-label {
-            background-color: #2C3E50;
+            background-color: #2c3e50;
             color: white;
-            padding: 4px 10px;
-            border-radius: 5px;
-            font-size: .78rem;
-            font-weight: 700;
-            min-width: 44px;
+            padding: 0.2rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            min-width: 36px;
             text-align: center;
             flex-shrink: 0;
         }
 
         .footer-value {
-            color: #2C3E50;
+            color: #000;
             font-weight: 700;
-            font-size: .95rem;
+            font-size: 0.88rem;
             text-align: right;
             flex: 1;
         }
@@ -465,6 +479,11 @@
             padding: 50px 20px;
             color: #6c757d;
             background: #f8f9fa !important;
+        }
+
+        /* Remove layout bottom padding so sticky bar is truly last */
+        main.content {
+            padding-bottom: 0 !important;
         }
 
         .final-save-section {
@@ -799,6 +818,19 @@
                                 </div>
 
                                 <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}"
+                                                {{ $kasbonContract->id_md_area == $area->id_md_area ? 'selected' : '' }}>
+                                                {{ $area->area }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
                                     <label class="form-label required-field">Release To</label>
                                     <select name="id_md_release" id="id_md_release" class="form-select select2-field"
                                         required>
@@ -888,6 +920,14 @@
                                 style="border-radius:8px;">
                                 <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
                             </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-4 py-2"
+                            style="background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+                            <i class="fas fa-bolt" style="color:#2563eb; font-size:.8rem; flex-shrink:0;"></i>
+                            <span style="font-size:.8rem; color:#1e40af;">
+                                <strong>Auto-saved.</strong>
+                                Items and amounts are saved instantly — once they appear in the table, they're already recorded.
+                            </span>
                         </div>
                         <div class="card-body p-4">
 
@@ -983,9 +1023,9 @@
                                         <tr>
                                             <th style="width:4%;">No</th>
                                             <th style="width:13%;">Category</th>
-                                            <th class="text-start" style="min-width:200px;">Description</th>
+                                            <th class="text-start" style="min-width:200px;">Item</th>
                                             <th style="width:15%;">Selling Price (IDR)</th>
-                                            <th style="width:15%;">Total CA / HPP (IDR)</th>
+                                            <th style="width:15%;">HPP (IDR)</th>
                                             <th style="width:15%;">CA Amount (IDR)</th>
                                             <th style="width:10%;">Action</th>
                                         </tr>
@@ -1612,7 +1652,7 @@
                     const isTaxRow = item.item_type === 'tax';
 
                     const categoryCell = catIndex === 0 ?
-                        `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
+                        `<td class="category-cell${category === 'Tax' ? ' category-cell-tax' : ''}" rowspan="${rowspan}">${category}</td>` :
                         '';
 
                     if (isTaxRow) {
@@ -1634,9 +1674,9 @@
                                 <td class="text-start">
                                     <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
                                 </td>
-                                <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
-                                <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                                <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                                <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hargajual_idr)}</span></div></td>
+                                <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hpp_ops)}</span></div></td>
+                                <td class="nilai-kasbon-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell nilai-kasbon-val">${formatNumber(item.nilai_kasbon)}</span></div></td>
                                 <td class="cell-center">
                                     <div class="d-flex gap-1 justify-content-center">
                                         <button type="button" class="btn btn-primary btn-sm btn-edit-row"
@@ -1675,9 +1715,9 @@
                                     <span class="fw-semibold" style="color:#2c3e50;">${item.invoice_typ}</span>
                                     ${lpjBadge}
                                 </td>
-                                <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
-                                <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                                <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                                <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hargajual_idr)}</span></div></td>
+                                <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hpp_ops)}</span></div></td>
+                                <td class="nilai-kasbon-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell nilai-kasbon-val">${formatNumber(item.nilai_kasbon)}</span></div></td>
                                 <td class="cell-center">
                                     <div class="d-flex gap-1 justify-content-center">
                                         <button type="button" class="btn btn-primary btn-sm btn-edit-row"
@@ -1698,7 +1738,7 @@
 
         function refreshRowAfterSave(globalIndex, nilaiKasbon, saved) {
             const $row = $(`#row_${globalIndex}`);
-            $row.find('.nilai-kasbon-cell').text(formatNumber(nilaiKasbon));
+            $row.find('.nilai-kasbon-val').text(formatNumber(nilaiKasbon));
             $row.find('.btn-clear-row')
                 .prop('disabled', !saved)
                 .attr('title', saved ? 'Clear CA amount' : 'No CA amount to clear');
@@ -2180,6 +2220,7 @@
                     id_jo_cont: idJoCont,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),

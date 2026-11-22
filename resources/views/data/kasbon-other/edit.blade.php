@@ -5,19 +5,23 @@
 @php
     $mergedItemsJs = collect($mergedItems)->map(
         fn($i) => [
-            'id_jo_other_item' => $i['id_jo_other_item'],
-            'invoice_typ' => $i['invoice_typ'],
-            'invoice_ctg' => $i['invoice_ctg'],
-            'hargajual_idr' => $i['hargajual_idr'],
-            'hpp_ops' => $i['hpp_ops'],
-            'id_kasbon_other_item' => $i['id_kasbon_other_item'],
-            'nilai_hpp_other_item' => $i['nilai_hpp_other_item'],
-            'nilai_kasbon' => $i['nilai_kasbon'],
-            'total_kasbon' => $i['total_kasbon'],
-            'has_kasbon' => $i['has_kasbon'],
-            'has_lpj_amount' => $i['has_lpj_amount'] ?? false, // ← TAMBAH
-            'lpj_count' => $i['lpj_count'] ?? 0, // ← TAMBAH
-            'origin_lpj_other' => $i['origin_lpj_other'] ?? null,
+            'item_type'                => $i['item_type'] ?? 'item',
+            'id_jo_other_item'         => $i['id_jo_other_item'],
+            'id_jo_other_pajak'        => $i['id_jo_other_pajak'] ?? null,
+            'invoice_typ'              => $i['invoice_typ'],
+            'invoice_ctg'              => $i['invoice_ctg'],
+            'hargajual_idr'            => $i['hargajual_idr'],
+            'hpp_ops'                  => $i['hpp_ops'],
+            'id_kasbon_other_item'     => $i['id_kasbon_other_item'],
+            'nilai_hpp_other_item'     => $i['nilai_hpp_other_item'],
+            'nilai_kasbon'             => $i['nilai_kasbon'],
+            'total_kasbon'             => $i['total_kasbon'],
+            'has_kasbon'               => $i['has_kasbon'],
+            'has_lpj_amount'           => $i['has_lpj_amount'] ?? false,
+            'lpj_count'                => $i['lpj_count'] ?? 0,
+            'origin_lpj_other'         => $i['origin_lpj_other'] ?? null,
+            'total_paid_other_kasbons' => $i['total_paid_other_kasbons'] ?? 0,
+            'max_allowed'              => $i['max_allowed'] ?? 0,
         ],
     );
 @endphp
@@ -241,9 +245,9 @@
 
         .input-item-card.active {
             display: block;
-            border: 2px solid #10b981;
+            border: 2px solid #3b82f6;
             background: #f0f7ff;
-            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.08);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
         }
 
         .input-item-card .card-title-bar {
@@ -252,11 +256,11 @@
             gap: 10px;
             margin-bottom: 20px;
             padding-bottom: 14px;
-            border-bottom: 1px solid #bbf7d0;
+            border-bottom: 1px solid #bfdbfe;
         }
 
         .input-item-card .card-title-bar i {
-            color: #10b981;
+            color: #3b82f6;
             font-size: 1rem;
         }
 
@@ -285,7 +289,7 @@
         .info-field .info-value {
             font-size: 0.9rem;
             font-weight: 700;
-            color: #2c3e50;
+            color: #1e40af;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -319,24 +323,24 @@
         }
 
         .currency-group .currency-input:focus {
-            border-color: #10b981 !important;
-            box-shadow: 0 0 0 0.2rem rgba(16, 185, 129, 0.25) !important;
+            border-color: #3b82f6 !important;
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25) !important;
         }
 
         .btn-save-item-input {
-            background: linear-gradient(135deg, #10b981, #059669);
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             border: none;
             color: white;
             padding: 10px 28px;
             border-radius: 8px;
             font-weight: 600;
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
             transition: all 0.25s;
         }
 
         .btn-save-item-input:hover {
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+            box-shadow: 0 6px 18px rgba(59, 130, 246, 0.45);
             color: white;
         }
 
@@ -392,6 +396,11 @@
             border-right: 2px solid #dee2e6;
         }
 
+        .table-kasbon .category-cell-tax {
+            background: #fffbea !important;
+            color: #92400e !important;
+        }
+
         .cell-right {
             text-align: right;
         }
@@ -405,6 +414,10 @@
             color: #495057;
             font-weight: 500;
         }
+
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; justify-content: space-between; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.4rem; font-size: 0.88rem; border-radius: 4px; min-width: 36px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { font-size: 0.88rem; font-weight: 600; color: #2c3e50; text-align: right; flex: 1; }
 
         .table-kasbon tfoot td {
             background-color: #ffffff;
@@ -1104,6 +1117,20 @@
                                     </select>
                                 </div>
 
+                                {{-- Area --}}
+                                <div class="col-md-6">
+                                    <label class="form-label">Area</label>
+                                    <select name="id_md_area" id="id_md_area" class="form-select select2-field">
+                                        <option value="">-- Select Area --</option>
+                                        @foreach ($areas as $area)
+                                            <option value="{{ $area->id_md_area }}"
+                                                {{ $kasbonOther->id_md_area == $area->id_md_area ? 'selected' : '' }}>
+                                                {{ $area->area }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
                                 <div class="col-md-6">
                                     <label class="form-label">Release Date</label>
                                     <input type="date" name="tgl_release" id="tgl_release" class="form-control"
@@ -1159,21 +1186,30 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="card shadow mb-4" id="itemsCard">
-                            <div class="card-header text-black d-flex justify-content-between align-items-center"
-                                style="background-color:#d1fae5">
-                                <h6 class="mb-0">
-                                    <i class="fas fa-list me-2"></i>
-                                    Cash Advance Items
-                                    <span class="items-count-badge" id="itemsCountBadge">0</span>
-                                </h6>
-                                <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
-                                    style="border-radius:8px;">
-                                    <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
-                                </button>
-                            </div>
-                            <div class="card-body p-4">
+                    <div class="card shadow mb-4" id="itemsCard">
+                        <div class="card-header text-black d-flex justify-content-between align-items-center"
+                            style="background-color:#d1fae5">
+                            <h6 class="mb-0">
+                                <i class="fas fa-list me-2"></i>
+                                Cash Advance Items
+                                <span class="items-count-badge" id="itemsCountBadge">0</span>
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-danger" id="btnResetAllItems"
+                                style="border-radius:8px;">
+                                <i class="fas fa-trash-alt me-1"></i> Reset All CA Amounts
+                            </button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 px-4 py-2"
+                            style="background:#eff6ff; border-bottom:1px solid #bfdbfe;">
+                            <i class="fas fa-bolt" style="color:#2563eb; font-size:.8rem; flex-shrink:0;"></i>
+                            <span style="font-size:.8rem; color:#1e40af;">
+                                <strong>Auto-saved.</strong>
+                                Items and amounts are saved instantly — once they appear in the table, they're already recorded.
+                            </span>
+                        </div>
+                        <div class="card-body p-4">
 
                                 <div class="input-item-card" id="inputItemCard">
                                     <div class="card-title-bar">
@@ -1181,28 +1217,46 @@
                                         <span>Input CA Amount</span>
                                     </div>
                                     <div class="row g-3 mb-4">
-                                        <div class="col-md-4">
-                                            <div class="info-field">
-                                                <div class="info-label">Description</div>
-                                                <div class="info-value" id="infoInvoiceTyp">—</div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-12">
                                             <div class="info-field">
                                                 <div class="info-label">Category</div>
                                                 <div class="info-value" id="infoInvoiceCtg">—</div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-12">
+                                            <div class="info-field">
+                                                <div class="info-label">Item</div>
+                                                <div class="info-value" id="infoInvoiceTyp">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
                                             <div class="info-field">
                                                 <div class="info-label">Selling Price (IDR)</div>
                                                 <div class="info-value" id="infoHargaJual">—</div>
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-6">
                                             <div class="info-field">
-                                                <div class="info-label">Total CA / HPP (IDR)</div>
-                                                <div class="info-value" id="infoTotalKasbon">—</div>
+                                                <div class="info-label">HPP (IDR)</div>
+                                                <div class="info-value" id="infoHpp">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-field">
+                                                <div class="info-label">Paid in Other CAs (IDR)</div>
+                                                <div class="info-value" id="infoPaidOther" style="color:#d97706;">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-field">
+                                                <div class="info-label">Max Allowed for This CA (IDR)</div>
+                                                <div class="info-value" id="infoMaxAllowed" style="color:#059669;">—</div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-field">
+                                                <div class="info-label">Already in This CA (IDR)</div>
+                                                <div class="info-value" id="infoCurrentKasbon">—</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1232,6 +1286,9 @@
                                     <input type="hidden" id="activeJoOtherItemId" value="">
                                     <input type="hidden" id="activeRowIndex" value="">
                                     <input type="hidden" id="activeHppValue" value="0">
+                                    <input type="hidden" id="activeMaxAllowed" value="0">
+                                    <input type="hidden" id="activeItemType" value="item">
+                                    <input type="hidden" id="activeJoOtherPajakId" value="">
                                 </div>
 
                                 <div class="table-responsive">
@@ -1240,9 +1297,9 @@
                                             <tr>
                                                 <th style="width:4%;">No</th>
                                                 <th style="width:13%;">Category</th>
-                                                <th class="text-start" style="min-width:200px;">Description</th>
+                                                <th class="text-start" style="min-width:200px;">Item</th>
                                                 <th style="width:15%;">Selling Price (IDR)</th>
-                                                <th style="width:15%;">Total CA / HPP (IDR)</th>
+                                                <th style="width:15%;">HPP (IDR)</th>
                                                 <th style="width:15%;">CA Amount (IDR)</th>
                                                 <th style="width:10%;">Action</th>
                                             </tr>
@@ -1288,16 +1345,25 @@
                                         page.</span>
                                 </div>
 
-                            </div>
                         </div>
+                    </div>
 
                 </form>
 
                 <div class="final-save-section">
-                    <div class="d-flex justify-content-end">
-                        <a href="{{ route('kasbon-other.index') }}" class="btn btn-final-back">
-                            <i class="fas fa-arrow-left me-1"></i> Back to List
-                        </a>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div></div>
+                        <div class="d-flex gap-2">
+                            <a href="{{ route('kasbon-other.export-pdf', $kasbonOther->id) }}" target="_blank"
+                                class="btn"
+                                style="padding:13px 35px; border-radius:10px; font-weight:700; font-size:1rem;
+                                       border-color:red; background-color:rgb(255,237,237); color:red">
+                                <i class="fas fa-file-pdf me-2"></i> Generate CA
+                            </a>
+                            <a href="{{ route('kasbon-other.index') }}" class="btn btn-final-back">
+                                <i class="fas fa-arrow-left me-1"></i> Back
+                            </a>
+                        </div>
                     </div>
                 </div>
 
@@ -1507,16 +1573,25 @@
 
         function validateCaInput() {
             const ca = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
-            const $input = $('#inputNilaiKasbon'),
-                $hint = $('#caValidationHint');
-            if (ca <= 0 || hpp <= 0) {
+            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
+            const $input = $('#inputNilaiKasbon');
+            const $hint = $('#caValidationHint');
+            if (ca <= 0) {
                 $input.removeClass('input-invalid input-valid');
                 setHint($hint, null, '', '');
                 return;
             }
-            if (ca > hpp) setHint($hint, $input, `⚠ CA Amount cannot exceed HPP (IDR ${formatNumber(hpp)}).`, 'danger');
-            else setHint($hint, $input, '', '');
+            if (maxAllowed <= 0) {
+                setHint($hint, $input, `⚠ HPP for this item is fully covered by other Cash Advances. Cannot add more.`, 'danger');
+                return;
+            }
+            if (ca > maxAllowed) {
+                setHint($hint, $input, `⚠ Exceeds remaining budget. Max allowed for this CA: IDR ${formatNumber(maxAllowed)}.`, 'danger');
+            } else {
+                const remaining = maxAllowed - ca;
+                if (remaining > 0) setHint($hint, $input, `✓ Remaining budget after this CA: IDR ${formatNumber(remaining)}`, 'ok');
+                else setHint($hint, $input, '✓ Fully covers the remaining budget.', 'ok');
+            }
         }
 
         function resetCaValidation() {
@@ -1553,6 +1628,16 @@
         }
 
         function doSaveItem(joOtherItemId, rowIndex, nilaiKasbon) {
+            doSaveItemFull(joOtherItemId, null, 'item', rowIndex, nilaiKasbon);
+        }
+
+        function doSaveItemFull(joOtherItemId, joOtherPajakId, itemType, rowIndex, nilaiKasbon) {
+            const payload = { nilai_kasbon: nilaiKasbon, item_type: itemType };
+            if (itemType === 'tax') {
+                payload.id_jo_other_pajak = joOtherPajakId;
+            } else {
+                payload.id_jo_other_item = joOtherItemId;
+            }
             $.ajax({
                 url: bulkSaveUrl,
                 method: 'POST',
@@ -1561,10 +1646,7 @@
                     'X-CSRF-TOKEN': csrfToken
                 },
                 data: JSON.stringify({
-                    items: [{
-                        id_jo_other_item: joOtherItemId,
-                        nilai_kasbon: nilaiKasbon
-                    }],
+                    items: [payload],
                     _token: csrfToken
                 }),
                 success: function(response) {
@@ -1722,14 +1804,17 @@
     ${!hasFilled ? 'disabled title="No CA amount to clear"' : 'title="Clear CA amount"'}>
     <i class="fas fa-trash"></i></button>`;
 
+                    const isTaxRow    = item.item_type === 'tax';
+                    const catClass    = isTaxRow ? 'category-cell category-cell-tax' : 'category-cell';
+                    const rowStyle    = isTaxRow ? ' style="background:#fefce8;"' : '';
                     const categoryCell = catIndex === 0 ?
-                        `<td class="category-cell" rowspan="${rowspan}">${category}</td>` :
+                        `<td class="${catClass}" rowspan="${rowspan}">${category}</td>` :
                         '';
 
                     const rowClass = isFromLpj ? 'item-row row-from-lpj' : 'item-row';
 
                     $tbody.append(`
-                        <tr class="${rowClass}" id="row_${globalIndex}"
+                        <tr class="${rowClass}" id="row_${globalIndex}"${rowStyle}
                             data-index="${globalIndex}"
                             data-jo-item="${item.id_jo_other_item}"
                             data-category="${category}">
@@ -1740,9 +1825,9 @@
                                 ${lpjBadge}
                                 ${statusBadge}
                             </td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hargajual_idr)}</td>
-                            <td class="cell-readonly cell-right">${formatNumber(item.hpp_ops)}</td>
-                            <td class="cell-right nilai-kasbon-cell">${formatNumber(item.nilai_kasbon)}</td>
+                            <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hargajual_idr)}</span></div></td>
+                            <td class="cell-readonly"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell">${formatNumber(item.hpp_ops)}</span></div></td>
+                            <td class="nilai-kasbon-cell"><div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell nilai-kasbon-val">${formatNumber(item.nilai_kasbon)}</span></div></td>
                             <td class="cell-center">
                                 <div class="d-flex gap-1 justify-content-center">
                                     <button type="button" class="btn btn-success btn-sm btn-edit-row"
@@ -1762,7 +1847,7 @@
 
         function refreshRowAfterSave(globalIndex, nilaiKasbon, saved) {
             const $row = $(`#row_${globalIndex}`);
-            $row.find('.nilai-kasbon-cell').text(formatNumber(nilaiKasbon));
+            $row.find('.nilai-kasbon-cell').html(`<div class="currency-group-cell"><span class="currency-label-cell">IDR</span><span class="value-cell nilai-kasbon-val">${formatNumber(nilaiKasbon)}</span></div>`);
             $row.find('.badge.bg-success, .badge.bg-secondary')
                 .removeClass('bg-success bg-secondary')
                 .addClass(saved ? 'bg-success' : 'bg-secondary')
@@ -1777,9 +1862,14 @@
             $('#infoInvoiceTyp').text(item.invoice_typ);
             $('#infoInvoiceCtg').text(item.invoice_ctg);
             $('#infoHargaJual').text(formatNumber(item.hargajual_idr));
-            $('#infoTotalKasbon').text(formatNumber(item.hpp_ops));
-            $('#activeHppValue').val(item.hpp_ops || 0);
-            $('#activeJoOtherItemId').val(item.id_jo_other_item);
+            $('#infoHpp').text(formatNumber(item.hpp_ops));
+            $('#infoPaidOther').text(formatNumber(item.total_paid_other_kasbons || 0));
+            $('#infoMaxAllowed').text(formatNumber(item.max_allowed || 0));
+            $('#infoCurrentKasbon').text(formatNumber(item.nilai_kasbon || 0));
+            $('#activeMaxAllowed').val(item.max_allowed || 0);
+            $('#activeItemType').val(item.item_type || 'item');
+            $('#activeJoOtherPajakId').val(item.id_jo_other_pajak || '');
+            $('#activeJoOtherItemId').val(item.id_jo_other_item || '');
             $('#activeRowIndex').val(index);
             if (item.has_kasbon && item.nilai_kasbon > 0)
                 $('#inputNilaiKasbon').val(formatRupiah(item.nilai_kasbon.toFixed(2).replace('.', ',')));
@@ -1804,6 +1894,9 @@
             $('#activeJoOtherItemId').val('');
             $('#activeRowIndex').val('');
             $('#activeHppValue').val('0');
+            $('#activeMaxAllowed').val('0');
+            $('#activeItemType').val('item');
+            $('#activeJoOtherPajakId').val('');
             resetCaValidation();
             $('.item-row').removeClass('tr-active');
         }
@@ -1818,50 +1911,39 @@
             const joOtherItemId = $('#activeJoOtherItemId').val();
             const rowIndex = parseInt($('#activeRowIndex').val());
             const nilaiKasbon = parseRupiah($('#inputNilaiKasbon').val());
-            const hpp = parseFloat($('#activeHppValue').val() || '0');
+            const maxAllowed = parseFloat($('#activeMaxAllowed').val() || '0');
+            const itemType = $('#activeItemType').val() || 'item';
+            const joOtherPajakId = $('#activeJoOtherPajakId').val();
 
-            if (!joOtherItemId) {
+            if (itemType === 'item' && !joOtherItemId) {
                 showFloatingAlert('error', 'No item selected');
+                return;
+            }
+            if (itemType === 'tax' && !joOtherPajakId) {
+                showFloatingAlert('error', 'No tax item selected');
                 return;
             }
             if (nilaiKasbon <= 0) {
                 showFloatingAlert('error', 'Please enter a CA Amount');
                 return;
             }
-            if (hpp > 0 && nilaiKasbon > hpp) {
-                showFloatingAlert('error',
-                    `CA Amount (IDR ${formatNumber(nilaiKasbon)}) cannot exceed HPP (IDR ${formatNumber(hpp)})`);
+            if (nilaiKasbon > maxAllowed) {
+                showFloatingAlert('error', `CA Amount exceeds remaining budget. Max: IDR ${formatNumber(maxAllowed)}`);
                 setHint($('#caValidationHint'), $('#inputNilaiKasbon'),
-                    `⚠ CA Amount exceeds HPP (IDR ${formatNumber(hpp)}). Please reduce.`, 'danger');
+                    `⚠ Exceeds remaining budget. Max allowed: IDR ${formatNumber(maxAllowed)}.`, 'danger');
                 return;
             }
 
             $('#btnSaveItemInput').prop('disabled', true);
 
-            $.ajax({
-                url: checkConflictUrl,
-                method: 'GET',
-                data: {
-                    id_jo_other_item: joOtherItemId,
-                    id_kasbon_other: currentKasbonOtherStr
-                },
-                success: function(res) {
-                    if (res.success && res.has_conflict)
-                        showConflictModal(res.conflict.id_kasbon_other, res.conflict.nilai_kasbon,
-                            function() {
-                                executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, true);
-                            });
-                    else
-                        executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
-                },
-                error: function() {
-                    executeSaveItem(joOtherItemId, rowIndex, nilaiKasbon, false);
-                }
-            });
+            // No conflict check needed — multiple kasbons per item are allowed
+            // as long as total does not exceed HPP (enforced by maxAllowed validation above).
+            doSaveItemFull(joOtherItemId, joOtherPajakId, itemType, rowIndex, nilaiKasbon);
         }
 
         function clearItem(index) {
             const item = mergedItems[index];
+            const isTaxRow = item.item_type === 'tax';
 
             // Blokir jika item dipakai di LPJ — tampilkan modal info
             if (item.has_lpj_amount) {
@@ -1889,7 +1971,7 @@
                     },
                     data: JSON.stringify({
                         items: [{
-                            id_jo_other_item: item.id_jo_other_item,
+                            ...(isTaxRow ? { id_jo_other_pajak: item.id_jo_other_pajak, item_type: 'tax' } : { id_jo_other_item: item.id_jo_other_item }),
                             nilai_kasbon: 0
                         }],
                         _token: csrfToken
@@ -2002,6 +2084,7 @@
                     id_jo_other: idJoOther,
                     id_md_dep: idDep,
                     id_md_cabang: idCabang,
+                    id_md_area: $('#id_md_area').val(),
                     id_md_release: idRelease,
                     tgl_kasbon: tglKasbon,
                     tgl_release: $('#tgl_release').val(),

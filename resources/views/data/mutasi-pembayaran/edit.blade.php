@@ -50,6 +50,7 @@
         .btn-kasbon-info{background:#e0f2fe;color:#0369a1;border:none;border-radius:50%;width:24px;height:24px;padding:0;font-size:.7rem;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
         .btn-kasbon-info:hover{background:#bae6fd;}
         .btn-tambah-kasbon{background:linear-gradient(135deg,#16a34a,#15803d);color:#fff;border:none;border-radius:6px;padding:4px 12px;font-size:.78rem;font-weight:600;cursor:pointer;}
+        .kasbon-search-input:focus{outline:none;border-color:#16a34a!important;box-shadow:0 0 0 2px rgba(22,163,74,.15);}
         .btn-tambah-kasbon:hover{background:linear-gradient(135deg,#15803d,#166534);}
         .btn-toggle-items{background:none;border:1px solid #e2e8f0;color:#64748b;width:22px;height:22px;border-radius:4px;font-size:.7rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;padding:0;}
         .btn-toggle-items:hover:not(:disabled){background:#e0f2fe;border-color:#7dd3fc;color:#0369a1;}
@@ -83,10 +84,12 @@
 
         /* ── Table footer (JO-Contract style) ── */
         .table-footer-mp { background:#f1f5f9; color:#111827; font-weight:700; border-top:2px solid #2c3e50; }
-        .table-footer-mp td { padding:12px 10px; font-size:.9rem; }
+        .table-footer-mp td { padding:8px 12px; font-size:.82rem; }
         .currency-group-footer-mp { display:flex; align-items:center; gap:5px; }
-        .currency-label-footer-mp { background:#2c3e50; color:#fff; border:1px solid #2c3e50; padding:.45rem .7rem; font-size:.78rem; border-radius:6px; min-width:46px; text-align:center; font-weight:700; }
-        .value-footer-mp { flex:1; color:#111827; font-weight:700; font-size:.9rem; padding-left:8px; font-variant-numeric:tabular-nums; }
+        .currency-label-footer-mp { background:#e9ecef; color:#495057; border:1px solid #ced4da; padding:.2rem .5rem; font-size:.78rem; border-radius:4px; min-width:42px; text-align:center; font-weight:600; white-space:nowrap; }
+        .value-footer-mp { flex:1; color:#1e293b; font-weight:600; font-size:.82rem; text-align:right; font-variant-numeric:tabular-nums; }
+        .table-footer-mp .currency-label-footer-mp { background:#2c3e50; color:#fff; border-color:#2c3e50; font-weight:700; }
+        .table-footer-mp .value-footer-mp { font-weight:700; }
         .value-footer-mp.clr-pos { color:#16a34a; }
         .value-footer-mp.clr-neg { color:#dc2626; }
         .value-footer-mp.clr-zero { color:#6b7280; }
@@ -298,9 +301,14 @@
                                 <div class="kasbon-summary-header">
                                     <span><i class="fas fa-list-alt me-2"></i>Cash Advances &amp; LPJ
                                     <span class="badge bg-white text-success ms-2" id="kasbonSummaryCount-{{ $voucher->id }}">0 items</span></span>
-                                    <button type="button" id="btnAddAll-{{ $voucher->id }}" class="btn btn-sm" style="background:#fff;color:#16a34a;border:1px solid #16a34a;font-weight:600;display:none;" onclick="addAllKasbon({{ $voucher->id }})">
-                                        <i class="fas fa-plus-circle me-1"></i> Add All
-                                    </button>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="kasbon-search-wrap" id="kasbonSearchWrap-{{ $voucher->id }}" style="display:none;">
+                                            <input type="text" class="form-control form-control-sm kasbon-search-input" id="kasbonSearch-{{ $voucher->id }}" placeholder="Search CA number..." oninput="filterKasbonRows({{ $voucher->id }}, this.value)" style="min-width:180px;font-size:.8rem;border-radius:6px;border:1px solid #d1d5db;">
+                                        </div>
+                                        <button type="button" id="btnAddAll-{{ $voucher->id }}" class="btn btn-sm" style="background:#fff;color:#16a34a;border:1px solid #16a34a;font-weight:600;display:none;" onclick="addAllKasbon({{ $voucher->id }})">
+                                            <i class="fas fa-plus-circle me-1"></i> Add All
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="table-responsive p-0">
                                     <table class="table table-kasbon-summary mb-0">
@@ -725,6 +733,8 @@
             $(`#joKasbonSummaryWrap-${vid}`).hide();
             $(`#kasbonSummaryBody-${vid}`).html('<tr><td colspan="6" class="text-center text-muted py-3">Select type to show cash advances</td></tr>');
             $(`#btnAddAll-${vid}`).hide();
+            $(`#kasbonSearchWrap-${vid}`).hide();
+            $(`#kasbonSearch-${vid}`).val('');
             const $jc=$(`#jenisCol-${vid}`),$joc=$(`#joCol-${vid}`),$gc=$(`#genKasbonCol-${vid}`),$cc=$(`#customCol-${vid}`);
             $cc.hide();
             if(!jenis){$jc.removeClass('col-md-3').addClass('col-12');$joc.hide();$gc.hide();return;}
@@ -737,11 +747,21 @@
                 return;
             }
             if(jenis==='general'){
-                $joc.hide();$gc.removeClass('col-12').addClass('col-md-9').show();
-                const $sel=$(`#input_kasbon_gen_sel-${vid}`);
-                $sel.html('<option value=""></option>');
-                $.ajax({url:ROUTES.kasbonOptions,method:'GET',data:{jenis:'general'},
-                    success:function(r){let o='<option value=""></option>';if(r.success&&r.data)r.data.forEach(k=>{o+=`<option value="${k.id}">${k.nomor}${k.label?' - '+k.label:''}</option>`;});$sel.html(o).trigger('change.select2');}
+                $joc.hide();$gc.hide();
+                $jc.removeClass('col-md-3').addClass('col-12');
+                // Langsung tampilkan semua kasbon general dalam summary table
+                $(`#joKasbonSummaryWrap-${vid}`).show();
+                $(`#kasbonSummaryBody-${vid}`).html('<tr><td colspan="6" class="text-center py-3"><i class="fas fa-circle-notch fa-spin me-1"></i> Loading cash advances...</td></tr>');
+                $.ajax({url:ROUTES.joKasbonSummary,method:'GET',data:{jenis:'general'},
+                    success:function(r){
+                        if(r.success&&r.data&&r.data.length){
+                            renderKasbonSummaryRows(vid,r.data,'general','');
+                        } else {
+                            $(`#kasbonSummaryBody-${vid}`).html('<tr><td colspan="6" class="text-center text-muted py-3">No general cash advances available</td></tr>');
+                            $(`#btnAddAll-${vid}`).hide();
+                        }
+                    },
+                    error:function(){$(`#kasbonSummaryBody-${vid}`).html('<tr><td colspan="6" class="text-center text-danger py-3">Failed to load cash advances</td></tr>');}
                 });
                 return;
             }
@@ -884,6 +904,51 @@
 <td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(totP)}</span></div></td>
 <td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp">${formatNumber(totS)}</span></div></td>
 <td colspan="3"></td></tr>`);
+            // Show search input when rows are rendered
+            $(`#kasbonSearchWrap-${vid}`).show();
+            $(`#kasbonSearch-${vid}`).val('');
+            // Apply select2 on every COA select in this kasbon summary table
+            $(`#kasbonSummaryBody-${vid}`).find('.kasbon-coa-select').each(function(){
+                if(!$(this).hasClass('select2-hidden-accessible')){
+                    $(this).select2({theme:'bootstrap-5',placeholder:'-- COA --',allowClear:true,width:'100%',dropdownParent:$(this).closest('.kasbon-summary-wrap')});
+                }
+            });
+        }
+
+        function filterKasbonRows(vid, q){
+            const term = q.trim().toLowerCase();
+            const $body = $(`#kasbonSummaryBody-${vid}`);
+            const kasbons = window._kasbonData?.[vid] || [];
+            let visibleCount = 0, totN = 0, totP = 0, totS = 0;
+            // Loop over parent rows only
+            $body.find('tr.kasbon-parent-row').each(function(){
+                const $row = $(this);
+                const ki = $row.data('ki');
+                const nomor = $row.find('span.fw-semibold').text().toLowerCase();
+                const match = !term || nomor.includes(term);
+                $row.toggle(match);
+                // child item rows always collapsed when filtering
+                $body.find(`tr.kasbon-item-row[data-parent-voucher="${vid}"][data-parent-ki="${ki}"]`).toggle(false);
+                if(match){
+                    visibleCount++;
+                    const k = kasbons[ki];
+                    if(k){ totN += parseFloat(k.nilai||0); totP += parseFloat(k.pj||0); totS += parseFloat(k.selisih||0); }
+                }
+            });
+            // Update footer total based on visible rows
+            const tSC = totS > 0.001 ? 'clr-pos' : totS < -0.001 ? 'clr-neg' : 'clr-zero';
+            const label = term ? `TOTAL <span style="font-weight:400;font-size:.75rem;color:#6b7280;">(${visibleCount} shown)</span>` : 'TOTAL';
+            $(`#kasbonSummaryFoot-${vid}`).html(`<tr class="table-footer-mp">
+<td class="text-end fw-bold" style="color:#111827;">${label}</td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(totN)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(totP)}</span></div></td>
+<td><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp ${tSC}">${formatNumber(totS)}</span></div></td>
+<td colspan="3"></td></tr>`);
+            // No results row
+            $body.find('tr.kasbon-no-result').remove();
+            if(term && visibleCount === 0){
+                $body.append('<tr class="kasbon-no-result"><td colspan="7" class="text-center text-muted py-3"><i class="fas fa-search me-1"></i> No results for "<strong>'+$('<span>').text(q).html()+'</strong>"</td></tr>');
+            }
         }
 
         function toggleKasbonItems(btn){
@@ -1123,9 +1188,9 @@
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">-</td>
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">${escHtml(d.keterangan||'-')}</td>
 <td style="vertical-align:middle;font-size:.8rem;">${coaBadge}</td>
-<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.nilai)}</td>
-<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.pj)}</td>
-<td class="num-cell ${sCls}" style="vertical-align:middle;">${formatNumber(d.selisih)}</td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(d.nilai)}</span></div></td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(d.pj)}</span></div></td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp ${sCls}">${formatNumber(d.selisih)}</span></div></td>
 <td class="text-center" style="vertical-align:middle;">${customAksi}</td></tr>`;
                         return;
                     }
@@ -1142,9 +1207,9 @@
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">-</td>
 <td class="text-muted" style="font-size:.8rem;vertical-align:middle;">-</td>
 <td style="vertical-align:middle;font-size:.8rem;">${coaNoItems}</td>
-<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.nilai)}</td>
-<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(d.pj)}</td>
-<td class="num-cell ${sCls}" style="vertical-align:middle;">${formatNumber(d.selisih)}</td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(d.nilai)}</span></div></td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(d.pj)}</span></div></td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp ${sCls}">${formatNumber(d.selisih)}</span></div></td>
 <td class="text-center" style="vertical-align:middle;">${aksi}</td></tr>`;
                     } else {
                         items.forEach(item=>{totN+=parseFloat(item.nilai_kasbon||0);totP+=parseFloat(item.pj||0);totS+=parseFloat(item.selisih||0);});
@@ -1169,9 +1234,9 @@
                                 const coac=firstKasbon?`<td rowspan="${kr}" style="vertical-align:middle;font-size:.8rem;">${coaKasbon}</td>`:'';
                                 const aksc=firstKasbon?`<td class="text-center" rowspan="${kr}" style="vertical-align:middle;">${aksi}</td>`:'';
                                 html+=`<tr>${noc}${joc}${kasc}${relDepBraCell}${catc}<td style="font-size:.78rem;vertical-align:middle;">${escHtml(item.label||'-')}</td>
-${coac}<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(item.nilai_kasbon||0)}</td>
-<td class="num-cell" style="color:#212529;vertical-align:middle;">${formatNumber(item.pj||0)}</td>
-<td class="num-cell ${iC}" style="vertical-align:middle;">${formatNumber(item.selisih||0)}</td>
+${coac}<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(item.nilai_kasbon||0)}</span></div></td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp" style="color:#212529;">${formatNumber(item.pj||0)}</span></div></td>
+<td style="vertical-align:middle;padding:4px 8px;"><div class="currency-group-footer-mp"><span class="currency-label-footer-mp">IDR</span><span class="value-footer-mp ${iC}">${formatNumber(item.selisih||0)}</span></div></td>
 ${aksc}</tr>`;
                                 firstKasbon=false;
                             });

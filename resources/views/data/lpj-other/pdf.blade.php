@@ -127,8 +127,14 @@
 
         foreach ($kasbon->items as $kasbonItem) {
             $lpjItem     = $lpj->items->firstWhere('id_kasbon_other_item', $kasbonItem->id_kasbon_other_item);
-            $cat         = optional(optional($kasbonItem->joOtherItem)->invoice)->invoice_ctg ?? 'Uncategorized';
-            $invoiceTyp  = optional(optional($kasbonItem->joOtherItem)->invoice)->invoice_typ ?? $kasbonItem->id_kasbon_other_item;
+            $isTax       = ($kasbonItem->item_type ?? 'item') === 'tax';
+            if ($isTax) {
+                $cat        = 'Tax';
+                $invoiceTyp = optional($kasbonItem->joOtherPajak)->nama_pajak ?? $kasbonItem->id_kasbon_other_item;
+            } else {
+                $cat        = optional(optional($kasbonItem->joOtherItem)->invoice)->invoice_ctg ?? 'Uncategorized';
+                $invoiceTyp = optional(optional($kasbonItem->joOtherItem)->invoice)->invoice_typ ?? $kasbonItem->id_kasbon_other_item;
+            }
 
             $nilaiKasbon = (float) $kasbonItem->nilai_kasbon;
             $amountLpj   = $lpjItem ? (float) $lpjItem->amount_lpj : 0;

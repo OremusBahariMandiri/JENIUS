@@ -4,6 +4,7 @@ namespace App\Models\Data;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Master\Area;
 use App\Models\Master\Departemen;
 use App\Models\Master\Branch;
 use App\Models\Master\ReleaseTo;
@@ -22,6 +23,7 @@ class KasbonTramper extends Model
         'id_jo_tram',
         'id_md_dep',
         'id_md_cabang',
+        'id_md_area',
         'id_md_release',
         'nomor',
         'tgl_kasbon',
@@ -42,6 +44,11 @@ class KasbonTramper extends Model
         'due_date'    => 'datetime',
         'ca_release_date'   => 'date',
     ];
+
+    public function area()
+    {
+        return $this->belongsTo(Area::class, 'id_md_area', 'id_md_area');
+    }
 
     public function joTramper()
     {

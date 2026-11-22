@@ -105,9 +105,9 @@
         }
 
         .table-items thead th {
-            background-color: #f8f9fa;
-            color: #2c3e50;
-            border: 1px solid #dee2e6;
+            background-color: #2c3e50;
+            color: white;
+            border: 1px solid #2c3e50;
             padding: 12px 10px;
             font-weight: 600;
             font-size: 0.875rem;
@@ -123,74 +123,34 @@
             padding: 10px;
             vertical-align: middle;
             background-color: #fff;
+            text-align: center;
         }
 
-        .table-items tbody tr:hover td:not(.category-cell) {
+        .table-items tbody tr:hover td {
             background-color: #f8f9fa;
         }
 
-        .category-cell {
-            background: #f1f5f9 !important;
-            color: #2c3e50 !important;
-            font-weight: 600;
-            font-size: 0.875rem;
-            border-right: 2px solid #dee2e6 !important;
-            text-align: center;
-            vertical-align: middle;
-            position: relative;
-            padding: 10px !important;
-        }
-
-        .category-cell .category-content {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .category-cell .category-name {
-            font-weight: 700;
-            font-size: 0.85rem;
-            color: #1e293b;
-        }
-
-        .category-cell .category-count {
-            background: #e2e8f0;
-            color: #475569;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-
-        .currency-group {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .currency-label {
-            background-color: #2c3e50;
-            color: white;
-            border: 1px solid #2c3e50;
-            padding: 0.5rem;
-            font-size: 0.8rem;
-            border-radius: 6px 0 0 6px;
-            min-width: 50px;
-            text-align: center;
-            font-weight: 600;
-        }
-
-        .currency-value {
-            background-color: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-left: none;
-            padding: 0.5rem;
-            border-radius: 0 6px 6px 0;
-            flex: 1;
-            font-weight: 600;
+        .table-items .category-cell {
+            background: #e8f5e9 !important;
             color: #2c3e50;
+            font-weight: 600;
         }
+
+        .table-items tbody tr.tax-row td {
+            background: #fff !important;
+        }
+
+        .table-items tbody tr.tax-row td.item-number-cell {
+            background: #ecf0f1 !important;
+        }
+
+        .table-items tbody tr.tax-row:hover td {
+            background: #f8f9fa !important;
+        }
+
+        .currency-group-cell { display: flex; align-items: center; gap: 5px; }
+        .currency-label-cell { background-color: #e9ecef; color: #495057; border: 1px solid #ced4da; padding: 0.2rem 0.5rem; font-size: 0.78rem; border-radius: 4px; min-width: 42px; text-align: center; font-weight: 600; white-space: nowrap; }
+        .value-cell { flex: 1; text-align: right; font-weight: 600; font-size: 0.88rem; color: #2c3e50; }
 
         .table-footer {
             background: #2c3e50;
@@ -198,9 +158,32 @@
             font-weight: 700;
         }
 
-        .table-footer .currency-label {
-            background-color: rgba(255, 255, 255, 0.2);
+        .currency-group-footer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .currency-label-footer {
+            background-color: #2c3e50;
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.2rem 0.5rem;
+            font-size: 0.78rem;
+            border-radius: 4px;
+            min-width: 42px;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .value-footer {
+            flex: 1;
+            color: #000;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding-right: 0;
+            text-align: right;
         }
 
         .item-number-cell {
@@ -271,121 +254,103 @@
                 <!-- JO Tramper Info Card -->
                 <div class="card shadow mb-4">
                     <div class="card-header text-black" style="background-color: #d1fae5">
-                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>JO Tramper Information</h6>
+                        <h6 class="mb-0"><i class="fas fa-ship me-2"></i>JO Tramper Information</h6>
                     </div>
                     <div class="card-body p-4">
-                        <!-- Title -->
-                        <div class="mb-4">
-                            <label class="text-muted small text-uppercase mb-2">Title</label>
-                            <h3 class="mb-0 text-primary">
-                                <i class="fas fa-file-alt me-2"></i>{{ $joTramper->title }}
-                            </h3>
-                        </div>
-
-                        <hr>
-
-                        <div class="row">
-                            <!-- Kolom Kiri -->
+                        <div class="row mb-4">
                             <div class="col-md-6">
-                                <div class="info-card">
-                                    <div class="info-row">
-                                        <span class="info-label"><i class="fas fa-hashtag me-2 text-secondary"></i>JO
-                                            Tramper ID</span>
-                                        <span class="info-value">
-                                            <span
-                                                class="badge bg-secondary fs-6 px-3 py-2">JOT-{{ $joTramper->id_jo_tram }}</span>
-                                        </span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label"><i
-                                                class="fas fa-user me-2 text-primary"></i>Customer</span>
-                                        <span class="info-value">
-                                            <strong>{{ $joTramper->customer->customer ?? '-' }}</strong>
-                                            @if ($joTramper->customer?->no_customer)
-                                                <br><small
-                                                    class="text-muted">({{ $joTramper->customer->no_customer }})</small>
-                                            @endif
-                                        </span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label"><i class="fas fa-anchor me-2 text-info"></i>Port</span>
-                                        <span class="info-value">
-                                            <span
-                                                class="badge bg-info text-dark fs-6">{{ $joTramper->port->name_port ?? '-' }}</span>
-                                            @if ($joTramper->port?->no_port)
-                                                <br><small class="text-muted">({{ $joTramper->port->no_port }})</small>
-                                            @endif
-                                        </span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label"><i class="fas fa-ship me-2 text-success"></i>Vessel</span>
-                                        <span class="info-value">
-                                            @if ($joTramper->vessel)
-                                                <strong>{{ $joTramper->vessel->vessel_name }}</strong>
-                                                @if ($joTramper->vessel->no_imo)
-                                                    <br><small class="text-muted">IMO:
-                                                        {{ $joTramper->vessel->no_imo }}</small>
-                                                @endif
-                                            @else
-                                                <span class="text-muted fst-italic">— Not specified —</span>
-                                            @endif
-                                        </span>
-                                    </div>
+                                <label class="form-label">No. JO Tramper</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-success text-white">
+                                        <i class="fas fa-ship"></i>
+                                    </span>
+                                    <input type="text" class="form-control fw-bold"
+                                        value="{{ $joTramper->no_jo_tram ?? '-' }}" readonly
+                                        style="background-color:#e9ecef; color:#2c3e50; letter-spacing:1px;">
                                 </div>
                             </div>
-
-                            <!-- Kolom Kanan -->
                             <div class="col-md-6">
-                                <div class="info-card">
-                                    <div class="info-row">
-                                        <span class="info-label"><i
-                                                class="fas fa-calendar-alt me-2 text-primary"></i>Period</span>
-                                        <span class="info-value">
-                                            <span class="period-badge">
-                                                <i class="fas fa-calendar-day"></i>
-                                                {{ $joTramper->date_start?->format('d M Y') ?? '-' }}
-                                                <i class="fas fa-arrow-right mx-1"></i>
-                                                {{ $joTramper->date_end?->format('d M Y') ?? '-' }}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label"><i class="fas fa-tag me-2 text-warning"></i>Status</span>
-                                        <span class="info-value">
-                                            @php
-                                                $statusMap = [
-                                                    'Draft' => 'bg-secondary',
-                                                    'Approved' => 'bg-success',
-                                                    'Pending' => 'bg-warning text-dark',
-                                                ];
-                                                $badgeClass = $statusMap[$joTramper->sts_proses] ?? 'bg-info';
-                                            @endphp
-                                            <span class="badge {{ $badgeClass }} fs-6 px-3 py-2">
-                                                {{ $joTramper->sts_proses ?? 'Draft' }}
-                                            </span>
-                                        </span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label"><i
-                                                class="fas fa-calendar-plus me-2 text-primary"></i>Created At</span>
-                                        <span class="info-value">{{ $joTramper->created_at->format('d M Y, H:i') }}</span>
-                                    </div>
-                                    <div class="info-row">
-                                        <span class="info-label"><i class="fas fa-calendar-check me-2 text-success"></i>Last
-                                            Updated</span>
-                                        <span class="info-value">{{ $joTramper->updated_at->format('d M Y, H:i') }}</span>
-                                    </div>
-                                    @if ($joTramper->note)
-                                        <div class="info-row">
-                                            <span class="info-label"><i
-                                                    class="fas fa-sticky-note me-2 text-warning"></i>Note</span>
-                                            <span class="info-value"
-                                                style="max-width: 300px; word-wrap: break-word; white-space: pre-line;">{{ $joTramper->note }}</span>
-                                        </div>
-                                    @endif
+                                <label class="form-label">Status</label>
+                                @php
+                                    $statusColors = ['Draft'=>'#6c757d','Approved'=>'#198754','Pending'=>'#ffc107'];
+                                    $statusColor = $statusColors[$joTramper->sts_proses] ?? '#17a2b8';
+                                @endphp
+                                <div class="input-group">
+                                    <span class="input-group-text text-white" style="background-color:{{ $statusColor }};">
+                                        <i class="fas fa-tag"></i>
+                                    </span>
+                                    <input type="text" class="form-control fw-bold" readonly
+                                        value="{{ $joTramper->sts_proses ?? 'Draft' }}"
+                                        style="background-color:#e9ecef; color:{{ $statusColor }};">
                                 </div>
                             </div>
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Title</label>
+                            <input type="text" class="form-control" readonly
+                                style="background-color:#e9ecef;"
+                                value="{{ $joTramper->title }}">
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Customer</label>
+                                <input type="text" class="form-control" readonly
+                                    style="background-color:#e9ecef;"
+                                    value="{{ $joTramper->customer->customer ?? '-' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Port</label>
+                                <input type="text" class="form-control" readonly
+                                    style="background-color:#e9ecef;"
+                                    value="{{ $joTramper->port->name_port ?? '-' }}">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Vessel</label>
+                                <input type="text" class="form-control" readonly
+                                    style="background-color:#e9ecef;"
+                                    value="{{ $joTramper->vessel->vessel_name ?? '-' }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Period</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" readonly
+                                        style="background-color:#e9ecef;"
+                                        value="{{ $joTramper->date_start?->format('d M Y') ?? '-' }}">
+                                    <span class="input-group-text"><i class="fas fa-arrow-right"></i></span>
+                                    <input type="text" class="form-control" readonly
+                                        style="background-color:#e9ecef;"
+                                        value="{{ $joTramper->date_end?->format('d M Y') ?? '-' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Created At</label>
+                                <input type="text" class="form-control" readonly
+                                    style="background-color:#e9ecef;"
+                                    value="{{ $joTramper->created_at->format('d M Y, H:i') }}">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Last Updated</label>
+                                <input type="text" class="form-control" readonly
+                                    style="background-color:#e9ecef;"
+                                    value="{{ $joTramper->updated_at->format('d M Y, H:i') }}">
+                            </div>
+                        </div>
+
+                        @if ($joTramper->note)
+                        <div class="mb-3">
+                            <label class="form-label">Note</label>
+                            <textarea class="form-control" rows="3" readonly
+                                style="background-color:#e9ecef;">{{ $joTramper->note }}</textarea>
+                        </div>
+                        @endif
                     </div>
                 </div>
 
@@ -425,7 +390,7 @@
                                     <tr>
                                         <th style="width: 5%;">No</th>
                                         <th style="width: 12%;">Category</th>
-                                        <th style="width: 18%;">Item / Invoice Type</th>
+                                        <th style="width: 18%;">Item</th>
                                         <th style="width: 13%;">Income (IDR)</th>
                                         <th style="width: 13%;">Income (USD)</th>
                                         <th style="width: 13%;">Selling Price (IDR)</th>
@@ -456,83 +421,115 @@
                                                 <td class="item-number-cell">{{ $itemNumber }}</td>
 
                                                 @if ($index === 0)
-                                                    <td class="category-cell" rowspan="{{ count($items) }}">
-                                                        <div class="category-content">
-                                                            <span class="category-name">{{ $category }}</span>
-                                                            <span class="category-count">{{ count($items) }}
-                                                                item{{ count($items) > 1 ? 's' : '' }}</span>
-                                                        </div>
-                                                    </td>
+                                                    <td class="category-cell" rowspan="{{ count($items) }}">{{ $category }}</td>
                                                 @endif
 
-                                                <td class="item-type-cell">
-                                                    {{ $item->invoice->invoice_typ }}
+                                                <td class="item-type-cell text-start">
+                                                    <span class="fw-semibold" style="color:#2c3e50;">{{ $item->invoice->invoice_typ }}</span>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">IDR</span>
-                                                        <span
-                                                            class="currency-value">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($item->pendapatan_idr, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">USD</span>
-                                                        <span
-                                                            class="currency-value">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">USD</span>
+                                                        <span class="value-cell">{{ number_format($item->pendapatan_usd, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">IDR</span>
-                                                        <span
-                                                            class="currency-value">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($item->hargajual_idr, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <div class="currency-group">
-                                                        <span class="currency-label">IDR</span>
-                                                        <span
-                                                            class="currency-value">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">{{ number_format($item->hpp_ops, 2, ',', '.') }}</span>
                                                     </div>
                                                 </td>
                                             </tr>
                                         @endforeach
                                     @endforeach
+
+                                    @if($pajakItems->count() > 0)
+                                        @foreach($pajakItems as $pi)
+                                            @php $itemNumber++; @endphp
+                                            <tr class="tax-row">
+                                                <td class="item-number-cell">{{ $itemNumber }}</td>
+                                                <td class="category-cell" style="background:#fef9c3 !important; color:#000;">Tax</td>
+                                                <td class="text-start">
+                                                    <span class="fw-semibold" style="color:#2c3e50;">{{ $pi->nama_pajak }}</span>
+                                                    <small class="text-muted ms-1">({{ $pi->persentase }}%)</small>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">USD</span>
+                                                        <span class="value-cell">0,00</span>
+                                                    </div>
+                                                </td>
+                                                <td class="tax-selling">
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">
+                                                            @if($pi->include_selling)
+                                                                {{ number_format($pi->nominal_pajak, 2, ',', '.') }}
+                                                            @else
+                                                                0,00
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td class="tax-hpp">
+                                                    <div class="currency-group-cell">
+                                                        <span class="currency-label-cell">IDR</span>
+                                                        <span class="value-cell">
+                                                            @if($pi->include_hpp)
+                                                                {{ number_format($pi->nominal_pajak_hpp, 2, ',', '.') }}
+                                                            @else
+                                                                0,00
+                                                            @endif
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    @endif
                                 </tbody>
                                 <tfoot class="table-footer">
                                     <tr>
                                         <td colspan="3" class="text-end"><strong>GRAND TOTAL</strong></td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">IDR</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_revenue_idr'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">IDR</span>
+                                                <span class="value-footer">{{ number_format($summary['total_revenue_idr'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">USD</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_revenue_usd'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">USD</span>
+                                                <span class="value-footer">{{ number_format($summary['total_revenue_usd'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">IDR</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_selling_price'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">IDR</span>
+                                                <span class="value-footer">{{ number_format($summary['total_selling_price'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <div class="currency-group">
-                                                <span class="currency-label text-black">IDR</span>
-                                                <span style="color: #000000; font-weight: 700;">
-                                                    {{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}
-                                                </span>
+                                            <div class="currency-group-footer">
+                                                <span class="currency-label-footer">IDR</span>
+                                                <span class="value-footer">{{ number_format($summary['total_hpp_ops'], 2, ',', '.') }}</span>
                                             </div>
                                         </td>
                                     </tr>

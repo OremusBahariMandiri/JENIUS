@@ -162,22 +162,24 @@
                             </div>
                         </div>
 
-                        <div class="table-responsive">
-                            <table id="kasbonTramperTable" class="table table-bordered table-striped">
+                        <div>
+                            <table id="kasbonTramperTable" style="width:100%" class="table table-bordered table-striped">
                                 <thead class="table-light">
                                     <tr>
                                         <th width="4%">No</th>
                                         <th>CA No</th>
-                                        <th>CA Date</th>
                                         <th>JO No</th>
-                                        <th>Dep.</th>
-                                        <th>Branch</th>
+                                        <th>JO Title</th>
+                                        <th>Customer</th>
                                         <th>Release To</th>
+                                        <th>Branch</th>
+                                        <th>Dep.</th>
                                         <th class="text-center">Items</th>
-                                        <th class="text-end">Total HPP</th>
+                                        <th class="text-end">Selling Price</th>
+                                        <th class="text-end">HPP</th>
                                         <th class="text-end">Total CA</th>
-                                        <th class="text-center">CA PDF</th>
                                         <th class="text-center">Priority</th>
+                                        <th class="text-center">CA PDF</th>
                                         <th class="text-center">Status</th>
                                         <th class="text-center" width="10%">Action</th>
                                     </tr>
@@ -191,28 +193,34 @@
                                         <tr class="{{ $rowClass }}">
                                             <td>{{ $loop->iteration }}</td>
                                             <td>{{ $kasbon->id_kasbon_tram ?? '-' }}</td>
-                                            <td>{{ $kasbon->tgl_kasbon ? $kasbon->tgl_kasbon->format('d/m/Y') : '-' }}</td>
                                             <td>{{ $kasbon->joTramper ? $kasbon->joTramper->no_jo_tram : '-' }}</td>
-                                            <td>{{ $kasbon->departemen ? $kasbon->departemen->nama_dep : '-' }}</td>
-                                            <td>{{ $kasbon->cabang ? $kasbon->cabang->nama_branch : '-' }}</td>
+                                            <td>{{ $kasbon->joTramper ? ($kasbon->joTramper->title ?? '-') : '-' }}</td>
+                                            <td>{{ $kasbon->joTramper ? ($kasbon->joTramper->customer->customer ?? '-') : '-' }}</td>
                                             <td>{{ $kasbon->release ? $kasbon->release->nama_release : '-' }}</td>
+                                            <td>{{ $kasbon->cabang ? $kasbon->cabang->nama_branch : '-' }}</td>
+                                            <td>{{ $kasbon->departemen ? $kasbon->departemen->nama_dep : '-' }}</td>
                                             <td class="text-center">{{ $kasbon->items->count() }}</td>
+                                            @php
+                                                $joT = $kasbon->joTramper;
+                                                $totalSelling = $joT
+                                                    ? $joT->items->sum('hargajual_idr')
+                                                        + $joT->pajakItems->where('include_hpp', true)->sum('nominal_pajak')
+                                                    : 0;
+                                                $totalHpp = $joT
+                                                    ? $joT->items->sum('hpp_ops')
+                                                        + $joT->pajakItems->where('include_hpp', true)->sum('nominal_pajak_hpp')
+                                                    : 0;
+                                            @endphp
                                             <td class="text-end">
-                                                {{ number_format($kasbon->items->sum('nilai_hpp_tram_item'), 2, ',', '.') }}
+                                                {{ number_format($totalSelling, 2, ',', '.') }}
+                                            </td>
+                                            <td class="text-end">
+                                                {{ number_format($totalHpp, 2, ',', '.') }}
                                             </td>
                                             <td class="text-end">
                                                 {{ number_format($kasbon->items->sum('nilai_kasbon'), 2, ',', '.') }}
                                             </td>
 
-                                            {{-- CA PDF --}}
-                                            <td class="text-center">
-                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('kasbon-tramper', 'detail')))
-                                                    <a href="{{ route('kasbon-tramper.export-pdf', $kasbon->id) }}"
-                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
-                                                        <i class="fas fa-file-pdf"></i>
-                                                    </a>
-                                                @endif
-                                            </td>
 
                                             {{-- Priority --}}
                                             <td class="text-center">
@@ -225,6 +233,16 @@
                                                     <span class="badge bg-secondary" style="font-size:.75rem;">
                                                         Normal
                                                     </span>
+                                                @endif
+                                            </td>
+
+                                            {{-- CA PDF --}}
+                                            <td class="text-center">
+                                                @if (auth()->check() && (auth()->user()->is_admin || auth()->user()->hasAccess('kasbon-tramper', 'detail')))
+                                                    <a href="{{ route('kasbon-tramper.export-pdf', $kasbon->id) }}"
+                                                        class="btn btn-sm btn-danger" target="_blank" title="Export PDF">
+                                                        <i class="fas fa-file-pdf"></i>
+                                                    </a>
                                                 @endif
                                             </td>
 
@@ -277,7 +295,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="14" class="text-center py-5">
+                                            <td colspan="16" class="text-center py-5">
                                                 <i class="fas fa-inbox fa-4x text-muted mb-3 d-block"></i>
                                                 <h5 class="text-muted">No Kasbon Tramper Data</h5>
                                                 <p class="text-muted mb-0">Start by adding a new Kasbon Tramper</p>
@@ -534,50 +552,25 @@
                     order: [
                         [2, 'desc']
                     ],
-                    columnDefs: [{
-                            orderable: false,
-                            targets: 0
-                        },
-                        {
-                            orderable: false,
-                            targets: -1
-                        },
-                        {
-                            responsivePriority: 1,
-                            targets: -1
-                        }, // Action
-                        {
-                            responsivePriority: 2,
-                            targets: 1
-                        }, // CA No
-                        {
-                            responsivePriority: 3,
-                            targets: 12
-                        }, // Status
-                        {
-                            responsivePriority: 4,
-                            targets: 11
-                        }, // Priority
-                        {
-                            responsivePriority: 5,
-                            targets: 2
-                        }, // CA Date
-                        {
-                            responsivePriority: 6,
-                            targets: 3
-                        }, // JO No
-                        {
-                            responsivePriority: 10001,
-                            targets: 4
-                        }, // Dep
-                        {
-                            responsivePriority: 10002,
-                            targets: 5
-                        }, // Branch
-                        {
-                            responsivePriority: 10003,
-                            targets: 6
-                        }, // Release To
+                    columnDefs: [
+                        { orderable: false, targets: 0 },
+                        { orderable: false, targets: -1 },
+                        // === Responsive Priority (lower = shown first) ===
+                        { responsivePriority: 1,     targets: 15 }, // Action
+                        { responsivePriority: 2,     targets: 1  }, // CA No
+                        { responsivePriority: 3,     targets: 14 }, // Status
+                        { responsivePriority: 4,     targets: 12 }, // Priority
+                        { responsivePriority: 5,     targets: 2  }, // JO No
+                        { responsivePriority: 6,     targets: 4  }, // Customer
+                        { responsivePriority: 7,     targets: 5  }, // Release To
+                        { responsivePriority: 8,     targets: 11 }, // Total CA
+                        { responsivePriority: 9,     targets: 13 }, // CA PDF
+                        { responsivePriority: 10,    targets: 3  }, // JO Title
+                        { responsivePriority: 11,    targets: 9  }, // Selling Price
+                        { responsivePriority: 12,    targets: 10 }, // HPP
+                        { responsivePriority: 13,    targets: 6  }, // Branch
+                        { responsivePriority: 10001, targets: 8  }, // Items (minor)
+                        { responsivePriority: 10002, targets: 7  }, // Dep (minor)
                     ],
                     language: {
                         search: 'Search:',

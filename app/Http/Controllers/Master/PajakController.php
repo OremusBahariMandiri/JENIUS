@@ -8,9 +8,12 @@ use App\Helpers\IdGenerator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Traits\LogsActivity;
 
 class PajakController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -94,6 +97,7 @@ class PajakController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Tax berhasil ditambahkan', 'Tax');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Data pajak berhasil ditambahkan', 'data' => $pajak], 201);
@@ -166,6 +170,7 @@ class PajakController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Tax berhasil diubah', 'Tax');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Data pajak berhasil diupdate', 'data' => $pajak]);
@@ -188,6 +193,7 @@ class PajakController extends Controller
             $pajak = Pajak::findOrFail($id);
             $pajak->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Tax berhasil dihapus', 'Tax');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Data pajak berhasil dihapus']);

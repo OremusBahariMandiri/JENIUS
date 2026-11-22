@@ -17,9 +17,12 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use App\Exports\Data\LpjOtherExport;
+use App\Traits\LogsActivity;
 
 class LpjOtherController extends Controller
 {
+    use LogsActivity;
+
     // ========================================
     // INDEX
     // ========================================
@@ -171,6 +174,7 @@ class LpjOtherController extends Controller
             $lpj = LpjOther::with([
                 'joOther',
                 'kasbons.kasbonOther.items.joOtherItem.invoice',
+                'kasbons.kasbonOther.items.joOtherPajak',
                 'items',
             ])->findOrFail($id);
 
@@ -196,29 +200,60 @@ class LpjOtherController extends Controller
                 if (!$kasbon) continue;
 
                 foreach ($kasbon->items as $kasbonItem) {
-                    // Skip jika id_jo_other_item sudah masuk dari kasbon lain
-                    if (in_array($kasbonItem->id_jo_other_item, $seenJoItems)) continue;
-                    $seenJoItems[] = $kasbonItem->id_jo_other_item;   // ← tandai sudah dilihat
+                    $isTaxRow = ($kasbonItem->item_type ?? 'item') === 'tax';
+                    $joPajak  = $kasbonItem->joOtherPajak;
 
-                    $lpjItem       = $lpjItemsMap->get($kasbonItem->id_kasbon_other_item);
-                    $mergedItems[] = [
-                        'id_kasbon_other_item'   => $kasbonItem->id_kasbon_other_item,
-                        'id_kasbon_other'        => $kasbonItem->id_kasbon_other,
-                        'id_jo_other_item'       => $kasbonItem->id_jo_other_item,
-                        'id_kasbon_other_no'     => $kasbon->id_kasbon_other,
-                        'invoice_typ'            => $kasbonItem->joOtherItem->invoice->invoice_typ ?? '-',
-                        'invoice_ctg'            => $kasbonItem->joOtherItem->invoice->invoice_ctg ?? '-',
-                        'nilai_hpp_other_item'   => (float) $kasbonItem->nilai_hpp_other_item,
-                        'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
-                        'total_kasbon'           => (float) $kasbonItem->total_kasbon,
-                        'id_lpj_other_item'      => $lpjItem?->id ?? null,
-                        'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
-                        'has_lpj'                => $lpjItem !== null,
-                        'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
-                        'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
-                        'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
-                        'origin_lpj_other'       => $kasbonItem->origin_lpj_other ?? null,
-                    ];
+                    // Skip regular items seen from another kasbon (deduplicate by jo_other_item)
+                    if (!$isTaxRow) {
+                        if (in_array($kasbonItem->id_jo_other_item, $seenJoItems)) continue;
+                        $seenJoItems[] = $kasbonItem->id_jo_other_item;
+                    }
+
+                    $lpjItem = $lpjItemsMap->get($kasbonItem->id_kasbon_other_item);
+
+                    if ($isTaxRow) {
+                        $mergedItems[] = [
+                            'id_kasbon_other_item'   => $kasbonItem->id_kasbon_other_item,
+                            'id_kasbon_other'        => $kasbonItem->id_kasbon_other,
+                            'id_jo_other_item'       => null,
+                            'id_kasbon_other_no'     => $kasbon->id_kasbon_other,
+                            'item_type'              => 'tax',
+                            'invoice_typ'            => $joPajak?->nama_pajak ?? $kasbonItem->id_kasbon_other_item,
+                            'invoice_ctg'            => 'Tax',
+                            'id_jo_other_pajak'      => $kasbonItem->id_jo_other_pajak,
+                            'nilai_hpp_other_item'   => (float) $kasbonItem->nilai_hpp_other_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'total_kasbon'           => (float) $kasbonItem->total_kasbon,
+                            'id_lpj_other_item'      => $lpjItem?->id ?? null,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
+                            'origin_lpj_other'       => null,
+                        ];
+                    } else {
+                        $mergedItems[] = [
+                            'id_kasbon_other_item'   => $kasbonItem->id_kasbon_other_item,
+                            'id_kasbon_other'        => $kasbonItem->id_kasbon_other,
+                            'id_jo_other_item'       => $kasbonItem->id_jo_other_item,
+                            'id_kasbon_other_no'     => $kasbon->id_kasbon_other,
+                            'item_type'              => 'item',
+                            'invoice_typ'            => $kasbonItem->joOtherItem?->invoice?->invoice_typ ?? '-',
+                            'invoice_ctg'            => $kasbonItem->joOtherItem?->invoice?->invoice_ctg ?? '-',
+                            'id_jo_other_pajak'      => null,
+                            'nilai_hpp_other_item'   => (float) $kasbonItem->nilai_hpp_other_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'total_kasbon'           => (float) $kasbonItem->total_kasbon,
+                            'id_lpj_other_item'      => $lpjItem?->id ?? null,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'id_md_chart_of_account' => $lpjItem?->id_md_chart_of_account ?? null,
+                            'coa_no'                 => $lpjItem?->chartOfAccount->no_account ?? null,
+                            'coa_name'               => $lpjItem?->chartOfAccount->account_name ?? null,
+                            'origin_lpj_other'       => $kasbonItem->origin_lpj_other ?? null,
+                        ];
+                    }
                 }
             }
 
@@ -526,7 +561,7 @@ class LpjOtherController extends Controller
             }
 
             $kasbons = KasbonOther::where('id_jo_other', $idJoOther)
-                ->with(['items.joOtherItem.invoice'])
+                ->with(['items.joOtherItem.invoice', 'items.joOtherPajak'])
                 ->get()
                 ->map(fn($k) => [
                     'id_kasbon_other' => $k->id_kasbon_other,
@@ -551,14 +586,20 @@ class LpjOtherController extends Controller
                     $response['kasbon_detail'] = [
                         'id_kasbon_other' => $kasbon->id_kasbon_other,
                         'tgl_kasbon'      => $kasbon->tgl_kasbon?->format('d/m/Y'),
-                        'items'           => $kasbon->items->map(fn($item) => [
-                            'id_kasbon_other_item' => $item->id_kasbon_other_item,
-                            'invoice_typ'          => $item->joOtherItem?->invoice?->invoice_typ ?? '—',
-                            'invoice_ctg'          => $item->joOtherItem?->invoice?->invoice_ctg ?? '—',
-                            'nilai_hpp_other_item' => (float) $item->nilai_hpp_other_item,
-                            'nilai_kasbon'         => (float) $item->nilai_kasbon,
-                            'total_kasbon'         => (float) $item->total_kasbon,
-                        ])->values(),
+                        'items'           => $kasbon->items->map(function($item) {
+                            $isTax = ($item->item_type ?? 'item') === 'tax';
+                            return [
+                                'id_kasbon_other_item' => $item->id_kasbon_other_item,
+                                'item_type'            => $isTax ? 'tax' : 'item',
+                                'invoice_typ'          => $isTax
+                                    ? ($item->joOtherPajak?->nama_pajak ?? '—')
+                                    : ($item->joOtherItem?->invoice?->invoice_typ ?? '—'),
+                                'invoice_ctg'          => $isTax ? 'Tax' : ($item->joOtherItem?->invoice?->invoice_ctg ?? '—'),
+                                'nilai_hpp_other_item' => (float) $item->nilai_hpp_other_item,
+                                'nilai_kasbon'         => (float) $item->nilai_kasbon,
+                                'total_kasbon'         => (float) $item->total_kasbon,
+                            ];
+                        })->values(),
                     ];
                 }
             }
@@ -663,23 +704,67 @@ class LpjOtherController extends Controller
     {
         try {
             $lpj = LpjOther::with([
-                'joOther',
-                'kasbons.kasbonOther',
-                'items.kasbonOtherItem.joOtherItem.invoice',
+                'joOther.customer',
+                'joOther.port',
+                'kasbons.kasbonOther.items.joOtherItem.invoice',
+                'kasbons.kasbonOther.items.joOtherPajak',
+                'items',
             ])->findOrFail($id);
 
-            $summary = [
-                'total_kasbon'     => $lpj->amount,
-                'total_amount_lpj' => $lpj->items->sum('amount_lpj'),
-                'total_items'      => $lpj->items->count(),
-                'total_kasbons'    => $lpj->kasbons->count(),
-            ];
-
             if ($request->expectsJson()) {
-                return response()->json(['success' => true, 'data' => $lpj, 'summary' => $summary]);
+                return response()->json(['success' => true, 'data' => $lpj]);
             }
 
-            return view('data.lpj-other.show', compact('lpj', 'summary'));
+            $lpjItemsMap = $lpj->items->keyBy('id_kasbon_other_item');
+            $mergedItems = [];
+            $seenJoItems = [];
+
+            foreach ($lpj->kasbons as $lpjKasbon) {
+                $kasbon = $lpjKasbon->kasbonOther;
+                if (!$kasbon) continue;
+
+                foreach ($kasbon->items as $kasbonItem) {
+                    $isTaxRow = ($kasbonItem->item_type ?? 'item') === 'tax';
+                    $joPajak  = $kasbonItem->joOtherPajak;
+
+                    if (!$isTaxRow) {
+                        if (in_array($kasbonItem->id_jo_other_item, $seenJoItems)) continue;
+                        $seenJoItems[] = $kasbonItem->id_jo_other_item;
+                    }
+
+                    $lpjItem = $lpjItemsMap->get($kasbonItem->id_kasbon_other_item);
+
+                    if ($isTaxRow) {
+                        $mergedItems[] = [
+                            'id_kasbon_other_item'   => $kasbonItem->id_kasbon_other_item,
+                            'id_kasbon_other_no'     => $kasbon->id_kasbon_other,
+                            'item_type'              => 'tax',
+                            'invoice_typ'            => $joPajak?->nama_pajak ?? $kasbonItem->id_kasbon_other_item,
+                            'invoice_ctg'            => 'Tax',
+                            'nilai_hpp_other_item'   => (float) $kasbonItem->nilai_hpp_other_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'origin_lpj_other'       => null,
+                        ];
+                    } else {
+                        $mergedItems[] = [
+                            'id_kasbon_other_item'   => $kasbonItem->id_kasbon_other_item,
+                            'id_kasbon_other_no'     => $kasbon->id_kasbon_other,
+                            'item_type'              => 'item',
+                            'invoice_typ'            => $kasbonItem->joOtherItem?->invoice?->invoice_typ ?? '-',
+                            'invoice_ctg'            => $kasbonItem->joOtherItem?->invoice?->invoice_ctg ?? '-',
+                            'nilai_hpp_other_item'   => (float) $kasbonItem->nilai_hpp_other_item,
+                            'nilai_kasbon'           => (float) $kasbonItem->nilai_kasbon,
+                            'amount_lpj'             => $lpjItem ? (float) $lpjItem->amount_lpj : 0,
+                            'has_lpj'                => $lpjItem !== null,
+                            'origin_lpj_other'       => $kasbonItem->origin_lpj_other ?? null,
+                        ];
+                    }
+                }
+            }
+
+            return view('data.lpj-other.show', compact('lpj', 'mergedItems'));
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -714,6 +799,7 @@ class LpjOtherController extends Controller
             $lpj->delete();
 
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data LPJ Other berhasil dihapus', 'LPJ Other');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'LPJ Other deleted successfully']);
@@ -739,6 +825,7 @@ class LpjOtherController extends Controller
             $lpj = LpjOther::with([
                 'joOther',
                 'kasbons.kasbonOther.items.joOtherItem.invoice',
+                'kasbons.kasbonOther.items.joOtherPajak',
                 'items.kasbonOtherItem',
                 'items.chartOfAccount',
             ])->findOrFail($id);

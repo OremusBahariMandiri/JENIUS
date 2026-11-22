@@ -8,9 +8,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use App\Helpers\IdGenerator;
+use App\Traits\LogsActivity;
 
 class BranchController extends Controller
 {
+    use LogsActivity;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -106,6 +109,7 @@ class BranchController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('create', 'Data Branch berhasil ditambahkan', 'Branch');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Cabang berhasil ditambahkan', 'data' => $branch], 201);
@@ -183,6 +187,7 @@ class BranchController extends Controller
             ]);
 
             DB::commit();
+            \App\Models\ActivityLog::record('update', 'Data Branch berhasil diubah', 'Branch');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Cabang berhasil diupdate', 'data' => $branch]);
@@ -204,6 +209,7 @@ class BranchController extends Controller
             $branch = Branch::findOrFail($id);
             $branch->delete();
             DB::commit();
+            \App\Models\ActivityLog::record('delete', 'Data Branch berhasil dihapus', 'Branch');
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => true, 'message' => 'Cabang berhasil dihapus']);

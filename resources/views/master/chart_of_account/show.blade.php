@@ -93,6 +93,24 @@
                             <p class="mb-0 fw-bold">{{ $account->payment_type ?? '-' }}</p>
                         </div>
 
+                        <!-- Invoice Display -->
+                        <div class="col-md-6 mb-3">
+                            <label class="text-muted small text-uppercase mb-2">Invoice Display</label>
+                            <p class="mb-0 fw-bold">{{ $account->invoice_display ?? '-' }}</p>
+                        </div>
+
+                        <!-- COA Code -->
+                        <div class="col-md-3 mb-3">
+                            <label class="text-muted small text-uppercase mb-2">COA Code</label>
+                            <p class="mb-0 fw-bold">{{ $account->coa_code ?? '-' }}</p>
+                        </div>
+
+                        <!-- Number -->
+                        <div class="col-md-3 mb-3">
+                            <label class="text-muted small text-uppercase mb-2">Number</label>
+                            <p class="mb-0 fw-bold">{{ $account->number ?? '-' }}</p>
+                        </div>
+
                         <!-- Opening Balance -->
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small text-uppercase mb-2">Opening Balance</label>
@@ -104,8 +122,9 @@
                         <!-- Current Balance -->
                         <div class="col-md-6 mb-3">
                             <label class="text-muted small text-uppercase mb-2">Current Balance</label>
-                            <p class="mb-0 fw-bold fs-5 {{ $account->current_balance >= 0 ? 'text-success' : 'text-danger' }}">
-                                Rp {{ number_format($account->current_balance, 2, ',', '.') }}
+                            @php $actualBalance = $account->opening_balance + $account->current_balance; @endphp
+                            <p class="mb-0 fw-bold fs-5 {{ $actualBalance >= 0 ? 'text-success' : 'text-danger' }}">
+                                Rp {{ number_format($actualBalance, 2, ',', '.') }}
                             </p>
                         </div>
                     </div>

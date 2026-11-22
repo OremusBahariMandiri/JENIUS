@@ -20,6 +20,10 @@ class ChartOfAccount extends Model
         'payment_type',
         'opening_balance',
         'current_balance',
+        'invoice_display',
+        'coa_code',
+        'number',
+        'swift_code',
     ];
 
     protected $casts = [

@@ -12,12 +12,14 @@ class InvoicePembayaranContractItem extends Model
 
     protected $fillable = [
         'id_invoice_contract', 'id_jo_cont_item', 'item_type', 'id_jo_cont_pajak',
-        'id_md_chart_of_account', 'deskripsi', 'nominal_invoice', 'is_reimbursement',
+        'id_md_chart_of_account', 'deskripsi', 'nominal_invoice', 'nominal_invoice_usd',
+        'is_reimbursement',
     ];
 
     protected $casts = [
-        'is_reimbursement' => 'boolean',
-        'nominal_invoice'  => 'decimal:2',
+        'is_reimbursement'    => 'boolean',
+        'nominal_invoice'     => 'decimal:2',
+        'nominal_invoice_usd' => 'decimal:4',
     ];
 
     public function invoice()
